@@ -6,7 +6,7 @@
 			Aberdeen Proving Ground
 			Maryland 21005-5066
 
-	$Header: /usr/Backup/upgrade/brlcad/brlcad/burst/Cakefile,v 1.16.14.2 2004-02-12 19:22:15 erikg Exp $ (BRL)
+	$Header: /usr/Backup/upgrade/brlcad/brlcad/burst/Cakefile,v 1.16.14.3 2004-03-15 14:06:05 erikg Exp $ (BRL)
 
  */
 #define CONFIGDEFS	LGT_CONFIG -I. -U_POSIX_SOURCE /*-DDEBUG*/

@@ -51,7 +51,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #if IRIX == 5
-/* we need a struct timeval */
+/* need a timeval struct */
 struct timeval {
         long    tv_sec;         /* seconds */
         long    tv_usec;        /* and microseconds */

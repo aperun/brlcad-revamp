@@ -222,16 +222,8 @@ register const char	*name;
 int			noisy;
 {
 	register struct directory *dp;
-	register char	n0;
-	register char	n1;
-
-	if (!name) {
-	  bu_log("db_lookup received NULL name\n");
-	  return (DIR_NULL);
-	}
-
-	n0 = name[0];
-	n1 = name[1];
+	register char	n0 = name[0];
+	register char	n1 = name[1];
 
 	RT_CK_DBI(dbip);
 
@@ -329,11 +321,10 @@ genptr_t		ptr;		/* for db version 5, this is a pointer to an unsigned char (mino
  *  one, stealing the external representation from 'ext'.
  */
 void
-db_inmem( dp, ext, flags, dbip )
+db_inmem( dp, ext, flags )
 struct directory	*dp;
 struct bu_external	*ext;
 int			flags;
-struct db_i		*dbip;
 {
 	BU_CK_EXTERNAL(ext);
 	RT_CK_DIR(dp);
@@ -341,11 +332,7 @@ struct db_i		*dbip;
 	if( dp->d_flags & RT_DIR_INMEM )
 		bu_free( dp->d_un.ptr, "db_inmem() ext ptr" );
 	dp->d_un.ptr = ext->ext_buf;
-	if( dbip->dbi_version < 5 ) {
-		dp->d_len = ext->ext_nbytes / 128;	/* DB_MINREC granule size */
-	} else {
-		dp->d_len = ext->ext_nbytes;
-	}
+	dp->d_len = ext->ext_nbytes / 128;	/* DB_MINREC granule size */
 	dp->d_flags = flags | RT_DIR_INMEM;
 
 	/* Empty out the external structure, but leave it w/valid magic */

@@ -11,7 +11,7 @@
  *	The U. S. Army Ballistic Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *
- *  $Header: /usr/Backup/upgrade/brlcad/brlcad/Cakefile.defs,v 11.254.2.1 2002-09-19 18:00:31 morrison Exp $
+ *  $Header: /usr/Backup/upgrade/brlcad/brlcad/Cakefile.defs,v 11.254.2.2 2003-01-31 00:11:52 morrison Exp $
  *
  *  For those unfamiliar with CAKE, one important hint:
  *  When a rule includes an ampersand ('&') before the colon,
@@ -122,8 +122,8 @@ set -S2 "/bin/sh"
 /* 1==YES, 0==NO */
 
 /* Read above for the meaning and implications of each flag! */
-#define BUILD_OPTIMIZED         1
-#define BUILD_SHARED            1
+#define BUILD_OPTIMIZED         0
+#define BUILD_SHARED            0
 #define BUILD_XWINDOWS          1
 #define BUILD_OPENGL            0
 #define BUILD_PRODUCTION        0
@@ -1188,7 +1188,7 @@ set -S2 "/bin/sh"
 #	if BUILD_OPTIMIZED	
 #		define	OPTIMIZER	-O3  -fno-common -ffast-math -fstrength-reduce -fexpensive-optimizations /* -faltivec */
 #	else
-#		define	OPTIMIZER	-g -pg -O -fno-common
+#		define	OPTIMIZER	-g -fno-common
 #	endif
 #	if BUILD_SHARED	
 /*		Shared library version support.  */

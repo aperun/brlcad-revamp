@@ -1,0 +1,45 @@
+.TH PP-FB 1V VMB
+'\"	last edit:	85/04/22	G. S. Moss
+'\"	SCCS ID:	@(#)pp-fb.1	1.2
+.SH NAME
+pp-fb \- display a GIFT pretty-picture file on a frame buffer
+.SH SYNOPSIS
+.B pp-fb
+file.pp
+.SH DESCRIPTION
+.I Pp-fb
+reads
+.IR file.pp\^ ,
+determines the size,
+and displays a color shaded image represented therein
+on a frame buffer.
+The
+.SM
+.B PP
+files are the output from using the pretty-picture option of the
+.IR gift\^ (1V)
+ray-tracing program.
+Some information pertaining to the color assignment of region identification
+numbers and the background color is prompted for on the standard input.
+By default, the frame buffer device
+.B /dev/ik0l
+is assumed.
+This may be changed by setting the environment
+variable
+.B
+.SM FB_FILE
+to the name of another device or file name
+and exporting it before execution of 
+.IR pp-fb\^ .
+Commands for manipulating the display are documented on-line.
+.SH FILE
+/vld/lib/libfb.a
+.SH "SEE ALSO"
+gift(1V).
+.SH AUTHORS
+.PP 
+Gary Kuehl, BRL-VLD/ATB
+.br
+Michael John Muuss, BRL-SECAD
+.br
+Gary S. Moss, BRL-VLD/VMB

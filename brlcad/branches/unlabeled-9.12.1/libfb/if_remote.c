@@ -70,6 +70,8 @@ _LOCAL_ int	rem_open(),
 		rem_clear(),
 		rem_read(),
 		rem_write(),
+		rem_cmp_read(),
+		rem_cmp_write(),
 		rem_rmap(),
 		rem_wmap(),
 		rem_view(),
@@ -80,6 +82,8 @@ _LOCAL_ int	rem_open(),
 		rem_getcursor(),
 		rem_readrect(),
 		rem_writerect(),
+		rem_cmp_readrect(),
+		rem_cmp_writerect(),
 		rem_poll(),
 		rem_flush(),
 		rem_free(),
@@ -109,6 +113,46 @@ FBIO remote_interface = {
 	1024,				/* " */
 	1024,				/* " */
 	"host:[dev]",
+	512,
+	512,
+	-1,				/* select fd */
+	-1,
+	1, 1,				/* zoom */
+	256, 256,			/* window center */
+	0, 0, 0,			/* cursor */
+	PIXEL_NULL,
+	PIXEL_NULL,
+	PIXEL_NULL,
+	-1,
+	0,
+	0L,
+	0L,
+	0
+};
+FBIO remote_compressed = {
+	0,
+	rem_open,
+	rem_close,
+	rem_clear,
+	rem_cmp_read,
+	rem_cmp_write,
+	rem_rmap,
+	rem_wmap,
+	rem_view,
+	rem_getview,
+	fb_null,			/* fb_setcursor */
+	rem_cursor,
+	rem_getcursor,
+	rem_cmp_readrect,
+	rem_cmp_writerect,
+	rem_poll,
+	rem_flush,
+	rem_free,
+	rem_help,
+	"Remote Compressed Device Interface",	/* should be filled in	*/
+	1024,				/* " */
+	1024,				/* " */
+	"host -c:[dev]",
 	512,
 	512,
 	-1,				/* select fd */
@@ -464,6 +508,85 @@ int		num;
 	return	ret/sizeof(RGBpixel);
 	/* No reading an error return package, sacrificed for speed. */
 }
+/*
+ *  Send as longs:  x, y, num
+ */
+_LOCAL_ int
+rem_cmp_read( ifp, x, y, pixelp, num )
+register FBIO	*ifp;
+int		x, y;
+RGBpixel	*pixelp;
+int		num;
+{
+	int	ret;
+	char	buf[3*NET_LONG_LEN+1];
+	char	*inbuf;
+
+	if( num <= 0 )
+		return(0);
+	inbuf = malloc(num*sizeof(RGBpixel));
+	if (!inbuf) {
+		return rem_read(ifp, x, y, pixlp, num);
+	}
+	/* Send Read Command */
+	(void)fbputlong( x, &buf[0*NET_LONG_LEN] );
+	(void)fbputlong( y, &buf[1*NET_LONG_LEN] );
+	(void)fbputlong( num, &buf[2*NET_LONG_LEN] );
+	if( pkg_send( MSG_FBCMPREAD, buf, 3*NET_LONG_LEN, PCP(ifp) ) < 3*NET_LONG_LEN )
+		return	-2;
+
+	/* Get response;  0 len means failure */
+	ret = pkg_waitfor( MSG_RETURN, inbuf,
+		num*sizeof(RGBpixel), PCP(ifp) );
+	if( ret <= 0 )  {
+		fb_log( "rem_cmp_read: read %d at <%d,%d> failed, ret=%d.\n",
+			num, x, y, ret );
+		return	-3;
+	}
+	ret = uncompress((char *) pixelp, inbuf, num);
+	free(inbuf);
+	return( ret/sizeof(RGBpixel) );
+}
+
+/*
+ * As longs, x, y, num
+ */
+_LOCAL_ int
+rem_cmp_write( ifp, x, y, pixelp, num )
+register FBIO	*ifp;
+int		x, y;
+RGBpixel	*pixelp;
+int		num;
+{
+	int	ret, length;
+	char	buf[3*NET_LONG_LEN+1];
+	char	*outbuf;
+
+	if( num <= 0 )  return	num;
+	outbuf = malloc(num * sizeof(RGBpixel);
+	if (!outbuf) {
+		return rem_write( ifp, x, y, pixelp, num);
+	}
+
+	/* Send Write Command */
+	(void)fbputlong( x, &buf[0*NET_LONG_LEN] );
+	(void)fbputlong( y, &buf[1*NET_LONG_LEN] );
+	(void)fbputlong( num, &buf[2*NET_LONG_LEN] );
+
+	length = compress(outbuf, (char *) pixelp, num);
+	ret = pkg_2send( MSG_FBCMPWRITE+MSG_NORETURN,
+		buf, 3*NET_LONG_LEN,
+		outbuf, length,
+		PCP(ifp) );
+
+	free(outbuf);
+
+	ret -= 3*NET_LONG_LEN;
+	if( ret < length )
+		return	-1;	/* Error from libpkg */
+	return	num;
+	/* No reading an error return package, sacrificed for speed. */
+}
 
 /*
  *			R E M _ R E A D R E C T
@@ -506,6 +629,75 @@ RGBpixel	*pp;
  */
 _LOCAL_ int
 rem_writerect( ifp, xmin, ymin, width, height, pp )
+FBIO	*ifp;
+int	xmin, ymin;
+int	width, height;
+RGBpixel	*pp;
+{
+	int	num;
+	int	ret;
+	char	buf[4*NET_LONG_LEN+1];
+
+	num = width*height;
+	if( num <= 0 )
+		return(0);
+
+	/* Send Write Command */
+	(void)fbputlong( xmin, &buf[0*NET_LONG_LEN] );
+	(void)fbputlong( ymin, &buf[1*NET_LONG_LEN] );
+	(void)fbputlong( width, &buf[2*NET_LONG_LEN] );
+	(void)fbputlong( height, &buf[3*NET_LONG_LEN] );
+	ret = pkg_2send( MSG_FBWRITERECT+MSG_NORETURN,
+		buf, 4*NET_LONG_LEN,
+		(char *)pp, num*sizeof(RGBpixel),
+		PCP(ifp) );
+	ret -= 4*NET_LONG_LEN;
+	if( ret < 0 )
+		return	-4;	/* Error from libpkg */
+	return	ret/sizeof(RGBpixel);
+	/* No reading an error return package, sacrificed for speed. */
+}
+/*
+ *			R E M _ R E A D R E C T
+ */
+_LOCAL_ int
+rem_cmp_readrect( ifp, xmin, ymin, width, height, pp )
+FBIO	*ifp;
+int	xmin, ymin;
+int	width, height;
+RGBpixel	*pp;
+{
+	int	num;
+	int	ret;
+	char	buf[4*NET_LONG_LEN+1];
+
+	num = width*height;
+	if( num <= 0 )
+		return(0);
+	/* Send Read Command */
+	(void)fbputlong( xmin, &buf[0*NET_LONG_LEN] );
+	(void)fbputlong( ymin, &buf[1*NET_LONG_LEN] );
+	(void)fbputlong( width, &buf[2*NET_LONG_LEN] );
+	(void)fbputlong( height, &buf[3*NET_LONG_LEN] );
+	if( pkg_send( MSG_FBREADRECT, buf, 4*NET_LONG_LEN, PCP(ifp) ) < 4*NET_LONG_LEN )
+		return	-2;
+
+	/* Get response;  0 len means failure */
+	ret = pkg_waitfor( MSG_RETURN, (char *)pp,
+			num*sizeof(RGBpixel), PCP(ifp) );
+	if( ret <= 0 )  {
+		fb_log( "rem_rectread: read %d at <%d,%d> failed, ret=%d.\n",
+			num, xmin, ymin, ret );
+		return	-3;
+	}
+	return( ret/sizeof(RGBpixel) );
+}
+
+/*
+ *			R E M _ W R I T E R E C T
+ */
+_LOCAL_ int
+rem_cmp_writerect( ifp, xmin, ymin, width, height, pp )
 FBIO	*ifp;
 int	xmin, ymin;
 int	width, height;

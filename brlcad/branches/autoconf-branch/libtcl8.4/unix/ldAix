@@ -10,7 +10,7 @@
 # symbols exported by those files, and then invokes "ldCmd" to
 # perform the real link.
 #
-# RCS: @(#) $Id: ldAix,v 1.1.6.2 2004-02-12 18:55:46 erikg Exp $
+# RCS: @(#) $Id: ldAix,v 1.1.6.3 2004-03-15 12:06:45 erikg Exp $
 
 # Extract from the arguments the names of all of the object files.
 

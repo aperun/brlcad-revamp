@@ -84,7 +84,7 @@ int		transpose_grid = 0;     /* reverse the order of grid traversal */
 /***** end variables shared with worker() *****/
 
 /***** Photon Mapping Variables *****/
-double		pmargs[9];
+double		pmargs[14];
 char		pmfile[255];
 /***** ************************ *****/
 
@@ -374,8 +374,17 @@ int get_args( int argc, register char **argv )
 					item= strtok(NULL,",");
 					pmargs[8]= item ? atof(item) : 1.0;		/* Scale Lumens */
 					item= strtok(NULL,",");
+					pmargs[9]= item ? atof(item) : 0.0;		/* Sphere Invalidation X Coordinate */
+					item= strtok(NULL,",");
+					pmargs[10]= item ? atof(item) : 0.0;		/* Sphere Invalidation Y Coordinate */
+					item= strtok(NULL,",");
+					pmargs[11]= item ? atof(item) : 0.0;		/* Sphere Invalidation Z Coordinate */
+					item= strtok(NULL,",");
+					pmargs[12]= item ? atof(item) : 0.0;		/* Sphere Invalidation Radius */
+					item= strtok(NULL,",");
+					pmargs[13]= item ? atof(item) : 0.0;		/* Sphere Invalidation Emit Radius */
+					item= strtok(NULL,",");
 					if (item) { strcpy(pmfile,item); } else { pmfile[0]= 0; }
-/*					item ? strcpy(pmfile,item) : pmfile[0]= 0;*/	/* Scale Lumens */
 				}
 			}
 			break;

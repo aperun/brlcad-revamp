@@ -1528,7 +1528,7 @@ bu_log("mallocing curr_float_frame\n");
 
                 /* Build Photon Map */
 		PM_Activated= 1;
-		BuildPhotonMap(ap,eye_model,npsw,width,height,hypersample,(int)pmargs[0],pmargs[1],(int)pmargs[2],pmargs[3],(int)pmargs[4],(int)pmargs[5],(int)pmargs[6],(int)pmargs[7],pmargs[8],pmfile);
+		BuildPhotonMap(ap,eye_model,npsw,width,height,hypersample,(int)pmargs[0],pmargs[1],(int)pmargs[2],pmargs[3],(int)pmargs[4],(int)pmargs[5],(int)pmargs[6],(int)pmargs[7],pmargs[8],pmargs[9],pmargs[10],pmargs[11],pmargs[12],pmargs[13],pmfile);
 
 		memcpy(ap,&bakapp,sizeof(struct application));
 		/* Set callback for ray hit */

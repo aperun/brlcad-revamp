@@ -25,7 +25,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -112,7 +112,6 @@ int	*blines[5];
 /*
  *			M A I N
  */
-int
 main( argc, argv )
 int	argc;
 char	**argv;

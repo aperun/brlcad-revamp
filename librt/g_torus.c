@@ -20,7 +20,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCStorus[] = "@(#)$Header$ (BRL)";
+static char RCStorus[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -50,8 +50,7 @@ CONST struct bu_structparse rt_tor_parse[] = {
     { "%f", 3, "H",   offsetof(struct rt_tor_internal, h[X]), BU_STRUCTPARSE_FUNC_NULL },
     { "%f", 1, "r_a", offsetof(struct rt_tor_internal, r_a),  BU_STRUCTPARSE_FUNC_NULL },
     { "%f", 1, "r_h", offsetof(struct rt_tor_internal, r_h),  BU_STRUCTPARSE_FUNC_NULL },
-    { {'\0','\0','\0','\0'}, 0, (char *)NULL, 0, BU_STRUCTPARSE_FUNC_NULL }
-    };
+    {0} };
 
 /*
  *  Algorithm:
@@ -928,62 +927,6 @@ rt_tor_class()
 	return(0);
 }
 
-/* 
- *			R T _ N U M _ C I R C U L A R _ S E G M E N T S
- *
- *  Given a circle with a specified radius, determine the minimum number
- *  of straight line segments that the circle can be approximated with,
- *  while still meeting the given maximum permissible error distance.
- *  Form a chord (straight line) by
- *  connecting the start and end points found when
- *  sweeping a 'radius' arc through angle 'theta'.
- *
- *  The error distance is the distance between where a radius line
- *  at angle theta/2 hits the chord, and where it hits the circle
- *  (at 'radius' distance).
- *
- *	error_distance = radius * ( 1 - cos( theta/2 ) )
- *
- *  or
- *
- *	theta = 2 * acos( 1 - error_distance / radius )
- *
- *  Returns -
- *	number of segments.  Always at least 6.
- */
-int
-rt_num_circular_segments(double	maxerr, double	radius)
-{
-	register fastf_t	cos_half_theta;
-	register fastf_t	half_theta;
-	int			n;
-
-	if( radius <= 0.0 || maxerr <= 0.0 || maxerr >= radius )  {
-		/* Return a default number of segments */
-		return(6);
-	}
-	cos_half_theta = 1.0 - maxerr / radius;
-	/* There does not seem to be any reasonable way to express the
-	 * acos in terms of an atan2(), so extra checking is done.
-	 */
-	if( cos_half_theta <= 0.0 || cos_half_theta >= 1.0 )  {
-		/* Return a default number of segments */
-		return(6);
-	}
-	half_theta = acos( cos_half_theta );
-	if( half_theta < SMALL )  {
-		/* A very large number of segments will be needed.
-		 * Impose an upper bound here
-		 */
-		return( 360*10 );
-	}
-	n = bn_pi / half_theta + 0.99;
-
-	/* Impose the limits again */
-	if( n <= 6 )  return(6);
-	if( n >= 360*10 )  return( 360*10 );
-	return(n);
-}
 /*
  *			R T _ T O R _ P L O T
  *
@@ -1290,6 +1233,64 @@ CONST struct bn_tol	*tol;
 	return(0);
 }
 
+/* 
+ *			R T _ N U M _ C I R C U L A R _ S E G M E N T S
+ *
+ *  Given a circle with a specified radius, determine the minimum number
+ *  of straight line segments that the circle can be approximated with,
+ *  while still meeting the given maximum permissible error distance.
+ *  Form a chord (straight line) by
+ *  connecting the start and end points found when
+ *  sweeping a 'radius' arc through angle 'theta'.
+ *
+ *  The error distance is the distance between where a radius line
+ *  at angle theta/2 hits the chord, and where it hits the circle
+ *  (at 'radius' distance).
+ *
+ *	error_distance = radius * ( 1 - cos( theta/2 ) )
+ *
+ *  or
+ *
+ *	theta = 2 * acos( 1 - error_distance / radius )
+ *
+ *  Returns -
+ *	number of segments.  Always at least 6.
+ */
+int
+rt_num_circular_segments( maxerr, radius )
+double	maxerr;
+double	radius;
+{
+	register fastf_t	cos_half_theta;
+	register fastf_t	half_theta;
+	int			n;
+
+	if( radius <= 0.0 || maxerr <= 0.0 || maxerr >= radius )  {
+		/* Return a default number of segments */
+		return(6);
+	}
+	cos_half_theta = 1.0 - maxerr / radius;
+	/* There does not seem to be any reasonable way to express the
+	 * acos in terms of an atan2(), so extra checking is done.
+	 */
+	if( cos_half_theta <= 0.0 || cos_half_theta >= 1.0 )  {
+		/* Return a default number of segments */
+		return(6);
+	}
+	half_theta = acos( cos_half_theta );
+	if( half_theta < SMALL )  {
+		/* A very large number of segments will be needed.
+		 * Impose an upper bound here
+		 */
+		return( 360*10 );
+	}
+	n = bn_pi / half_theta + 0.99;
+
+	/* Impose the limits again */
+	if( n <= 6 )  return(6);
+	if( n >= 360*10 )  return( 360*10 );
+	return(n);
+}
 
 /*
  *			R T _ T O R _ I M P O R T
@@ -1318,7 +1319,7 @@ CONST struct db_i		*dbip;
 		return(-1);
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_TOR;
 	ip->idb_meth = &rt_functab[ID_TOR];
 	ip->idb_ptr = bu_malloc(sizeof(struct rt_tor_internal), "rt_tor_internal");
@@ -1357,39 +1358,6 @@ CONST struct db_i		*dbip;
 }
 
 /*
- *			R T _ T O R _ E X P O R T 5
- */
-int
-rt_tor_export5( ep , ip, local2mm, dbip )
-struct bu_external		*ep;
-CONST struct rt_db_internal	*ip;
-double				local2mm;
-CONST struct db_i		*dbip;
-{
-	double			vec[2*3+2];
-	struct rt_tor_internal	*tip;
-
-	RT_CK_DB_INTERNAL( ip );
-	if (ip->idb_type != ID_TOR) return -1;
-	tip = (struct rt_tor_internal *)ip->idb_ptr;
-	RT_TOR_CK_MAGIC(tip);
-
-	BU_CK_EXTERNAL(ep);
-	ep->ext_nbytes = SIZEOF_NETWORK_DOUBLE * (2*3+2);
-	ep->ext_buf = (genptr_t)bu_malloc( ep->ext_nbytes, "tor external");
-
-	/* scale values into local buffer */
-	VSCALE( &vec[0*3], tip->v, local2mm );
-	VMOVE(  &vec[1*3], tip->h);		/* UNIT vector, not scaled */
-	vec[2*3+0] = tip->r_a*local2mm;		/* r1 */
-	vec[2*3+1] = tip->r_h*local2mm;		/* r2 */
-
-	/* convert from internal (host) to database (network) format */
-	htond( ep->ext_buf, (unsigned char *)vec, 2*3+2);
-
-	return 0;
-}
-/*
  *			R T _ T O R _ E X P O R T
  *
  *  The name will be added by the caller.
@@ -1414,7 +1382,7 @@ CONST struct db_i		*dbip;
 	tip = (struct rt_tor_internal *)ip->idb_ptr;
 	RT_TOR_CK_MAGIC(tip);
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 	ep->ext_nbytes = sizeof(union record);
 	ep->ext_buf = (genptr_t)bu_calloc( 1, ep->ext_nbytes, "tor external");
 	rec = (union record *)ep->ext_buf;
@@ -1479,68 +1447,6 @@ CONST struct db_i		*dbip;
 }
 
 /*
- *			R T _ T O R _ I M P O R T 5
- *
- *	Taken from the database record:
- *		v	vertex (point) of center of torus.
- *		h	unit vector in the normal direction of the torus
- *		major	radius of ring from 'v' to center of ring
- *		minor	radius of the ring
- *
- *	Calculate:
- *		2nd radius of ring (==1st radius)
- *		ring unit vector 1
- *		ring unit vector 2
- */
-int
-rt_tor_import5( ip, ep, mat, dbip )
-struct rt_db_internal		*ip;
-CONST struct bu_external	*ep;
-register CONST mat_t		mat;
-CONST struct db_i		*dbip;
-{
-	struct rt_tor_internal	*tip;
-	LOCAL struct rec {
-		double	v[3];
-		double	h[3];
-		double	ra;	/* r1 */
-		double	rh;	/* r2 */
-	} rec;
-
-	BU_CK_EXTERNAL( ep );
-	BU_ASSERT_LONG( ep->ext_nbytes, ==, SIZEOF_NETWORK_DOUBLE * (2*3+2) );
-
-	RT_CK_DB_INTERNAL( ip );
-
-	ip->idb_type = ID_TOR;
-	ip->idb_meth = &rt_functab[ID_TOR];
-	ip->idb_ptr = bu_malloc( sizeof(struct rt_tor_internal), "rt_tor_internal");
-	tip = (struct rt_tor_internal *)ip->idb_ptr;
-
-	tip->magic = RT_TOR_INTERNAL_MAGIC;
-
-	ntohd( (unsigned char *)&rec, ep->ext_buf, 2*3+2);
-
-	/* Apply modeling transformations */
-	MAT4X3PNT( tip->v, mat, rec.v );
-	MAT4X3VEC( tip->h, mat, rec.h );
-	VUNITIZE( tip->h );			/* just to be sure */
-
-	tip->r_a = rec.ra;
-	tip->r_h = rec.rh;
-
-	/* Prepare the extra information */
-	tip->r_b = rec.ra;
-
-	/* Calculate two mutually perpendicular vectors, perpendicular to N */
-	bn_vec_ortho( tip->a, tip->h );		/* a has unit length */
-	VCROSS( tip->b, tip->h, tip->a);	/* |A| = |H| = 1, so |B|=1 */
-
-	VSCALE(tip->a, tip->a, tip->r_a);
-	VSCALE(tip->b, tip->b, tip->r_b);
-	return 0;
-}
-/*
  *			R T _ T O R _ D E S C R I B E
  *
  *  Make human-readable formatted presentation of this solid.
@@ -1556,45 +1462,52 @@ double			mm2local;
 {
 	register struct rt_tor_internal	*tip =
 		(struct rt_tor_internal *)ip->idb_ptr;
+	char				buf[256];
 	double				r3, r4;
 
 	RT_TOR_CK_MAGIC(tip);
 	bu_vls_strcat( str, "torus (TOR)\n");
 
-	bu_vls_printf( str, "\tV (%g, %g, %g), r1=%g (A), r2=%g (H)\n",
+	sprintf(buf, "\tV (%g, %g, %g), r1=%g (A), r2=%g (H)\n",
 		tip->v[X] * mm2local,
 		tip->v[Y] * mm2local,
 		tip->v[Z] * mm2local,
 		tip->r_a * mm2local, tip->r_h * mm2local );
+	bu_vls_strcat( str, buf );
 
-	bu_vls_printf( str, "\tN=(%g, %g, %g)\n",
+	sprintf(buf, "\tN=(%g, %g, %g)\n",
 		tip->h[X] * mm2local,
 		tip->h[Y] * mm2local,
 		tip->h[Z] * mm2local );
+	bu_vls_strcat( str, buf );
 
 	if( !verbose )  return(0);
 
-	bu_vls_printf( str, "\tA=(%g, %g, %g)\n",
+	sprintf(buf, "\tA=(%g, %g, %g)\n",
 		tip->a[X] * mm2local / tip->r_a,
 		tip->a[Y] * mm2local / tip->r_a,
 		tip->a[Z] * mm2local / tip->r_a );
+	bu_vls_strcat( str, buf );
 
-	bu_vls_printf( str, "\tB=(%g, %g, %g)\n",
+	sprintf(buf, "\tB=(%g, %g, %g)\n",
 		tip->b[X] * mm2local / tip->r_b,
 		tip->b[Y] * mm2local / tip->r_b,
 		tip->b[Z] * mm2local / tip->r_b );
+	bu_vls_strcat( str, buf );
 
 	r3 = tip->r_a - tip->r_h;
-	bu_vls_printf( str, "\tvector to inner edge = (%g, %g, %g)\n",
+	sprintf(buf, "\tvector to inner edge = (%g, %g, %g)\n",
 		tip->a[X] * mm2local / tip->r_a * r3,
 		tip->a[Y] * mm2local / tip->r_a * r3,
 		tip->a[Z] * mm2local / tip->r_a * r3 );
+	bu_vls_strcat( str, buf );
 
 	r4 = tip->r_a + tip->r_h;
-	bu_vls_printf( str, "\tvector to outer edge = (%g, %g, %g)\n",
+	sprintf(buf, "\tvector to outer edge = (%g, %g, %g)\n",
 		tip->a[X] * mm2local / tip->r_a * r4,
 		tip->a[Y] * mm2local / tip->r_a * r4,
 		tip->a[Z] * mm2local / tip->r_a * r4 );
+	bu_vls_strcat( str, buf );
 
 	return(0);
 }

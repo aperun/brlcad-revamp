@@ -56,7 +56,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -68,11 +68,8 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
-extern int rr_render(struct application	*ap,
-		     struct partition	*pp,
-		     struct shadework   *swp);
 #define fire_MAGIC 0x46697265   /* ``Fire'' */
 #define CK_fire_SP(_p) BU_CKMAG(_p, fire_MAGIC, "fire_specific")
 
@@ -191,24 +188,24 @@ struct mfuncs fire_mfuncs[] = {
 };
 
 CONST double flame_colors[18][3] = {
-	{0.0, 0.0, 0.0},
-	{0.0, 0.0, 0.0},
-	{0.106, 0.0, 0.0},
-	{0.212, 0.0, 0.0},
-	{0.318, 0.0, 0.0},
-	{0.427, 0.0, 0.0},
-	{0.533, 0.0, 0.0},
-	{0.651, 0.02, 0.0},
-	{0.741, 0.118, 0.0},
-	{0.827, 0.235, 0.0},
-	{0.906, 0.353, 0.0},
-	{0.933, 0.500, 0.0},
-	{0.957, 0.635, 0.047},
-	{0.973, 0.733, 0.227},
-	{0.984, 0.820, 0.451},
-	{0.990, 0.925, 0.824},
-	{1.0, 0.945, 0.902},
-	{1.0, 0.945, 0.902}
+	0.0, 0.0, 0.0,
+	0.0, 0.0, 0.0,
+	0.106, 0.0, 0.0,
+	0.212, 0.0, 0.0,
+	0.318, 0.0, 0.0,
+	0.427, 0.0, 0.0,
+	0.533, 0.0, 0.0,
+	0.651, 0.02, 0.0,
+	0.741, 0.118, 0.0,
+	0.827, 0.235, 0.0,
+	0.906, 0.353, 0.0,
+	0.933, 0.500, 0.0,
+	0.957, 0.635, 0.047,
+	0.973, 0.733, 0.227,
+	0.984, 0.820, 0.451,
+	0.990, 0.925, 0.824,
+	1.0, 0.945, 0.902,
+	1.0, 0.945, 0.902
 };
 
 /*	F I R E _ S E T U P
@@ -258,7 +255,7 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	 */
 
 	db_shader_mat(fire_sp->fire_m_to_sh, rtip, rp, fire_sp->fire_min,
-		fire_sp->fire_max, &rt_uniresource);
+		fire_sp->fire_max);
 
 	/* Build matrix to map shader space to noise space.
 	 * XXX If only we could get the frametime at this point

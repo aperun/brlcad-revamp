@@ -5,7 +5,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -26,7 +26,6 @@ static const char RCSid[] = "$Header$";
 #include "raytrace.h"
 #include "../librt/debug.h"
 
-int
 main()
 {
 	char str[1024];

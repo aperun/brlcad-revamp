@@ -114,59 +114,6 @@ struct hf_specific {
 };
 
 /*
- *			R T _ H F _ T O _ D S P
- *
- *	Convert in-memory form of a height-field (HF) to a displacement-map
- *	solid (DSP) in internal representation.
- *	There is no record in the V5 database for an HF.
- */
-int
-rt_hf_to_dsp(struct rt_db_internal *db_intern, struct resource *resp)
-{
-	struct rt_hf_internal	*hip = (struct rt_hf_internal *)db_intern;
-	struct rt_dsp_internal	*dsp;
-	mat_t 			tmp, mat;
-
-	RT_CK_DB_INTERNAL(db_intern);
-	RT_CK_RESOURCE(resp);
-
-	BU_GETSTRUCT( dsp, rt_dsp_internal );
-	dsp->dsp_xcnt = hip->w;
-	dsp->dsp_ycnt = hip->n;
-
-	if (! hip->shorts) {
-		bu_log("cannot convert float HF to DSP\n");
-		return -1;
-	}
-	bn_mat_idn(mat);
-	MAT_DELTAS_VEC(mat,  hip->v);	/* translate */
-
-	/* Apply modeling transformations */
-	MAT4X3PNT( tmp, mat, hip->v );
-	VMOVE( hip->v, tmp );
-	MAT4X3VEC( tmp, mat, hip->x );
-	VMOVE( hip->x, tmp );
-	MAT4X3VEC( tmp, mat, hip->y );
-	VMOVE( hip->y, tmp );
-	hip->xlen /= mat[15];
-	hip->ylen /= mat[15];
-	hip->zscale /= mat[15];
-
-	/* XXX There is more logic needed here */
-
-
-	db_intern->idb_ptr = (genptr_t)dsp;
-	db_intern->idb_type = ID_DSP;
-	db_intern->idb_meth = &rt_functab[ID_DSP];
-
-	rt_db_free_internal( db_intern, resp );
-
-	return -1;
-
-}
-
-
-/*
  *  			R T _ H F _ P R E P
  *  
  *  Given a pointer to a GED database record, and a transformation matrix,
@@ -187,7 +134,7 @@ struct soltab		*stp;
 struct rt_db_internal	*ip;
 struct rt_i		*rtip;
 {
-	struct rt_hf_internal *hip;
+	struct rt_hf_internal		*hip;
 	register struct hf_specific	*hf;
 	CONST struct bn_tol		*tol = &rtip->rti_tol;
 	double	dot;
@@ -350,7 +297,7 @@ int			xCell, yCell;
 	register struct hf_specific *hfp =
 		(struct hf_specific *)stp->st_specific;
 
-	fastf_t dn, abs_dn, k1st=0, k2nd=0, alpha, beta;
+	fastf_t dn, abs_dn, k1st, k2nd , alpha, beta;
 	int dir1st, dir2nd;
 	vect_t wxb, xp;
 	vect_t tri_wn1st, tri_wn2nd, tri_BA1st, tri_BA2nd;
@@ -522,7 +469,7 @@ int			xCell, yCell;
 
 
 
-
+other_half:
 
 	/* XXX This is really hard to read.  Need to fix this like above */
 	dn = VDOT(tri_wn2nd, rp->r_dir);
@@ -649,9 +596,9 @@ struct hit **hp;
 int *nhits;
 
 {
-	double left, right, xx=0, xright=0, answer;
+	double left, right, xx, xright, answer;
 	vect_t loc;
-	int CellX=0, CellY=0;
+	int CellX, CellY;
 
 	if (plane == -6) return;
 
@@ -770,7 +717,7 @@ struct seg		*seghead;
 	double	xWidth, yWidth;
 
 	vect_t  peqn;
-	fastf_t pdist=0;
+	fastf_t pdist;
 	fastf_t allDist[6];	/* The hit point for all rays. */
 	fastf_t cosine;
 
@@ -950,7 +897,7 @@ bzero(hits,sizeof(hits));
 		VSUB2(tmp, rp->r_pt, hf->hf_V);
 		xCell = tmp[X]/hf->hf_Xlen*hf->hf_w;
 		yCell = tmp[Y]/hf->hf_Ylen*hf->hf_n;
-		if (  (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) ) {
+		if (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) {
 			if ((nhits+=r)>MAXHITS) rt_bomb("g_hf.c: too many hits.\n");
 			hp+=r;
 		}
@@ -1138,7 +1085,7 @@ bu_log("aray[Y]/aray[X]=%g\n", delta);
 			{
 #endif
 				int r;
-				if ( (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) ) {
+				if (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) {
 					if ((nhits+=r)>=MAXHITS) rt_bomb("g_hf.c: too many hits.\n");
 					hp+=r;
 				}
@@ -1207,7 +1154,7 @@ skip_first:
 #endif /* 0 */
 					int r;
 					/* DO HIT */
-					if ( (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) ) {
+					if (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) {
 						if ((nhits+=r)>=MAXHITS) rt_bomb("g_hf.c: too many hits.\n");
 						hp+=r;
 					}
@@ -1398,7 +1345,7 @@ bu_log("aray[X]/aray[Y]=%g\n", delta);
 			{
 #endif
 				int r;
-				if ( (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) ) {
+				if (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) {
 					if ((nhits+=r)>=MAXHITS) rt_bomb("g_hf.c: too many hits.\n");
 					hp+=r;
 				}
@@ -1467,7 +1414,7 @@ skip_2nd:
 #endif
 					int r;
 					/* DO HIT */
-					if ( (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) ) {
+					if (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) {
 						if ((nhits+=r)>=MAXHITS) rt_bomb("g_hf.c: too many hits.\n");
 						hp+=r;
 					}
@@ -1968,7 +1915,7 @@ CONST struct db_i		*dbip;
 		return(-1);
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_HF;
 	ip->idb_meth = &rt_functab[ID_HF];
 	ip->idb_ptr = bu_calloc( 1, sizeof(struct rt_hf_internal), "rt_hf_internal");
@@ -2135,7 +2082,7 @@ CONST struct db_i		*dbip;
 	xip->ylen /= local2mm;
 	xip->zscale /= local2mm;
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 	ep->ext_nbytes = sizeof(union record) * DB_SS_NGRAN;
 	ep->ext_buf = (genptr_t)bu_calloc( 1, ep->ext_nbytes, "hf external");
 	rec = (union record *)ep->ext_buf;
@@ -2153,30 +2100,6 @@ CONST struct db_i		*dbip;
 	bu_vls_free( &str );
 
 	return(0);
-}
-
-int
-rt_hf_import5( ip, ep, mat, dbip )
-struct rt_db_internal		*ip;
-CONST struct bu_external	*ep;
-CONST mat_t			mat;
-CONST struct db_i		*dbip;
-{
-	bu_log( "Import of HF solids from a version 5 database is not allowed.\n" );
-	bu_log( "\tHF solids should be converted to DSP solids using the rt_hf_to_dsp() routine or g4-g5 utility.\n" );
-	return -1;
-}
-
-int
-rt_hf_export5( ep, ip, local2mm, dbip )
-struct bu_external		*ep;
-CONST struct rt_db_internal	*ip;
-double				local2mm;
-CONST struct db_i		*dbip;
-{
-	bu_log( "Export of HF solids from a version 5 database is not allowed.\n" );
-	bu_log( "\tHF solids should be converted to DSP solids using the rt_hf_to_dsp() routine or g4-g5 utility.\n" );
-	return -1;
 }
 
 /*

@@ -17,7 +17,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -38,11 +38,11 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 /* Usage:  overlay file.plot [name] */
 int
-f_overlay(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_overlay(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	char		*name;
 	FILE		*fp;
@@ -100,7 +100,7 @@ char	**argv;
 
 	CHECK_DBI_NULL;
 
-	if(argc < 2){
+	if(argc < 2 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);

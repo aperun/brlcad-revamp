@@ -16,7 +16,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSanim[] = "@(#)$Header$ (BRL)";
+static char RCSanim[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -225,7 +225,8 @@ struct mater_info	*materp;
  *  Free one animation structure
  */
 void
-db_free_1anim( struct animate *anp )
+db_free_1anim( anp )
+struct animate		*anp;
 {
 	RT_CK_ANIMATE( anp );
 
@@ -293,7 +294,7 @@ struct animate	*
 db_parse_1anim( dbip, argc, argv )
 struct db_i	*dbip;
 int		argc;
-const char	**argv;
+CONST char	**argv;
 {
 	struct db_tree_state	ts;
 	struct animate		*anp;
@@ -302,7 +303,7 @@ const char	**argv;
 	BU_GETSTRUCT( anp, animate );
 	anp->magic = ANIMATE_MAGIC;
 
-	db_init_db_tree_state( &ts, dbip, &rt_uniresource );
+	db_init_db_tree_state( &ts, dbip );
 	db_full_path_init( &anp->an_path );
 	if( db_follow_path_for_state( &ts, &(anp->an_path), argv[1], LOOKUP_NOISY ) < 0 )
 		goto bad;
@@ -432,9 +433,11 @@ bad:
  *  Experimental.
  *  Not the best name for this.
  */
-int db_parse_anim(struct db_i	*dbip,
-		int		argc,
-		const char	**argv)
+int
+db_parse_anim( dbip, argc, argv )
+struct db_i	*dbip;
+int		argc;
+CONST char		**argv;
 {
 	struct animate		*anp;
 	int	at_root = 0;

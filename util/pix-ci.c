@@ -21,7 +21,6 @@ unsigned short rb[2048];
 unsigned short gb[2048];
 unsigned short bb[2048];
 
-int
 main(argc,argv)
 int argc;
 char **argv;

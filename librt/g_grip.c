@@ -22,7 +22,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSgrip[] = "@(#)$Header$ (BRL)";
+static char RCSgrip[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -291,7 +291,7 @@ CONST struct db_i		*dbip;
 		return(-1);
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_GRIP;
 	ip->idb_meth = &rt_functab[ID_GRIP];
 	ip->idb_ptr = bu_malloc( sizeof(struct rt_grip_internal), "rt_grip_internal");
@@ -341,7 +341,7 @@ CONST struct db_i		*dbip;
 	gip = (struct rt_grip_internal *)ip->idb_ptr;
 	RT_GRIP_CK_MAGIC(gip);
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 	ep->ext_nbytes = sizeof(union record);
 	ep->ext_buf = (genptr_t)bu_calloc( 1, ep->ext_nbytes, "grip external");
 	rec = (union record *)ep->ext_buf;

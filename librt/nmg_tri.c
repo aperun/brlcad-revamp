@@ -19,7 +19,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -29,7 +29,6 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "vmath.h"
 #include "nmg.h"
 #include "raytrace.h"
-#include "plot3.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -101,7 +100,8 @@ struct trap {
 
 
 /* subroutine version to pass to the rt_tree functions */
-int PvsV(struct trap *p, struct trap *v)
+PvsV(p, v)
+struct trap *p, *v;
 {
 	NMG_CK_TRAP(p);
 	NMG_CK_TRAP(v);
@@ -242,7 +242,7 @@ struct bu_list *tbl2d;
 		} else if (BU_LIST_FIRST_MAGIC(&lu->down_hd) == NMG_VERTEXUSE_MAGIC){
 			vu = BU_LIST_FIRST(vertexuse, &lu->down_hd);
 			pdv_3move(fd, vu->v_p->vg_p->coord);
-			if ( (p=find_pt2d(tbl2d, vu)) ) {
+			if (p=find_pt2d(tbl2d, vu)) {
 				sprintf(buf, "%g, %g",
 					p->coord[0], p->coord[1]);
 				pl_label(fd, buf);
@@ -254,7 +254,7 @@ struct bu_list *tbl2d;
 			NMG_CK_EDGEUSE( eu );
 
 			for (BU_LIST_FOR(eu, edgeuse, &lu->down_hd)) {
-				if ( (p=find_pt2d(tbl2d,eu->vu_p)) ) {
+				if (p=find_pt2d(tbl2d,eu->vu_p)) {
 					pdv_3move(fd, eu->vu_p->v_p->vg_p->coord);
 
 					sprintf(buf, "%g, %g",
@@ -358,7 +358,7 @@ struct faceuse *fu;
 
 	/* if one of the other vertexuses has been mapped, use that data */
 	for (BU_LIST_FOR(vu_p, vertexuse, &vu->v_p->vu_hd)) {
-		if ( (p = find_pt2d(tbl2d, vu_p)) ) {
+		if (p = find_pt2d(tbl2d, vu_p)) {
 			VMOVE(np->coord, p->coord);
 			return;
 		}
@@ -723,7 +723,7 @@ struct pt2d *pt, *tbl2d;
 struct bu_list *tlist;
 {
 	struct trap *new_trap, *tp;
-	struct edgeuse *upper_edge=NULL, *lower_edge=NULL;
+	struct edgeuse *upper_edge, *lower_edge;
 	struct pt2d *pnext, *plast;
 
 	NMG_CK_TBL2D(tbl2d);
@@ -1148,7 +1148,7 @@ struct vertexuse *vu_p;
 	NMG_CK_VERTEXUSE(vu_p);
 
 	/* if it's already mapped we're outta here! */
-	if ( (p = find_pt2d(tbl2d, vu_p)) ) {
+	if (p = find_pt2d(tbl2d, vu_p)) {
 		if (rt_g.NMG_debug & DEBUG_TRI)
 		    bu_log("%s %d map_new_vertexuse() vertexuse already mapped!\n",
 			__FILE__, __LINE__);
@@ -1348,7 +1348,7 @@ struct faceuse *fu;
 vect_t dir;
 int find_max;
 {
-	struct edgeuse *eu, *keep_eu=NULL, *eu_next;
+	struct edgeuse *eu, *keep_eu, *eu_next;
 	int go_radial_not_mate = 0;
 	double dot_limit;
 	double euleft_dot;
@@ -1464,7 +1464,7 @@ CONST struct bn_tol	*tol;
 {
 	struct vertexuse *vu_first, *vu_last;
 	int max_dir, min_dir;	/* 1: forward -1 reverse */
-	struct edgeuse *eu_first, *eu_last, *eu_p=NULL;
+	struct edgeuse *eu_first, *eu_last, *eu_p;
 
 	NMG_CK_VERTEX(v);
 	NMG_CK_FACEUSE(fu);
@@ -2346,7 +2346,7 @@ struct bu_list *tbl2d, *tlist;
 struct loopuse *lu;
 CONST struct bn_tol *tol;
 {
-	struct pt2d *min, *max, *new, *first=NULL, *prev, *next, *current;
+	struct pt2d *min, *max, *new, *first, *prev, *next, *current;
 	struct edgeuse *eu;
 	int verts=0;
 	int vert_count_sq;	/* XXXXX Hack for catching infinite loop */
@@ -2747,23 +2747,6 @@ triangulate:
 	bu_free((char *)tbl2d, "discard tbl2d");
 
 	return;
-}
-
-void
-nmg_triangulate_shell(s, tol)
-struct shell *s;
-CONST struct bn_tol   *tol;
-{
-	struct faceuse *fu;
-
-	BN_CK_TOL(tol);
-	NMG_CK_SHELL( s );
-
-	for (BU_LIST_FOR(fu, faceuse, &s->fu_hd)) {
-		NMG_CK_FACEUSE(fu);
-		if (fu->orientation == OT_SAME)
-			nmg_triangulate_fu(fu, tol);
-	}
 }
 
 void

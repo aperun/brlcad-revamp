@@ -53,6 +53,10 @@
 static const char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
+#if defined(IRIX) && IRIX==5
+#define	_BSD_COMPAT
+#endif
+
 #include "conf.h"
 
 #include <stdio.h>
@@ -68,8 +72,6 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 # include <varargs.h>
 #endif
 
-#include <sys/time.h>		/* For struct timeval */
-
 #if defined(BSD) && !defined(CRAY2)
 #	include <syslog.h>
 #endif
@@ -82,6 +84,8 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include <strings.h>
 #endif
 #include <sys/wait.h>
+
+#include <sys/time.h>		/* For struct timeval */
 
 #include "machine.h"
 #include "externs.h"		/* For malloc, getopt */
@@ -408,7 +412,7 @@ main_loop()
 		tv.tv_sec = 60L;
 		tv.tv_usec = 0L;
 		if( (select( max_fd+1, &infds, (fd_set *)0, (fd_set *)0, 
-			     &tv )) == 0 ) {
+			     (void *)&tv )) == 0 ) {
 			/* Process fb events while waiting for client */
 			/*printf("select timeout waiting for client\n");*/
 			if(fb_server_fbp) fb_poll(fb_server_fbp);
@@ -480,8 +484,7 @@ int	fd;
 #if defined(SO_RCVBUF)
 	/* try to set our buffers up larger */
 	{
-		int	m = 0;
-		int	n = 0;
+		int	m, n;
 		int	val;
 		int	size;
 

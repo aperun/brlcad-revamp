@@ -14,27 +14,20 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSrefract[] = "@(#)$Header$ (BRL)";
+static char RCSrefract[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 #include "machine.h"
 #include "vmath.h"
 #include "mater.h"
 #include "raytrace.h"
-#include "rtprivate.h"
+#include "./rdebug.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "plot3.h"
-
-extern int viewshade(struct application *ap,
-		     register const struct partition *pp,
-		     register struct shadework *swp);
-
 
 int	max_ireflect = 5;	/* Maximum internal reflection level */
 int	max_bounces = 5;	/* Maximum recursion level */
@@ -60,29 +53,37 @@ extern vect_t background;
  *			R R _ R E N D E R
  */
 int
-rr_render(register struct application *ap,
-	  struct partition	*pp,
-	  struct shadework	*swp)
+rr_render( ap, pp, swp )
+register struct application *ap;
+struct partition	*pp;
+struct shadework	*swp;
 {
 	struct application sub_ap;
 	vect_t	work;
 	vect_t	incident_dir;
-	fastf_t	shader_fract;
-	fastf_t	reflect;
-	fastf_t	transmit;
-
 #if RT_MULTISPECTRAL
 	struct bn_tabdata	*ms_filter_color = BN_TABDATA_NULL;
-	struct bn_tabdata	*ms_shader_color = BN_TABDATA_NULL;
-	struct bn_tabdata	*ms_reflect_color = BN_TABDATA_NULL;
-	struct bn_tabdata	*ms_transmit_color = BN_TABDATA_NULL;
 #else
 	vect_t	filter_color;
+#endif
+	fastf_t	shader_fract;
+#if RT_MULTISPECTRAL
+	struct bn_tabdata	*ms_shader_color = BN_TABDATA_NULL;
+#else
 	vect_t	shader_color;
+#endif
+	fastf_t	reflect;
+#if RT_MULTISPECTRAL
+	struct bn_tabdata	*ms_reflect_color = BN_TABDATA_NULL;
+#else
 	vect_t	reflect_color;
+#endif
+	fastf_t	transmit;
+#if RT_MULTISPECTRAL
+	struct bn_tabdata	*ms_transmit_color = BN_TABDATA_NULL;
+#else
 	vect_t	transmit_color;
 #endif
-
 	fastf_t	attenuation;
 	vect_t	to_eye;
 	int	code;

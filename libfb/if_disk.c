@@ -14,15 +14,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-       
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
 #else

@@ -53,19 +53,13 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char bn_RCSmat[] = "@(#)$Header$ (ARL)";
+static char bn_RCSmat[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif 
 
 #include "machine.h"
 #include "bu.h"
@@ -328,10 +322,10 @@ CONST mat_t	input;
 	LOCAL int	z[4];			/* Temporary */
 	LOCAL fastf_t	b[4];			/* Temporary */
 	LOCAL fastf_t	c[4];			/* Temporary */
-	
+
 	bn_mat_copy( output, input );	/* Duplicate */
 
-        /* Initialization */
+	/* Initialization */
 	for( j = 0; j < 4; j++ )
 		z[j] = j;
 
@@ -1190,7 +1184,11 @@ int
 bn_mat_is_identity( m )
 CONST mat_t	m;
 {
-	return (! memcmp(m, bn_mat_identity, sizeof(mat_t)));
+	if( m[0]  != 1 || m[1]  != 0 || m[2]  != 0 || m[3]  != 0 )  return 0;
+	if( m[4]  != 0 || m[5]  != 1 || m[6]  != 0 || m[7]  != 0 )  return 0;
+	if( m[8]  != 0 || m[9]  != 0 || m[10] != 1 || m[11] != 0 )  return 0;
+	if( m[12] != 0 || m[13] != 0 || m[14] != 0 || m[15] != 1 )  return 0;
+	return 1;
 }
 
 /*	B N _ M A T _ A R B _ R O T

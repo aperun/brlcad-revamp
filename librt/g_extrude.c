@@ -38,27 +38,24 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSextrude[] = "@(#)$Header$ (BRL)";
+static char RCSextrude[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include "tcl.h"
 #include "machine.h"
 #include "vmath.h"
 #include "db.h"
 #include "nmg.h"
-#include "rtgeom.h"
 #include "raytrace.h"
+#include "rtgeom.h"
 #include "./debug.h"
 
+/* From g_sketch.c */
+BU_EXTERN( struct rt_sketch_internal *rt_copy_sketch, (CONST struct rt_sketch_internal *sketch_ip ) );
 
 struct extrude_specific {
 	mat_t rot, irot;	/* rotation and translation to get extrsuion vector in +z direction with V at origin */
@@ -115,7 +112,7 @@ struct rt_i		*rtip;
 	struct rt_sketch_internal *skt;
 	LOCAL vect_t tmp, tmp2;
 	fastf_t tmp_f;
-	int i;
+	int i, curve_no;
 	int vert_count;
 	int curr_vert;
 	
@@ -337,54 +334,6 @@ fastf_t *vx, *vy;
 }
 
 int
-isect_line2_ellipse( dist, ray_start, ray_dir, center, ra, rb )
-fastf_t dist[2];
-point_t ray_start, center;
-vect_t ray_dir, ra, rb;
-{
-	fastf_t a, b, c;
-	point2d_t pmc;
-	fastf_t pmcda, pmcdb;
-	fastf_t ra_sq, rb_sq;
-	fastf_t ra_4, rb_4;
-	fastf_t dda, ddb;
-	fastf_t disc;
-
-	V2SUB2( pmc, ray_start, center );
-	pmcda = V2DOT( pmc, ra );
-	pmcdb = V2DOT( pmc, rb );
-	ra_sq = V2DOT( ra, ra );
-	ra_4 = ra_sq * ra_sq;
-	rb_sq = V2DOT( rb, rb );
-	rb_4 = rb_sq * rb_sq;
-	if( ra_4 < SMALL_FASTF || rb_4 < SMALL_FASTF )
-		bu_bomb( "ERROR: isect_line2_ellipse: semi-axis length is too small!!!\n" );
-
-	dda = V2DOT( ray_dir, ra );
-	ddb = V2DOT( ray_dir, rb );
-
-	a = dda*dda/ra_4 + ddb*ddb/rb_4;
-	b = 2.0 * (pmcda*dda/ra_4 + pmcdb*ddb/rb_4);
-	c = pmcda*pmcda/ra_4 + pmcdb*pmcdb/rb_4 - 1.0;
-
-	disc = b*b - 4.0*a*c;
-
-	if( disc < 0.0 )
-		return( 0 );
-
-	if( disc == 0.0 )
-	{
-		dist[0] = -b/(2.0*a);
-		return( 1 );
-	}
-
-	dist[0] = (-b - sqrt( disc )) / (2.0*a);
-	dist[1] = (-b + sqrt( disc )) / (2.0*a);
-	return( 2 );
-}
-
-
-int
 isect_line_earc( dist, ray_start, ray_dir, center, ra, rb, norm, start, end, orientation )
 fastf_t dist[2];
 point_t ray_start;
@@ -541,6 +490,52 @@ int orientation;	/* 0 -> ccw, !0 -> cw */
 	return( dist_count );
 }
 
+int
+isect_line2_ellipse( dist, ray_start, ray_dir, center, ra, rb )
+fastf_t dist[2];
+point_t ray_start, center;
+vect_t ray_dir, ra, rb;
+{
+	fastf_t a, b, c;
+	point2d_t pmc;
+	fastf_t pmcda, pmcdb;
+	fastf_t ra_sq, rb_sq;
+	fastf_t ra_4, rb_4;
+	fastf_t dda, ddb;
+	fastf_t disc;
+
+	V2SUB2( pmc, ray_start, center );
+	pmcda = V2DOT( pmc, ra );
+	pmcdb = V2DOT( pmc, rb );
+	ra_sq = V2DOT( ra, ra );
+	ra_4 = ra_sq * ra_sq;
+	rb_sq = V2DOT( rb, rb );
+	rb_4 = rb_sq * rb_sq;
+	if( ra_4 < SMALL_FASTF || rb_4 < SMALL_FASTF )
+		bu_bomb( "ERROR: isect_line2_ellipse: semi-axis length is too small!!!\n" );
+
+	dda = V2DOT( ray_dir, ra );
+	ddb = V2DOT( ray_dir, rb );
+
+	a = dda*dda/ra_4 + ddb*ddb/rb_4;
+	b = 2.0 * (pmcda*dda/ra_4 + pmcdb*ddb/rb_4);
+	c = pmcda*pmcda/ra_4 + pmcdb*pmcdb/rb_4 - 1.0;
+
+	disc = b*b - 4.0*a*c;
+
+	if( disc < 0.0 )
+		return( 0 );
+
+	if( disc == 0.0 )
+	{
+		dist[0] = -b/(2.0*a);
+		return( 1 );
+	}
+
+	dist[0] = (-b - sqrt( disc )) / (2.0*a);
+	dist[1] = (-b + sqrt( disc )) / (2.0*a);
+	return( 2 );
+}
 
 /*
  *  			R T _ E X T R U D E _ S H O T
@@ -562,7 +557,7 @@ struct seg		*seghead;
 {
 	struct extrude_specific *extr=(struct extrude_specific *)stp->st_specific;
 	register int i, j, k;
-	fastf_t dist_top, dist_bottom, to_bottom=0;
+	fastf_t dist_top, dist_bottom, to_bottom;
 	fastf_t dist[2];
 	fastf_t dot_pl1, dir_dot_z;
 	point_t tmp, tmp2;
@@ -571,14 +566,14 @@ struct seg		*seghead;
 	struct hit hits[MAX_HITS];
 	fastf_t dists_before[MAX_HITS];
 	fastf_t dists_after[MAX_HITS];
-	fastf_t *dists=NULL;
-	int dist_count=0;
+	fastf_t *dists;
+	int dist_count;
 	int hit_count=0;
 	int hits_before_bottom=0, hits_after_top=0;
 	int code;
 	int check_inout=0;
 	int top_face=TOP_FACE, bot_face=BOTTOM_FACE;
-	int surfno= -42;
+	int surfno;
 	int free_dists=0;
 
 	crv = &extr->crv;
@@ -642,7 +637,7 @@ struct seg		*seghead;
 	{
 		long *lng=(long *)crv->segments[i];
 		struct line_seg *lsg;
-		struct carc_seg *csg=NULL;
+		struct carc_seg *csg;
 		fastf_t diff;
 
 		if( free_dists )
@@ -1095,7 +1090,7 @@ register struct soltab *stp;
 
 	if( extrude->verts )
 		bu_free( (char *)extrude->verts, "extrude->verts" );
-	rt_curve_free( &(extrude->crv) );
+	rt_curve_free( extrude->crv );
 	bu_free( (char *)extrude, "extrude_specific" );
 }
 
@@ -1120,6 +1115,7 @@ CONST struct bn_tol	*tol;
 {
 	LOCAL struct rt_extrude_internal	*extrude_ip;
 	struct curve			*crv=(struct curve *)NULL;
+	int				curve_no;
 	struct rt_sketch_internal	*sketch_ip;
 	point_t				end_of_h;
 	int				i1, i2, nused1, nused2;
@@ -1220,12 +1216,11 @@ CONST struct bn_tol	*tol;
  *  Apply modeling transformations as well.
  */
 int
-rt_extrude_import( ip, ep, mat, dbip, resp )
+rt_extrude_import( ip, ep, mat, dbip )
 struct rt_db_internal		*ip;
 CONST struct bu_external	*ep;
 register CONST mat_t		mat;
 CONST struct db_i		*dbip;
-struct resource			*resp;
 {
 	LOCAL struct rt_extrude_internal	*extrude_ip;
 	struct rt_db_internal			tmp_ip;
@@ -1243,7 +1238,7 @@ struct resource			*resp;
 		return(-1);
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_EXTRUDE;
 	ip->idb_meth = &rt_functab[ID_EXTRUDE];
 	ip->idb_ptr = bu_malloc( sizeof(struct rt_extrude_internal), "rt_extrude_internal");
@@ -1261,7 +1256,7 @@ struct resource			*resp;
 	}
 	else
 	{
-		if( rt_db_get_internal( &tmp_ip, dp, dbip, bn_mat_identity, resp ) != ID_SKETCH )
+		if( rt_db_get_internal( &tmp_ip, dp, dbip, bn_mat_identity ) != ID_SKETCH )
 		{
 			bu_log( "rt_extrude_import: ERROR: Cannot import sketch (%.16s) for extrusion (%.16s)\n",
 				sketch_name, rp->extr.ex_name );
@@ -1272,19 +1267,18 @@ struct resource			*resp;
 			extrude_ip->skt = (struct rt_sketch_internal *)tmp_ip.idb_ptr;
 	}
 
-	ntohd( (unsigned char *)tmp_vec, rp->extr.ex_V, ELEMENTS_PER_VECT );
+	ntohd( (unsigned char *)tmp_vec, rp->extr.ex_V, 3 );
 	MAT4X3PNT( extrude_ip->V, mat, tmp_vec );
-	ntohd( (unsigned char *)tmp_vec, rp->extr.ex_h, ELEMENTS_PER_VECT );
+	ntohd( (unsigned char *)tmp_vec, rp->extr.ex_h, 3 );
 	MAT4X3VEC( extrude_ip->h, mat, tmp_vec );
-	ntohd( (unsigned char *)tmp_vec, rp->extr.ex_uvec, ELEMENTS_PER_VECT );
+	ntohd( (unsigned char *)tmp_vec, rp->extr.ex_uvec, 3 );
 	MAT4X3VEC( extrude_ip->u_vec, mat, tmp_vec );
-	ntohd( (unsigned char *)tmp_vec, rp->extr.ex_vvec, ELEMENTS_PER_VECT );
+	ntohd( (unsigned char *)tmp_vec, rp->extr.ex_vvec, 3 );
 	MAT4X3VEC( extrude_ip->v_vec, mat, tmp_vec );
 	extrude_ip->keypoint = bu_glong( rp->extr.ex_key );
 
 	ptr = (char *)rp;
 	ptr += sizeof( struct extr_rec );
-	extrude_ip->sketch_name = (char *)bu_calloc( 17, sizeof( char ), "Extrude sketch name" );
 	strncpy( extrude_ip->sketch_name, ptr, 16 );
 
 	return(0);			/* OK */
@@ -1312,7 +1306,7 @@ CONST struct db_i		*dbip;
 	extrude_ip = (struct rt_extrude_internal *)ip->idb_ptr;
 	RT_EXTRUDE_CK_MAGIC(extrude_ip);
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 	ep->ext_nbytes = 2*sizeof( union record );
 	ep->ext_buf = (genptr_t)bu_calloc( 1, ep->ext_nbytes, "extrusion external");
 	rec = (union record *)ep->ext_buf;
@@ -1320,130 +1314,22 @@ CONST struct db_i		*dbip;
 	rec->extr.ex_id = DBID_EXTR;
 
 	VSCALE( tmp_vec, extrude_ip->V, local2mm );
-	htond( rec->extr.ex_V, (unsigned char *)tmp_vec, ELEMENTS_PER_VECT );
+	htond( rec->extr.ex_V, (unsigned char *)tmp_vec, 3 );
 	VSCALE( tmp_vec, extrude_ip->h, local2mm );
-	htond( rec->extr.ex_h, (unsigned char *)tmp_vec, ELEMENTS_PER_VECT );
+	htond( rec->extr.ex_h, (unsigned char *)tmp_vec, 3 );
 	VSCALE( tmp_vec, extrude_ip->u_vec, local2mm );
-	htond( rec->extr.ex_uvec, (unsigned char *)tmp_vec, ELEMENTS_PER_VECT );
+	htond( rec->extr.ex_uvec, (unsigned char *)tmp_vec, 3 );
 	VSCALE( tmp_vec, extrude_ip->v_vec, local2mm );
-	htond( rec->extr.ex_vvec, (unsigned char *)tmp_vec, ELEMENTS_PER_VECT );
+	htond( rec->extr.ex_vvec, (unsigned char *)tmp_vec, 3 );
 	bu_plong( rec->extr.ex_key, extrude_ip->keypoint );
 	bu_plong( rec->extr.ex_count, 1 );
 
 	ptr = (unsigned char *)rec;
 	ptr += sizeof( struct extr_rec );
 
-	strcpy( (char *)ptr, extrude_ip->sketch_name );
+	strncpy( (char *)ptr, extrude_ip->sketch_name, 16 );
 
 	return(0);
-}
-
-
-/*
- *			R T _ E X T R U D E _ E X P O R T 5
- *
- *  The name is added by the caller, in the usual place.
- */
-int
-rt_extrude_export5( ep, ip, local2mm, dbip )
-struct bu_external		*ep;
-CONST struct rt_db_internal	*ip;
-double				local2mm;
-CONST struct db_i		*dbip;
-{
-	struct rt_extrude_internal	*extrude_ip;
-	vect_t				tmp_vec[4];
-	unsigned char			*ptr;
-
-	RT_CK_DB_INTERNAL(ip);
-	if( ip->idb_type != ID_EXTRUDE )  return(-1);
-
-	extrude_ip = (struct rt_extrude_internal *)ip->idb_ptr;
-	RT_EXTRUDE_CK_MAGIC(extrude_ip);
-
-	BU_CK_EXTERNAL(ep);
-	ep->ext_nbytes = 4 * ELEMENTS_PER_VECT * SIZEOF_NETWORK_DOUBLE + SIZEOF_NETWORK_LONG + strlen( extrude_ip->sketch_name ) + 1;
-	ep->ext_buf = (genptr_t)bu_calloc( 1, ep->ext_nbytes, "extrusion external");
-	ptr = (unsigned char *)ep->ext_buf;
-
-	VSCALE( tmp_vec[0], extrude_ip->V, local2mm );
-	VSCALE( tmp_vec[1], extrude_ip->h, local2mm );
-	VSCALE( tmp_vec[2], extrude_ip->u_vec, local2mm );
-	VSCALE( tmp_vec[3], extrude_ip->v_vec, local2mm );
-	htond( ptr, (unsigned char *)tmp_vec, ELEMENTS_PER_VECT*4 );
-	ptr += ELEMENTS_PER_VECT * 4 * SIZEOF_NETWORK_DOUBLE;
-	bu_plong( ptr, extrude_ip->keypoint );
-	ptr += SIZEOF_NETWORK_LONG;
-	strcpy( (char *)ptr, extrude_ip->sketch_name );
-
-	return(0);
-}
-
-
-/*
- *			R T _ E X T R U D E _ I M P O R T 5
- *
- *  Import an EXTRUDE from the database format to the internal format.
- *  Apply modeling transformations as well.
- */
-int
-rt_extrude_import5(
-	struct rt_db_internal		*ip,
-	CONST struct bu_external	*ep,
-	register CONST mat_t		mat,
-	CONST struct db_i		*dbip,
-	struct resource			*resp)
-{
-	LOCAL struct rt_extrude_internal	*extrude_ip;
-	struct rt_db_internal			tmp_ip;
-	struct directory			*dp;
-	char					*sketch_name;
-	unsigned char				*ptr;
-	point_t					tmp_vec[4];
-
-	BU_CK_EXTERNAL( ep );
-
-	RT_CK_DB_INTERNAL( ip );
-	ip->idb_type = ID_EXTRUDE;
-	ip->idb_meth = &rt_functab[ID_EXTRUDE];
-	ip->idb_ptr = bu_malloc( sizeof(struct rt_extrude_internal), "rt_extrude_internal");
-	extrude_ip = (struct rt_extrude_internal *)ip->idb_ptr;
-	extrude_ip->magic = RT_EXTRUDE_INTERNAL_MAGIC;
-
-	ptr = (unsigned char *)ep->ext_buf;
-	sketch_name = (char *)ptr + ELEMENTS_PER_VECT*4*SIZEOF_NETWORK_DOUBLE + SIZEOF_NETWORK_LONG;
-	if( !dbip )
-		extrude_ip->skt = (struct rt_sketch_internal *)NULL;
-	else if( (dp=db_lookup( dbip, sketch_name, LOOKUP_NOISY)) == DIR_NULL )
-	{
-		bu_log( "rt_extrude_import: ERROR: Cannot find sketch (%s) for extrusion\n",
-			sketch_name );
-		extrude_ip->skt = (struct rt_sketch_internal *)NULL;
-	}
-	else
-	{
-		if( rt_db_get_internal( &tmp_ip, dp, dbip, bn_mat_identity, resp ) != ID_SKETCH )
-		{
-			bu_log( "rt_extrude_import: ERROR: Cannot import sketch (%s) for extrusion\n",
-				sketch_name );
-			bu_free( ip->idb_ptr, "extrusion" );
-			return( -1 );
-		}
-		else
-			extrude_ip->skt = (struct rt_sketch_internal *)tmp_ip.idb_ptr;
-	}
-
-	ntohd( (unsigned char *)tmp_vec, ptr, ELEMENTS_PER_VECT*4 );
-	MAT4X3PNT( extrude_ip->V, mat, tmp_vec[0] );
-	MAT4X3VEC( extrude_ip->h, mat, tmp_vec[1] );
-	MAT4X3VEC( extrude_ip->u_vec, mat, tmp_vec[2] );
-	MAT4X3VEC( extrude_ip->v_vec, mat, tmp_vec[3] );
-	ptr += ELEMENTS_PER_VECT * 4 * SIZEOF_NETWORK_DOUBLE;
-	extrude_ip->keypoint = bu_glong( ptr );
-	ptr += SIZEOF_NETWORK_LONG;
-	extrude_ip->sketch_name = strdup( (const char *)ptr );
-
-	return(0);			/* OK */
 }
 
 /*
@@ -1478,7 +1364,7 @@ double			mm2local;
 		V3ARGS( u ),
 		V3ARGS( v ) );
 	bu_vls_strcat( str, buf );
-	sprintf( buf, "\tsketch name: %s\n",
+	sprintf( buf, "\tsketch name: %.16s\n",
 		extrude_ip->sketch_name );
 	bu_vls_strcat( str, buf );
 	
@@ -1511,25 +1397,22 @@ struct rt_db_internal	*ip;
 	}
 	extrude_ip->magic = 0;			/* sanity */
 
-	bu_free( extrude_ip->sketch_name, "Extrude sketch_name" );
 	bu_free( (char *)extrude_ip, "extrude ifree" );
 	ip->idb_ptr = GENPTR_NULL;	/* sanity */
 }
 
 int
-rt_extrude_xform(
-	struct rt_db_internal *op,
-	const mat_t mat,
-	struct rt_db_internal *ip,
-	int free,
-	struct db_i *dbip,
-	struct resource *resp)
+rt_extrude_xform( op, mat, ip, free, dbip )
+struct rt_db_internal *op;
+CONST mat_t mat;
+struct rt_db_internal *ip;
+int free;
+struct db_i *dbip;
 {
 	struct rt_extrude_internal	*eip, *eop;
 	point_t tmp_vec;
 
 	RT_CK_DB_INTERNAL( ip );
-	RT_CK_RESOURCE(resp)
 	eip = (struct rt_extrude_internal *)ip->idb_ptr;
 	RT_EXTRUDE_CK_MAGIC( eip );
 
@@ -1541,7 +1424,7 @@ rt_extrude_xform(
 
 	if( op != ip )
 	{
-		RT_CK_DB_INTERNAL( op );
+		RT_INIT_DB_INTERNAL( op );
 		eop = (struct rt_extrude_internal *)bu_malloc( sizeof( struct rt_extrude_internal ), "eop" );
 		eop->magic = RT_EXTRUDE_INTERNAL_MAGIC;
 		op->idb_ptr = (genptr_t)eop;
@@ -1566,7 +1449,8 @@ rt_extrude_xform(
 	{
 		eop->skt = eip->skt;
 		eip->skt = (struct rt_sketch_internal *)NULL;
-		rt_db_free_internal( ip, resp );
+		rt_functab[ip->idb_type].ft_ifree( ip );
+		ip->idb_ptr = (genptr_t) 0;
 	}
 	else if( eip->skt )
 		eop->skt = rt_copy_sketch( eip->skt );

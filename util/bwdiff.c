@@ -19,16 +19,14 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <ctype.h>
 
 #include "machine.h"
-#include "externs.h"
 
 FILE *fp1, *fp2;
 
@@ -48,7 +46,6 @@ void	open_file();
 char usage[] = "\
 Usage: bwdiff [-b -m -g -l -e -n] file1.bw file2.bw (- stdin, . skip)\n";
 
-int
 main( argc, argv )
 int argc; char **argv;
 {

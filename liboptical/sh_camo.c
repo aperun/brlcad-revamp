@@ -21,7 +21,7 @@
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
 #if !defined(M_PI)
 #define M_PI            3.14159265358979323846
@@ -224,7 +224,7 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	/* Optional:  get the matrix which maps model space into
 	 *  "region" or "shader" space
 	 */
-	db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name, &rt_uniresource);
+	db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name);
 
 	/* add the noise-space scaling */
 	bn_mat_idn(tmp);
@@ -369,7 +369,7 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	/* Optional:  get the matrix which maps model space into
 	 *  "region" or "shader" space
 	 */
-	db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name, &rt_uniresource);
+	db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name);
 
 	/* add the noise-space scaling */
 	bn_mat_idn(tmp);

@@ -17,7 +17,7 @@
  *
  */
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -211,7 +211,6 @@ struct bu_list	*sl;
 	show_scripts(sl, "after running them");
 }
 
-int
 main (argc, argv)
 int argc;
 char **argv;
@@ -480,7 +479,6 @@ char **argv;
     }
     else
 	interact(READING_FILE, stdin);
-    return 0;
 }
  
 char	usage[] = "\

@@ -29,7 +29,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -47,11 +47,10 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "tk.h"
 
 #include "machine.h"
-#include "externs.h"
 #include "bu.h"
 #include "vmath.h"
 #include "raytrace.h"
-#include "wdb.h"
+#include "externs.h"
 #include "./ged.h"
 #include "./mged_solid.h"
 #include "./mged_dm.h"
@@ -127,7 +126,7 @@ char	**argv;
 
   CHECK_DBI_NULL;
 
-  if(argc < 1){
+  if(argc < 1 || MAXARGS < argc){
     bu_vls_init(&vls);
     bu_vls_printf(&vls, "help %s", argv[0]);
     Tcl_Eval(interp, bu_vls_addr(&vls));
@@ -239,8 +238,7 @@ char	**argv;
   Tcl_AppendResult(interp, "Display manager free map:\n", (char *)NULL);
   rt_memprint( &(dmp->dm_map) );
 #endif
-
-  bu_log("Database free-storage map:\n");
+  Tcl_AppendResult(interp, "Database free granule map:\n", (char *)NULL);
   rt_memprint( &(dbip->dbi_freep) );
 
   return TCL_OK;
@@ -254,7 +252,7 @@ char	**argv;
  * as a request to print all the names in that category (eg, DIR_SOLID).
  */
 void
-dir_summary(int flag)
+dir_summary(flag)
 {
 	register struct directory *dp;
 	register int i;
@@ -282,12 +280,11 @@ dir_summary(int flag)
 		for( dp = dbip->dbi_Head[i]; dp != DIR_NULL; dp = dp->d_forw )  {
 			if( dp->d_flags & DIR_SOLID )
 				sol++;
-			if( dp->d_flags & DIR_COMB )  {
+			if( dp->d_flags & DIR_COMB )
 				if( dp->d_flags & DIR_REGION )
 					reg++;
 				else
 					comb++;
-			}
 		}
 	}
 	bu_log("Summary:\n");
@@ -363,7 +360,7 @@ char	**argv;
 	  return TCL_OK;
 	}
 
-	db_update_nref( dbip, &rt_uniresource );
+	db_update_nref( dbip );
 	/*
 	 * Find number of possible entries and allocate memory
 	 */
@@ -535,7 +532,7 @@ char **argv;
 
     CHECK_DBI_NULL;
 
-    if(argc < 1){
+    if(argc < 1 || MAXARGS < argc){
       struct bu_vls vls;
 
       bu_vls_init(&vls);
@@ -651,7 +648,7 @@ char	**argv;
 
   CHECK_DBI_NULL;
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -682,7 +679,7 @@ char	**argv;
     (void)signal( SIGINT, sig3);	/* allow interupts */
   else{
     if( comb )
-  	rt_comb_ifree( &intern, &rt_uniresource );
+  	rt_comb_ifree( &intern );
     return TCL_OK;
   }
 
@@ -692,7 +689,7 @@ char	**argv;
       if( !(dp->d_flags & DIR_COMB) )
 	continue;
 
-    	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )
+    	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )
 	{
 		(void)signal( SIGINT, SIG_IGN );
 		TCL_READ_ERR_return;
@@ -701,7 +698,7 @@ char	**argv;
 	for( k=0; k<argc; k++ )
 	    	db_tree_funcleaf( dbip, comb, comb->tree, Find_ref, (genptr_t)argv[k], (genptr_t)dp->d_namep, (genptr_t)sflag );
 
-    	rt_comb_ifree( &intern, &rt_uniresource );
+    	rt_comb_ifree( &intern );
     }
   }
 
@@ -756,7 +753,7 @@ char	**argv;
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
 
-	if(argc < 3){
+	if(argc < 3 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -809,14 +806,14 @@ char	**argv;
 			if( !(dp->d_flags & DIR_COMB) )
 				continue;
 
-			if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )
+			if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )
 				TCL_READ_ERR_return;
 			comb = (struct rt_comb_internal *)intern.idb_ptr;
 
 			for( k=2; k<argc; k++ )
 				db_tree_funcleaf( dbip, comb, comb->tree, Do_prefix,
 					(genptr_t)argv[1], (genptr_t)argv[k], (genptr_t)NULL );
-			if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) )
+			if( rt_db_put_internal( dp, dbip, &intern ) )
 				TCL_WRITE_ERR_return;
 		}
 	}
@@ -837,17 +834,15 @@ struct db_i	*dbip;
 register struct directory *dp;
 genptr_t	ptr;
 {
-	struct rt_wdb	*keepfp = (struct rt_wdb *)ptr;
-	struct bu_external	ext;
-
-	RT_CK_WDB(keepfp);
+	FILE		*keepfp = (FILE *)ptr;
+	struct rt_db_internal	intern;
 
 	if( dp->d_nref++ > 0 )
 		return;		/* already written */
 
-	if( db_get_external( &ext, dp, dbip ) < 0 )
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )
 		READ_ERR_return;
-	if( wdb_export_external( keepfp, &ext, dp->d_namep, dp->d_flags ) < 0 )
+	if( mk_export_fwrite( keepfp, dp->d_namep, intern.idb_ptr, intern.idb_type ) )
 		WRITE_ERR_return;
 }
 
@@ -858,15 +853,15 @@ Tcl_Interp *interp;
 int	argc;
 char	**argv;
 {
-	struct rt_wdb		*keepfp;
+	FILE			*keepfp;
 	register struct directory *dp;
 	struct bu_vls		title;
+	struct bu_vls		units;
 	register int		i;
-	struct db_i		*new_dbip;
 
 	CHECK_DBI_NULL;
 
-	if(argc < 3){
+	if(argc < 3 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -883,16 +878,15 @@ char	**argv;
 	}
 
 	/* Alert user if named file already exists */
-	if( (new_dbip = db_open( argv[1], "w" )) !=  DBI_NULL  &&
-	    (keepfp = wdb_dbopen( new_dbip, RT_WDB_TYPE_DB_DISK ) ) != NULL )  {
-		Tcl_AppendResult(interp, "keep:  appending to '", argv[1],
+	if( (keepfp = fopen( argv[1], "r" ) ) != NULL )  {
+	  Tcl_AppendResult(interp, "keep:  appending to '", argv[1],
 			   "'\n", (char *)NULL);
-	} else {
-		/* Create a new database */
-		if( (keepfp = wdb_fopen( argv[1] ) ) == NULL )  {
-			perror( argv[1] );
-			return TCL_ERROR;
-		}
+	  fclose(keepfp);
+	}
+
+	if( (keepfp = fopen( argv[1], "a" ) ) == NULL )  {
+		perror( argv[1] );
+		return TCL_ERROR;
 	}
 	
 	/* ident record */
@@ -900,14 +894,16 @@ char	**argv;
 	bu_vls_strcat( &title, "Parts of: " );
 	bu_vls_strcat( &title, dbip->dbi_title );
 
-	if( db_update_ident( keepfp->dbip, bu_vls_addr(&title), dbip->dbi_local2base ) < 0 )  {
+	bu_vls_init( &units);
+	
+	if( db_fwrite_ident( keepfp, bu_vls_addr(&title), dbip->dbi_local2base ) < 0 )  {
 		perror("fwrite");
-		Tcl_AppendResult(interp, "db_update_ident() failed\n", (char *)NULL);
-		wdb_close(keepfp);
+		Tcl_AppendResult(interp, "db_fwrite_ident() failed\n", (char *)NULL);
+		fclose(keepfp);
 		bu_vls_free( &title );
+		bu_vls_free( &units );
 		return TCL_ERROR;
 	}
-	bu_vls_free( &title );
 
 	for(i = 2; i < argc; i++) {
 		if( (dp = db_lookup( dbip, argv[i], LOOKUP_NOISY)) == DIR_NULL )
@@ -915,7 +911,9 @@ char	**argv;
 		db_functree( dbip, dp, node_write, node_write, (genptr_t)keepfp );
 	}
 
-	wdb_close(keepfp);
+	fclose(keepfp);
+	bu_vls_free( &title );
+	bu_vls_free( &units );
 
 	return TCL_OK;
 }
@@ -939,7 +937,7 @@ f_tree(clientData, interp, argc, argv)
 
 	CHECK_DBI_NULL;
 
-	if (argc < 2) {
+	if (argc < 2 || MAXARGS < argc) {
 		struct bu_vls vls;
 
 		bu_vls_init(&vls);
@@ -1022,7 +1020,7 @@ printnode(dp, pathpos, prefix, cflag)
 	 *  Process all the arcs (eg, directory members).
 	 */
 
-	if (rt_db_get_internal(&intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource) < 0)
+	if (rt_db_get_internal(&intern, dp, dbip, (fastf_t *)NULL) < 0)
 		READ_ERR_return;
 	comb = (struct rt_comb_internal *)intern.idb_ptr;
 
@@ -1032,7 +1030,7 @@ printnode(dp, pathpos, prefix, cflag)
 		struct rt_tree_array	*rt_tree_array;
 
 		if (comb->tree && db_ck_v4gift_tree(comb->tree) < 0) {
-			db_non_union_push( comb->tree, &rt_uniresource );
+			db_non_union_push(comb->tree);
 			if (db_ck_v4gift_tree(comb->tree) < 0) {
 				Tcl_AppendResult(interp, "Cannot flatten tree for listing\n", (char *)NULL );
 				return;
@@ -1042,9 +1040,7 @@ printnode(dp, pathpos, prefix, cflag)
 		if (node_count > 0) {
 			rt_tree_array = (struct rt_tree_array *)bu_calloc( node_count,
 									   sizeof( struct rt_tree_array ), "tree list" );
-			actual_count = (struct rt_tree_array *)db_flatten_tree(
-				rt_tree_array, comb->tree, OP_UNION, 0,
-				&rt_uniresource ) - rt_tree_array;
+			actual_count = (struct rt_tree_array *)db_flatten_tree( rt_tree_array, comb->tree, OP_UNION ) - rt_tree_array;
 			if (actual_count > node_count)
 				bu_bomb("rt_comb_v4_export() array overflow!");
 			if (actual_count < node_count)
@@ -1088,7 +1084,8 @@ printnode(dp, pathpos, prefix, cflag)
 		bu_free((char *)rt_tree_array, "printnode: rt_tree_array");
 	}
 
-	rt_comb_ifree( &intern, &rt_uniresource );
+end:
+	rt_comb_ifree( &intern );
 }
 
 
@@ -1172,9 +1169,9 @@ char	**argv;
 	}
 
 	/* Change name in the file */
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )
 		TCL_READ_ERR_return;
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 ) {
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 ) {
 		TCL_WRITE_ERR_return;
 	}
 
@@ -1190,7 +1187,7 @@ char	**argv;
 			if( !(dp->d_flags & DIR_COMB) )
 				continue;
 
-			if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )
+			if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )
 				continue;
 			comb = (struct rt_comb_internal *)intern.idb_ptr;
 
@@ -1229,15 +1226,15 @@ char	**argv;
 
 			if( changed )
 			{
-				if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) )
+				if( rt_db_put_internal( dp, dbip, &intern ) )
 				{
 					bu_ptbl_free( &stack );
-					rt_comb_ifree( &intern, &rt_uniresource );
+					rt_comb_ifree( &intern );
 					TCL_WRITE_ERR_return;
 				}
 			}
 			else
-				rt_comb_ifree( &intern, &rt_uniresource );
+				rt_comb_ifree( &intern );
 		}
 	}
 	bu_ptbl_free( &stack );
@@ -1252,11 +1249,11 @@ char	**argv;
  *
  */
 int
-f_killall(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_killall(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	register int	i,k;
 	register struct directory *dp;
@@ -1267,7 +1264,7 @@ f_killall(
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
 
-	if(argc < 2){
+	if(argc < 2 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -1292,7 +1289,7 @@ f_killall(
 			if( !(dp->d_flags & DIR_COMB) )
 				continue;
 
-			if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+			if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 				Tcl_AppendResult(interp, "rt_db_get_internal(", dp->d_namep,
 					") failure", (char *)NULL );
 				ret = TCL_ERROR;
@@ -1304,7 +1301,7 @@ f_killall(
 			for( k=1; k<argc; k++ )  {
 				int	code;
 
-				code = db_tree_del_dbleaf( &(comb->tree), argv[k], &rt_uniresource );
+				code = db_tree_del_dbleaf( &(comb->tree), argv[k] );
 				if( code == -1 )  continue;	/* not found */
 				if( code == -2 )  continue;	/* empty tree */
 				if( code < 0 )  {
@@ -1319,7 +1316,7 @@ f_killall(
 				}
 			}
 
-			if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+			if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 				Tcl_AppendResult(interp, "ERROR: Unable to write new combination into database.\n", (char *)NULL);
 				ret = TCL_ERROR;
 				continue;
@@ -1346,11 +1343,11 @@ f_killall(
  *
  */
 int
-f_killtree(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_killtree(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	register struct directory *dp;
 	register int i;
@@ -1358,7 +1355,7 @@ f_killtree(
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
 
-	if(argc < 2){
+	if(argc < 2 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);

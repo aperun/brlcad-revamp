@@ -25,7 +25,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -46,6 +46,7 @@ static const char RCSid[] = "$Header$";
 #include "rtgeom.h"
 #include "raytrace.h"
 #include "wdb.h"
+#include "../librt/debug.h"
 #include "regex.h"
 
 extern char *optarg;
@@ -61,6 +62,7 @@ static char *brlcad_file;	/* name of output file */
 static char ret_name[NAMESIZE]; /* unique name built by Build_unique_name() */
 static char forced_name[NAME_LENGTH+1];	/* name specified on command line */
 static int stl_format=0;	/* Flag, non-zero indocates raw Stereolithography format input */
+static int polysolid=1;		/* Flag for polysolid output rather than NMG's */
 static int solid_count=0;	/* count of solids converted */
 static struct bn_tol tol;	/* Tolerance structure */
 static int id_no=1000;		/* Ident numbers */
@@ -70,9 +72,7 @@ static int air_no=1;		/* Air numbers */
 static int debug=0;		/* Debug flag */
 static int cut_count=0;		/* count of assembly cut HAF solids created */
 static int do_regex=0;		/* flag to indicate if 'u' option is in effect */
-#if 0
 static int do_simplify=0;	/* flag to try to simplify solids */
-#endif
 static regex_t reg_cmp;		/* compiled regular expression */
 static char *proe_usage="%s [-darS] [-i initial_ident] [-I constant_ident] [-m material_code] [-u reg_exp] [-x rt_debug_flag] proe_file.brl output.g\n\
 	where proe_file.brl is the output from Pro/Engineer's BRL-CAD EXPORT option\n\
@@ -105,7 +105,7 @@ static char *stl_usage="%s [-da] [-N forced_name] [-i initial_ident] [-I constan
 	The -x option specifies an RT debug flags (see cad/librt/debug.h).\n";
 static char *usage;
 static FILE *fd_in;		/* input file (from Pro/E) */
-static struct rt_wdb *fd_out;	/* Resulting BRL-CAD file */
+static FILE *fd_out;		/* Resulting BRL-CAD file */
 static struct bu_ptbl null_parts; /* Table of NULL solids */
 static float conv_factor=1.0;	/* conversion factor from model units to mm */
 static int top_level=1;		/* flag to catch top level assembly or part */
@@ -469,7 +469,7 @@ char line[MAX_LINE_LEN];
 			brlcad_name = Get_unique_name( memb_name , memb_obj , PART_TYPE );
 			if( debug )
 				bu_log( "\tmember (%s)\n" , brlcad_name );
-			wmem = mk_addmember( brlcad_name , &head.l , WMOP_UNION );
+			wmem = mk_addmember( brlcad_name , &head , WMOP_UNION );
 		}
 		else if( !strncmp( &line1[start] , "matrix" , 6 ) || !strncmp( &line1[start] , "MATRIX" , 6 ) )
 		{
@@ -664,7 +664,7 @@ point_t min, max;
 			else
 			{
 				/* Add this cut to the region */
-				wmem = mk_addmember( ptr->solid_name, &(head->l),
+				wmem = mk_addmember( ptr->solid_name, head,
 						WMOP_SUBTRACT );
 
 				if( top_level && do_reorient )
@@ -754,6 +754,7 @@ char line[MAX_LINE_LEN];
 	char name[NAME_LENGTH + 1];
 	unsigned int obj=0;
 	char *solid_name;
+	int tmp_count;
 	int start;
 	int i;
 	int face_count=0;
@@ -764,8 +765,9 @@ char line[MAX_LINE_LEN];
 	char *brlcad_name;
 	struct wmember head;
 	struct wmember *wmem;
-	vect_t normal={0,0,0};
+	vect_t normal;
 	int solid_in_region=0;
+	int solid_is_written=0;
 	point_t part_max,part_min;	/* Part RPP */
 
 	if( rt_g.debug & DEBUG_MEM_FULL )
@@ -977,7 +979,6 @@ char line[MAX_LINE_LEN];
 				bu_log( "Making Face:\n" );
 				for( n=0 ; n<3; n++ )
 					bu_log( "\tvertex #%d: ( %g %g %g )\n", tmp_face[n], V3ARGS( &bot_verts[3*tmp_face[n]] ) );
-				VPRINT(" normal", normal);
 			}
 
 			Add_face( tmp_face );
@@ -987,7 +988,7 @@ char line[MAX_LINE_LEN];
 		{
 			if( face_count )
 			{
-				wmem = mk_addmember( solid_name , &head.l , WMOP_UNION );
+				wmem = mk_addmember( solid_name , &head , WMOP_UNION );
 				if( top_level && do_reorient )
 				{
 					/* apply re_orient transformation here */
@@ -1032,7 +1033,7 @@ char line[MAX_LINE_LEN];
 
 	if( face_count && !solid_in_region )
 	{
-		wmem = mk_addmember( solid_name , &head.l , WMOP_UNION );
+		wmem = mk_addmember( solid_name , &head , WMOP_UNION );
 		if( top_level && do_reorient )
 		{
 			/* apply re_orient transformation here */
@@ -1063,14 +1064,14 @@ char line[MAX_LINE_LEN];
 			mk_lrcomb( fd_out, brlcad_name, &head, 1, (char *)NULL, (char *)NULL,
 			color, const_id, 0, mat_code, 100, 0 );
 			if( stl_format && face_count )
-				(void)mk_addmember( brlcad_name, &all_head.l, WMOP_UNION );
+				(void)mk_addmember( brlcad_name, &all_head, WMOP_UNION );
 		}
 		else
 		{
 			mk_lrcomb( fd_out, brlcad_name, &head, 1, (char *)NULL, (char *)NULL,
 			color, id_no, 0, mat_code, 100, 0 );
 			if( stl_format && face_count )
-				(void)mk_addmember( brlcad_name, &all_head.l, WMOP_UNION );
+				(void)mk_addmember( brlcad_name, &all_head, WMOP_UNION );
 			id_no++;
 		}
 	}
@@ -1086,7 +1087,6 @@ char line[MAX_LINE_LEN];
 
 	return;
 
-#if 0
 empty_model:
 	{
 		char *save_name;
@@ -1098,7 +1098,7 @@ empty_model:
 		bu_ptbl_ins( &null_parts, (long *)save_name );
 		return;
 	}
-#endif
+
 }
 
 static void
@@ -1134,7 +1134,6 @@ Rm_nulls()
 	struct db_i *dbip;
 	int i;	
 
-/* XXX you can just use existing fd_out->dbip here. */
 	dbip = db_open( brlcad_file, "rw" );
 	if( dbip == DBI_NULL )
 	{
@@ -1155,8 +1154,7 @@ Rm_nulls()
 		}
 	}
 
-	db_dirbuild( dbip );
-
+	db_scan(dbip, (int (*)())db_diradd, 1, NULL);
 	for( i=0 ; i<RT_DBNHASH ; i++ )
 	{
 		struct directory *dp;
@@ -1174,7 +1172,8 @@ Rm_nulls()
 			if( dp->d_flags & DIR_SOLID )
 				continue;
 
-			if( rt_db_get_internal( &intern, dp, dbip, (matp_t)NULL, &rt_uniresource ) < 1 )
+top:
+			if( rt_db_get_internal( &intern, dp, dbip, (matp_t)NULL ) < 1 )
 			{
 				bu_log( "Cannot get internal form of combination %s\n", dp->d_namep );
 				continue;
@@ -1183,7 +1182,7 @@ Rm_nulls()
 			RT_CK_COMB( comb );
 			if( comb->tree && db_ck_v4gift_tree( comb->tree ) < 0 )
 			{
-				db_non_union_push( comb->tree , &rt_uniresource);
+				db_non_union_push( comb->tree );
 				if( db_ck_v4gift_tree( comb->tree ) < 0 )
 				{
 					bu_log( "Cannot flatten tree (%s) for editing\n", dp->d_namep );
@@ -1195,8 +1194,9 @@ Rm_nulls()
 			{
 				tree_list = (struct rt_tree_array *)bu_calloc( node_count,
 					sizeof( struct rt_tree_array ), "tree list" );
-				actual_count = (struct rt_tree_array *)db_flatten_tree( tree_list, comb->tree, OP_UNION, 0, &rt_uniresource ) - tree_list;
-				BU_ASSERT_LONG( actual_count, ==, node_count );
+				actual_count = (struct rt_tree_array *)db_flatten_tree( tree_list, comb->tree, OP_UNION ) - tree_list;
+				if( actual_count > node_count )  bu_bomb("Rm_nulls() array overflow!");
+				if( actual_count < node_count )  bu_log("WARNING Rm_nulls() array underflow! %d < %d", actual_count, node_count);
 			}
 			else
 			{
@@ -1228,7 +1228,7 @@ Rm_nulls()
 						bu_log( "Deleting reference to null part (%s) from combination %s\n",
 							tree_list[j].tl_tree->tr_l.tl_name, dp->d_namep );
 
-					db_free_tree( tree_list[j].tl_tree , &rt_uniresource);
+					db_free_tree( tree_list[j].tl_tree );
 
 					for( k=j+1 ; k<actual_count ; k++ )
 						tree_list[k-1] = tree_list[k]; /* struct copy */
@@ -1242,18 +1242,33 @@ Rm_nulls()
 			if( changed )
 			{
 				char name[NAMESIZE+1];
+				int flags;
 
 				strncpy( name, dp->d_namep, NAMESIZE );
+				flags = dp->d_flags;
 
 				if( actual_count )
-					comb->tree = (union tree *)db_mkgift_tree( tree_list, actual_count, &rt_uniresource );
+					comb->tree = (union tree *)db_mkgift_tree( tree_list, actual_count, (struct db_tree_state *)NULL );
 				else
 					comb->tree = (union tree *)NULL;
 
-				if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )
+				if( db_delete( dbip, dp ) || db_dirdelete( dbip, dp ) )
+				{
+					bu_log( "Failed to delete combination (%s)\n", dp->d_namep );
+					rt_comb_ifree( &intern );
+					continue;
+				}
+				if( (dp=db_diradd( dbip, name, -1, 0, flags, NULL)) == DIR_NULL )
+				{
+					bu_log( "Could not add modified '%s' to directory\n", dp->d_namep );
+					rt_comb_ifree( &intern );
+					continue;
+				}
+
+				if( rt_db_put_internal( dp, dbip, &intern ) < 0 )
 				{
 					bu_log( "Unable to write modified combination '%s' to database\n", dp->d_namep );
-					rt_comb_ifree( &intern , &rt_uniresource);
+					rt_comb_ifree( &intern );
 					continue;
 				}
 			}
@@ -1362,19 +1377,15 @@ char	*argv[];
 		case 'r':
 			do_reorient = 0;
 			break;
-#if 0
 		case 's':
 			do_simplify = 1;
 			break;
-#endif
 		default:
 			bu_log( usage, argv[0]);
 			exit(1);
 			break;
 		}
 	}
-
-	rt_init_resource( &rt_uniresource, 0, NULL );
 
 	input_file = argv[optind];
 	if( (fd_in=fopen( input_file, "r")) == NULL )
@@ -1385,7 +1396,7 @@ char	*argv[];
 	}
 	optind++;
 	brlcad_file = argv[optind];
-	if( (fd_out=wdb_fopen( brlcad_file)) == NULL )
+	if( (fd_out=fopen( brlcad_file, "w")) == NULL )
 	{
 		bu_log( "Cannot open BRL-CAD file (%s)\n" , brlcad_file );
 		perror( argv[0] );
@@ -1411,9 +1422,8 @@ char	*argv[];
 	}
 
 	fclose( fd_in );
-	wdb_close( fd_out );
+	fclose( fd_out );
 
 	/* Remove references to null parts */
 	Rm_nulls();
-	return 0;
 }

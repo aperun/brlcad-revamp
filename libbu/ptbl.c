@@ -21,18 +21,13 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char libbu_ptbl_RCSid[] = "@(#)$Header$ (ARL)";
+static char libbu_ptbl_RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 #include <stdio.h>
 #include "machine.h"
 #include "bu.h"
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 
 /*
  *			B U _ P T B L _ I N I T

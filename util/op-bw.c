@@ -21,7 +21,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 # include <stdio.h>
@@ -95,7 +95,6 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main( argc, argv )
 int	argc;
 char	**argv;
@@ -181,7 +180,6 @@ doit()
 	return 0;
 }
 #else
-int
 main()
 {
 	fprintf( stderr, "op-bw: this is a vax specific program\n" );

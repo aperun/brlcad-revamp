@@ -16,7 +16,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -118,7 +118,6 @@ Window	win;
 GC	gc;
 XFontStruct *fontstruct;
 
-int
 main( argc, argv )
 int	argc;
 char	**argv;

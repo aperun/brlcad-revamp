@@ -52,12 +52,11 @@
  *		adjacency chain includes all memory, allocated plus free.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 #include "machine.h"
 #include "externs.h"
@@ -684,7 +683,7 @@ register struct rt_pm_res *pmem;
 	register char *p;
 
 	size *= num;
-	if ( (p = rt_pmalloc((long)size, pmem)) )  {
+	if (p = rt_pmalloc((long)size, pmem))  {
 #ifdef BSD
 		bzero(p, size);
 #else

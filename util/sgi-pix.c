@@ -14,7 +14,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -43,7 +43,9 @@ struct cmap {
 	unsigned char blu;
 } cmap[4096];
 
-int
+static char usage[] = "\
+Usage: sgi-pix [x1 x2 y1 y2] [outfile]\n";
+
 main(argc,argv)
 int argc;
 char **argv;

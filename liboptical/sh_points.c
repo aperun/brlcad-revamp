@@ -23,7 +23,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -37,7 +37,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "spm.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
 #define PT_NAME_LEN 128
 struct points_specific {

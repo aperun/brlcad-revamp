@@ -18,7 +18,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -95,7 +95,6 @@ int	numx;
 int	numy;
 int	pixsize = 3;
 
-int
 main( argc, argv )
 int	argc;
 char	**argv;

@@ -30,7 +30,7 @@ int truncations = 0;
 rle_hdr in_hdr, out_hdr;
 rle_pixel r_in, g_in, b_in;
 
-int
+void
 main(argc,argv)
 int argc;
 char *argv[];

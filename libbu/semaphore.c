@@ -24,7 +24,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char RCSsemaphore[] = "@(#)$Header$ (ARL)";
+static char RCSsemaphore[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -69,9 +69,6 @@ struct bu_semaphores {
 # define SGI_4D	1
 # define _SGI_SOURCE	1	/* IRIX 5.0.1 needs this to def M_BLKSZ */
 # define _BSD_TYPES	1	/* IRIX 5.0.1 botch in sys/prctl.h */
-#if ( IRIX == 6 ) && !defined(IRIX64)
-typedef __uint64_t k_sigset_t;  /* signal set type */
-#endif
 # include <sys/types.h>
 # include <ulocks.h>
 /* ulocks.h #include's <limits.h> and <malloc.h> */
@@ -211,10 +208,8 @@ register long *p;
 }
 #endif /* convex */
 
-#if defined(PARALLEL) || defined(DEFINED_BU_SEMAPHORES)
 static unsigned int		bu_nsemaphores = 0;
 static struct bu_semaphores	*bu_semaphores = (struct bu_semaphores *)NULL;
-#endif
 
 /*
  *			B U _ S E M A P H O R E _ I N I T
@@ -230,11 +225,11 @@ void
 bu_semaphore_init( nsemaphores )
 unsigned int	nsemaphores;
 {
+	int	i;
+
 #if !defined(PARALLEL) && !defined(DEFINED_BU_SEMAPHORES)
 	return;					/* No support on this hardware */
 #else
-	int	i;
-
 	if( bu_nsemaphores != 0 )  return;	/* Already called */
 	bu_semaphores = (struct bu_semaphores *)calloc(
 		nsemaphores,

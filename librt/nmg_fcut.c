@@ -35,20 +35,17 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 #include "machine.h"
 #include "externs.h"
 #include "vmath.h"
 #include "nmg.h"
 #include "raytrace.h"
-
-
 
 /* States of the state machine */
 #define NMG_STATE_ERROR		0
@@ -194,11 +191,6 @@ struct loop_cuts {
 	struct vertexuse *vu1;
 	struct vertexuse *vu2;
 };
-int
-nmg_face_state_transition(struct nmg_ray_state	*rs, 
-			  int			pos,
-			  int			multi,
-			  int			other_rs_state);
 
 /*
  *			P T B L _ V S O R T
@@ -2255,8 +2247,7 @@ point_t mid_pt;
 struct nmg_ray_state *rs;
 {
 	struct loopuse *lu1,*lu2;
-	struct vertexuse *vu1 = (struct vertexuse *)NULL;
-	struct vertexuse *vu2 = (struct vertexuse *)NULL;
+	struct vertexuse *vu1,*vu2;
 	struct loopuse *match_lu=(struct loopuse *)NULL;
 	struct loopuse *prior_lu,*next_lu;
 	struct bu_ptbl *cuts=(struct bu_ptbl *)NULL;
@@ -2683,7 +2674,7 @@ struct nmg_ray_state *rs;
 	struct loopuse *best_lu;
 	fastf_t best_angle;
 	int best_index;
-	int other_is_in_best = -42;
+	int other_is_in_best;
 	int class;
 	int i;
 
@@ -3737,7 +3728,7 @@ top:
 	 */
 
 	/* Merging uses of common edges is OK, though, and quite necessary. */
-	if( (i = nmg_mesh_two_faces( fu1, fu2, tol )) )  {
+	if( i = nmg_mesh_two_faces( fu1, fu2, tol ) )  {
 		if(rt_g.NMG_debug&DEBUG_FCUT)
 			bu_log("nmg_face_cutjoin() meshed %d edges\n", i);
 	}
@@ -4024,7 +4015,7 @@ int			other_rs_state;
 	int			new_state;
 	CONST struct state_transitions	*stp;
 	struct vertexuse	*vu;
-	struct vertexuse	*prev_vu = (struct vertexuse *)NULL;
+	struct vertexuse	*prev_vu;
 	struct loopuse		*lu;
 	struct loopuse		*prev_lu;
 	struct faceuse		*fu;
@@ -4477,4 +4468,3 @@ nmg_fu_touchingloops(rs->fu2);
 	if(rs->eg_p) NMG_CK_EDGE_G_LSEG(rs->eg_p);
 	return 0;
 }
-

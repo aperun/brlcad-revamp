@@ -14,7 +14,7 @@
  * remain constant from call to call.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$";
+static char RCSid[] = "@(#)$Header$";
 #endif
 
 #define	NULL	0

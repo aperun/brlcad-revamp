@@ -16,7 +16,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCScell[] = "@(#)$Header$ (BRL)";
+static char RCScell[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -29,7 +29,7 @@ static const char RCScell[] = "@(#)$Header$ (BRL)";
 #include "raytrace.h"
 #include "./ext.h"
 
-#include "rtprivate.h"
+#include "rdebug.h"
 
 #define	MM2IN	0.03937008		/* mm times MM2IN gives inches */
 

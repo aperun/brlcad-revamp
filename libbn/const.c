@@ -13,7 +13,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSmat[] = "@(#)$Header$ (BRL)";
+static char RCSmat[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"

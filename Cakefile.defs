@@ -11,7 +11,7 @@
  *	The U. S. Army Ballistic Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *
- *  $Header: /usr/Backup/upgrade/brlcad/brlcad/Cakefile.defs,v 11.207 2000-09-05 15:16:01 bparker Exp $
+ *  $Header: /usr/Backup/upgrade/brlcad/brlcad/Cakefile.defs,v 11.190.2.12 2000-09-11 17:02:13 jra Exp $
  *
  *  For those unfamiliar with CAKE, one important hint:
  *  When a rule includes an ampersand ('&') before the colon,
@@ -197,6 +197,7 @@ set -S2 "/bin/sh"
 #		define	BWISH_CONFIG	-I''XINCDIR
 #		define	BWISH_LIBES	MGED_LIBES
 #		define	LIBDM_SAMPLE_LIBES \$"(LIBDM)" \$"(LIBTK)" \$"(LIBTCL)" \$"(LIBTK_LIBES)" \$"(LIBTCL_LIBES)" \$"(XLIBDIR)" -lXi -lXext -lX11 -lGL
+#		define	LIBTCLHOOKS_LIBES	-lmalloc -lXi -lXext -lgl -lGL
 #	else
 /*		Static linked executables */
 #		define	GFLAG		
@@ -224,7 +225,6 @@ set -S2 "/bin/sh"
 #	define	LGT_CONFIG	GFLAG
 #	define	LIBFB_OBJS	if_remote if_ab if_4d if_X if_X24 if_ogl
 #	define	LIBFB_CONFIG	-DIF_REMOTE -DIF_AB -DIF_4D -DIF_5D -DIF_OGL -DBSD=43 -DIF_X -I''XINCDIR
-#	define	LIBTCLHOOKS_LIBES	-lmalloc -lXi -lXext -lgl -lGL
 #	define	LIBMESA_CONFIG	-DFBIND=2
 #	define  LIBDM_OBJS	dm-X dm-ogl
 #	define	LIBDM_CONFIG	-DIR_KNOBS=8 -DIR_BUTTONS=32 -DDM_X -DDM_OGL -DUSE_RT_ASPECT
@@ -251,39 +251,38 @@ set -S2 "/bin/sh"
 /*		Warning 1048 WAS "cast between pointer-to-object and pointer-to-function */
 /*		Warning 1110 is "statement is unreachable" */
 /*		Warning 1048 is "cast between pointer-to-object and pointer-to-function" */
-#		define	OPTIMIZER	-O3 \
-					-OPT:Olimit=4096 \
-					-OPT:const_copy_limit=16000 \
-					-use_readonly_const \
-					-woff 1203
+#		define	OPTIMIZER	-O2 \
+					-Olimit 2000 \
+					-use_readonly_const
 #	else
 /*		This version for debugging with DBX */
 /*		-fullwarn is pretty verbose */
 #		define	OPTIMIZER	-g -use_readonly_const
 #	endif
-#	define	GFLAG	-n32 -mips4 -KPIC -G 7
+#	define	GFLAG	-o32 -KPIC -G 0
 #	define  XINCDIR /usr/include/X11
-#	define	XLIBDIR /usr/lib32
+#	define	XLIBDIR /usr/lib
 #	if 1	/* PRODUCTION=1 */
 /*		Shared library version support */
 #		define	ARCH_SUF	so
 #		define	LIBVERS ../sh/sharedlibvers.sh
-#		define	BUILD_LIBRARY	ld -mips4 -shared -o
+#		define	LDSHARED	ld -o32 -shared
+#		define	BUILD_LIBRARY	LDSHARED -o
 #		define	RANLIB	true
-#		define	STANDARD_LIBES	-lm -lmalloc -lc -rpath LIBDIR:/usr/lib32
+#		define	STANDARD_LIBES	-lm -lmalloc -lc -rpath LIBDIR:/usr/lib
 /*		When debugging libraries, -m and -v are helpful LD_OPTS */
 /*		Warning 84:  library not used for resolving any symbol */
 /*		Warning 85: definition in one library preempts that in another */
 /*		Warning 134: weak definition in one library preempts that in another */
-#		define	LD_OPTS		GFLAG -Wl,-woff,84 -Wl,-woff,85 -Wl,-woff,134
+#		define	LIBTCLHOOKS_LIBES	-lGL -lXi -lXext
 #	else
 /*		Static linked executables */
 #		define	RANLIB	ranlib5.sh
-#		define	STANDARD_LIBES	-n32 -lm -lmalloc -lc
-#		define	LD_OPTS		-n32 GFLAG -Wl,-woff,84 -Wl,-woff,85 -Wl,-woff,134
+#		define	STANDARD_LIBES	-o32 -lm -lmalloc -lc
 #	endif
+#	define	LD_OPTS		GFLAG 
 /* -ansiposix	ANSI+POSIX mode is used over ANSI, to get fdopen(), etc, defined. */
-#	define  CC_OPTS		GFLAG -xansi -DIRIX=6 -Wl,-woff,1048
+#	define  CC_OPTS		GFLAG -xansi -DIRIX=6 
 #	define	LGT_CONFIG	GFLAG
 #	define	LIBFB_OBJS	if_remote if_ab if_X if_X24 if_ogl
 #	define	LIBFB_CONFIG	-DIF_REMOTE -DIF_AB -DBSD=43 -DIF_X -I''XINCDIR -DIF_OGL
@@ -294,7 +293,6 @@ set -S2 "/bin/sh"
 #	define	MGED_OBJS	dm-X dm-ogl dm-generic
 #	define	MGED_CONFIG	GFLAG -DIR_KNOBS=8 -DIR_BUTTONS=32 -DDM_X -DDM_OGL -I''XINCDIR
 #	define	MGED_LIBES	LIBDM LIBDM_LIBES LIBFB LIBFB_LIBES -lXi -lXext 
-#	define	LIBTCLHOOKS_LIBES	-lGL -lXi -lXext
 #	define	BWISH_LIBES	MGED_LIBES
 #	define	BWISH_CONFIG	-I''XINCDIR
 #	define	LIBDM_SAMPLE_LIBES \$"(LIBDM)" \$"(LIBTK)" \$"(LIBTCL)" \$"(LIBTK_LIBES)" \$"(LIBTCL_LIBES)" \$"(XLIBDIR)" -lXi -lXext -lX11 -lGL
@@ -352,6 +350,7 @@ set -S2 "/bin/sh"
 #		define	STANDARD_LIBES	-lm -lmalloc -lc -rpath LIBDIR:/usr/lib64
 /*		When debugging libraries, -m and -v are helpful LD_OPTS */
 #		define	LD_OPTS		GFLAG -Wl,-woff,84 -Wl,-woff,85
+#		define	LIBTCLHOOKS_LIBES	-lmalloc -lGL -lXi -lXext
 #	else
 /*		Static linked executables */
 #		define	RANLIB	ranlib5.sh
@@ -369,7 +368,6 @@ set -S2 "/bin/sh"
 #	define	MGED_OBJS	dm-X dm-ogl dm-generic
 #	define	MGED_CONFIG	GFLAG -DIR_KNOBS=8 -DIR_BUTTONS=32 -DDM_X -DDM_OGL -I''XINCDIR
 #	define	MGED_LIBES	LIBDM LIBDM_LIBES LIBFB LIBFB_LIBES -lXi -lXext 
-#	define	LIBTCLHOOKS_LIBES	-lmalloc -lGL -lXi -lXext
 #	define	BWISH_LIBES	MGED_LIBES
 #	define	BWISH_CONFIG	-I''XINCDIR
 #	define	LIBDM_SAMPLE_LIBES \$"(LIBDM)" \$"(LIBTK)" \$"(LIBTCL)" \$"(LIBTK_LIBES)" \$"(LIBTCL_LIBES)" \$"(XLIBDIR)" -lXi -lXext -lX11 -lGL
@@ -421,6 +419,7 @@ set -S2 "/bin/sh"
 #		define	STANDARD_LIBES	-lm -lmalloc -lc -rpath LIBDIR:/usr/lib64
 /*		When debugging libraries, -m and -v are helpful LD_OPTS */
 #		define	LD_OPTS		GFLAG -Wl,-woff,84 -Wl,-woff,85
+#		define	LIBTCLHOOKS_LIBES	-lmalloc -lGL -lXi -lXext
 #	else
 /*		Static linked executables */
 #		define	RANLIB	ranlib5.sh
@@ -438,7 +437,6 @@ set -S2 "/bin/sh"
 #	define	MGED_OBJS	dm-X dm-ogl dm-generic
 #	define	MGED_CONFIG	GFLAG -DIR_KNOBS=8 -DIR_BUTTONS=32 -DDM_X -DDM_OGL -I''XINCDIR
 #	define	MGED_LIBES	LIBDM LIBDM_LIBES LIBFB LIBFB_LIBES -lXi -lXext 
-#	define	LIBTCLHOOKS_LIBES	-lmalloc -lGL -lXi -lXext
 #	define	BWISH_LIBES	MGED_LIBES
 #	define	BWISH_CONFIG	-I''XINCDIR
 #	define	LIBDM_SAMPLE_LIBES \$"(LIBDM)" \$"(LIBTK)" \$"(LIBTCL)" \$"(LIBTK_LIBES)" \$"(LIBTCL_LIBES)" \$"(XLIBDIR)" -lXi -lXext -lX11 -lGL
@@ -489,7 +487,7 @@ set -S2 "/bin/sh"
 				-woff 1429,1203,1048,1110,1412,1167,1209 \
 				-Wl,-w
 #			else
-#				define	OPTIMIZER	-O2 \
+#				define	OPTIMIZER	-O2 -Olimit 2000 \
 				-use_readonly_const \
 				-woff 1429,1203,1048,1110,1412,1167,1209 \
 				-Wl,-w
@@ -537,6 +535,7 @@ set -S2 "/bin/sh"
 /*		When debugging libraries, -m and -v are helpful LD_OPTS */
 #		define	LD_OPTS		GFLAG -Wl,-multigot -Wl,-woff,84 -Wl,-woff,85 -Wl,-woff,134
 #		define  CC_OPTS		GFLAG -xansi -DIRIX=6 -DIRIX64=64
+#		define	LIBTCLHOOKS_LIBES	-lmalloc -lGL -lXi -lXext
 #	else
 /*		Static linked executables */
 #		define	RANLIB	ranlib5.sh
@@ -556,7 +555,6 @@ set -S2 "/bin/sh"
 #	define	MGED_OBJS	dm-X dm-ogl dm-generic
 #	define	MGED_CONFIG	GFLAG -DIR_KNOBS=8 -DIR_BUTTONS=32 -DDM_X -DDM_OGL -I''XINCDIR
 #	define	MGED_LIBES	LIBDM LIBDM_LIBES LIBFB LIBFB_LIBES -lXi -lXext 
-#	define	LIBTCLHOOKS_LIBES	-lmalloc -lGL -lXi -lXext
 #	define	BWISH_LIBES	MGED_LIBES
 #	define	BWISH_CONFIG	-I''XINCDIR
 #	define	LIBDM_SAMPLE_LIBES \$"(LIBDM)" \$"(LIBTK)" \$"(LIBTCL)" \$"(LIBTK_LIBES)" \$"(LIBTCL_LIBES)" \$"(XLIBDIR)" -lXi -lXext -lX11 -lGL
@@ -608,6 +606,7 @@ set -S2 "/bin/sh"
 #		define	STANDARD_LIBES	-lm -lmalloc -lc -rpath LIBDIR:/usr/lib64
 /*		When debugging libraries, -m and -v are helpful LD_OPTS */
 #		define	LD_OPTS		GFLAG -Wl,-woff,84 -Wl,-woff,85 -Wl,-woff,134
+#		define	LIBTCLHOOKS_LIBES	-lmalloc -lGL -lXi -lXext
 #	else
 /*		Static linked executables */
 #		define	RANLIB	ranlib5.sh
@@ -625,7 +624,6 @@ set -S2 "/bin/sh"
 #	define	MGED_OBJS	dm-X dm-ogl dm-generic
 #	define	MGED_CONFIG	GFLAG -DIR_KNOBS=8 -DIR_BUTTONS=32 -DDM_X -DDM_OGL -I''XINCDIR
 #	define	MGED_LIBES	LIBDM LIBDM_LIBES LIBFB LIBFB_LIBES -lXi -lXext 
-#	define	LIBTCLHOOKS_LIBES	-lmalloc -lGL -lXi -lXext
 #	define	BWISH_LIBES	MGED_LIBES
 #	define	BWISH_CONFIG	-I''XINCDIR
 #	define	LIBDM_SAMPLE_LIBES \$"(LIBDM)" \$"(LIBTK)" \$"(LIBTCL)" \$"(LIBTK_LIBES)" \$"(LIBTCL_LIBES)" \$"(XLIBDIR)" -lXi -lXext -lX11 -lGL
@@ -743,9 +741,9 @@ $#			define	MGED_LIBES	LIBDM LIBDM_LIBES -L''XLIBDIR -lXi -lXext -lX11 -ly -L../
 #	if defined( __GNUC__ )
 #		define	CC		gcc
 #		if 1	/* PRODUCTION=1 */
-#			define	OPTIMIZER	-O2 -fwritable-strings -Wall
+#			define	OPTIMIZER	-O2 -fwritable-strings
 #		else
-#			define	OPTIMIZER	-g -fwritable-strings -Wall
+#			define	OPTIMIZER	-g -fwritable-strings
 #		endif
 #		define	CC_DEFS		-D_REENTRANT -DSUNOS=55
 #		define	CC_OPTS		-I''XINCDIR
@@ -914,7 +912,7 @@ $#			define	MGED_LIBES	LIBDM LIBDM_LIBES -L''XLIBDIR -lXi -lXext -lX11 -ly -L../
 #	if 1	/* PRODUCTION=1 */
 /*		Shared library version support.  Requires ELF for Linux. */
 #		define	CC	gcc
-#		define	CC_DEFS -pipe -fPIC -Wall
+#		define	CC_OPTS -fPIC
 #		define	ARCH_SUF	so
 #		define	LIBVERS ../sh/sharedlibvers.sh
 #		define	BUILD_LIBRARY	gcc -shared -o
@@ -925,7 +923,7 @@ $#			define	MGED_LIBES	LIBDM LIBDM_LIBES -L''XLIBDIR -lXi -lXext -lX11 -ly -L../
 #		define	CC	gcc
 #		define	RANLIB	ar -s
 /*		Don't use -ansi, that gives __STRICT_ANSI__.  Default is _GNU_SOURCE. */
-#		define	CC_DEFS -pipe -Wall
+#		define	CC_OPTS /**/
 #	endif
 #	define	XINCDIR	/usr/X11R6/include
 #	define	XLIBDIR	/usr/X11R6/lib
@@ -993,22 +991,19 @@ $#			define	MGED_LIBES	LIBDM LIBDM_LIBES -L''XLIBDIR -lXi -lXext -lX11 -ly -L../
 #	define	XINCDIR	/usr/X11R6/include
 #	define	XLIBDIR	/usr/X11R6/lib
 #	define	CC	gcc
+#	define	OPTIMIZER	-O2
 #	define	LEX_OPTS	-l
-#	if 1	/* PRODUCTION=1 */
-#		define	OPTIMIZER	-O2
-#	else
-#		define	OPTIMIZER	-g
-#	endif
+
 #	if 1	/* PRODUCTION=1 */
 /*		Shared library version support.  */
-#		define	CC_DEFS -pipe -fPIC -Wall
+#		define	CC_DEFS -pipe -fPIC
 #		define	ARCH_SUF	so
 #		define	LIBVERS ../sh/sharedlibvers.sh
 #		define	BUILD_LIBRARY	ld -Bshareable -o
 #		define	STANDARD_LIBES	-lm -Wl,-R -Wl,LIBDIR
 #	else
 /*		Static linked executables */
-#		define	CC_DEFS -pipe -Wall
+#		define	CC_DEFS -pipe
 #	endif
 
 #	define	LIBRT_TIMER	timer42
@@ -1024,17 +1019,6 @@ $#			define	MGED_LIBES	LIBDM LIBDM_LIBES -L''XLIBDIR -lXi -lXext -lX11 -ly -L../
 #	define	BWISH_LIBES	MGED_LIBES
 #	define	BWISH_CONFIG	-I''XINCDIR
 #	define	LIBDM_SAMPLE_LIBES \$"(LIBDM)" \$"(LIBTK)" \$"(LIBTCL)" \$"(LIBTK_LIBES)" \$"(LIBTCL_LIBES)" \$"(XLIBDIR)" -lXi -lXext -lX11
-/*	Use the system-provided TCL and Tk libraries */
-/*	XXX What about the system-provided itcl library? */
-#	if 0	/* PRODUCTION=1 */
-#		define	LIBTCL_DIR	_use_system_tcl_
-#		define	LIBTCL_USE_SYSTEM 
-#		define	LIBTCL		-L/usr/local/lib -ltcl82
-#		define	LIBTCL_DEP	/**/
-#		define	LIBTK_DIR	_use_system_tk_
-#		define	LIBTK		-L/usr/local/lib -ltk82
-#		define	LIBTK_DEP	/**/
-#	endif
 /*	Use the system-provided libz and libpng */
 #	define	LIBZ_DIR	_use_system_z_
 #	define	LIBZ		-lz
@@ -1913,10 +1897,6 @@ $#			define	MGED_LIBES	LIBDM LIBDM_LIBES -L''XLIBDIR -lXi -lXext -lX11 -ly -L../
 
 #ifndef RFBD_LIBES
 #	define	RFBD_LIBES	/**/
-#endif
-
-#ifndef LIBTCLHOOKS_CONFIG
-#	define	LIBTCLHOOKS_CONFIG	/**/
 #endif
 
 #ifndef LIBPKG_CONFIG

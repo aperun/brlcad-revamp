@@ -18,13 +18,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <ctype.h>
 #include "machine.h"
 
 unsigned char	obuf[3*1024];
@@ -34,7 +33,6 @@ void	open_file();
 
 char *Usage = "usage: bw3-pix redin greenin bluein > file.pix (- stdin, . skip)\n";
 
-int
 main( argc, argv )
 int argc;
 char **argv;
@@ -78,7 +76,6 @@ char **argv;
 		}
 		fwrite( obuf, sizeof( char ), num*3, stdout );
 	}
-	return 0;
 }
 
 void

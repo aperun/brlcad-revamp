@@ -20,7 +20,7 @@
 
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -37,13 +37,12 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 static char *usage="Usage:\n\t%s png__file\n";
 
-int
 main( argc, argv )
 int argc;
 char *argv[];
 {
 	int i;
-	FILE *fp_in = NULL;
+	FILE *fp_in;
 	png_structp png_p;
 	png_infop info_p;
 	char header[8];
@@ -203,5 +202,4 @@ char *argv[];
 	if( png_get_tIME( png_p, info_p, &mod_time ) )
 		bu_log( "Last modified: %d/%d/%d %d:%d:%d\n", mod_time->month, mod_time->day,
 			mod_time->year, mod_time->hour, mod_time->minute, mod_time->second );
-	return 0;
 }

@@ -18,7 +18,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include <stdio.h>
@@ -104,7 +104,6 @@ Usage: plgetframe [-v] desired_frame < unix_plot\n";
 
 char	buf[8*32];
 
-int
 main( argc, argv )
 int	argc;
 char	**argv;

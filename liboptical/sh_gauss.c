@@ -37,7 +37,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -50,11 +50,8 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "rtgeom.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
-extern int rr_render(struct application	*ap,
-		     struct partition	*pp,
-		     struct shadework   *swp);
 
 /* The internal representation of the solids must be stored so that we
  * can access their parameters at shading time.  This is done with
@@ -152,11 +149,10 @@ struct mfuncs gauss_mfuncs[] = {
 
 
 static void
-tree_solids(tp, tb, op, resp)
+tree_solids(tp, tb, op)
 union tree *tp;
 struct tree_bark *tb;
 int op;
-struct resource *resp;
 {
 	RT_CK_TREE(tp);
 
@@ -181,7 +177,7 @@ struct resource *resp;
 
 		/* Get the internal form of this solid & add it to the list */
 		rt_db_get_internal(&dbint->ip, tp->tr_a.tu_stp->st_dp,
-			tb->dbip, mp, resp);
+			tb->dbip, mp);
 
 		RT_CK_DB_INTERNAL(&dbint->ip);
 		dbint->st_p = tp->tr_a.tu_stp;
@@ -259,18 +255,18 @@ struct resource *resp;
 		break;
 	}
 	case OP_UNION:
-		tree_solids(tp->tr_b.tb_left, tb, tp->tr_op, resp);
-		tree_solids(tp->tr_b.tb_right, tb, tp->tr_op, resp);
+		tree_solids(tp->tr_b.tb_left, tb, tp->tr_op);
+		tree_solids(tp->tr_b.tb_right, tb, tp->tr_op);
 		break;
 
 	case OP_NOT: bu_log("Warning: 'Not' region operator in %s\n",tb->name);
-		tree_solids(tp->tr_b.tb_left, tb, tp->tr_op, resp);
+		tree_solids(tp->tr_b.tb_left, tb, tp->tr_op);
 		break;
 	case OP_GUARD:bu_log("Warning: 'Guard' region operator in %s\n",tb->name);
-		tree_solids(tp->tr_b.tb_left, tb, tp->tr_op, resp);
+		tree_solids(tp->tr_b.tb_left, tb, tp->tr_op);
 		break;
 	case OP_XNOP:bu_log("Warning: 'XNOP' region operator in %s\n",tb->name);
-		tree_solids(tp->tr_b.tb_left, tb, tp->tr_op, resp);
+		tree_solids(tp->tr_b.tb_left, tb, tp->tr_op);
 		break;
 
 	case OP_INTERSECT:
@@ -279,8 +275,8 @@ struct resource *resp;
 		/* XXX this can get us in trouble if 1 solid is subtracted
 		 * from less than all the "union" solids of the region.
 		 */
-		tree_solids(tp->tr_b.tb_left, tb, tp->tr_op, resp);
-		tree_solids(tp->tr_b.tb_right, tb, tp->tr_op, resp);
+		tree_solids(tp->tr_b.tb_left, tb, tp->tr_op);
+		tree_solids(tp->tr_b.tb_right, tb, tp->tr_op);
 		return;
 
 	default:
@@ -343,7 +339,7 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	tb.name = rp->reg_name;
 	tb.gs = gauss_sp;
 
-	tree_solids ( rp->reg_treetop, &tb, OP_UNION, &rt_uniresource );
+	tree_solids ( rp->reg_treetop, &tb );
 
 
 	/* XXX If this puppy isn't axis-aligned, we should come up with a

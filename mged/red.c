@@ -17,7 +17,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -91,7 +91,7 @@ char **argv;
 		  return TCL_ERROR;
 		}
 
-		if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )
+		if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )
 			TCL_READ_ERR_return;
 
 		comb = (struct rt_comb_internal *)intern.idb_ptr;
@@ -127,7 +127,7 @@ char **argv;
 	  if( (node_count = checkcomb()) < 0 ){ /* Do some quick checking on the edited file */
 	    Tcl_AppendResult(interp, "Error in edited region, no changes made\n", (char *)NULL);
 	    if( comb )
-		    rt_comb_ifree( &intern, &rt_uniresource );
+		    rt_comb_ifree( &intern );
 	    (void)unlink( red_tmpfil );
 	    return TCL_ERROR;
 	  }
@@ -135,7 +135,7 @@ char **argv;
 	  if( comb ){
 	    if( save_comb( dp ) ){ /* Save combination to a temp name */
 	      Tcl_AppendResult(interp, "No changes made\n", (char *)NULL);
-	      rt_comb_ifree( &intern, &rt_uniresource );
+	      rt_comb_ifree( &intern );
 	      (void)unlink( red_tmpfil );
 	      return TCL_OK;
 	    }
@@ -147,7 +147,7 @@ char **argv;
 	    if( comb ){
 	      restore_comb( dp );
 	      Tcl_AppendResult(interp, "\toriginal restored\n", (char *)NULL );
-	      rt_comb_ifree( &intern, &rt_uniresource );
+	      rt_comb_ifree( &intern );
 	    }
 
 	    (void)unlink( red_tmpfil );
@@ -323,7 +323,7 @@ char *line;
     while (isspace(name[--j]))
       name[j] = '\0';
 
-    if (relation != '+' && relation != 'u' && relation != '-') {
+    if (relation != '+' && relation != 'u' & relation != '-') {
       struct bu_vls tmp_vls;
 
       bu_vls_init(&tmp_vls);
@@ -385,6 +385,8 @@ put_tree_into_comb(comb, dp, old_name, new_name, str)
 	int			node_count = 0;
 	int			tree_index = 0;
 	union tree		*tp;
+	union tree		*final_tree;
+	struct rt_db_internal	intern;
 	matp_t			matrix;
 	struct bu_vls		vls;
 	int			result;
@@ -576,13 +578,13 @@ char **argv;
       return TCL_ERROR;
     }
 
-    if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )
+    if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )
       TCL_READ_ERR_return;
 
     comb = (struct rt_comb_internal *)intern.idb_ptr;
 
     if( comb->tree && db_ck_v4gift_tree( comb->tree ) < 0 ){
-      db_non_union_push( comb->tree, &rt_uniresource );
+      db_non_union_push( comb->tree );
       if( db_ck_v4gift_tree( comb->tree ) < 0 ){
 	Tcl_AppendResult(interp, "Cannot flatten tree for editing\n", (char *)NULL );
 	return TCL_ERROR;
@@ -592,10 +594,16 @@ char **argv;
     node_count = db_tree_nleaves( comb->tree );
     if( node_count > 0 ){
       rt_tree_array = (struct rt_tree_array *)bu_calloc( node_count, sizeof( struct rt_tree_array ), "tree list" );
-      actual_count = (struct rt_tree_array *)db_flatten_tree( rt_tree_array,
-		comb->tree, OP_UNION, 1, &rt_uniresource ) - rt_tree_array;
-      BU_ASSERT_LONG( actual_count, ==, node_count );
-      comb->tree = TREE_NULL;
+      actual_count = (struct rt_tree_array *)db_flatten_tree( rt_tree_array, comb->tree, OP_UNION ) - rt_tree_array;
+      if( actual_count > node_count )
+	bu_bomb("write_comb() array overflow!");
+      if( actual_count < node_count ){
+	bu_vls_trunc(&vls, 0);
+	bu_vls_printf(&vls, "WARNING write_comb() array underflow! %d < %d",
+		      actual_count, node_count);
+	Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
+	bu_vls_free(&vls);
+      }
     } else {
       rt_tree_array = (struct rt_tree_array *)NULL;
       actual_count = 0;
@@ -660,7 +668,6 @@ char **argv;
       bu_vls_printf(&vls, " %c %s" , op , rt_tree_array[i].tl_tree->tr_l.tl_name);
       vls_print_matrix(&vls, rt_tree_array[i].tl_tree->tr_l.tl_mat);
       bu_vls_printf(&vls, "\n");
-      db_free_tree( rt_tree_array[i].tl_tree, &rt_uniresource );
     }
 
     Tcl_AppendElement(interp, bu_vls_addr(&vls));
@@ -734,7 +741,7 @@ char **argv;
       return TCL_ERROR;
     }
     
-    if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )
+    if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )
       TCL_READ_ERR_return;
 
     comb = (struct rt_comb_internal *)intern.idb_ptr;
@@ -746,7 +753,7 @@ char **argv;
 
   /* empty the existing combination */
   if( comb && comb->tree ){
-    db_free_tree( comb->tree, &rt_uniresource );
+    db_free_tree( comb->tree );
     comb->tree = NULL;
   }else{
     /* make an empty combination structure */
@@ -872,7 +879,7 @@ char *name;
 
 	if( comb->tree && db_ck_v4gift_tree( comb->tree ) < 0 )
 	{
-		db_non_union_push( comb->tree, &rt_uniresource );
+		db_non_union_push( comb->tree );
 		if( db_ck_v4gift_tree( comb->tree ) < 0 )
 		{
 			Tcl_AppendResult(interp, "Cannot flatten tree for editing\n", (char *)NULL );
@@ -884,10 +891,9 @@ char *name;
 	{
 		rt_tree_array = (struct rt_tree_array *)bu_calloc( node_count,
 			sizeof( struct rt_tree_array ), "tree list" );
-		actual_count = (struct rt_tree_array *)db_flatten_tree(
-			rt_tree_array, comb->tree, OP_UNION,
-			0, &rt_uniresource ) - rt_tree_array;
-		BU_ASSERT_LONG( actual_count, ==, node_count );
+		actual_count = (struct rt_tree_array *)db_flatten_tree( rt_tree_array, comb->tree, OP_UNION ) - rt_tree_array;
+		if( actual_count > node_count )  bu_bomb("write_comb() array overflow!");
+		if( actual_count < node_count )  bu_log("WARNING write_comb() array underflow! %d < %d", actual_count, node_count);
 	}
 	else
 	{
@@ -979,7 +985,7 @@ checkcomb()
 	char line[MAXLINE];
 	char *ptr;
 	int region=(-1);
-	int id=0,air=0;
+	int id,air;
 	int rgb_valid;
 
 	if( (fp=fopen( red_tmpfil , "r" )) == NULL )
@@ -1155,7 +1161,7 @@ checkcomb()
 			while( isspace( name[--j] ) )
 				name[j] = '\0';
 
-			if( relation != '+' && relation != 'u' && relation != '-' )
+			if( relation != '+' && relation != 'u' & relation != '-' )
 			{
 			  struct bu_vls tmp_vls;
 
@@ -1229,7 +1235,7 @@ make_tree(comb, dp, node_count, old_name, new_name, rt_tree_array, tree_index)
 	union tree		*final_tree;
 
 	if (tree_index)
-		final_tree = (union tree *)db_mkgift_tree( rt_tree_array, node_count, &rt_uniresource );
+		final_tree = (union tree *)db_mkgift_tree( rt_tree_array, node_count, (struct db_tree_state *)NULL );
 	else
 		final_tree = (union tree *)NULL;
 
@@ -1251,15 +1257,22 @@ make_tree(comb, dp, node_count, old_name, new_name, rt_tree_array, tree_index)
 			if (db_delete(dbip, dp) || db_dirdelete(dbip, dp)) {
 				Tcl_AppendResult(interp, "ERROR: Unable to delete directory entry for ",
 						 old_name, "\n", (char *)NULL);
-				rt_comb_ifree(&intern, &rt_uniresource);
+				rt_comb_ifree(&intern);
 				return(1);
 			}
 		}
 
-		if ((dp=db_diradd(dbip, new_name, -1L, 0, flags, NULL)) == DIR_NULL) {
+		if ((dp=db_diradd(dbip, new_name, -1, node_count+1, flags, NULL)) == DIR_NULL) {
 			Tcl_AppendResult(interp, "Cannot add ", new_name,
 					 " to directory, no changes made\n", (char *)NULL);
-			rt_comb_ifree(&intern, &rt_uniresource);
+			rt_comb_ifree(&intern);
+			return(1);
+		}
+
+		if (db_alloc(dbip, dp, node_count+1)) {
+			Tcl_AppendResult(interp, "Cannot allocate file space for ", new_name,
+				"\n", (char *)NULL);
+			rt_comb_ifree(&intern);
 			return(1);
 		}
 	} else if( dp == DIR_NULL ) {
@@ -1270,10 +1283,17 @@ make_tree(comb, dp, node_count, old_name, new_name, rt_tree_array, tree_index)
 		else
 			flags = DIR_COMB;
 
-		if ((dp=db_diradd(dbip, new_name, -1L, 0, flags, NULL)) == DIR_NULL) {
+		if ((dp=db_diradd(dbip, new_name, -1, node_count+1, flags, NULL)) == DIR_NULL) {
 			Tcl_AppendResult(interp, "Cannot add ", new_name,
 					 " to directory, no changes made\n", (char *)NULL);
-			rt_comb_ifree( &intern, &rt_uniresource );
+			rt_comb_ifree( &intern );
+			return(1);
+		}
+
+		if (db_alloc( dbip, dp, node_count+1)) {
+			Tcl_AppendResult(interp, "Cannot allocate file space for ", new_name,
+				"\n", (char *)NULL);
+			rt_comb_ifree(&intern);
 			return(1);
 		}
 	} else {
@@ -1283,7 +1303,7 @@ make_tree(comb, dp, node_count, old_name, new_name, rt_tree_array, tree_index)
 			dp->d_flags &= ~DIR_REGION;
 	}
 
-	if (rt_db_put_internal(dp, dbip, &intern, &rt_uniresource) < 0) {
+	if (rt_db_put_internal(dp, dbip, &intern) < 0) {
 		Tcl_AppendResult(interp, "ERROR: Unable to write new combination into database.\n", (char *)NULL);
 		return 1;
 	}
@@ -1335,7 +1355,7 @@ char *old_name;
 	/* empty the existing combination */
 	if( comb && comb->tree )
 	{
-		db_free_tree( comb->tree, &rt_uniresource );
+		db_free_tree( comb->tree );
 		comb->tree = NULL;
 	}
 	else
@@ -1652,16 +1672,18 @@ struct directory *dpold;
 	/* Make a new name */
 	mktemp_comb( red_tmpcomb );
 
-	if( rt_db_get_internal( &intern, dpold, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )
+	if( rt_db_get_internal( &intern, dpold, dbip, (fastf_t *)NULL ) < 0 )
 		TCL_READ_ERR_return;
 
-	if( (dp=db_diradd( dbip, red_tmpcomb, -1L, 0, dpold->d_flags, NULL)) == DIR_NULL )  {
+	if( (dp=db_diradd( dbip, red_tmpcomb, -1, dpold->d_len, dpold->d_flags, NULL)) == DIR_NULL ||
+	    db_alloc( dbip, dp, dpold->d_len ) < 0 )
+	{
 	  Tcl_AppendResult(interp, "Cannot save copy of ", dpold->d_namep,
 			   ", no changes made\n", (char *)NULL);
 	  return( 1 );
 	}
 
-	if( rt_db_put_internal(	dp, dbip, &intern, &rt_uniresource ) < 0 )
+	if( rt_db_put_internal(	dp, dbip, &intern ) < 0 )
 	{
 		Tcl_AppendResult(interp, "Cannot save copy of ", dpold->d_namep,
 			", no changes made\n", (char *)NULL);

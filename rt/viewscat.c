@@ -23,7 +23,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSppview[] = "@(#)$Header$ (BRL)";
+static char RCSppview[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -33,7 +33,7 @@ static const char RCSppview[] = "@(#)$Header$ (BRL)";
 #include "machine.h"
 #include "vmath.h"
 #include "raytrace.h"
-#include "rtprivate.h"
+#include "./rdebug.h"
 #include "../librad/rad.h"
 
 #ifndef M_PI

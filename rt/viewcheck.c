@@ -30,7 +30,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCScheckview[] = "@(#)$Header$ (BRL)";
+static char RCScheckview[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -39,7 +39,6 @@ static const char RCScheckview[] = "@(#)$Header$ (BRL)";
 #include "machine.h"
 #include "vmath.h"
 #include "raytrace.h"
-#include "plot3.h"
 
 #define OVLP_TOL	0.1
 

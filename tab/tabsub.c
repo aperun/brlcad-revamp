@@ -26,7 +26,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -57,7 +57,6 @@ void	out_mat();
  *			M A I N
  *
  */
-int
 main( argc, argv )
 int	argc;
 char	**argv;
@@ -81,7 +80,6 @@ char	**argv;
 		}
 	}
 	do_lines( table );
-	return 0;
 }
 
 void
@@ -336,7 +334,7 @@ int	nwords;
 		bn_mat_idn( mat );
 		bn_mat_angles( mat, args[4], args[5], args[6] );
 		MAT_DELTAS( mat, args[1], args[2], args[3] );
-		if( NEAR_ZERO( args[7], VDIVIDE_TOL ) )  {
+		if( args[7] > -1e-17 && args[7] < 1e-17 )  {
 			/* Nearly zero, signal error */
 			fprintf(stderr,"Orient scale arg is near zero ('%s')\n",
 				words[7] );

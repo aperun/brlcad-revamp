@@ -18,7 +18,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #define USE_OLD_MENUS 0
@@ -68,7 +68,8 @@ extern struct rt_db_internal	es_int;
  *  Prepare the numerical display of the currently edited solid/object.
  */
 void
-create_text_overlay( struct bu_vls *vp )
+create_text_overlay( vp )
+register struct bu_vls	*vp;
 {
 	struct directory	*dp;
 	register int	i;
@@ -188,10 +189,10 @@ create_text_overlay( struct bu_vls *vp )
  * so each line is written with a separate call to DM_DRAW_STRING_2D().
  */
 void
-screen_vls(
-	int	xbase,
-	int	ybase,
-	struct bu_vls	*vp)
+screen_vls( xbase, ybase, vp )
+int	xbase;
+int	ybase;
+register struct bu_vls	*vp;
 {
   register char	*start;
   register char	*end;
@@ -225,7 +226,8 @@ screen_vls(
  * NOTE that this routine depends on being called AFTER dozoom();
  */
 void
-dotitles(struct bu_vls *overlay_vls)
+dotitles(overlay_vls)
+struct bu_vls *overlay_vls;
 {
 	register int    i;
 	register int    x, y;			/* for menu computations */

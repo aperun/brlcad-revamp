@@ -16,19 +16,14 @@
  *  Distribution Notice -
  *	Re-distribution of this software is restricted, as described in
  *	your "Statement of Terms and Conditions for the Release of
- *	The BRL-CAD Package" license agreement.
+ *	The BRL-CAD Package" agreement.
  *
  *  Copyright Notice -
- *	This software is Copyright (C) 2000 by the United States Army
+ *	This software is Copyright (C) 1997 by the United States Army
  *	in all countries except the USA.  All rights reserved.
  */
-#ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
-#endif
 
 #include "conf.h"
-#include <ctype.h>
-
 #ifdef USE_STRING_H
 #include <string.h>
 #else
@@ -51,8 +46,6 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "wdb.h"
 
 #include "./debug.h"
-
-extern void rt_insert_color( struct mater *newp );
 
 #define WDB_MAX_LEVELS 12
 #define WDB_CPEVAL	0
@@ -135,68 +128,68 @@ struct directory *wdb_combadd();
 void wdb_identitize();
 
 static struct bu_cmdtab wdb_cmds[] = {
-	{"adjust",	wdb_adjust_tcl},
-	{"c",		wdb_comb_std_tcl},
-	{"cat",		wdb_cat_tcl},
-	{"close",	wdb_close_tcl},
-	{"color",	wdb_color_tcl},
-	{"comb",		wdb_comb_tcl},
-	{"concat",	wdb_concat_tcl},
-	{"cp",		wdb_copy_tcl},
-	{"dbip",		wdb_dbip_tcl},
-	{"dump",		wdb_dump_tcl},
-	{"dup",		wdb_dup_tcl},
-	{"expand",	wdb_expand_tcl},
-	{"find",		wdb_find_tcl},
-	{"form",		wdb_form_tcl},
-	{"g",		wdb_group_tcl},
-	{"get",		wdb_get_tcl},
-	{"i",		wdb_instance_tcl},
-	{"keep",		wdb_keep_tcl},
-	{"kill",		wdb_kill_tcl},
-	{"killall",	wdb_killall_tcl},
-	{"killtree",	wdb_killtree_tcl},
-	{"l",		wdb_list_tcl},
-	{"listeval",	wdb_pathsum_tcl},
-	{"ls",		wdb_ls_tcl},
-	{"match",	wdb_match_tcl},
-	{"mv",		wdb_move_tcl},
-	{"mvall",	wdb_move_all_tcl},
-	{"observer",	wdb_observer_tcl},
-	{"open",		wdb_reopen_tcl},
-	{"paths",	wdb_pathsum_tcl},
-	{"prcolor",	wdb_prcolor_tcl},
-	{"push",		wdb_push_tcl},
-	{"put",		wdb_put_tcl},
-	{"r",		wdb_region_tcl},
-	{"rm",		wdb_remove_tcl},
-	{"rt_gettrees",	wdb_rt_gettrees_tcl},
-	{"title",	wdb_title_tcl},
-	{"tol",		wdb_tol_tcl},
-	{"tops",		wdb_tops_tcl},
-	{"tree",		wdb_tree_tcl},
-	{"whatid",	wdb_whatid_tcl},
-	{"whichair",	wdb_which_tcl},
-	{"whichid",	wdb_which_tcl},
+	"adjust",	wdb_adjust_tcl,
+	"c",		wdb_comb_std_tcl,
+	"cat",		wdb_cat_tcl,
+	"close",	wdb_close_tcl,
+	"color",	wdb_color_tcl,
+	"comb",		wdb_comb_tcl,
+	"concat",	wdb_concat_tcl,
+	"cp",		wdb_copy_tcl,
+	"dbip",		wdb_dbip_tcl,
+	"dump",		wdb_dump_tcl,
+	"dup",		wdb_dup_tcl,
+	"expand",	wdb_expand_tcl,
+	"find",		wdb_find_tcl,
+	"form",		wdb_form_tcl,
+	"g",		wdb_group_tcl,
+	"get",		wdb_get_tcl,
+	"i",		wdb_instance_tcl,
+	"keep",		wdb_keep_tcl,
+	"kill",		wdb_kill_tcl,
+	"killall",	wdb_killall_tcl,
+	"killtree",	wdb_killtree_tcl,
+	"l",		wdb_list_tcl,
+	"listeval",	wdb_pathsum_tcl,
+	"ls",		wdb_ls_tcl,
+	"match",	wdb_match_tcl,
+	"mv",		wdb_move_tcl,
+	"mvall",	wdb_move_all_tcl,
+	"observer",	wdb_observer_tcl,
+	"open",		wdb_reopen_tcl,
+	"paths",	wdb_pathsum_tcl,
+	"prcolor",	wdb_prcolor_tcl,
+	"push",		wdb_push_tcl,
+	"put",		wdb_put_tcl,
+	"r",		wdb_region_tcl,
+	"rm",		wdb_remove_tcl,
+	"rt_gettrees",	wdb_rt_gettrees_tcl,
+	"title",	wdb_title_tcl,
+	"tol",		wdb_tol_tcl,
+	"tops",		wdb_tops_tcl,
+	"tree",		wdb_tree_tcl,
+	"whatid",	wdb_whatid_tcl,
+	"whichair",	wdb_which_tcl,
+	"whichid",	wdb_which_tcl,
 #if 0
 	/* Commands to be added */
-	{"units",	wdb_units_tcl},
-	{"comb_color",	wdb_comb_color_tcl},
-	{"copymat",	wdb_copymat_tcl},
-	{"copyeval",	wdb_copyeval_tcl},
-	{"pathlist",	wdb_pathlist_tcl},
-	{"getmat",	wdb_getmat_tcl},
-	{"putmat",	wdb_putmat_tcl},
-	{"summary",	wdb_summary_tcl},
-	{"which_shader",	wdb_which_shader_tcl},
-	{"rcodes",	wdb_rcodes_tcl},
-	{"wcodes",	wdb_wcodes_tcl},
-	{"rmater",	wdb_rmater_tcl},
-	{"wmater",	wdb_wmater_tcl},
-	{"analyze",	wdb_analyze_tcl},
-	{"inside",	wdb_inside_tcl},
+	"units",	wdb_units_tcl,
+	"comb_color",	wdb_comb_color_tcl,
+	"copymat",	wdb_copymat_tcl,
+	"copyeval",	wdb_copyeval_tcl,
+	"pathlist",	wdb_pathlist_tcl,
+	"getmat",	wdb_getmat_tcl,
+	"putmat",	wdb_putmat_tcl,
+	"summary",	wdb_summary_tcl,
+	"which_shader",	wdb_which_shader_tcl,
+	"rcodes",	wdb_rcodes_tcl,
+	"wcodes",	wdb_wcodes_tcl,
+	"rmater",	wdb_rmater_tcl,
+	"wmater",	wdb_wmater_tcl,
+	"analyze",	wdb_analyze_tcl,
+	"inside",	wdb_inside_tcl,
 #endif
-	{(char *)NULL,	(int (*)())0 }
+	(char *)0,	(int (*)())0
 };
 
 /* This could go in struct rt_wdb */
@@ -633,7 +626,7 @@ wdb_get_tcl(clientData, interp, argc, argv)
 		return TCL_ERROR;
 
 	status = intern.idb_meth->ft_tclget(interp, &intern, argv[2]);
-	rt_db_free_internal(&intern, &rt_uniresource);
+	intern.idb_meth->ft_ifree(&intern);
 	return status;
 }
 
@@ -703,19 +696,20 @@ wdb_put_tcl(clientData, interp, argc, argv)
 		rt_generic_make(ftp, &intern, 0.0);
 	}
 
-	if (ftp->ft_tcladjust(interp, &intern, argc-3, argv+3, &rt_uniresource) == TCL_ERROR) {
-		rt_db_free_internal(&intern, &rt_uniresource);
+	if (ftp->ft_tcladjust(interp, &intern, argc-3, argv+3) == TCL_ERROR) {
+		rt_db_free_internal(&intern);
 		return TCL_ERROR;
 	}
 
-	if (wdb_put_internal(wdbp, name, &intern, 1.0) < 0)  {
-		Tcl_AppendResult(interp, "wdb_put_internal(", argv[1],
+	if (wdb_export(wdbp, name, intern.idb_ptr, intern.idb_type,
+			1.0) < 0)  {
+		Tcl_AppendResult(interp, "wdb_export(", argv[1],
 				 ") failure", (char *)NULL);
-		rt_db_free_internal(&intern, &rt_uniresource);
+		rt_db_free_internal(&intern);
 		return TCL_ERROR;
 	}
 
-	rt_db_free_internal( &intern, &rt_uniresource );
+	rt_db_free_internal( &intern );
 	return TCL_OK;
 }
 
@@ -765,7 +759,7 @@ wdb_adjust_tcl( clientData, interp, argc, argv )
 		return TCL_ERROR;
 	}
 
-	status = rt_db_get_internal(&intern, dp, wdbp->dbip, (matp_t)NULL, &rt_uniresource);
+	status = rt_db_get_internal(&intern, dp, wdbp->dbip, (matp_t)NULL);
 	if (status < 0) {
 		Tcl_AppendResult(interp, "rt_db_get_internal(", name,
 				 ") failure", (char *)NULL );
@@ -776,13 +770,15 @@ wdb_adjust_tcl( clientData, interp, argc, argv )
 	/* Find out what type of object we are dealing with and tweak it. */
 	RT_CK_FUNCTAB(intern.idb_meth);
 
-	status = intern.idb_meth->ft_tcladjust(interp, &intern, argc-3, argv+3, &rt_uniresource);
-	if( status == TCL_OK && wdb_put_internal(wdbp, name, &intern, 1.0) < 0)  {
+	status = intern.idb_meth->ft_tcladjust(interp, &intern, argc-3, argv+3);
+	if( status == TCL_OK && wdb_export(wdbp, name, intern.idb_ptr,
+					   intern.idb_type, 1.0) < 0)  {
 		Tcl_AppendResult(interp, "wdb_export(", name,
 				 ") failure", (char *)NULL);
-		rt_db_free_internal(&intern, &rt_uniresource);
+		rt_db_free_internal(&intern);
 		return TCL_ERROR;
 	}
+	rt_db_free_internal(&intern);
 
 	/* notify observers */
 	bu_observer_notify(interp, &wdbp->wdb_observers, bu_vls_addr(&wdbp->wdb_name));
@@ -821,8 +817,6 @@ wdb_form_tcl( clientData, interp, argc, argv )
 
 /*
  *			W D B _ T O P S _ T C L
- *
- *  NON-PARALLEL because of rt_uniresource
  */
 static int
 wdb_tops_tcl(clientData, interp, argc, argv)
@@ -840,15 +834,14 @@ wdb_tops_tcl(clientData, interp, argc, argv)
 
 	/* Can this be executed only sometimes?
 	   Perhaps a "dirty bit" on the database? */
-	db_update_nref(wdbp->dbip, &rt_uniresource);
+	db_update_nref(wdbp->dbip);
 	
 	for (i = 0; i < RT_DBNHASH; i++)
 		for (dp = wdbp->dbip->dbi_Head[i];
 		     dp != DIR_NULL;
-		     dp = dp->d_forw)  {
+		     dp = dp->d_forw)
 			if (dp->d_nref == 0)
 				Tcl_AppendElement( interp, dp->d_namep);
-		}
 	return TCL_OK;
 }
 
@@ -951,8 +944,8 @@ wdb_rt_gettrees_tcl( clientData, interp, argc, argv )
 	 *  Once on the rti_resources list, rt_clean() will clean 'em up.
 	 */
 	BU_GETSTRUCT(resp, resource);
-	rt_init_resource(resp, 0, rtip);
-	BU_ASSERT_PTR( BU_PTBL_GET(&rtip->rti_resources, 0), !=, NULL );
+	rt_init_resource(resp, 0);
+	bu_ptbl_ins_unique(&rtip->rti_resources, (long *)resp);
 
 	BU_GETSTRUCT(ap, application);
 	ap->a_magic = RT_AP_MAGIC;
@@ -1231,7 +1224,7 @@ wdb_list_tcl(clientData, interp, argc, argv)
 
 			dp = DB_FULL_PATH_CUR_DIR( &path );
 
-			if ((id = rt_db_get_internal(&intern, dp, wdbp->dbip, ts.ts_mat, &rt_uniresource)) < 0) {
+			if ((id = rt_db_get_internal(&intern, dp, wdbp->dbip, ts.ts_mat)) < 0) {
 				Tcl_AppendResult(interp, "rt_db_get_internal(", dp->d_namep,
 						 ") failure", (char *)NULL );
 				continue;
@@ -1241,10 +1234,10 @@ wdb_list_tcl(clientData, interp, argc, argv)
 
 			bu_vls_printf( &str, "%s:  ", argv[arg] );
 
-			if (rt_functab[id].ft_describe(&str, &intern, 99, wdbp->dbip->dbi_base2local, &rt_uniresource) < 0)
+			if (rt_functab[id].ft_describe(&str, &intern, 99, wdbp->dbip->dbi_base2local) < 0)
 				Tcl_AppendResult(interp, dp->d_namep, ": describe error", (char *)NULL);
 
-			rt_db_free_internal(&intern, &rt_uniresource);
+			rt_functab[id].ft_ifree(&intern);
 		} else {
 			if ((dp = db_lookup(wdbp->dbip, argv[arg], LOOKUP_NOISY)) == DIR_NULL)
 				continue;
@@ -1287,7 +1280,7 @@ wdb_trace(interp, dbip, old_xlate, flag, wdb_xform, des_path)
 	RT_CK_FULL_PATH(des_path);
 
 	db_full_path_init(&accumulated_path);
-	db_init_db_tree_state( &ts, dbip, &rt_uniresource );
+	db_init_db_tree_state( &ts, dbip );
 	bn_mat_copy( ts.ts_mat, old_xlate );
 	if( db_follow_path( &ts, &accumulated_path, des_path, LOOKUP_NOISY, 0 ) < 0 )  {
 		ret = 0;
@@ -1346,7 +1339,7 @@ wdb_pathsum_tcl(clientData, interp, argc, argv)
      char    **argv;
 {
 	struct rt_wdb *wdbp = (struct rt_wdb *)clientData;
-	int flag = WDB_CPEVAL;
+	int flag;
 	mat_t	wdb_xform;
 	struct db_full_path	desired_path;
 
@@ -1382,7 +1375,7 @@ wdb_pathsum_tcl(clientData, interp, argc, argv)
 		if( db_string_to_path( &desired_path, wdbp->dbip, argv[1] ) < 0 )
 			goto err;
 	} else {
-		if( db_argv_to_path( &desired_path, wdbp->dbip, argc-1, (const char*const*)(argv+1) ) < 0 )
+		if( db_argv_to_path( &desired_path, wdbp->dbip, argc-1, argv+1 ) < 0 )
 			goto err;
 	}
 
@@ -1629,7 +1622,7 @@ wdb_killall_tcl(clientData, interp, argc, argv)
 			if (!(dp->d_flags & DIR_COMB))
 				continue;
 
-			if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL, &rt_uniresource) < 0) {
+			if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL) < 0) {
 				Tcl_AppendResult(interp, "rt_db_get_internal(", dp->d_namep,
 						 ") failure", (char *)NULL );
 				ret = TCL_ERROR;
@@ -1641,7 +1634,7 @@ wdb_killall_tcl(clientData, interp, argc, argv)
 			for (k=2; k<argc; k++) {
 				int	code;
 
-				code = db_tree_del_dbleaf(&(comb->tree), argv[k], &rt_uniresource);
+				code = db_tree_del_dbleaf(&(comb->tree), argv[k]);
 				if (code == -1)
 					continue;	/* not found */
 				if (code == -2)
@@ -1658,7 +1651,7 @@ wdb_killall_tcl(clientData, interp, argc, argv)
 				}
 			}
 
-			if (rt_db_put_internal(dp, wdbp->dbip, &intern, &rt_uniresource) < 0) {
+			if (rt_db_put_internal(dp, wdbp->dbip, &intern) < 0) {
 				Tcl_AppendResult(interp,
 						 "ERROR: Unable to write new combination into database.\n",
 						 (char *)NULL);
@@ -1804,7 +1797,8 @@ wdb_copy_tcl(clientData, interp, argc, argv)
 		return TCL_ERROR;
 	}
 
-	if ((dp=db_diradd(wdbp->dbip, argv[3], -1, proto->d_len, proto->d_flags, NULL)) == DIR_NULL ) {
+	if ((dp=db_diradd(wdbp->dbip, argv[3], -1, proto->d_len, proto->d_flags, NULL)) == DIR_NULL ||
+	    db_alloc(wdbp->dbip, dp, proto->d_len) < 0) {
 		Tcl_AppendResult(interp,
 				 "An error has occured while adding a new object to the database.",
 				 (char *)NULL);
@@ -1812,11 +1806,11 @@ wdb_copy_tcl(clientData, interp, argc, argv)
 	}
 
 	if (db_put_external(&external, dp, wdbp->dbip) < 0) {
-		bu_free_external(&external);
+		db_free_external(&external);
 		Tcl_AppendResult(interp, "Database write error, aborting", (char *)NULL);
 		return TCL_ERROR;
 	}
-	bu_free_external(&external);
+	db_free_external(&external);
 
 	return TCL_OK;
 }
@@ -1861,21 +1855,21 @@ wdb_move_tcl(clientData, interp, argc, argv)
 		return TCL_ERROR;
 	}
 
-	if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL, &rt_uniresource) < 0) {
+	if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL) < 0) {
 		Tcl_AppendResult(interp, "Database read error, aborting", (char *)NULL);
 		return TCL_ERROR;
 	}
 
 	/*  Change object name in the in-memory directory. */
 	if (db_rename(wdbp->dbip, dp, argv[3]) < 0) {
-		rt_db_free_internal(&intern, &rt_uniresource);
+		rt_db_free_internal(&intern);
 		Tcl_AppendResult(interp, "error in db_rename to ", argv[3],
 				 ", aborting", (char *)NULL);
 		return TCL_ERROR;
 	}
 
 	/* Re-write to the database.  New name is applied on the way out. */
-	if (rt_db_put_internal(dp, wdbp->dbip, &intern, &rt_uniresource) < 0) {
+	if (rt_db_put_internal(dp, wdbp->dbip, &intern) < 0) {
 		Tcl_AppendResult(interp, "Database write error, aborting", (char *)NULL);
 		return TCL_ERROR;
 	}
@@ -1945,12 +1939,12 @@ wdb_move_all_tcl(clientData, interp, argc, argv)
 	}
 
 	/* Change name in the file */
-	if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL, &rt_uniresource) < 0) {
+	if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL) < 0) {
 		Tcl_AppendResult(interp, "Database read error, aborting", (char *)NULL);
 		return TCL_ERROR;
 	}
 
-	if (rt_db_put_internal(dp, wdbp->dbip, &intern, &rt_uniresource) < 0) {
+	if (rt_db_put_internal(dp, wdbp->dbip, &intern) < 0) {
 		Tcl_AppendResult(interp, "Database write error, aborting", (char *)NULL);
 		return TCL_ERROR;
 	}
@@ -1967,7 +1961,7 @@ wdb_move_all_tcl(clientData, interp, argc, argv)
 			if (!(dp->d_flags & DIR_COMB))
 				continue;
 
-			if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL, &rt_uniresource) < 0)
+			if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL) < 0)
 				continue;
 			comb = (struct rt_comb_internal *)intern.idb_ptr;
 
@@ -2000,9 +1994,9 @@ wdb_move_all_tcl(clientData, interp, argc, argv)
 			}
 
 			if (changed) {
-				if (rt_db_put_internal(dp, wdbp->dbip, &intern, &rt_uniresource)) {
+				if (rt_db_put_internal(dp, wdbp->dbip, &intern)) {
 					bu_ptbl_free( &stack );
-					rt_db_free_internal( &intern, &rt_uniresource );
+					rt_comb_ifree( &intern );
 					Tcl_AppendResult(interp,
 							 "Database write error, aborting",
 							 (char *)NULL);
@@ -2010,7 +2004,7 @@ wdb_move_all_tcl(clientData, interp, argc, argv)
 				}
 			}
 			else
-				rt_db_free_internal(&intern, &rt_uniresource);
+				rt_comb_ifree(&intern);
 		}
 	}
 
@@ -2077,7 +2071,8 @@ wdb_dir_add(input_dbip, name, laddr, len, flags, ptr)
 	char			local[RT_NAMESIZE+2+2];
 	struct dir_add_stuff	*dasp = (struct dir_add_stuff *)ptr;
 
-	RT_CK_DBI(input_dbip);
+	if (input_dbip->dbi_magic != DBI_MAGIC)
+		bu_bomb("wdb_dir_add:  bad dbip");
 
 	/* Add the prefix, if any */
 	if (dasp->wdbp->wdb_ncharadd > 0) {
@@ -2124,10 +2119,12 @@ wdb_dir_add(input_dbip, name, laddr, len, flags, ptr)
 		return(-1);
 
 	/* Then, register a new object in the main database */
-	if ((dp = db_diradd(dasp->main_dbip, local, -1L, 0, flags, NULL)) == DIR_NULL)
+	if ((dp = db_diradd(dasp->main_dbip, local, -1L, len, flags, NULL)) == DIR_NULL)
+		return(-1);
+	if(db_alloc(dasp->main_dbip, dp, len) < 0)
 		return(-1);
 
-	if (rt_db_get_internal(&intern, input_dp, input_dbip, (fastf_t *)NULL, &rt_uniresource) < 0) {
+	if (rt_db_get_internal(&intern, input_dp, input_dbip, (fastf_t *)NULL) < 0) {
 		Tcl_AppendResult(dasp->interp, "Database read error, aborting\n", (char *)NULL);
 		if (db_delete(dasp->main_dbip, dp) < 0 ||
 		    db_dirdelete(dasp->main_dbip, dp) < 0) {
@@ -2137,7 +2134,7 @@ wdb_dir_add(input_dbip, name, laddr, len, flags, ptr)
 		return -1;
 	}
 
-	/* Update any references.  Name is already correct. */
+	/* Update the name, and any references */
 	if (flags & DIR_SOLID) {
 		Tcl_AppendResult(dasp->interp,
 				 "adding solid '",
@@ -2148,10 +2145,15 @@ wdb_dir_add(input_dbip, name, laddr, len, flags, ptr)
 					 dasp->wdbp->wdb_prestr, name,
 					 "\" truncated to \"",
 					 local, "\"\n", (char *)NULL);
-	} else if(flags & DIR_COMB) {
+
+		bu_free((genptr_t)dp->d_namep, "mged_dir_add: dp->d_namep");
+		dp->d_namep = bu_strdup(local);
+	} else {
 		Tcl_AppendResult(dasp->interp,
 				 "adding  comb '",
 				 local, "'\n", (char *)NULL);
+		bu_free((genptr_t)dp->d_namep, "mged_dir_add: dp->d_namep");
+		dp->d_namep = bu_strdup(local);
 
 		/* Update all the member records */
 		comb = (struct rt_comb_internal *)intern.idb_ptr;
@@ -2160,16 +2162,9 @@ wdb_dir_add(input_dbip, name, laddr, len, flags, ptr)
 			 (genptr_t)&(dasp->wdbp->wdb_ncharadd),
 			 (genptr_t)dasp->wdbp->wdb_prestr, (genptr_t)NULL);
 		}
-	} else {
-		Tcl_AppendResult(dasp->interp,
-				 "WARNING: object name \"",
-				 dasp->wdbp->wdb_prestr, name,
-				 "\" is of an unsupported type, not copied.\n",
-				 (char *)NULL);
-		return -1;
 	}
 
-	if (rt_db_put_internal(dp, dasp->main_dbip, &intern, &rt_uniresource) < 0) {
+	if (rt_db_put_internal(dp, dasp->main_dbip, &intern) < 0) {
 		Tcl_AppendResult(dasp->interp,
 				 "Failed writing ",
 				 dp->d_namep, " to database\n", (char *)NULL);
@@ -2468,7 +2463,7 @@ wdb_remove_tcl(clientData, interp, argc, argv)
 		return TCL_ERROR;
 	}
 
-	if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL, &rt_uniresource) < 0) {
+	if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL) < 0) {
 		Tcl_AppendResult(interp, "Database read error, aborting", (char *)NULL);
 		return TCL_ERROR;
 	}
@@ -2480,7 +2475,7 @@ wdb_remove_tcl(clientData, interp, argc, argv)
 	num_deleted = 0;
 	ret = TCL_OK;
 	for (i = 3; i < argc; i++) {
-		if (db_tree_del_dbleaf( &(comb->tree), argv[i], &rt_uniresource ) < 0) {
+		if (db_tree_del_dbleaf( &(comb->tree), argv[i] ) < 0) {
 			Tcl_AppendResult(interp, "  ERROR_deleting ",
 					 dp->d_namep, "/", argv[i],
 					 "\n", (char *)NULL);
@@ -2493,7 +2488,7 @@ wdb_remove_tcl(clientData, interp, argc, argv)
 		}
 	}
 
-	if (rt_db_put_internal(dp, wdbp->dbip, &intern, &rt_uniresource) < 0) {
+	if (rt_db_put_internal(dp, wdbp->dbip, &intern) < 0) {
 		Tcl_AppendResult(interp, "Database write error, aborting", (char *)NULL);
 		return TCL_ERROR;
 	}
@@ -2758,7 +2753,7 @@ wdb_find_tcl(clientData, interp, argc, argv)
 			if (!(dp->d_flags & DIR_COMB))
 				continue;
 
-			if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL, &rt_uniresource) < 0) {
+			if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL) < 0) {
 				Tcl_AppendResult(interp, "Database read error, aborting", (char *)NULL);
 				return TCL_ERROR;
 			}
@@ -2767,7 +2762,7 @@ wdb_find_tcl(clientData, interp, argc, argv)
 			for (k=2; k<argc; k++)
 				db_tree_funcleaf(wdbp->dbip, comb, comb->tree, wdb_find_ref, (genptr_t)argv[k], (genptr_t)dp->d_namep, (genptr_t)interp);
 
-			rt_db_free_internal(&intern, &rt_uniresource);
+			rt_comb_ifree(&intern);
 		}
 	}
 
@@ -2882,7 +2877,7 @@ wdb_which_tcl(clientData, interp, argc, argv)
 			if (!(dp->d_flags & DIR_REGION))
 				continue;
 
-			if (rt_db_get_internal( &intern, dp, wdbp->dbip, (fastf_t *)NULL, &rt_uniresource ) < 0) {
+			if (rt_db_get_internal( &intern, dp, wdbp->dbip, (fastf_t *)NULL ) < 0) {
 				Tcl_AppendResult(interp, "Database read error, aborting", (char *)NULL);
 				return TCL_ERROR;
 			}
@@ -2906,7 +2901,7 @@ wdb_which_tcl(clientData, interp, argc, argv)
 				}
 			}
 
-			rt_db_free_internal(&intern, &rt_uniresource);
+			rt_comb_ifree(&intern);
 		}
 	}
 
@@ -2942,8 +2937,9 @@ wdb_title_tcl(clientData, interp, argc, argv)
 	struct rt_wdb *wdbp = (struct rt_wdb *)clientData;
 	struct bu_vls	title;
 	int bad = 0;
+	int code;
 
-	RT_CK_WDB(wdbp);
+	/* Caution: Not all wdb's have a dbip, some have only an fp */
 	RT_CK_DBI(wdbp->dbip);
 	if (wdbp->dbip->dbi_read_only) {
 		Tcl_AppendResult(interp, "Database is read-only!", (char *)NULL);
@@ -2968,7 +2964,8 @@ wdb_title_tcl(clientData, interp, argc, argv)
 	bu_vls_init(&title);
 	bu_vls_from_argv(&title, argc-2, argv+2);
 
-	if (db_update_ident(wdbp->dbip, bu_vls_addr(&title), wdbp->dbip->dbi_base2local) < 0) {
+	code = db_v4_get_units_code(bu_units_string(wdbp->dbip->dbi_base2local));
+	if (db_ident(wdbp->dbip, bu_vls_addr(&title), code) < 0) {
 		Tcl_AppendResult(interp, "Error: unable to change database title");
 		bad = 1;
 	}
@@ -2979,8 +2976,6 @@ wdb_title_tcl(clientData, interp, argc, argv)
 
 /*
  *			W D B _ P R I N T _ N O D E
- *
- *  NON-PARALLEL due to rt_uniresource
  */
 static void
 wdb_print_node(wdbp, interp, dp, pathpos, prefix)
@@ -3024,7 +3019,7 @@ wdb_print_node(wdbp, interp, dp, pathpos, prefix)
 	 *  Process all the arcs (eg, directory members).
 	 */
 
-	if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL, &rt_uniresource) < 0) {
+	if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL) < 0) {
 		Tcl_AppendResult(interp, "Database read error, aborting", (char *)NULL);
 		return;
 	}
@@ -3036,7 +3031,7 @@ wdb_print_node(wdbp, interp, dp, pathpos, prefix)
 		struct rt_tree_array *rt_tree_array;
 
 		if (comb->tree && db_ck_v4gift_tree(comb->tree) < 0) {
-			db_non_union_push(comb->tree, &rt_uniresource);
+			db_non_union_push(comb->tree);
 			if (db_ck_v4gift_tree(comb->tree) < 0) {
 				Tcl_AppendResult(interp, "Cannot flatten tree for listing", (char *)NULL);
 				return;
@@ -3046,14 +3041,11 @@ wdb_print_node(wdbp, interp, dp, pathpos, prefix)
 		if (node_count > 0) {
 			rt_tree_array = (struct rt_tree_array *)bu_calloc( node_count,
 									   sizeof( struct rt_tree_array ), "tree list" );
-			actual_count = (struct rt_tree_array *)db_flatten_tree(
-				rt_tree_array, comb->tree, OP_UNION,
-				1, &rt_uniresource ) - rt_tree_array;
-			BU_ASSERT_PTR( actual_count, ==, node_count );
-			comb->tree = TREE_NULL;
-		} else {
-			actual_count = 0;
-			rt_tree_array = NULL;
+			actual_count = (struct rt_tree_array *)db_flatten_tree( rt_tree_array, comb->tree, OP_UNION ) - rt_tree_array;
+			if (actual_count > node_count)
+				bu_bomb("rt_comb_v4_export() array overflow!");
+			if (actual_count < node_count)
+				bu_log("WARNING rt_comb_v4_export() array underflow! %d < %d", actual_count, node_count);
 		}
 
 		for (i=0 ; i<actual_count ; i++) {
@@ -3089,11 +3081,10 @@ wdb_print_node(wdbp, interp, dp, pathpos, prefix)
 				Tcl_AppendResult(interp, rt_tree_array[i].tl_tree->tr_l.tl_name, "\n", (char *)NULL);
 			} else
 				wdb_print_node(wdbp, interp, nextdp, pathpos+1, op);
-			db_free_tree( rt_tree_array[i].tl_tree, &rt_uniresource );
 		}
-		if(rt_tree_array) bu_free((char *)rt_tree_array, "printnode: rt_tree_array");
+		bu_free((char *)rt_tree_array, "printnode: rt_tree_array");
 	}
-	rt_db_free_internal(&intern, &rt_uniresource);
+	rt_comb_ifree(&intern);
 }
 
 /*
@@ -3150,8 +3141,6 @@ wdb_color_putrec(mp, interp, dbip)
 	if (dbip->dbi_read_only)
 		return;
 
-	BU_ASSERT_LONG( dbip->dbi_version, ==, 4 );
-
 	rec.md.md_id = ID_MATERIAL;
 	rec.md.md_low = mp->mt_low;
 	rec.md.md_hi = mp->mt_high;
@@ -3160,7 +3149,7 @@ wdb_color_putrec(mp, interp, dbip)
 	rec.md.md_b = mp->mt_b;
 
 	/* Fake up a directory entry for db_* routines */
-	RT_DIR_SET_NAMEP( &dir, "color_putrec" );
+	dir.d_namep = "color_putrec";
 	dir.d_magic = RT_DIR_MAGIC;
 	dir.d_flags = 0;
 
@@ -3199,13 +3188,11 @@ wdb_color_zaprec(mp, interp, dbip)
 {
 	struct directory dir;
 
-	BU_ASSERT_LONG( dbip->dbi_version, ==, 4 );
-
 	if (dbip->dbi_read_only || mp->mt_daddr == MATER_NO_ADDR)
 		return;
 
 	dir.d_magic = RT_DIR_MAGIC;
-	RT_DIR_SET_NAMEP( &dir, "color_zaprec" );
+	dir.d_namep = "color_zaprec";
 	dir.d_len = 1;
 	dir.d_addr = mp->mt_daddr;
 	dir.d_flags = 0;
@@ -3565,10 +3552,11 @@ struct wdb_push_data {
  * enough to do hear with out them.
  */
 static union tree *
-wdb_push_leaf(tsp, pathp, ip, client_data)
+wdb_push_leaf(tsp, pathp, ep, id, client_data)
      struct db_tree_state	*tsp;
      struct db_full_path	*pathp;
-     struct rt_db_internal	*ip;
+     struct bu_external	*ep;
+     int			id;
      genptr_t		client_data;
 {
 	union tree	*curtree;
@@ -3578,15 +3566,13 @@ wdb_push_leaf(tsp, pathp, ip, client_data)
 
 	RT_CK_TESS_TOL(tsp->ts_ttol);
 	BN_CK_TOL(tsp->ts_tol);
-	RT_CK_RESOURCE(tsp->ts_resp);
 
 	dp = pathp->fp_names[pathp->fp_len-1];
 
 	if (rt_g.debug&DEBUG_TREEWALK) {
 		char *sofar = db_path_to_string(pathp);
 
-		Tcl_AppendResult(wpdp->interp, "wdb_push_leaf(",
-				ip->idb_meth->ft_name,
+		Tcl_AppendResult(wpdp->interp, "wdb_push_leaf(", rt_functab[id].ft_name,
 				 ") path='", sofar, "'\n", (char *)NULL);
 		bu_free((genptr_t)sofar, "path string");
 	}
@@ -3614,7 +3600,7 @@ wdb_push_leaf(tsp, pathp, ip, client_data)
 			}
 
 			bu_semaphore_release(RT_SEM_WORKER);
-			RT_GET_TREE(curtree, tsp->ts_resp);
+			BU_GETUNION(curtree, tree);
 			curtree->magic = RT_TREE_MAGIC;
 			curtree->tr_op = OP_NOP;
 			return curtree;
@@ -3632,7 +3618,7 @@ wdb_push_leaf(tsp, pathp, ip, client_data)
 	pip->forw = &wpdp->pi_head;
 	pip->back->forw = pip;
 	bu_semaphore_release(RT_SEM_WORKER);
-	RT_GET_TREE( curtree, tsp->ts_resp );
+	BU_GETUNION(curtree, tree);
 	curtree->magic = RT_TREE_MAGIC;
 	curtree->tr_op = OP_NOP;
 	return curtree;
@@ -3777,22 +3763,23 @@ wdb_push_tcl(clientData, interp, argc, argv)
 			continue;
 		}
 		id = rt_id_solid(&es_ext);
-		if (rt_functab[id].ft_import(&es_int, &es_ext, pip->pi_mat, wdbp->dbip, &rt_uniresource) < 0 ) {
+		if (rt_functab[id].ft_import(&es_int, &es_ext, pip->pi_mat, wdbp->dbip) < 0 ) {
 			Tcl_AppendResult(interp, "push(", pip->pi_dir->d_namep,
 					 "): solid import failure\n", (char *)NULL);
-			rt_db_free_internal( &es_int, &rt_uniresource);
-			bu_free_external( &es_ext);
+			if (es_int.idb_ptr) rt_functab[id].ft_ifree( &es_int);
+			db_free_external( &es_ext);
 			continue;
 		}
 		RT_CK_DB_INTERNAL(&es_int);
-		if (rt_functab[id].ft_export( &es_ext, &es_int, 1.0, wdbp->dbip, &rt_uniresource) < 0 ) {
+		if (rt_functab[id].ft_export( &es_ext, &es_int, 1.0, wdbp->dbip) < 0 ) {
 		  Tcl_AppendResult(interp, "push(", pip->pi_dir->d_namep,
 				   "): solid export failure\n", (char *)NULL);
 		} else {
 			db_put_external(&es_ext, pip->pi_dir, wdbp->dbip);
 		}
-		rt_db_free_internal(&es_int, &rt_uniresource);
-		bu_free_external(&es_ext);
+		if (es_int.idb_ptr)
+			rt_functab[id].ft_ifree(&es_int);
+		db_free_external(&es_ext);
 	}
 
 	/*
@@ -3863,13 +3850,13 @@ wdb_whatid_tcl(clientData, interp, argc, argv)
 		return TCL_ERROR;
 	}
 
-	if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL, &rt_uniresource) < 0)
+	if (rt_db_get_internal(&intern, dp, wdbp->dbip, (fastf_t *)NULL) < 0)
 		return TCL_ERROR;
 	comb = (struct rt_comb_internal *)intern.idb_ptr;
 
 	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "%d", comb->region_id);
-	rt_db_free_internal(&intern, &rt_uniresource);
+	rt_comb_ifree(&intern);
 	Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 	bu_vls_free(&vls);
 
@@ -3907,12 +3894,11 @@ wdb_node_write(dbip, dp, client_data)
 		return;
 	}
 
-	if( db_fwrite_external( wndp->fp, dp->d_namep, &ext) < 0 )  {
-		Tcl_AppendResult(wndp->interp,
-				 "Output database write error on ",
+	if( db_fwrite_external( wndp->fp, dp->d_namep, &ext, 1.0 ) < 0 )  {
+		Tcl_AppendResult(wndp->interp, "Output database write error on ",
 			dp->d_namep, ", aborting", (char *)NULL);
 	}
-	bu_free_external(&ext);
+	db_free_external(&ext);
 }
 
 /*
@@ -4316,10 +4302,10 @@ wdb_vls_line_dpp(vls, list_of_names, num_in_list, aflag, cflag, rflag, sflag)
 
 		/* print list item i */
 		if (aflag ||
-		    (!cflag && !rflag && !sflag) ||
-		    (cflag && isComb) ||
-		    (rflag && isRegion) ||
-		    (sflag && isSolid)) {
+		    !cflag && !rflag && !sflag ||
+		    cflag && isComb ||
+		    rflag && isRegion ||
+		    sflag && isSolid) {
 			bu_vls_printf(vls,  "%s ", list_of_names[i]->d_namep);
 		}
 	}
@@ -4371,7 +4357,7 @@ wdb_do_list(dbip, interp, outstrp, dp, verbose)
 
 	RT_CK_DBI(dbip);
 
-	if ((id = rt_db_get_internal(&intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource)) < 0) {
+	if ((id = rt_db_get_internal(&intern, dp, dbip, (fastf_t *)NULL)) < 0) {
 		Tcl_AppendResult(interp, "rt_db_get_internal(", dp->d_namep,
 				 ") failure\n", (char *)NULL);
 		return;
@@ -4380,9 +4366,9 @@ wdb_do_list(dbip, interp, outstrp, dp, verbose)
 	bu_vls_printf(outstrp, "%s:  ", dp->d_namep);
 
 	if (rt_functab[id].ft_describe(outstrp, &intern,
-				       verbose, dbip->dbi_base2local, &rt_uniresource) < 0)
+				       verbose, dbip->dbi_base2local) < 0)
 		Tcl_AppendResult(interp, dp->d_namep, ": describe error\n", (char *)NULL);
-	rt_db_free_internal(&intern, &rt_uniresource);
+	rt_functab[id].ft_ifree(&intern);
 }
 
 /*
@@ -4429,7 +4415,8 @@ wdb_combadd(interp, dbip, objp, combname, region_flag, relation, ident, air, wdb
 			flags = DIR_COMB;
 
 		/* Update the in-core directory */
-		if ((dp = db_diradd(dbip, combname, -1, 2, flags, NULL)) == DIR_NULL )  {
+		if ((dp = db_diradd(dbip, combname, -1, 2, flags, NULL)) == DIR_NULL ||
+		    db_alloc(dbip, dp, 2) < 0)  {
 			Tcl_AppendResult(interp, "An error has occured while adding '",
 					 combname, "' to the database.\n", (char *)NULL);
 			return DIR_NULL;
@@ -4465,14 +4452,14 @@ wdb_combadd(interp, dbip, objp, combname, region_flag, relation, ident, air, wdb
 			bu_vls_free(&tmp_vls);
 		}
 
-		RT_GET_TREE( tp, &rt_uniresource );
+		BU_GETUNION( tp, tree );
 		tp->magic = RT_TREE_MAGIC;
 		tp->tr_l.tl_op = OP_DB_LEAF;
 		tp->tr_l.tl_name = bu_strdup( objp->d_namep );
 		tp->tr_l.tl_mat = (matp_t)NULL;
 		comb->tree = tp;
 
-		if (rt_db_put_internal(dp, dbip, &intern, &rt_uniresource) < 0) {
+		if (rt_db_put_internal(dp, dbip, &intern) < 0) {
 			Tcl_AppendResult(interp, "Failed to write ", dp->d_namep, (char *)NULL );
 			return( DIR_NULL );
 		}
@@ -4480,7 +4467,7 @@ wdb_combadd(interp, dbip, objp, combname, region_flag, relation, ident, air, wdb
 	}
 
 	/* combination exists, add a new member */
-	if (rt_db_get_internal(&intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource) < 0) {
+	if (rt_db_get_internal(&intern, dp, dbip, (fastf_t *)NULL) < 0) {
 		Tcl_AppendResult(interp, "read error, aborting\n", (char *)NULL);
 		return DIR_NULL;
 	}
@@ -4494,10 +4481,10 @@ wdb_combadd(interp, dbip, objp, combname, region_flag, relation, ident, air, wdb
 	}
 
 	if (comb->tree && db_ck_v4gift_tree(comb->tree) < 0) {
-		db_non_union_push(comb->tree, &rt_uniresource);
+		db_non_union_push(comb->tree);
 		if (db_ck_v4gift_tree(comb->tree) < 0) {
 			Tcl_AppendResult(interp, "Cannot flatten tree for editing\n", (char *)NULL);
-			rt_db_free_internal(&intern, &rt_uniresource);
+			rt_comb_ifree(comb);
 			return DIR_NULL;
 		}
 	}
@@ -4509,11 +4496,9 @@ wdb_combadd(interp, dbip, objp, combname, region_flag, relation, ident, air, wdb
 
 	/* flatten tree */
 	if (comb->tree) {
-		actual_count = 1 + (struct rt_tree_array *)db_flatten_tree(
-			tree_list, comb->tree, OP_UNION, 1, &rt_uniresource )
-			- tree_list;
-		BU_ASSERT_LONG( actual_count, ==, node_count );
-		comb->tree = TREE_NULL;
+		actual_count = 1 + (struct rt_tree_array *)db_flatten_tree( tree_list, comb->tree, OP_UNION ) - tree_list;
+		if( actual_count > node_count )  bu_bomb("combadd() array overflow!");
+		if( actual_count < node_count )  bu_log("WARNING combadd() array underflow! %d", actual_count, node_count);
 	}
 
 	/* insert new member at end */
@@ -4533,7 +4518,7 @@ wdb_combadd(interp, dbip, objp, combname, region_flag, relation, ident, air, wdb
 	}
 
 	/* make new leaf node, and insert at end of list */
-	RT_GET_TREE( tp, &rt_uniresource );
+	BU_GETUNION(tp, tree);
 	tree_list[node_count-1].tl_tree = tp;
 	tp->tr_l.magic = RT_TREE_MAGIC;
 	tp->tr_l.tl_op = OP_DB_LEAF;
@@ -4541,10 +4526,16 @@ wdb_combadd(interp, dbip, objp, combname, region_flag, relation, ident, air, wdb
 	tp->tr_l.tl_mat = (matp_t)NULL;
 
 	/* rebuild the tree */
-	comb->tree = (union tree *)db_mkgift_tree( tree_list, node_count, &rt_uniresource );
+	comb->tree = (union tree *)db_mkgift_tree( tree_list, node_count, (struct db_tree_state *)NULL );
+
+	/* increase the length of this record */
+	if (db_grow(dbip, dp, 1) < 0) {
+		Tcl_AppendResult(interp, "db_grow error, aborting\n", (char *)NULL);
+		return DIR_NULL;
+	}
 
 	/* and finally, write it out */
-	if (rt_db_put_internal(dp, dbip, &intern, &rt_uniresource) < 0) {
+	if (rt_db_put_internal(dp, dbip, &intern) < 0) {
 		Tcl_AppendResult(interp, "Failed to write ", dp->d_namep, (char *)NULL);
 		return DIR_NULL;
 	}
@@ -4594,7 +4585,7 @@ wdb_identitize(dp, dbip, interp)
 
 	if (dp->d_flags & DIR_SOLID)
 		return;
-	if (rt_db_get_internal(&intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource) < 0) {
+	if (rt_db_get_internal(&intern, dp, dbip, (fastf_t *)NULL) < 0) {
 		Tcl_AppendResult(interp, "Database read error, aborting\n", (char *)NULL);
 		return;
 	}
@@ -4602,7 +4593,7 @@ wdb_identitize(dp, dbip, interp)
 	if (comb->tree) {
 		db_tree_funcleaf(dbip, comb, comb->tree, wdb_do_identitize,
 				 (genptr_t)interp, (genptr_t)NULL, (genptr_t)NULL);
-		if (rt_db_put_internal(dp, dbip, &intern, &rt_uniresource) < 0) {
+		if (rt_db_put_internal(dp, dbip, &intern) < 0) {
 			Tcl_AppendResult(interp, "Cannot write modified combination (", dp->d_namep,
 					 ") to database\n", (char *)NULL );
 			return;

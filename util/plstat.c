@@ -16,7 +16,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include <stdio.h>
@@ -105,7 +105,6 @@ void	outchar(), outstring(), outshort(), outfloat();
 static char usage[] = "\
 Usage: pldebug [-v] [unix_plot]\n";
 
-int
 main( argc, argv )
 int	argc;
 char	**argv;

@@ -51,14 +51,13 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
 #include "machine.h"
 #include "vmath.h"
 #include "nmg.h"
@@ -510,8 +509,7 @@ int		orientation;
 {
 	struct loop	*l;
 	struct loopuse	*lu1, *lu2;
-	struct vertexuse *vu1 = NULL;
-	struct vertexuse *vu2;
+	struct vertexuse *vu1, *vu2;
 	struct model	*m;
 	/* XXX - why the new union? ctj */
 	union {
@@ -559,7 +557,7 @@ int		orientation;
 
 		/* Second, build the vertices */
 		/* This "if" degenerates to the "else" clause if no stealing */
-		if ( (vu1 = s->vu_p) ) {
+		if ( vu1 = s->vu_p ) {
 			/* Use shell's lone vertex */
 			s->vu_p = (struct vertexuse *)NULL;
 			vu1->up.lu_p = lu1;
@@ -1652,7 +1650,7 @@ CONST point_t	pt;
 
 	NMG_CK_VERTEX(v);
 
-	if ( (vg = v->vg_p) ) {
+	if (vg = v->vg_p) {
 		NMG_CK_VERTEX_G(v->vg_p);
 	}
 	else {
@@ -1799,7 +1797,7 @@ struct edgeuse *eu;
 	if(eu->vu_p->v_p == eu->eumate_p->vu_p->v_p )
 		rt_bomb("nmg_edge_g(): Warning - edge runs from+to same vertex, 0 len!\n");
 
-	if ( (eg_p = eu->g.lseg_p) ) {
+	if (eg_p = eu->g.lseg_p) {
 		NMG_CK_EDGE_G_LSEG(eg_p);
 		rt_bomb("nmg_edge_g() geometry already assigned\n");
 	}
@@ -2200,7 +2198,7 @@ CONST struct bn_tol	*tol;
 	lu = l->lu_p;
 	NMG_CK_LOOPUSE(lu);
 
-	if ( (lg = l->lg_p) ) {
+	if (lg = l->lg_p) {
 		NMG_CK_LOOP_G(lg);
 	} else {
 		m = nmg_find_model( lu->up.magic_p );

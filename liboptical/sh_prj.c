@@ -24,8 +24,7 @@
 #include "shadefuncs.h"
 #include "shadework.h"
 #include "../rt/ext.h"
-#include "rtprivate.h"
-#include "plot3.h"
+#include "../rt/rdebug.h"
 
 #define prj_MAGIC 0x70726a00	/* "prj" */
 #define CK_prj_SP(_p) BU_CKMAG(_p, prj_MAGIC, "prj_specific")
@@ -394,7 +393,7 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	for (BU_LIST_FOR(img_sp, img_specific, &prj_sp->prj_images.l)) {
 		if (img_sp->i_antialias) {
 			if (rdebug&RDEBUG_SHADE)
-				bu_log("prj_setup(%s) setting prismtrace 1\n", rp->reg_name);
+				bu_log("setting prismtrace 1");
 			rtip->rti_prismtrace = 1;
 			break;
 		}
@@ -412,10 +411,8 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	 * db_region_mat returns a matrix which maps points on/in the region
 	 * as it exists where the region is defined (as opposed to the 
 	 * (possibly transformed) one we are rendering.
-	 *
-	 *  Non-PARALLEL, which is OK, because shaders are prepped serially.
 	 */
-	db_region_mat(prj_sp->prj_m_to_sh, rtip->rti_dbip, rp->reg_name, &rt_uniresource);
+	db_region_mat(prj_sp->prj_m_to_sh, rtip->rti_dbip, rp->reg_name);
 
 
 	if (rdebug&RDEBUG_SHADE) {
@@ -474,7 +471,6 @@ char *cp;
 static CONST double	cs = (1.0/255.0);
 static CONST point_t delta = {0.5, 0.5, 0.0};
 
-#if 0
 static int
 project_antialiased(sh_color, img_sp, prj_sp, ap, r_pe, r_N, r_pt)
 point_t sh_color;
@@ -508,7 +504,7 @@ CONST point_t r_pt;
 	}
 	return 0;
 }
-#endif
+
 static int
 project_point(sh_color, img_sp, prj_sp, r_pt)
 point_t sh_color;

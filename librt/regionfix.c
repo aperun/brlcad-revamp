@@ -17,7 +17,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSregionfix[] = "@(#)$Header$ (BRL)";
+static char RCSregionfix[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -59,6 +59,7 @@ struct rt_i	*rtip;
 	char	*line;
 	char	*tabp;
 	int	linenum = 0;
+	char	*err;
 	register struct region	*rp;
 	int	ret;
 	int	oldid;
@@ -111,12 +112,9 @@ struct rt_i	*rtip;
 			continue;		/* just ignore it */
 		}
 #else
-		{
-			char	*err;
-			if( (err = re_comp(line)) != (char *)0 )  {
-				bu_log("%s: line %d, re_comp error '%s'\n", file, line, err );
-				continue;		/* just ignore it */
-			}
+		if( (err = re_comp(line)) != (char *)0 )  {
+			bu_log("%s: line %d, re_comp error '%s'\n", file, line, err );
+			continue;		/* just ignore it */
 		}
 #endif
 		

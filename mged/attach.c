@@ -21,7 +21,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -258,7 +258,7 @@ char    **argv;
 {
   register struct w_dm *wp;
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -269,7 +269,6 @@ char    **argv;
     return TCL_ERROR;
   }
 
-  /* Look at last argument, skipping over any options which preceed it */
   for( wp = &which_dm[2]; wp->type != -1; wp++ )
     if( strcmp(argv[argc - 1], wp->name ) == 0 )
       break;
@@ -300,10 +299,10 @@ print_valid_dm()
 }
 
 int
-mged_attach(
-	struct w_dm *wp,
-	int argc,
-	char *argv[])
+mged_attach(wp, argc, argv)
+register struct w_dm *wp;
+int argc;
+char *argv[];
 {
   register struct dm_list *o_dm_list;
 
@@ -520,7 +519,7 @@ char	**argv;
     return TCL_ERROR;
   }
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);

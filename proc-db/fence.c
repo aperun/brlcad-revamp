@@ -698,7 +698,7 @@ char *getPrePostName(prefix, base, suffix)
  * as necessary to actually generate the fence.
  *************************************************************/
 int generateFence_s(fp, fencename, startposition, endposition)
-     struct rt_wdb *fp;
+     FILE *fp;
      char *fencename;
      point_t startposition;
      point_t endposition;
@@ -713,7 +713,7 @@ int generateFence_s(fp, fencename, startposition, endposition)
 }
 
 int generateFence(fp, fencename, startposition, heightvector, widthvector)
-     struct rt_wdb *fp;
+     FILE *fp;
      char *fencename;
      point_t startposition;
      vect_t heightvector;
@@ -754,7 +754,7 @@ int generateFence(fp, fencename, startposition, heightvector, widthvector)
     if ((poleerrors=generatePoles_s(fp, poleName))==0){
       if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...Pole generated\n");
       
-      if ((mk_addmember(poleName, &fencemembers.l, WMOP_UNION))!=NULL){
+      if ((mk_addmember(poleName, &fencemembers, WMOP_UNION))!=NULL){
 	if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...building fence...poles added...\n");
       } 
       else {
@@ -762,7 +762,7 @@ int generateFence(fp, fencename, startposition, heightvector, widthvector)
 	if (debug) fprintf(DEFAULT_DEBUG_OUTPUT, "generateFence:mk_addmember poleName[%s] FAILED\n", poleName);
 	errors++;
       }
-      if ((mk_addmember(poleName, &fenceregionmembers.l, WMOP_UNION))!=NULL){
+      if ((mk_addmember(poleName, &fenceregionmembers, WMOP_UNION))!=NULL){
 	if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...building fence region...poles added...\n");
       } 
       else {
@@ -782,14 +782,14 @@ int generateFence(fp, fencename, startposition, heightvector, widthvector)
     if ((mesherrors+=generateMesh_s(fp, meshName))==0) {
       if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...Mesh generated\n");
       
-      if ((mk_addmember(meshName, &fencemembers.l, WMOP_UNION))!=NULL){
+      if ((mk_addmember(meshName, &fencemembers, WMOP_UNION))!=NULL){
 	if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...building fence...mesh added...\n");
       } 
       else {
 	if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...building fence...ERROR adding mesh to fence combination\n");
 	if (debug) fprintf(DEFAULT_DEBUG_OUTPUT, "generateFence:mk_addmember meshName[%s] FAILED\n", meshName);
       }
-      if ((mk_addmember(meshName, &fenceregionmembers.l, WMOP_UNION))!=NULL){
+      if ((mk_addmember(meshName, &fenceregionmembers, WMOP_UNION))!=NULL){
 	if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...building fence region...mesh added...\n");
       }
       else {
@@ -834,7 +834,7 @@ int generateFence(fp, fencename, startposition, heightvector, widthvector)
  * poles for the scene
  ********************************/
 int generatePoles_s(fp, polename)
-     struct rt_wdb *fp;
+     FILE *fp;
      char *polename;
 {
   vect_t polevector;
@@ -847,7 +847,7 @@ int generatePoles_s(fp, polename)
 }
 
 int generatePoles(fp, polename, startposition, heightvector, widthvector, radius)
-     struct rt_wdb *fp;
+     FILE *fp;
      char *polename;
      point_t startposition;
      vect_t heightvector;
@@ -894,14 +894,14 @@ int generatePoles(fp, polename, startposition, heightvector, widthvector, radius
       errors++;
     }
     
-    if ((mk_addmember(getName(polename, count, DEFAULT_POLEBASICPARAM), &polemembers.l, WMOP_UNION))!=NULL){
+    if ((mk_addmember(getName(polename, count, DEFAULT_POLEBASICPARAM), &polemembers, WMOP_UNION))!=NULL){
       if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...adding pole [%d] to pole list\n", count);
     }
     else {
       if (debug) fprintf(DEFAULT_DEBUG_OUTPUT, "generatePoles:mk_addmember count[%d] FAILED\n", count);
       errors++;
     }
-    if ((mk_addmember(getName(polename, count, DEFAULT_POLEBASICPARAM), &poleregionmembers.l, WMOP_UNION))!=NULL){
+    if ((mk_addmember(getName(polename, count, DEFAULT_POLEBASICPARAM), &poleregionmembers, WMOP_UNION))!=NULL){
       if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...adding pole [%d] to pole region list\n", count);
     }
     else {
@@ -925,14 +925,14 @@ int generatePoles(fp, polename, startposition, heightvector, widthvector, radius
     errors++;
   }
   
-  if ((mk_addmember(getName(polename, count, DEFAULT_POLEBASICPARAM), &polemembers.l, WMOP_UNION))!=NULL){
+  if ((mk_addmember(getName(polename, count, DEFAULT_POLEBASICPARAM), &polemembers, WMOP_UNION))!=NULL){
     if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...adding pole [%d] to pole list\n", count);
   }
   else {
     if (debug) fprintf(DEFAULT_DEBUG_OUTPUT, "generatePoles:mk_addmember count[%d] FAILED\n", count);
     errors++;
   }
-  if ((mk_addmember(getName(polename, count, DEFAULT_POLEBASICPARAM), &poleregionmembers.l, WMOP_UNION))!=NULL){
+  if ((mk_addmember(getName(polename, count, DEFAULT_POLEBASICPARAM), &poleregionmembers, WMOP_UNION))!=NULL){
     if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...adding pole [%d] to pole region list\n", count);
   }
   else {
@@ -966,7 +966,7 @@ int generatePoles(fp, polename, startposition, heightvector, widthvector, radius
  * gets attached to the poles (if given).
  *******************************/
 int generateMesh_s(fp, meshname)
-     struct rt_wdb *fp;
+     FILE *fp;
      char *meshname;
 {
   point_t meshstartposition;
@@ -987,7 +987,7 @@ int generateMesh_s(fp, meshname)
 }
 
 int generateMesh(fp, meshname, startposition, heightvector, widthvector)
-     struct rt_wdb *fp;
+     FILE *fp;
      char *meshname;
      point_t startposition;
      vect_t heightvector;
@@ -1046,7 +1046,7 @@ int generateMesh(fp, meshname, startposition, heightvector, widthvector)
     
     for (count=0, step=0.0; step <= width; step += (double) MAGNITUDE(incrementvector), count++) {
       
-      if ((matrixextractor=mk_addmember(wireName, &meshmembers.l, WMOP_UNION))!=NULL){
+      if ((matrixextractor=mk_addmember(wireName, &meshmembers, WMOP_UNION))!=NULL){
 	if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...building mesh combination: wire [%d] of [%d]\n", count+1, count2);
       } 
       else {
@@ -1057,7 +1057,7 @@ int generateMesh(fp, meshname, startposition, heightvector, widthvector)
       matrixextractor->wm_mat[7]  = dy;
       matrixextractor->wm_mat[11] = dz;
 
-      if ((matrixextractor=mk_addmember(wireName, &meshregionmembers.l, WMOP_UNION))!=NULL){
+      if ((matrixextractor=mk_addmember(wireName, &meshregionmembers, WMOP_UNION))!=NULL){
 	if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...building mesh region: wire [%d] of [%d]\n", count+1, count2);
       } 
       else {
@@ -1111,7 +1111,7 @@ int generateMesh(fp, meshname, startposition, heightvector, widthvector)
  *****************************************/
 
 int generateWire_s(fp, wirename, position)
-     struct rt_wdb *fp;
+     FILE *fp;
      char *wirename;
      point_t position;
 {
@@ -1127,7 +1127,7 @@ int generateWire_s(fp, wirename, position)
 }
 
 int generateWire(fp, wirename, position, fenceheightvector, fencewidthvector, radius, angle, segmentlength)
-     struct rt_wdb *fp;
+     FILE *fp;
      char *wirename;
      point_t position;
      vect_t fenceheightvector;
@@ -1181,14 +1181,14 @@ int generateWire(fp, wirename, position, fenceheightvector, fencewidthvector, ra
     if (debug) fprintf(DEFAULT_DEBUG_OUTPUT, "generateWire:createWire:errors[%d]\n", errors);
   }
   for (count=0; count < DEFAULT_MESHPIECECOUNT; count++){
-    if ((mk_addmember(getName(segmentName, count, DEFAULT_WIREBASICPARAM), &basicmeshmembers.l, WMOP_UNION))!=NULL){
+    if ((mk_addmember(getName(segmentName, count, DEFAULT_WIREBASICPARAM), &basicmeshmembers, WMOP_UNION))!=NULL){
       if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...adding basic mesh segment component [%d] of [%d]\n", count, DEFAULT_MESHPIECECOUNT-1);
     }
     else {
       if (debug) fprintf(DEFAULT_DEBUG_OUTPUT, "generateWire:mk_addmember count[%d] FAILED\n", count);
       errors++;
     }
-    if ((mk_addmember(getName(segmentName, count, DEFAULT_WIREBASICPARAM), &basicmeshregionmembers.l, WMOP_UNION))!=NULL){
+    if ((mk_addmember(getName(segmentName, count, DEFAULT_WIREBASICPARAM), &basicmeshregionmembers, WMOP_UNION))!=NULL){
       if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...adding basic mesh segment region component [%d] of [%d]\n", count, DEFAULT_MESHPIECECOUNT-1);
     }
     else {
@@ -1221,7 +1221,7 @@ int generateWire(fp, wirename, position, fenceheightvector, fencewidthvector, ra
   
   for (count=0, dx=0, dy=0, dz=0, step=0.0; step <= height; step += (double) MAGNITUDE(incrementvector), count++) {
     
-    if ((matrixextractor=mk_addmember(segmentName, &wiremembers.l, WMOP_UNION))!=NULL){
+    if ((matrixextractor=mk_addmember(segmentName, &wiremembers, WMOP_UNION))!=NULL){
       if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...building base wire combination: piece [%d] of [%d]\n", count+1, count2);
     }
     else {
@@ -1232,7 +1232,7 @@ int generateWire(fp, wirename, position, fenceheightvector, fencewidthvector, ra
     matrixextractor->wm_mat[7]  = dy;
     matrixextractor->wm_mat[11] = dz;
 
-    if ((matrixextractor=mk_addmember(segmentName, &wireregionmembers.l, WMOP_UNION))!=NULL){
+    if ((matrixextractor=mk_addmember(segmentName, &wireregionmembers, WMOP_UNION))!=NULL){
       if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...building base wire region: piece [%d] of [%d]\n", count+1, count2);
     }
     else {
@@ -1281,7 +1281,7 @@ int generateWire(fp, wirename, position, fenceheightvector, fencewidthvector, ra
  *
  ***************************************************************************************************************/
 int createWire(fp, segmentname, heightvector, widthvector, radius, angle, segmentlength, segmentdepthseparation) 
-     struct rt_wdb *fp;
+     FILE *fp;
      char *segmentname;
      vect_t heightvector;
      vect_t widthvector;
@@ -1898,7 +1898,7 @@ int main(argc, argv)
      int argc;
      char **argv;
 {
-  struct rt_wdb *fp;
+  FILE *fp;
   int errors;
 
   int len = 0;
@@ -1909,8 +1909,8 @@ int main(argc, argv)
 
   (void) parseArguments(argc, argv);
   
-  if ((fp=wdb_fopen(outputFilename))==NULL) {
-    perror(outputFilename);
+  if ((fp=fopen(outputFilename, "w"))==NULL) {
+    perror("Unable to open output database file");
     exit(2);
   }
   else {

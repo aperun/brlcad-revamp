@@ -5,7 +5,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -28,7 +28,6 @@ static const char RCSid[] = "$Header$";
 
 #define MAX_PTS	500
 
-int
 main()
 {
 	char str[1024];
@@ -75,5 +74,4 @@ main()
 		if( npts > 2 )
 			printf( "         1%15.5f%15.5f%15.5f%15.5f", V4ARGS( pl ) );
 	}
-	return 0;
 }

@@ -20,7 +20,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -33,11 +33,8 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "shadefuncs.h"
 #include "shadework.h"
 /*#include "../rt/mathtab.h"*/
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
-extern int rr_render(struct application	*ap,
-		     struct partition	*pp,
-		     struct shadework   *swp);
 extern struct region	env_region;		/* import from view.c */
 
 HIDDEN int	bwtxt_render();
@@ -181,7 +178,7 @@ char	*dp;
 		uvc.uv_v = 1.0 - uvc.uv_v;
 
 	uvc.uv_du /= tp->tx_scale[X];
-	uvc.uv_dv /= tp->tx_scale[Y];
+	uvc.uv_dv /= tp->tx_scale[X];
 
 	/*
 	 * If no texture file present, or if
@@ -430,7 +427,7 @@ char	*dp;
 		uvc.uv_v = 1.0 - uvc.uv_v;
 
 	uvc.uv_du /= tp->tx_scale[X];
-	uvc.uv_dv /= tp->tx_scale[Y];
+	uvc.uv_dv /= tp->tx_scale[X];
 
 
 	/* u is left->right index, v is line number bottom->top */
@@ -529,12 +526,7 @@ struct rt_i             *rtip;  /* New since 4.4 release */
 		rp->reg_transmit = 1;
 
 	if (tp->tx_file[0] == '\0' )  return -1;	/* FAIL, no file */
-
-	tp->mp = bu_open_mapped_file_with_path(
-		rtip->rti_dbip->dbi_filepath,
-		tp->tx_file, NULL);
-
-	if (!(tp->mp) )
+	if (!(tp->mp = bu_open_mapped_file( tp->tx_file, NULL )) )
 		return -1;				/* FAIL */
 
 	/* Ensure file is large enough */
@@ -612,7 +604,7 @@ char	*dp;
 	u = swp->sw_uv.uv_u * ckp->ckr_scale;
 	v = swp->sw_uv.uv_v * ckp->ckr_scale;
 
-	if ( ((u&1) && (v&1)) || (!(u&1) && !(v&1)) ) {
+	if ( (u&1) && (v&1) || !(u&1) && !(v&1)) {
 		cp = ckp->ckr_a;
 	} else {
 		cp = ckp->ckr_b;
@@ -696,7 +688,7 @@ char *cp;
  *  Render a map which varries red with U and blue with V values.
  *  Mostly useful for debugging ft_uv() routines.
  */
-HIDDEN int
+HIDDEN
 tstm_render( ap, pp, swp, dp )
 struct application	*ap;
 struct partition	*pp;
@@ -733,7 +725,7 @@ static vect_t star_colors[] = {
 /*
  *			S T A R _ R E N D E R
  */
-HIDDEN int
+HIDDEN
 star_render( ap, pp, swp, dp )
 register struct application *ap;
 register struct partition *pp;
@@ -774,7 +766,7 @@ char	*dp;
  *  Note that .pix files are stored left-to-right, bottom-to-top,
  *  which works out very naturally for the indexing scheme.
  */
-HIDDEN int
+HIDDEN
 bmp_render( ap, pp, swp, dp )
 struct application	*ap;
 struct partition	*pp;

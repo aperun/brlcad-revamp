@@ -23,7 +23,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -117,8 +117,6 @@ char	*argv[];
 	tol.perp = 1e-5;
 	tol.para = 1 - tol.perp;
 
-	rt_init_resource( &rt_uniresource, 0, NULL );
-
 	the_model = nmg_mm();
 	BU_LIST_INIT( &rt_g.rtg_vlfree );	/* for vlist macros */
 
@@ -207,7 +205,8 @@ char	*argv[];
 		perror(argv[0]);
 		exit(1);
 	}
-	db_dirbuild( dbip );
+	db_scan(dbip, (int (*)())db_diradd, 1, NULL);
+
 
 	BN_CK_TOL(tree_state.ts_tol);
 	RT_CK_TESS_TOL(tree_state.ts_ttol);
@@ -274,7 +273,7 @@ char	*argv[];
 
 	/* Release dynamic storage */
 	nmg_km(the_model);
-	rt_vlist_cleanup();
+	bn_vlist_cleanup();
 	db_close(dbip);
 
 #if MEMORY_LEAK_CHECKING
@@ -504,6 +503,7 @@ struct db_full_path	*pathp;
 union tree		*curtree;
 genptr_t		client_data;
 {
+	extern FILE		*fp_fig;
 	union tree		*ret_tree;
 	struct bu_list		vhead;
 	struct nmgregion	*r;
@@ -567,7 +567,7 @@ genptr_t		client_data;
 	}
 	printf("Attempting to process region %s\n",db_path_to_string( pathp ));
 	fflush(stdout);
-	ret_tree = nmg_booltree_evaluate( curtree, tsp->ts_tol, &rt_uniresource );	/* librt/nmg_bool.c */
+	ret_tree = nmg_booltree_evaluate( curtree, tsp->ts_tol );	/* librt/nmg_bool.c */
 
 	if( ret_tree )
 		r = ret_tree->tr_d.td_r;
@@ -682,7 +682,7 @@ out:
 		regions_tried, regions_converted, regions_written, npercent,tpercent);
 	}
 
-	db_free_tree(curtree, &rt_uniresource);		/* Does an nmg_kr() */
+	db_free_tree(curtree);		/* Does an nmg_kr() */
 
 	BU_GETUNION(curtree, tree);
 	curtree->magic = RT_TREE_MAGIC;

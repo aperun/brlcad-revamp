@@ -14,7 +14,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include <stdio.h>
@@ -45,7 +45,6 @@ FILE	*outfp;
 genptr_t	ibuf;
 genptr_t	obuf;
 
-int
 main( argc, argv )
 int	argc;
 char	**argv;

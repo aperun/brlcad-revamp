@@ -41,7 +41,7 @@
  *	Public Domain, Distribution Unlimited
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -59,12 +59,9 @@ char	*buf;
 
 void	fileout();
 
-int mread(int fd, char *bufp, int n );
-
 static char usage[] = "\
 Usage: files-tape [-b bytes] [-k Kbytes] [files]\n";
 
-int
 get_args( argc, argv )
 register char **argv;
 {
@@ -93,7 +90,6 @@ register char **argv;
 /*
  *			M A I N
  */
-int
 main(argc, argv)
 char	**argv;
 {

@@ -20,18 +20,13 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char extr_RCSid[] = "@(#)$Header$ (BRL)";
+static char extr_RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include "machine.h"
 #include "bu.h"
 #include "db.h"
@@ -42,21 +37,19 @@ static const char extr_RCSid[] = "@(#)$Header$ (BRL)";
 #include "wdb.h"
 
 int
-mk_extrusion(
-	struct rt_wdb *fp,
-	const char *name,
-	const char *sketch_name,
-	const point_t V,
-	const vect_t h,
-	const vect_t u_vec,
-	const vect_t v_vec,
-	int keypoint )
+mk_extrusion( fp, name, sketch_name, V, h, u_vec, v_vec, keypoint )
+FILE *fp;
+char *name, *sketch_name;
+point_t V;
+vect_t h, u_vec, v_vec;
 {
+	struct rt_db_internal intern;
 	struct rt_extrude_internal *extr;
+	int ret;
 
-	BU_GETSTRUCT( extr, rt_extrude_internal );
+	extr = (struct rt_extrude_internal *)bu_malloc( sizeof( struct rt_extrude_internal ), "extrusion" );
 	extr->magic = RT_EXTRUDE_INTERNAL_MAGIC;
-	extr->sketch_name = bu_strdup( sketch_name );
+	NAMEMOVE( sketch_name, extr->sketch_name );
 	VMOVE( extr->V, V );
 	VMOVE( extr->h, h );
 	VMOVE( extr->u_vec, u_vec );
@@ -64,5 +57,13 @@ mk_extrusion(
 	extr->keypoint = keypoint;
 	extr->skt = (struct rt_sketch_internal *)NULL;
 
-	return wdb_export( fp, name, (genptr_t)extr, ID_EXTRUDE, mk_conv2mm );
+	ret = mk_export_fwrite( fp, name, (genptr_t)extr, ID_EXTRUDE );
+
+	RT_INIT_DB_INTERNAL( &intern );
+	intern.idb_ptr = (genptr_t)extr;
+	intern.idb_type = ID_EXTRUDE;
+
+	rt_extrude_ifree( &intern );
+
+	return( ret );
 }

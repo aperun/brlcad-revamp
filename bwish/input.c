@@ -32,17 +32,17 @@
  *
  */
 
-#include <stdio.h>
-#include <ctype.h>
-#include <sys/time.h>
 #include <time.h>
+#if defined(IRIX) && IRIX == 5
+#define _BSD_COMPAT
+#endif
+#include <sys/time.h>
 #include "conf.h"
 #include "tcl.h"
 
 #include "machine.h"
 #include "externs.h"
 #include "bu.h"
-#include "libtermio.h"
 
 #define CTRL_A      1
 #define CTRL_B      2

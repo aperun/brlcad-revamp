@@ -19,7 +19,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -86,11 +86,11 @@ static void	illuminate();
  *  is by completing the sequence, or pressing BE_REJECT.
  */
 int
-f_mouse(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_mouse(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	vect_t	mousevec;		/* float pt -1..+1 mouse pos vect */
 	int	isave;
@@ -307,11 +307,11 @@ illuminate( y )  {
  *   advance illump or ipathpos
  */
 int
-f_aip(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int argc,
-	char **argv)
+f_aip(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int argc;
+char *argv[];
 {
   register struct solid *sp;
 
@@ -384,7 +384,9 @@ f_aip(
  * There is important information in dx,dy,dz,s .
  */
 void
-buildHrot( matp_t mat, double alpha, double beta, double ggamma )
+buildHrot( mat, alpha, beta, ggamma )
+register matp_t mat;
+double alpha, beta, ggamma;
 {
 	static fastf_t calpha, cbeta, cgamma;
 	static fastf_t salpha, sbeta, sgamma;
@@ -443,7 +445,8 @@ buildHrot( matp_t mat, double alpha, double beta, double ggamma )
  *  the view center.
  */
 void
-wrt_view( mat_t out, const mat_t change, const mat_t in )
+wrt_view( out, change, in )
+register matp_t out, change, in;
 {
 	static mat_t t1, t2;
 
@@ -464,7 +467,10 @@ wrt_view( mat_t out, const mat_t change, const mat_t in )
  *  "point".
  */
 void
-wrt_point( mat_t out, const mat_t change, const mat_t in, const point_t point )
+wrt_point( out, change, in, point )
+register matp_t out;
+register CONST matp_t change, in;
+register CONST vect_t point;
 {
 	mat_t	t;
 
@@ -484,7 +490,9 @@ wrt_point( mat_t out, const mat_t change, const mat_t in, const point_t point )
  *  given "point" and "direc".
  */
 void
-wrt_point_direc( mat_t out, const mat_t change, const mat_t in, const point_t point, const vect_t direc )
+wrt_point_direc( out, change, in, point, direc )
+register matp_t out, change, in;
+register vect_t point, direc;
 {
 	static mat_t	t1;
 	static mat_t	pt_to_origin, origin_to_pt;
@@ -532,11 +540,11 @@ wrt_point_direc( mat_t out, const mat_t change, const mat_t in, const point_t po
  *			n = edit arc from s_path[n-1] to [n]
  */
 int
-f_matpick(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_matpick(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	register struct solid	*sp;
 	char			*cp;

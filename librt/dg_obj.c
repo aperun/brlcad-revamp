@@ -27,17 +27,10 @@
  *	This software is Copyright (C) 1997 by the United States Army
  *	in all countries except the USA.  All rights reserved.
  */
-#include "conf.h"
 
-#include <stdio.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <fcntl.h>
 #include <math.h>
-
+#include "conf.h"
 #include "tcl.h"
 #include "machine.h"
 #include "externs.h"
@@ -116,30 +109,30 @@ struct dg_obj HeadDGObj;		/* head of drawable geometry object list */
 static struct solid FreeSolid;		/* head of free solid list */
 
 static struct bu_cmdtab dgo_cmds[] = {
-	{"assoc",		dgo_assoc_tcl},
-	{"blast",		dgo_blast_tcl},
-	{"clear",		dgo_zap_tcl},
-	{"close",		dgo_close_tcl},
-	{"draw",		dgo_draw_tcl},
-	{"erase",		dgo_erase_tcl},
-	{"erase_all",		dgo_erase_all_tcl},
-	{"ev",			dgo_draw_tcl},
-	{"get_autoview",	dgo_get_autoview_tcl},
-	{"headSolid",		dgo_headSolid_tcl},
-	{"illum",		dgo_illum_tcl},
-	{"label",		dgo_label_tcl},
-	{"observer",		dgo_observer_tcl},
-	{"overlay",		dgo_overlay_tcl},
-	{"report",		dgo_report_tcl},
-	{"rt",			dgo_rt_tcl},
-	{"rtcheck",		dgo_rtcheck_tcl},
+	"assoc",		dgo_assoc_tcl,
+	"blast",		dgo_blast_tcl,
+	"clear",		dgo_zap_tcl,
+	"close",		dgo_close_tcl,
+	"draw",			dgo_draw_tcl,
+	"erase",		dgo_erase_tcl,
+	"erase_all",		dgo_erase_all_tcl,
+	"ev",			dgo_draw_tcl,
+	"get_autoview",		dgo_get_autoview_tcl,
+	"headSolid",		dgo_headSolid_tcl,
+	"illum",		dgo_illum_tcl,
+	"label",		dgo_label_tcl,
+	"observer",		dgo_observer_tcl,
+	"overlay",		dgo_overlay_tcl,
+	"report",		dgo_report_tcl,
+	"rt",			dgo_rt_tcl,
+	"rtcheck",		dgo_rtcheck_tcl,
 #if 0
-	{"tol",			dgo_tol_tcl},
+	"tol",			dgo_tol_tcl,
 #endif
-	{"vdraw",		dgo_vdraw_tcl},
-	{"who",			dgo_who_tcl},
-	{"zap",			dgo_zap_tcl},
-	{(char *)0,		(int (*)())0}
+	"vdraw",		dgo_vdraw_tcl,
+	"who",			dgo_who_tcl,
+	"zap",			dgo_zap_tcl,
+	(char *)0,		(int (*)())0
 };
 
 /*
@@ -387,6 +380,7 @@ dgo_illum_tcl(clientData, interp, argc, argv)
 		goto bad;
 
 	FOR_ALL_SOLIDS(sp, &dgop->dgo_headSolid) {
+		register struct solid *forw;
 		register int i;
 
 		for (i = 0; i <= sp->s_last; ++i) {
@@ -449,6 +443,8 @@ dgo_draw(dgop, interp, argc, argv, kind)
      char    **argv;
      int kind;
 {
+	register struct directory *dp;
+	register int i;
 
 	/* skip past procname and cmd */
 	argc -= 2;
@@ -1256,8 +1252,6 @@ dgo_rtcheck_vector_handler(clientData, mask)
 		while ((rpid = wait(&retcode)) != rtcp->pid && rpid != -1)
 			dgo_wait_status(rtcp->interp, retcode);
 
-		dgo_notify(rtcp->dgop, rtcp->interp);
-
 		/* free rtcp */
 		bu_free((genptr_t)rtcp, "dgo_rtcheck_vector_handler: rtcp");
 
@@ -1594,12 +1588,14 @@ dgo_wireframe_region_end(tsp, pathp, curtree, client_data)
  *  This routine must be prepared to run in parallel.
  */
 static union tree *
-dgo_wireframe_leaf(tsp, pathp, ip, client_data)
+dgo_wireframe_leaf(tsp, pathp, ep, id, client_data)
      struct db_tree_state	*tsp;
      struct db_full_path	*pathp;
-     struct rt_db_internal	*ip;
+     struct bu_external		*ep;
+     int			id;
      genptr_t			client_data;
 {
+	struct rt_db_internal	intern;
 	union tree	*curtree;
 	int		dashflag;		/* draw with dashed lines */
 	struct bu_list	vhead;
@@ -1607,15 +1603,13 @@ dgo_wireframe_leaf(tsp, pathp, ip, client_data)
 
 	RT_CK_TESS_TOL(tsp->ts_ttol);
 	BN_CK_TOL(tsp->ts_tol);
-	RT_CK_RESOURCE(tsp->ts_resp);
 
 	BU_LIST_INIT(&vhead);
 
 	if (rt_g.debug&DEBUG_TREEWALK) {
 		char	*sofar = db_path_to_string(pathp);
 
-		Tcl_AppendResult(dgcdp->interp, "dgo_wireframe_leaf(",
-				 ip->idb_meth->ft_name,
+		Tcl_AppendResult(dgcdp->interp, "dgo_wireframe_leaf(", rt_functab[id].ft_name,
 				 ") path='", sofar, "'\n", (char *)NULL);
 		bu_free((genptr_t)sofar, "path string");
 	}
@@ -1625,13 +1619,24 @@ dgo_wireframe_leaf(tsp, pathp, ip, client_data)
 	else
 		dashflag = (tsp->ts_sofar & (TS_SOFAR_MINUS|TS_SOFAR_INTER));
 
-	RT_CK_DB_INTERNAL(ip);
+	RT_INIT_DB_INTERNAL(&intern);
+	if (rt_functab[id].ft_import(&intern, ep, tsp->ts_mat, dgcdp->dgop->dgo_wdbp->dbip) < 0) {
+		Tcl_AppendResult(dgcdp->interp, DB_FULL_PATH_CUR_DIR(pathp)->d_namep,
+				 ":  solid import failure\n", (char *)NULL);
 
-	if (ip->idb_meth->ft_plot(&vhead, ip,
+		if (intern.idb_ptr)
+			rt_functab[id].ft_ifree( &intern );
+		return (TREE_NULL);		/* ERROR */
+	}
+	RT_CK_DB_INTERNAL(&intern);
+
+	if (rt_functab[id].ft_plot(&vhead,
+				   &intern,
 				   tsp->ts_ttol,
 				   tsp->ts_tol) < 0) {
 		Tcl_AppendResult(dgcdp->interp, DB_FULL_PATH_CUR_DIR(pathp)->d_namep,
 				 ": plot failure\n", (char *)NULL);
+		rt_functab[id].ft_ifree(&intern);
 		return (TREE_NULL);		/* ERROR */
 	}
 
@@ -1641,7 +1646,7 @@ dgo_wireframe_leaf(tsp, pathp, ip, client_data)
 	 * solids, this needs to be something different and drawH
 	 * has no idea or need to know what type of solid this is.
 	 */
-	if (ip->idb_type == ID_GRIP) {
+	if (intern.idb_type == ID_GRIP) {
 		int r,g,b;
 		r= tsp->ts_mater.ma_color[0];
 		g= tsp->ts_mater.ma_color[1];
@@ -1656,9 +1661,10 @@ dgo_wireframe_leaf(tsp, pathp, ip, client_data)
 	} else {
 		dgo_drawH_part2(dashflag, &vhead, pathp, tsp, SOLID_NULL, dgcdp);
 	}
+	rt_functab[id].ft_ifree(&intern);
 
 	/* Indicate success by returning something other than TREE_NULL */
-	RT_GET_TREE(curtree, tsp->ts_resp);
+	BU_GETUNION(curtree, tree);
 	curtree->magic = RT_TREE_MAGIC;
 	curtree->tr_op = OP_NOP;
 
@@ -1701,9 +1707,6 @@ dgo_nmg_region_start(tsp, pathp, combp, client_data)
 		db_pr_tree_state(tsp);
 	}
 
-	RT_CK_DBI(tsp->ts_dbip);
-	RT_CK_RESOURCE(tsp->ts_resp);
-
 	BU_LIST_INIT(&vhead);
 
 	RT_CK_COMB(combp);
@@ -1734,7 +1737,7 @@ dgo_nmg_region_start(tsp, pathp, combp, client_data)
 			matp = (matp_t)NULL;
 		}
 	}
-	if (rt_db_get_internal(&intern, dp, tsp->ts_dbip, matp, &rt_uniresource) < 0)
+	if (rt_db_get_internal(&intern, dp, tsp->ts_dbip, matp) < 0)
 		return 0;	/* proceed as usual */
 
 	switch (intern.idb_type) {
@@ -1793,7 +1796,7 @@ dgo_nmg_region_start(tsp, pathp, combp, client_data)
 	default:
 		break;
 	}
-	rt_db_free_internal(&intern, tsp->ts_resp);
+	rt_db_free_internal(&intern);
 	return 0;
 
 out:
@@ -1801,7 +1804,7 @@ out:
 	db_add_node_to_full_path(pathp, dp);
 	dgo_drawH_part2(0, &vhead, pathp, tsp, SOLID_NULL, dgcdp);
 	DB_FULL_PATH_POP(pathp);
-	rt_db_free_internal(&intern, tsp->ts_resp);
+	rt_db_free_internal(&intern);
 	dgcdp->fastpath_count++;
 	return -1;	/* SKIP THIS REGION */
 }
@@ -1826,7 +1829,6 @@ dgo_nmg_region_end(tsp, pathp, curtree, client_data)
 	RT_CK_TESS_TOL(tsp->ts_ttol);
 	BN_CK_TOL(tsp->ts_tol);
 	NMG_CK_MODEL(*tsp->ts_m);
-	RT_CK_RESOURCE(tsp->ts_resp);
 
 	BU_LIST_INIT( &vhead );
 
@@ -1851,27 +1853,27 @@ dgo_nmg_region_end(tsp, pathp, curtree, client_data)
 				" failed!!!\n", (char *)NULL );
 			bu_free((genptr_t)sofar, "path string");
 			if( curtree )
-				db_free_tree( curtree, tsp->ts_resp );
+				db_free_tree( curtree );
 			return (union tree *)NULL;
 		}
-		failed = nmg_boolean( curtree, *tsp->ts_m, tsp->ts_tol, tsp->ts_resp );
+		failed = nmg_boolean( curtree, *tsp->ts_m, tsp->ts_tol );
 		BU_UNSETJUMP;
 		if( failed )  {
-			db_free_tree( curtree, tsp->ts_resp );
+			db_free_tree( curtree );
 			return (union tree *)NULL;
 		}
 	}
 	else if( curtree->tr_op != OP_NMG_TESS )
 	{
 	  Tcl_AppendResult(dgcdp->interp, "Cannot use '-d' option when Boolean evaluation is required\n", (char *)NULL);
-	  db_free_tree( curtree, tsp->ts_resp );
+	  db_free_tree( curtree );
 	  return (union tree *)NULL;
 	}
 	r = curtree->tr_d.td_r;
 	NMG_CK_REGION(r);
 
 	if( dgcdp->do_not_draw_nmg_solids_during_debugging && r )  {
-		db_free_tree( curtree, tsp->ts_resp );
+		db_free_tree( curtree );
 		return (union tree *)NULL;
 	}
 
@@ -1885,7 +1887,7 @@ dgo_nmg_region_end(tsp, pathp, curtree, client_data)
 				" failed!!!\n", (char *)NULL );
 			bu_free((genptr_t)sofar, "path string");
 			if( curtree )
-				db_free_tree( curtree, tsp->ts_resp );
+				db_free_tree( curtree );
 			return (union tree *)NULL;
 		}
 		nmg_triangulate_model(*tsp->ts_m, tsp->ts_tol);
@@ -1921,7 +1923,7 @@ dgo_nmg_region_end(tsp, pathp, curtree, client_data)
 			nmg_vlblock_r(dgcdp->draw_edge_uses_vbp, r, 1);
 		}
 		/* NMG region is no longer necessary, only vlist remains */
-		db_free_tree( curtree, tsp->ts_resp );
+		db_free_tree( curtree );
 		return (union tree *)NULL;
 	}
 
@@ -2976,7 +2978,7 @@ dgo_print_schain(dgop, interp, lvl)
 	FOR_ALL_SOLIDS(sp, &dgop->dgo_headSolid) {
 		if (lvl <= -2) {
 			/* print only leaves */
-			bu_vls_printf(&vls, "%s ", sp->s_path[(int)(sp->s_last)]->d_namep);
+			bu_vls_printf(&vls, "%s ", sp->s_path[sp->s_last]->d_namep);
 			continue;
 		}
 

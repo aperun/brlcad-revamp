@@ -17,9 +17,8 @@
 
 #define	PATCH_COUNT	1
 
-spline( entityno, b_patch )
+spline( entityno )
 int entityno;
-struct face_g_snurb *b_patch;
 {
 	int	k1;	/* upper index of first sum */
 	int	k2;	/* upper index of second sum */
@@ -36,6 +35,7 @@ struct face_g_snurb *b_patch;
 	int	count=0;
 	fastf_t	min_knot;
 	fastf_t max_wt;
+	struct face_g_snurb *b_patch;
 
 	/* Acquiring Data */
 
@@ -147,6 +147,11 @@ struct face_g_snurb *b_patch;
 			count++;
 		}
 	}
+
+
+
+	/* Output the the b_spline through the libwdb interface */
+	mk_bsurf(fdout, b_patch);
 
 	return( 1 );
 }

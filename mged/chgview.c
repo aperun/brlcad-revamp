@@ -53,17 +53,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 #include "conf.h"
 
-#include <stdio.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <signal.h>
+#include <stdio.h>
 #include <math.h>
 
 #include "machine.h"
@@ -168,13 +163,15 @@ double		mged_abs_tol;
 double		mged_rel_tol = 0.01;		/* 1%, by default */
 double		mged_nrm_tol;			/* normal ang tol, radians */
 
+BU_EXTERN(int	edit_com, (int argc, char **argv, int kind, int catch_sigint));
+
 void
-eraseobjpath(
-     Tcl_Interp	*interp,
-     int	argc,
-     char	**argv,
-     int	noisy,
-     int	all)
+eraseobjpath(interp, argc, argv, noisy, all)
+     Tcl_Interp	*interp;
+     int	argc;
+     char	**argv;
+     int	noisy;	
+     int	all;
 {
 	register struct directory *dp;
 	register int i;
@@ -237,15 +234,17 @@ eraseobjpath(
 /* Delete an object or several objects from the display */
 /* Format: d object1 object2 .... objectn */
 int
-f_erase(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int     argc,
-	char    **argv)
+f_erase(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int     argc;
+char    **argv;
 {
+	register int i;
+
 	CHECK_DBI_NULL;
 
-	if (argc < 2) {
+	if (argc < 2 || MAXARGS < argc) {
 		struct bu_vls vls;
 
 		bu_vls_init(&vls);
@@ -261,16 +260,18 @@ f_erase(
 	return TCL_OK;
 }
 
-int
-f_erase_all(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int     argc,
-	char    **argv)
+f_erase_all(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int     argc;
+char    **argv;
 {
+  register struct directory *dp;
+  register int i;
+
   CHECK_DBI_NULL;
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -395,7 +396,7 @@ char	**argv;
   av[0] = "Z";
   av[1] = (char *)NULL;
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -414,13 +415,13 @@ char	**argv;
 /* Edit something (add to visible display) */
 /* Format: e object	*/
 int
-f_edit(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_edit(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -441,7 +442,7 @@ Tcl_Interp *interp;
 int	argc;
 char	**argv;
 {
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -473,7 +474,7 @@ Tcl_Interp *interp;
 int	argc;
 char	**argv;
 {
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -544,12 +545,14 @@ size_reset()
  * B, e, and E commands use this area as common
  */
 int
-edit_com(
-     int	argc,
-     char	**argv,
-     int	kind,
-     int	catch_sigint)
+edit_com(argc, argv, kind, catch_sigint)
+     int	argc;
+     char	**argv;
+     int	kind;
+     int	catch_sigint;
 {
+	register struct directory *dp;
+	register int	i;
 	register struct dm_list *dmlp;
 	register struct dm_list *save_dmlp;
 	register struct cmd_list *save_cmd_list;
@@ -893,7 +896,7 @@ int	verbose;
 	if(dbip == DBI_NULL)
 	  return;
 
-	if( (id = rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource )) < 0 )  {
+	if( (id = rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL )) < 0 )  {
 		Tcl_AppendResult(interp, "rt_db_get_internal(", dp->d_namep,
 			") failure\n", (char *)NULL );
 		return;
@@ -902,14 +905,11 @@ int	verbose;
 	bu_vls_printf( outstrp, "%s:  ", dp->d_namep );
 
 	if( rt_functab[id].ft_describe( outstrp, &intern,
-	    verbose, base2local, &rt_uniresource ) < 0 )
+	    verbose, base2local ) < 0 )
 	  Tcl_AppendResult(interp, dp->d_namep, ": describe error\n", (char *)NULL);
-	rt_db_free_internal( &intern, &rt_uniresource );
+	rt_functab[id].ft_ifree( &intern );
 }
 
-/*
- *			C M D _ L I S T _ G U T S
- */
 static void
 cmd_list_guts(clientData, interp, argc, argv, recurse)
 ClientData clientData;
@@ -921,6 +921,7 @@ int recurse;
   register struct directory *dp;
   register int arg;
   struct bu_vls str;
+  int id;
   char *listeval="listeval";
   struct rt_db_internal intern;
 
@@ -949,7 +950,7 @@ int recurse;
 
       dp = DB_FULL_PATH_CUR_DIR( &path );
 
-      if (rt_db_get_internal(&intern, dp, dbip, ts.ts_mat, &rt_uniresource) < 0) {
+      if ((id = rt_db_get_internal(&intern, dp, dbip, ts.ts_mat)) < 0) {
 	Tcl_AppendResult(interp, "rt_db_get_internal(", dp->d_namep,
 			 ") failure\n", (char *)NULL );
 	continue;
@@ -959,9 +960,10 @@ int recurse;
 
       bu_vls_printf( &str, "%s:  ", argv[arg] );
 
-      if (intern.idb_meth->ft_describe(&str, &intern, 99, base2local, &rt_uniresource) < 0)
-	Tcl_AppendResult(interp, dp->d_namep, ": ft_describe error\n", (char *)NULL);
-    	rt_db_free_internal( &intern, &rt_uniresource );
+      if (rt_functab[id].ft_describe(&str, &intern, 99, base2local) < 0)
+	Tcl_AppendResult(interp, dp->d_namep, ": describe error\n", (char *)NULL);
+
+      rt_functab[id].ft_ifree( &intern );
     } else {
       if ((dp = db_lookup(dbip, argv[arg], LOOKUP_NOISY)) == DIR_NULL)
 	continue;
@@ -977,7 +979,7 @@ int recurse;
 /*
  *			C M D _ L I S T
  *
- *  List object information, verbose, in GIFT-compatible format.
+ *  List object information, verbose
  *  Format: l object
  */
 int
@@ -992,7 +994,7 @@ char	**argv;
 
   CHECK_DBI_NULL;
 
-  if(argc < 2){
+  if(MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -1018,10 +1020,10 @@ char	**argv;
 
   /* 
    * Here we have no usable arguments,
-   * so we better be in an edit state.
+   * so we better be in and edit state.
    */
   if (argc == 1 ||
-      (argc == 2 && recurse)) {
+      argc == 2 && recurse) {
     int ac = 1;
     char *av[2];
 
@@ -1082,7 +1084,7 @@ char	**argv;
 
   CHECK_DBI_NULL;
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -1144,11 +1146,11 @@ mged_freemem()
 /* ZAP the display -- everything dropped */
 /* Format: Z	*/
 int
-f_zap(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_zap(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	register struct solid *sp;
 	register struct solid *nsp;
@@ -1348,7 +1350,6 @@ char	**argv;
   return TCL_ERROR;
 }
 
-int
 f_view(clientData, interp, argc, argv)
 ClientData clientData;
 Tcl_Interp *interp;
@@ -1686,7 +1687,6 @@ char	**argv;
   return TCL_ERROR;
 }
 
-int
 f_refresh(clientData, interp, argc, argv)
 ClientData clientData;
 Tcl_Interp *interp;
@@ -1942,7 +1942,7 @@ int		lvl;			/* debug level */
   FOR_ALL_SOLIDS(sp, &startp->l){
     if (lvl <= -2) {
       /* print only leaves */
-      bu_vls_printf(&vls, "%s ", sp->s_path[(int)(sp->s_last)]->d_namep);
+      bu_vls_printf(&vls, "%s ", sp->s_path[sp->s_last]->d_namep);
       continue;
     }
 
@@ -2162,11 +2162,11 @@ bail_out:
 
 /* Simulate pressing "Solid Edit" and doing an ILLuminate command */
 int
-f_sed(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_sed(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
   CHECK_DBI_NULL;
   CHECK_READ_ONLY;
@@ -2380,7 +2380,7 @@ char	**argv;
 
   CHECK_DBI_NULL;
 
-  if(argc < 1){
+  if(argc < 1 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -3521,12 +3521,12 @@ int edit_flag;
 }
 
 int
-knob_rot(
-	vect_t rvec,
-	char origin,
-	int model_flag,
-	int view_flag,
-	int edit_flag)
+knob_rot(rvec, origin, model_flag, view_flag, edit_flag)
+vect_t rvec;
+char origin;
+int model_flag;
+int view_flag;
+int edit_flag;
 {
   if(EDIT_ROTATE && ((mged_variables->mv_transform == 'e' &&
 		      !view_flag && !model_flag) || edit_flag))
@@ -4735,7 +4735,8 @@ struct _view_state *vsp2;
 }
 
 void
-view_ring_destroy(struct dm_list *dlp)
+view_ring_destroy(dlp)
+struct dm_list *dlp;
 {
   struct view_ring *vrp;
 
@@ -5134,9 +5135,9 @@ mat_t newrot;
 }
 
 int
-mged_erot_xyz(
-	char origin,
-	vect_t rvec)
+mged_erot_xyz(origin, rvec)
+char origin;
+vect_t rvec;
 {
   mat_t newrot;
 
@@ -5245,10 +5246,10 @@ mat_t newrot;
 }
 
 int
-mged_vrot_xyz(
-	char origin,
-	char coords,
-	vect_t rvec)
+mged_vrot_xyz(origin, coords, rvec)
+char origin;
+char coords;
+vect_t rvec;
 {
   mat_t newrot;
   mat_t temp1, temp2;
@@ -5317,7 +5318,6 @@ char	**argv;
   return mged_vrot_xyz(mged_variables->mv_rotate_about, 'v', rvec);
 }
 
-int
 mged_rot(origin, newrot)
 char origin;
 mat_t newrot;
@@ -5444,28 +5444,27 @@ char    **argv;
 }
 
 int
-mged_etran(const point_t pt)
+mged_etran(pt)
+point_t pt;
 {
-  point_t p2;
   int save_edflag;
   point_t delta;
   point_t vcenter;
   point_t work;
   mat_t xlatemat;
 
-  /* compute delta */
   switch(mged_variables->mv_coords){
   case 'm':
     VSCALE(delta, pt, local2base);
     break;
   case 'o':
-    VSCALE(p2, pt, local2base);
-    MAT4X3PNT(delta, acc_rot_sol, p2);
+    VSCALE(pt, pt, local2base);
+    MAT4X3PNT(delta, acc_rot_sol, pt);
     break;
   case 'v':
   default:
-    VSCALE(p2, pt, local2base/view_state->vs_Viewscale);
-    MAT4X3PNT(work, view_state->vs_view2model, p2);
+    VSCALE(pt, pt, local2base/view_state->vs_Viewscale);
+    MAT4X3PNT(work, view_state->vs_view2model, pt);
     MAT_DELTAS_GET_NEG(vcenter, view_state->vs_toViewcenter);
     VSUB2(delta, work, vcenter);
 
@@ -5494,7 +5493,8 @@ mged_etran(const point_t pt)
 }
 
 int
-mged_otran(const vect_t tvec)
+mged_otran(tvec)
+vect_t tvec;
 {
   vect_t work;
 
@@ -5507,7 +5507,8 @@ mged_otran(const vect_t tvec)
 }
 
 int
-mged_mtran(const vect_t tvec)
+mged_mtran(tvec)
+vect_t tvec;
 {
   point_t delta;
   point_t vc, nvc;
@@ -5525,15 +5526,15 @@ mged_mtran(const vect_t tvec)
 }
 
 int
-mged_vtran(const vect_t tvec)
+mged_vtran(tvec)
+vect_t tvec;
 {
-  vect_t  tt;
   point_t delta;
   point_t work;
   point_t vc, nvc;
 
-  VSCALE(tt, tvec, local2base/view_state->vs_Viewscale);
-  MAT4X3PNT(work, view_state->vs_view2model, tt);
+  VSCALE(tvec, tvec, local2base/view_state->vs_Viewscale);
+  MAT4X3PNT(work, view_state->vs_view2model, tvec);
   MAT_DELTAS_GET_NEG(vc, view_state->vs_toViewcenter);
   VSUB2(delta, work, vc);
   VSUB2(nvc, vc, delta);
@@ -5548,7 +5549,8 @@ mged_vtran(const vect_t tvec)
 }
 
 int
-mged_tran(const vect_t tvec)
+mged_tran(tvec)
+vect_t tvec;
 {
   if((state == ST_S_EDIT || state == ST_O_EDIT) &&
       mged_variables->mv_transform == 'e')

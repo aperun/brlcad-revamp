@@ -27,7 +27,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char libbu_mappedfile_RCSid[] = "@(#)$Header$ (ARL)";
+static char libbu_mappedfile_RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -35,7 +35,6 @@ static const char libbu_mappedfile_RCSid[] = "@(#)$Header$ (ARL)";
 #include <stdio.h>
 #include <math.h>
 #include <fcntl.h>
-#include <unistd.h>
 #ifdef USE_STRING_H
 #include <string.h>
 #else
@@ -89,17 +88,11 @@ CONST char	*appl;		/* non-null only when app. will use 'apbuf' */
 	FILE			*fp;	/* stdio file pointer */
 #endif
 
-	if( bu_debug&BU_DEBUG_MAPPED_FILE )
-		bu_log("bu_open_mapped_file(%s, %s) sbrk=x%lx\n",
-			name, appl?appl:"(NIL)",
-#ifdef HAVE_SBRK
-			(long)sbrk(0)
-#else
-			0
-#endif
-			);
+#ifdef HAVE_UNIX_IO
+	/* Obtain some initial information about the file */
 
-	/* See if file has already been mapped, and can be shared */
+#endif
+
 	bu_semaphore_acquire(BU_SEM_MAPPEDFILE);
 	if( BU_LIST_UNINITIALIZED( &bu_mapped_file_list ) )  {
 		BU_LIST_INIT( &bu_mapped_file_list );
@@ -133,8 +126,6 @@ do_reuse:
 		/* It is safe to reuse mp */
 		mp->uses++;
 		bu_semaphore_release(BU_SEM_MAPPEDFILE);
-		if( bu_debug&BU_DEBUG_MAPPED_FILE )
-			bu_pr_mapped_file("open_reused", mp);
 		return mp;
 dont_reuse:
 		/* mp doesn't reflect the file any longer.  Invalidate. */
@@ -269,16 +260,6 @@ dont_reuse:
 	BU_LIST_APPEND( &bu_mapped_file_list, &mp->l );
 	bu_semaphore_release(BU_SEM_MAPPEDFILE);
 
-	if( bu_debug&BU_DEBUG_MAPPED_FILE )  {
-		bu_pr_mapped_file("1st_open", mp);
-		bu_log("bu_open_mapped_file() sbrk=x%lx\n",
-#ifdef HAVE_SBRK
-			(long)sbrk(0)
-#else
-			0
-#endif
-			);
-	}
 	return mp;
 
 fail:
@@ -288,8 +269,7 @@ fail:
 		/* Don't free mp->buf here, it might not be bu_malloced but mmaped */
 		bu_free( mp, "mp from bu_open_mapped_file fail");
 	}
-	bu_log("bu_open_mapped_file(%s, %s) can't open file\n",
-		name, appl?appl:"(NIL)" );
+	bu_log("bu_open_mapped_file(%s) can't open file\n", name);
 	return (struct bu_mapped_file *)NULL;
 }
 
@@ -301,18 +281,12 @@ fail:
  *  an animation, don't release the memory even on final close,
  *  so that it's available when next needed.
  *  Call bu_free_mapped_files() after final close to reclaim space.
- *  But only do that if you're SURE that ALL these files will never again
- *  need to be mapped by this process.  Such as when running multi-frame
- *  animations.
  */
 void
 bu_close_mapped_file( mp )
 struct bu_mapped_file	*mp;
 {
 	BU_CK_MAPPED_FILE(mp);
-
-	if( bu_debug&BU_DEBUG_MAPPED_FILE )
-		bu_pr_mapped_file("close:uses--", mp);
 
 	bu_semaphore_acquire(BU_SEM_MAPPEDFILE);
 	--mp->uses;
@@ -340,18 +314,12 @@ CONST struct bu_mapped_file	*mp;
  *
  *  Release storage being used by mapped files with no remaining users.
  *  This entire routine runs inside a critical section, for parallel protection.
- *  Only call this routine if you're SURE that ALL these files will never
- *  again need to be mapped by this process.  Such as when running multi-frame
- *  animations.
  */
 void
 bu_free_mapped_files(verbose)
 int	verbose;
 {
 	struct bu_mapped_file	*mp;
-
-	if( bu_debug&BU_DEBUG_MAPPED_FILE )
-		bu_log("bu_free_mapped_files(verbose=%d)\n", verbose);
 
 	bu_semaphore_acquire(BU_SEM_MAPPEDFILE);
 
@@ -361,8 +329,7 @@ int	verbose;
 		if( mp->uses > 0 )  continue;
 
 		/* Found one that needs to have storage released */
-		if(verbose || (bu_debug&BU_DEBUG_MAPPED_FILE))
-			bu_pr_mapped_file( "freeing", mp );
+		if(verbose)  bu_pr_mapped_file( "freeing", mp );
 
 		BU_LIST_DEQUEUE( &mp->l );
 
@@ -414,9 +381,6 @@ CONST char	*appl;		/* non-null only when app. will use 'apbuf' */
 	char	* CONST *pathp = path;
 	struct bu_vls	str;
 	struct bu_mapped_file	*ret;
-
-	BU_ASSERT_PTR( name, !=, NULL );
-	BU_ASSERT_PTR( pathp, !=, NULL );
 
 	/* Do not resort to path for a rooted filename */
 	if( name[0] == '/' )

@@ -15,7 +15,7 @@
  *	This software is Copyright (C) 1985 by the United States Army.
  *	All rights reserved.
  */
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "conf.h"
 
@@ -53,7 +53,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "../librt/debug.h"
 #include "../rt/ext.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
 #include "./protocol.h"
 
@@ -311,11 +311,13 @@ char **argv;
 	}
 
 	/*
-	 *  Initialize the non-parallel memory resource.
-	 *  The parallel guys are initialized after the rt_dirbuild().
+	 *  Initialize all the per-CPU memory resources.
+	 *  Go for the max, as TCL interface may change npsw as we run.
 	 */
-	rt_init_resource( &rt_uniresource, MAX_PSW, NULL );
-	bn_rand_init( rt_uniresource.re_randptr, MAX_PSW );
+	for( n=0; n < MAX_PSW; n++ )  {
+		rt_init_resource( &resource[n], n );
+		bn_rand_init( resource[n].re_randptr, n );
+	}
 
 	BU_LIST_INIT( &WorkHead );
 
@@ -447,7 +449,6 @@ char *buf;
 #define MAXARGS 1024
 	char	*argv[MAXARGS+1];
 	struct rt_i *rtip;
-	int	n;
 
 	if( debug )  fprintf(stderr, "ph_dirbuild: %s\n", buf );
 
@@ -472,15 +473,6 @@ char *buf;
 	}
 	ap.a_rt_i = rtip;
 	seen_dirbuild = 1;
-
-	/*
-	 *  Initialize all the per-CPU memory resources.
-	 *  Go for the max, as TCL interface may change npsw as we run.
-	 */
-	for( n=0; n < MAX_PSW; n++ )  {
-		rt_init_resource( &resource[n], n, rtip );
-		bn_rand_init( resource[n].re_randptr, n );
-	}
 
 	if( pkg_send( MSG_DIRBUILD_REPLY,
 	    idbuf, strlen(idbuf)+1, pcsrv ) < 0 )
@@ -989,10 +981,4 @@ char *buf;
 {
 	fprintf(stderr,"msg: %s\n", buf);
 	(void)free(buf);
-}
-
-/* Stub for do.c */
-void
-memory_summary()
-{
 }

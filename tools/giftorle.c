@@ -35,7 +35,7 @@
 #include "rle.h"
 
 #ifndef lint
-static const char rcsid[] = "$Id$";
+static char rcsid[] = "$Id$";
 #endif
 
 #define	MAXCOLORMAPSIZE		256
@@ -80,7 +80,7 @@ struct {
 
 static int output_colormap = FALSE;
 
-int
+void
 main(argc,argv)
 int	argc;
 char	**argv;
@@ -106,7 +106,6 @@ char	**argv;
 
     while ( nfname-- > 0 )
 	(void)ReadGIF( *infname++ );
-    return 0;
 }
 
 int

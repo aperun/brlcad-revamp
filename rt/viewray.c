@@ -25,7 +25,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSrayview[] = "@(#)$Header$ (BRL)";
+static char RCSrayview[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -36,7 +36,7 @@ static const char RCSrayview[] = "@(#)$Header$ (BRL)";
 #include "vmath.h"
 #include "raytrace.h"
 
-#include "rtprivate.h"
+#include "rdebug.h"
 
 int		use_air = 1;		/* Handling of air in librt */
 

@@ -29,7 +29,7 @@ static char RCSsh_fbm[] = "@(#)$Header$ (ARL)";
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
 #if !defined(M_PI)
 #define M_PI            3.14159265358979323846

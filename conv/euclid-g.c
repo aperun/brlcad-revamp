@@ -15,7 +15,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -116,21 +116,20 @@ struct shell *s;
 	}
 }
 
-int
 main(argc, argv)
 int	argc;
 char	*argv[];
 {
 	char		*bfile, *efile;
-	FILE		*fpin;
-	struct rt_wdb	*fpout;
+	FILE		*fpin, *fpout;
 	char		title[BRLCAD_TITLE_LENGTH];	/* BRL-CAD database title */
 	register int	c;
 	int i;
 
 	fpin = stdin;
+	fpout = stdout;
 	efile = NULL;
-	bfile = "euclid.g";
+	bfile = NULL;
 	polysolids = 0;
 	debug = 0;
 
@@ -163,6 +162,12 @@ char	*argv[];
 			break;
 		case 'o':
 			bfile = optarg;
+			if ((fpout = fopen(bfile, "w")) == NULL) {
+				fprintf(stderr,	"%s: cannot open %s for writing\n",
+					argv[0], bfile);
+				perror( argv[0] );
+				exit(1);
+			}
 			break;
 		case 'p':
 			polysolids = 1;
@@ -198,13 +203,6 @@ char	*argv[];
 			strcat( title, tol_str );
 	}
 
-	if ((fpout = wdb_fopen(bfile)) == NULL) {
-		fprintf(stderr,	"%s: cannot open %s for writing\n",
-			argv[0], bfile);
-		perror( argv[0] );
-		exit(1);
-	}
-
 	mk_id( fpout, title );
 
 	for( i=0 ; i<11 ; i++ )
@@ -213,8 +211,7 @@ char	*argv[];
 	euclid_to_brlcad(fpin, fpout);
 
 	fclose(fpin);
-	wdb_close(fpout);
-	return 0;
+	fclose(fpout);
 }
 
 /*
@@ -224,7 +221,7 @@ char	*argv[];
  */
 static void
 add_nmg_to_db(fpout, m, reg_id)
-struct rt_wdb	*fpout;
+FILE		*fpout;
 struct model	*m;
 int		reg_id;
 {
@@ -278,7 +275,7 @@ int		reg_id;
 
 	sprintf(rname, "%s.r", id);
 
-	if( mk_addmember( sname, &head.l, WMOP_UNION ) == WMEMBER_NULL )
+	if( mk_addmember( sname, &head, WMOP_UNION ) == WMEMBER_NULL )
 	{
 		bu_log( "add_nmg_to_db: mk_addmember failed for solid %s\n" , sname );
 		rt_bomb( "add_nmg_to_db: FAILED\n" );
@@ -298,7 +295,7 @@ int		reg_id;
 
 static void
 build_groups( fpout )
-struct rt_wdb *fpout;
+FILE *fpout;
 {
 	int i,j;
 	struct wmember head;
@@ -319,7 +316,7 @@ struct rt_wdb *fpout;
 			char *region_name;
 
 			region_name = (char *)BU_PTBL_GET( &groups[i] , j );
-			if( mk_addmember( region_name , &head.l , WMOP_UNION ) == WMEMBER_NULL )
+			if( mk_addmember( region_name , &head , WMOP_UNION ) == WMEMBER_NULL )
 			{
 				bu_log( "build_groups: mk_addmember failed for region %s\n" , region_name );
 				rt_bomb( "build_groups: FAILED\n" );
@@ -338,7 +335,7 @@ struct rt_wdb *fpout;
 			rt_bomb( "build_groups: mk_lcomb FAILED\n" );
 		}
 
-		if( mk_addmember( group_name , &head_all.l , WMOP_UNION ) == WMEMBER_NULL )
+		if( mk_addmember( group_name , &head_all , WMOP_UNION ) == WMEMBER_NULL )
 		{
 			bu_log( "build_groups: mk_addmember failed for group %s\n" , group_name );
 			rt_bomb( "build_groups: FAILED\n" );
@@ -384,8 +381,7 @@ struct rt_wdb *fpout;
  */
 void
 euclid_to_brlcad(fpin, fpout)
-FILE	*fpin;
-struct rt_wdb *fpout;
+FILE	*fpin, *fpout;
 {
 	char	str[80];
 	int	reg_id;
@@ -410,10 +406,9 @@ struct rt_wdb *fpout;
 	build_groups( fpout );
 }
 
-#if 0
 static void
 add_shells_to_db( fpout, shell_count, shells, reg_id )
-struct rt_wdb *fpout;
+FILE *fpout;
 int shell_count;
 struct shell *shells[];
 int reg_id;
@@ -441,7 +436,7 @@ int reg_id;
 		solid_no++;
 		sprintf( sol_name , "%d.%d.s", reg_id, solid_no );
 
-		if( mk_addmember( sol_name, &head.l, WMOP_UNION ) == WMEMBER_NULL )
+		if( mk_addmember( sol_name, &head, WMOP_UNION ) == WMEMBER_NULL )
 		{
 			bu_log( "add_shells_to_db: mk_addmember failed for solid %s\n" , sol_name );
 			rt_bomb( "add_shells_to_db: FAILED\n" );
@@ -491,7 +486,6 @@ int reg_id;
 
 	bu_ptbl_ins( &groups[group_id] , (long *)reg_name );
 }
-#endif
 
 /*
  *	R e a d _ E u c l i d _ R e g i o n
@@ -501,8 +495,7 @@ int reg_id;
  */
 int
 cvt_euclid_region(fp, fpdb, reg_id)
-FILE	*fp;
-struct rt_wdb *fpdb;
+FILE	*fp, *fpdb;
 int	reg_id;
 {
 	int	cur_id, face, facet_type, hole_face, i,
@@ -1065,11 +1058,11 @@ FILE	*fp;
 int	*lst, *ni, *nv;
 struct vlist	*vert;
 {
-	double	num_points, x, y, z, a, b, c, d;
+	fastf_t	num_points, x, y, z, a, b, c, d;
 	int	i, j, k, facet_type;
 
 	/* Description of record. */
-	fscanf(fp, "%d %*f %*f %lf", &facet_type, &num_points);
+	fscanf(fp, "%d %*lf %*lf %lf", &facet_type, &num_points);
 	*ni = (int)num_points;
 
 	if( debug )

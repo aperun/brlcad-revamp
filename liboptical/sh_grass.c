@@ -20,7 +20,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -33,11 +33,8 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
-extern int rr_render(struct application	*ap,
-		     struct partition	*pp,
-		     struct shadework   *swp);
 #ifndef M_PI
 #define M_PI            3.14159265358979323846
 #endif
@@ -155,6 +152,10 @@ struct grass_specific grass_defaults = {
 	{ 1.0, 1.0, 1.0 },		/* vscale */
 	{ 1001.6, 1020.5, 1300.4 },	/* delta into noise space */
 	{.7, .6, .3},	
+	{	0.0, 0.0, 0.0, 0.0,	/* m_to_sh */
+		0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0 }
 	};
 
 #define SHDR_NULL	((struct grass_specific *)0)
@@ -518,7 +519,7 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	 * fixed on the region when the region is moved (as in animation).
 	 * We need to get a matrix to perform the appropriate transform(s).
 	 */
-	db_region_mat(grass_sp->m_to_sh, rtip->rti_dbip, rp->reg_name, &rt_uniresource);
+	db_region_mat(grass_sp->m_to_sh, rtip->rti_dbip, rp->reg_name);
 
 	bn_mat_inv(grass_sp->sh_to_m, grass_sp->m_to_sh);
 

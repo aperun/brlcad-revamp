@@ -29,7 +29,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSparse[] = "@(#)$Header$ (BRL)";
+static char RCSparse[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -1515,26 +1515,6 @@ struct bu_vls *vls;
 	return( 0 );
 }
 
-/*
- *			B U _ S H A D E R _ T O _ T C L _ L I S T
- *
- *  Take an old v4 shader specification of the form
- *
- *	shadername arg1=value1 arg2=value2 color=1/2/3
- *
- *  and convert it into the v5 Tcl-list form
- *
- *	shadername {arg1 value1 arg2 value2 color 1/2/3}
- *
- *  Note -- the input string is smashed with nulls.
- *
- *  Note -- the v5 version is used everywhere internally, and in v5
- *  databases.
- *
- *  Returns -
- *	1	error
- *	0	OK
- */
 int
 bu_shader_to_tcl_list( in, vls )
 char *in;
@@ -1656,25 +1636,18 @@ struct bu_vls *vls;
 	return( 0 );
 }
 
-/*
- *			B U _ L I S T _ E L E M
- *
- *  Given a Tcl list, return a copy of the 'index'th entry,
- *  which may itself be a list.
- *
- *
- *  Note -- the caller is responsible for freeing the returned string.
- */
 char *
-bu_list_elem( const char *in, int index )
+bu_list_elem( in, index )
+char *in;
+int index;
 {
 	int depth=0;
 	int count=0;
 	int len=0;
-	const char *ptr=in;
-	const char *prev=NULL;
-	const char *start=NULL;
-	const char *end=NULL;
+	char *ptr=in;
+	char *prev=NULL;
+	char *start=NULL;
+	char *end=NULL;
 	char *out=NULL;
 
 	while( *ptr )
@@ -1764,18 +1737,14 @@ bu_list_elem( const char *in, int index )
 	return( out );
 }
 
-/*
- *			B U _ T C L _ L I S T _ L E N G T H
- *
- *  Return number of items in a string, interpreted as a Tcl list.
- */
 int
-bu_tcl_list_length( const char *in )
+bu_tcl_list_length( in )
+char *in;
 {
 	int count=0;
 	int depth=0;
-	const char *ptr=in;
-	const char *prev=NULL;
+	char *ptr=in;
+	char *prev=NULL;
 
 	while( *ptr )
 	{
@@ -1864,15 +1833,10 @@ char *params;
 		}
 		else
 			bu_vls_strcat( vls, value );
-		bu_free( keyword, "bu_key_val_to_vls() keyword");
-		bu_free( value, "bu_key_val_to_vls() value");
 	}
 	return( 0 );
 }
 
-/*
- *			B U _ S H A D E R _ T O _ K E Y _ E Q
- */
 int
 bu_shader_to_key_eq( in, vls )
 char *in;
@@ -1973,88 +1937,27 @@ struct bu_vls *vls;
  *	0	OK
  */
 int
-bu_fwrite_external( FILE *fp, const struct bu_external *ep )
+bu_fwrite_external( fp, ep )
+FILE			*fp;
+CONST struct bu_external *ep;
 {
-	size_t	got;
-
 	BU_CK_EXTERNAL(ep);
 
-	if( (got = fwrite( ep->ext_buf, 1, ep->ext_nbytes, fp )) != ep->ext_nbytes )  {
-		perror("fwrite");
-		bu_log("bu_fwrite_external() attempted to write %ld, got %ld\n", (long)ep->ext_nbytes, (long)got );
+	if( fwrite( ep->ext_buf, ep->ext_nbytes, 1, fp ) != 1 )
 		return -1;
-	}
 	return 0;
-}
-
-/*
- *			B U _ H E X D U M P _ E X T E R N A L
- */
-void
-bu_hexdump_external( FILE *fp, CONST struct bu_external *ep, CONST char *str)
-{
-	const unsigned char	*cp;
-	const unsigned char	*endp;
-	int i, j, k;
-
-	BU_CK_EXTERNAL(ep);
-
-	fprintf(fp, "%s:\n", str);
-	if( ep->ext_nbytes <= 0 )  fprintf(fp, "\tWarning: 0 length external buffer\n");
-
-	cp = ep->ext_buf;
-	endp = cp + ep->ext_nbytes;
-	for( i=0; i < ep->ext_nbytes; i += 16 )  {
-		const unsigned char	*sp = cp;
-
-		for( j=0; j < 4; j++ )  {
-			for( k=0; k < 4; k++ )  {
-				if( cp >= endp )
-					fprintf(fp, "   ");
-				else
-					fprintf(fp, "%2.2x ", *cp++ );
-			}
-			fprintf(fp, " ");
-		}
-		fprintf(fp, " |");
-
-		for( j=0; j < 16; j++,sp++ )  {
-			if( sp >= endp )  break;
-			if( isprint(*sp) )
-				putc(*sp, fp);
-			else
-				putc('.', fp);
-		}
-
-		fprintf(fp, "|\n");
-	}
 }
 
 /*
  *			B U _ F R E E _ E X T E R N A L
  */
 void
-bu_free_external( register struct bu_external *ep)
+bu_free_external( ep )
+register struct bu_external	*ep;
 {
 	BU_CK_EXTERNAL(ep);
 	if( ep->ext_buf )  {
 		bu_free( ep->ext_buf, "bu_external ext_buf" );
 		ep->ext_buf = GENPTR_NULL;
 	}
-}
-
-/*
- *			B U _ C O P Y _ E X T E R N A L
- */
-void
-bu_copy_external(struct bu_external *op, const struct bu_external *ip)
-{
-	BU_CK_EXTERNAL(ip);
-	BU_INIT_EXTERNAL(op);
-
-	if( op == ip )  return;
-
-	op->ext_nbytes = ip->ext_nbytes;
-	op->ext_buf = bu_malloc( ip->ext_nbytes, "bu_copy_external" );
-	bcopy( ip->ext_buf, op->ext_buf, ip->ext_nbytes );
 }

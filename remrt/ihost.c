@@ -14,7 +14,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -35,7 +35,6 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 
 #include "machine.h"
 #include "vmath.h"

@@ -82,9 +82,6 @@ extern "C" {
  *		if( fabs(VDOT(a,b)) >= tol->para )	a & b are parallel
  *		if( fabs(VDOT(a,b)) <= tol->perp )	a & b are perpendicular
  *
- *  Note:
- *	tol->dist_sq = tol->dist * tol->dist;
- *	tol->para = 1 - tol->perp;
  */
 struct bn_tol {
 	unsigned long	magic;
@@ -102,32 +99,6 @@ struct bn_tol {
 	(((_dot) < 0) ? ((-(_dot))<=(_tol)->perp) : ((_dot) <= (_tol)->perp))
 
 #define BN_APPROXEQUAL(_a, _b, _tol) (fabs( (_a) - (_b) ) <= _tol->dist)
-
-/* asize.c */
-BU_EXTERN(int			bn_common_file_size, (int *width,
-						      int *height,
-						      char *filename,
-						      int pixel_size));
-BU_EXTERN(int			bn_common_name_size, (int *width,
-						      int *height,
-						      char *name));
-BU_EXTERN(int			bn_common_image_size, (int *width,
-						      int *height,
-						      int num_pixels));
-
-/*----------------------------------------------------------------------*/
-/* bn_tcl.c */
-int bn_decode_mat(mat_t m, const char *str);
-int bn_decode_tol(struct bn_tol *tol, const char *str);
-int bn_decode_quat(quat_t q, const char *str);
-int bn_decode_vect( vect_t v, const char *str );
-int bn_decode_hvect(hvect_t v, const char *str);
-int bn_decode_plane(plane_t v, const char *str);
-void bn_encode_mat(struct bu_vls *vp, const mat_t m);
-void bn_encode_quat(struct bu_vls *vp, const quat_t q);
-void bn_encode_vect(struct bu_vls *vp, const vect_t v);
-void bn_encode_hvect(struct bu_vls *vp, const hvect_t v);
-
 
 /*----------------------------------------------------------------------*/
 /* complex.c */
@@ -195,12 +166,6 @@ BU_EXTERN(void		bn_mat_mul, (register mat_t o, register CONST mat_t a,
 BU_EXTERN(void		bn_mat_mul2, (register CONST mat_t i, register mat_t o));
 BU_EXTERN(void		bn_mat_mul3, (mat_t o, CONST mat_t a, CONST mat_t b,
 					CONST mat_t c));
-void			bn_mat_mul4(
-				mat_t		o,
-				const mat_t	a,
-				const mat_t	b,
-				const mat_t	c,
-				const mat_t	d);
 BU_EXTERN(void		bn_matXvec, (register hvect_t ov,
 					register CONST mat_t im,
 					register CONST hvect_t iv));
@@ -351,14 +316,6 @@ BU_EXTERN(double	bn_noise_ridged, (point_t point, double h_val,
  * Plane/line/point calculations
  */
 
-
-extern int bn_distsq_line3_line3(fastf_t dist[3],
-				 point_t P,
-				 vect_t d,
-				 point_t Q,
-				 vect_t e,
-				 point_t pt1,
-				 point_t pt2);
 
 BU_EXTERN(int		bn_dist_pt3_lseg3, (fastf_t *dist, point_t pca,
 				CONST point_t a, CONST point_t b,
@@ -586,6 +543,7 @@ extern float bn_rand_halftab[BN_RANDHALFTABSIZE];
 /* random numbers 0..1 except when benchmarking, when this is always 0.5 */
 #define bn_rand0to1(_q)	(bn_rand_half(_q)+0.5)
 
+
 #define	BN_SINTABSIZE		2048
 extern double bn_sin_scale;
 #define bn_tab_sin(_a)	(((_a) > 0) ? \
@@ -593,7 +551,6 @@ extern double bn_sin_scale;
 	(-bn_sin_table[(int)((0.5- (_a)*bn_sin_scale))&(BN_SINTABSIZE-1)] ) )
 extern CONST float bn_sin_table[BN_SINTABSIZE];
 
-extern void bn_mathtab_constant();
 
 
 /*----------------------------------------------------------------------*/
@@ -857,21 +814,6 @@ BU_EXTERN( void			bn_tabdata_add, (struct bn_tabdata *out,
 BU_EXTERN( void			bn_tabdata_mul, (struct bn_tabdata *out,
 					CONST struct bn_tabdata *in1,
 					CONST struct bn_tabdata *in2));
-BU_EXTERN( void			bn_tabdata_mul3, (struct bn_tabdata *out,
-					CONST struct bn_tabdata	*in1,
-					CONST struct bn_tabdata	*in2,
-					CONST struct bn_tabdata	*in3));
-BU_EXTERN( void			bn_tabdata_incr_mul3_scale,
-					(struct bn_tabdata *out,
-					CONST struct bn_tabdata	*in1,
-					CONST struct bn_tabdata	*in2,
-					CONST struct bn_tabdata	*in3,
-					double scale));
-BU_EXTERN( void			bn_tabdata_incr_mul2_scale,
-					(struct bn_tabdata *out,
-					CONST struct bn_tabdata	*in1,
-					CONST struct bn_tabdata	*in2,
-					double scale));
 BU_EXTERN( void			bn_tabdata_scale, (struct bn_tabdata *out,
 					CONST struct bn_tabdata *in1,
 					double scale));
@@ -880,17 +822,6 @@ BU_EXTERN( void			bn_table_scale, (struct bn_table *tabp,
 BU_EXTERN( void			bn_tabdata_join1, (struct bn_tabdata *out,
 					CONST struct bn_tabdata *in1,
 					double scale,
-					CONST struct bn_tabdata *in2));
-BU_EXTERN( void			bn_tabdata_join2, (struct bn_tabdata *out,
-					CONST struct bn_tabdata *in1,
-					double scale2,
-					CONST struct bn_tabdata *in2,
-					double scale3,
-					CONST struct bn_tabdata *in3));
-BU_EXTERN( void			bn_tabdata_blend2, (struct bn_tabdata *out,
-					double scale1,
-					CONST struct bn_tabdata *in1,
-					double scale2,
 					CONST struct bn_tabdata *in2));
 BU_EXTERN( void			bn_tabdata_blend3, (struct bn_tabdata *out,
 					double scale1,
@@ -916,10 +847,6 @@ BU_EXTERN( struct bn_tabdata	*bn_tabdata_resample_avg, (
 BU_EXTERN( int			bn_table_write, (CONST char *filename,
 					CONST struct bn_table *tabp));
 BU_EXTERN( struct bn_table	*bn_table_read, (CONST char *filename));
-BU_EXTERN( void			bn_pr_table, (CONST char *title,
-					CONST struct bn_table *tabp));
-BU_EXTERN( void			bn_pr_tabdata, (CONST char *title,
-					CONST struct bn_tabdata	*data));
 BU_EXTERN( int			bn_print_table_and_tabdata, (CONST char *filename,
 					CONST struct bn_tabdata *data));
 BU_EXTERN( struct bn_tabdata	*bn_read_table_and_tabdata, (
@@ -936,18 +863,7 @@ BU_EXTERN(struct bn_tabdata	*bn_tabdata_dup, (CONST struct bn_tabdata *in));
 BU_EXTERN(struct bn_tabdata	*bn_tabdata_get_constval, (double val,
 					CONST struct bn_table	*tabp));
 BU_EXTERN(void			bn_tabdata_constval, (struct bn_tabdata	*data, double val));
-BU_EXTERN( void			bn_tabdata_to_tcl, (struct bu_vls *vp,
-					CONST struct bn_tabdata	*data));
 BU_EXTERN(struct bn_tabdata	*bn_tabdata_from_array, (CONST double *array));
-BU_EXTERN( void			bn_tabdata_freq_shift, (struct bn_tabdata *out,
-					CONST struct bn_tabdata *in,
-					double offset));
-BU_EXTERN( int			bn_table_interval_num_samples,
-					(CONST struct bn_table *tabp,
-					double	low, double	hi));
-BU_EXTERN( int			bn_table_delete_sample_pts,
-					(struct bn_table *tabp,
-					int	i, int	j));
 BU_EXTERN(struct bn_table	*bn_table_merge2, (CONST struct bn_table *a,
 				CONST struct bn_table *b));
 BU_EXTERN(struct bn_tabdata	*bn_tabdata_mk_linear_filter,

@@ -37,7 +37,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 char MGEDCopyRight_Notice[] = "@(#) \
@@ -69,7 +69,6 @@ in all countries except the USA.  All rights reserved.";
 #include "vmath.h"
 #include "bn.h"
 #include "raytrace.h"
-#include "libtermio.h"
 #include "./ged.h"
 #include "./titles.h"
 #include "./mged_solid.h"
@@ -163,7 +162,6 @@ struct bn_tol	mged_tol;		/* calculation tolerance */
 
 struct bu_vls mged_prompt;
 void pr_prompt(), pr_beep();
-int mged_bomb_hook();
 
 #ifdef USE_PROTOTYPES
 Tcl_FileProc stdin_input;
@@ -250,7 +248,6 @@ char **argv;
 	cur_sigint = signal( SIGINT, SIG_IGN );		/* sample */
 	(void)signal( SIGINT, cur_sigint );		/* restore */
 
-#if 1
 	/* If multiple processors might be used, initialize for it.
 	 * Do not run any commands before here.
 	 * Do not use bu_log() or bu_malloc() before here.
@@ -259,15 +256,12 @@ char **argv;
 	  rt_g.rtg_parallel = 1;
 	  bu_semaphore_init( RT_SEM_LAST );
 	}
-#endif
 
 	/* Set up linked lists */
 	BU_LIST_INIT(&HeadSolid.l);
 	BU_LIST_INIT(&FreeSolid.l);
-#if 1
 	BU_LIST_INIT(&rt_g.rtg_vlfree);
 	BU_LIST_INIT(&rt_g.rtg_headwdb.l);
-#endif
 
 	bzero((void *)&head_cmd_list, sizeof(struct cmd_list));
 	BU_LIST_INIT(&head_cmd_list.l);
@@ -350,8 +344,6 @@ char **argv;
 	mged_tol.dist_sq = mged_tol.dist * mged_tol.dist;
 	mged_tol.perp = 1e-6;
 	mged_tol.para = 1 - mged_tol.perp;
-
-	rt_init_resource( &rt_uniresource, 0, NULL );
 
 	rt_prep_timer();		/* Initialize timer */
 
@@ -469,8 +461,6 @@ char **argv;
 	    }else{
 	      exit(0);
 	    }
-
-	    bu_add_hook(&bu_bomb_hook_list, mged_bomb_hook, GENPTR_NULL);
 	  }
 	}
 
@@ -1196,7 +1186,8 @@ int mask;
  */
 
 int
-event_check( int non_blocking )
+event_check( non_blocking )
+int	non_blocking;
 {
     register struct dm_list *p;
     struct dm_list *save_dm_list;
@@ -1970,11 +1961,11 @@ do_rc()
  *	cmdline()		Only one arg is permitted.
  */
 int
-f_opendb(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_opendb(clientData, interp, argc, argv )
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	struct db_i *save_dbip;
 	struct bu_vls vls;
@@ -2196,23 +2187,3 @@ f_opendb(
 	bu_vls_free(&msg);
 	return TCL_OK;
 }
-
-int
-mged_bomb_hook(clientData, str)
-     genptr_t clientData;
-     genptr_t str;
-{
-	struct bu_vls vls;
-
-	bu_vls_init(&vls);
-	bu_vls_printf(&vls, "set mbh_dialog [Dialog .#auto -modality application];");
-	bu_vls_printf(&vls, "$mbh_dialog hide 1; $mbh_dialog hide 2; $mbh_dialog hide 3;");
-	bu_vls_printf(&vls, "label [$mbh_dialog childsite].l -text {%s};", str);
-	bu_vls_printf(&vls, "pack [$mbh_dialog childsite].l;");
-	bu_vls_printf(&vls, "update; $mbh_dialog activate");
-	Tcl_Eval(interp, bu_vls_addr(&vls));
-	bu_vls_free(&vls);
-	
-	return TCL_OK;
-}
-	     

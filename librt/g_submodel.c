@@ -27,14 +27,13 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSsubmodel[] = "@(#)$Header$ (BRL)";
+static char RCSsubmodel[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
 #include "machine.h"
 #include "vmath.h"
 #include "db.h"
@@ -89,7 +88,8 @@ struct rt_i		*rtip;
 	struct submodel_specific	*submodel;
 	struct rt_i			*sub_rtip;
 	struct db_i			*sub_dbip;
-	struct resource			*resp;
+	struct soltab			*sub_stp;
+	struct region			*rp;
 	vect_t	radvec;
 	vect_t	diam;
 	char	*argv[2];
@@ -164,15 +164,6 @@ struct rt_i		*rtip;
 		bu_log("rt_submodel_prep(%s): Opened database %s\n",
 			stp->st_dp->d_namep, sub_dbip->dbi_filename );
 	}
-
-	/*
-	 *  Initialize per-processor resources for the submodel.
-	 *  We treewalk here with only one processor (CPU 0).
-	 *  rt_gettrees() will pluck the 0th resource out of the rtip table.
-	 *  rt_submodel_shot() will get additional resources as needed.
-	 */
-	resp = (struct resource *)BU_PTBL_GET(&sub_rtip->rti_resources, 0);
-	rt_init_resource( resp, 0, sub_rtip );
 
 	/* Propagate some important settings downward */
 	sub_rtip->useair = rtip->useair;
@@ -302,6 +293,7 @@ struct seg		*segHeadp;
 	struct region		*up_reg;
 	struct submodel_gobetween *gp;
 	struct submodel_specific *submodel;
+	fastf_t			delta;
 	int			count = 0;
 
 	RT_AP_CHECK(ap);
@@ -405,14 +397,11 @@ struct seg		*segHeadp;
 		/* RT_HIT_CURVATURE */
 		/* no place to stash curvature data! */
 
-		/*
-		 *  Here, the surfno reported upwards is the solid's
-		 *  index (bit) number in the submodel.
-		 *  This can be used as subscript to rti_Solids[]
-		 *  to retrieve the identity of the solid that was hit.
+		/* Leave behind a distinctive surfno marker
+		 * in case app is using it for something.
 		 */
-		up_segp->seg_in.hit_surfno = inseg->seg_stp->st_bit;
-		up_segp->seg_out.hit_surfno = outseg->seg_stp->st_bit;
+		up_segp->seg_in.hit_surfno = 17;
+		up_segp->seg_out.hit_surfno = 17;
 
 		/* Put this segment on caller's shot routine seglist */
 		BU_LIST_INSERT( &(gp->up_seghead->l), &(up_segp->l) );
@@ -441,6 +430,8 @@ struct seg		*seghead;
 {
 	register struct submodel_specific *submodel =
 		(struct submodel_specific *)stp->st_specific;
+	register struct seg *segp;
+	CONST struct bn_tol	*tol = &ap->a_rt_i->rti_tol;
 	struct application	sub_ap;
 	struct submodel_gobetween	gb;
 	vect_t			vdiff;
@@ -477,12 +468,17 @@ struct seg		*seghead;
 	 */
 	restbl = &submodel->rtip->rti_resources;	/* a ptbl */
 	cpu = ap->a_resource->re_cpu;
-	BU_ASSERT_LONG( cpu, <, BU_PTBL_END(restbl) );
+	if( !( cpu < BU_PTBL_END(restbl) ) )  {
+		bu_log("ptbl_end=%d, ptbl_blen=%d, cpu=%d\n",
+			BU_PTBL_END(restbl), restbl->blen, cpu );
+	}
+	BU_ASSERT( cpu < BU_PTBL_END(restbl) );
 	if( (resp = (struct resource *)BU_PTBL_GET(restbl, cpu)) == NULL )  {
 		/* First ray for this cpu for this submodel, alloc up */
 		BU_GETSTRUCT( resp, resource );
-		BU_PTBL_SET(restbl, cpu, resp);
-		rt_init_resource( resp, cpu, submodel->rtip );
+		/* XXX Should be a BU_PTBL_SET() */
+		BU_PTBL_GET(restbl, cpu) = (long *)resp;
+		rt_init_resource( resp, cpu );
 	}
 	RT_CK_RESOURCE(resp);
 	sub_ap.a_resource = resp;
@@ -557,6 +553,9 @@ register struct curvature *cvp;
 register struct hit	*hitp;
 struct soltab		*stp;
 {
+	register struct submodel_specific *submodel =
+		(struct submodel_specific *)stp->st_specific;
+
  	cvp->crv_c1 = cvp->crv_c2 = 0;
 
 	/* any tangent direction */
@@ -599,26 +598,6 @@ register struct soltab *stp;
 {
 	register struct submodel_specific *submodel =
 		(struct submodel_specific *)stp->st_specific;
-	struct resource	**rpp;
-	struct rt_i	*rtip;
-
-	RT_CK_SUBMODEL_SPECIFIC(submodel);
-	rtip = submodel->rtip;
-	RT_CK_RTI(rtip);
-
-	/* Specificially free resource structures here */
-	BU_CK_PTBL( &rtip->rti_resources );
-	for( BU_PTBL_FOR( rpp, (struct resource **), &rtip->rti_resources ) )  {
-		if( *rpp == NULL )  continue;
-		if( *rpp == &rt_uniresource )  continue;
-		RT_CK_RESOURCE(*rpp);
-		/* Cleans but does not free the resource struct */
-		rt_clean_resource(rtip, *rpp);
-		bu_free( *rpp, "struct resource (submodel)" );
-		/* Forget remembered ptr */
-		*rpp = NULL;
-	}
-	/* Keep the ptbl allocated. */
 
 	rt_free_rti( submodel->rtip );
 
@@ -648,19 +627,19 @@ struct goodies {
  *  This routine must be prepared to run in parallel.
  *  This routine should be generally exported for other uses.
  */
-HIDDEN union tree *rt_submodel_wireframe_leaf( tsp, pathp, ip, client_data )
+HIDDEN union tree *rt_submodel_wireframe_leaf( tsp, pathp, ep, id, client_data )
 struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
-struct rt_db_internal	*ip;
+struct bu_external	*ep;
+int			id;
 genptr_t		client_data;
 {
+	struct rt_db_internal	intern;
 	union tree	*curtree;
 	struct goodies	*gp;
 
 	RT_CK_TESS_TOL(tsp->ts_ttol);
 	BN_CK_TOL(tsp->ts_tol);
-	RT_CK_DB_INTERNAL(ip );
-	RT_CK_RESOURCE(tsp->ts_resp);
 
 	gp = (struct goodies *)tsp->ts_m;	/* hack */
 	RT_CK_DBI(gp->dbip);
@@ -672,21 +651,37 @@ genptr_t		client_data;
 		char	*sofar = db_path_to_string(pathp);
 
 		bu_log("rt_submodel_wireframe_leaf(%s) path=%s\n",
-			ip->idb_meth->ft_name, sofar );
+			rt_functab[id].ft_name, sofar );
 		bu_free((genptr_t)sofar, "path string");
 	}
 
-	if( ip->idb_meth->ft_plot(
-	    gp->vheadp, ip,
+    	RT_INIT_DB_INTERNAL(&intern);
+	if( rt_functab[id].ft_import( &intern, ep, tsp->ts_mat, gp->dbip ) < 0 )  {
+		bu_log("rt_submodel_wireframe_leaf(%s): %s solid import failure\n",
+			rt_functab[id].ft_name,
+			DB_FULL_PATH_CUR_DIR(pathp)->d_namep );
+
+		if( intern.idb_ptr )  intern.idb_meth->ft_ifree( &intern );
+		return(TREE_NULL);		/* ERROR */
+	}
+	RT_CK_DB_INTERNAL( &intern );
+
+	if( rt_functab[id].ft_plot(
+	    gp->vheadp,
+	    &intern,
 	    tsp->ts_ttol, tsp->ts_tol ) < 0 )  {
 		bu_log("rt_submodel_wireframe_leaf(%s): %s plot failure\n",
-			ip->idb_meth->ft_name,
+			rt_functab[id].ft_name,
 			DB_FULL_PATH_CUR_DIR(pathp)->d_namep );
+
+		rt_functab[id].ft_ifree( &intern );
 		return(TREE_NULL);		/* ERROR */
 	}
 
+	intern.idb_meth->ft_ifree( &intern );
+
 	/* Indicate success by returning something other than TREE_NULL */
-	RT_GET_TREE( curtree, tsp->ts_resp);
+	BU_GETUNION( curtree, tree );
 	curtree->magic = RT_TREE_MAGIC;
 	curtree->tr_op = OP_NOP;
 
@@ -712,6 +707,7 @@ CONST struct bn_tol	*tol;
 {
 	LOCAL struct rt_submodel_internal	*sip;
 	struct db_tree_state	state;
+	struct db_i		*dbip;
 	int			ret;
 	char			*argv[2];
 	struct goodies		good;
@@ -818,7 +814,7 @@ CONST struct db_i		*dbip;
 		return(-1);
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_SUBMODEL;
 	ip->idb_meth = &rt_functab[ID_SUBMODEL];
 	ip->idb_ptr = bu_malloc( sizeof(struct rt_submodel_internal), "rt_submodel_internal");
@@ -883,7 +879,7 @@ bu_log("export: file='%s', treetop='%s', meth=%d\n", sip->file, sip->treetop, si
 	/* Ignores scale factor */
 	BU_ASSERT( local2mm == 1.0 );
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 	ep->ext_nbytes = sizeof(union record)*DB_SS_NGRAN;
 	ep->ext_buf = bu_calloc( 1, ep->ext_nbytes, "submodel external");
 	rec = (union record *)ep->ext_buf;
@@ -894,105 +890,6 @@ bu_log("export: file='%s', treetop='%s', meth=%d\n", sip->file, sip->treetop, si
 	rec->ss.ss_id = DBID_STRSOL;
 	strncpy( rec->ss.ss_keyword, "submodel", NAMESIZE-1 );
 	strncpy( rec->ss.ss_args, bu_vls_addr(&str), DB_SS_LEN-1 );
-	bu_vls_free( &str );
-#if 0
-bu_log("rt_submodel_export: '%s'\n", rec->ss.ss_args);
-#endif
-
-	return(0);
-}
-
-
-/*
- *			R T _ S U B M O D E L _ I M P O R T 5
- *
- *  Import an SUBMODEL from the database format to the internal format.
- *  Apply modeling transformations as well.
- */
-int
-rt_submodel_import5( ip, ep, mat, dbip )
-struct rt_db_internal		*ip;
-CONST struct bu_external	*ep;
-register CONST mat_t		mat;
-CONST struct db_i		*dbip;
-{
-	LOCAL struct rt_submodel_internal	*sip;
-	struct bu_vls		str;
-
-	BU_CK_EXTERNAL( ep );
-	RT_CK_DBI(dbip);
-
-	RT_CK_DB_INTERNAL( ip );
-	ip->idb_type = ID_SUBMODEL;
-	ip->idb_meth = &rt_functab[ID_SUBMODEL];
-	ip->idb_ptr = bu_malloc( sizeof(struct rt_submodel_internal), "rt_submodel_internal");
-	sip = (struct rt_submodel_internal *)ip->idb_ptr;
-	sip->magic = RT_SUBMODEL_INTERNAL_MAGIC;
-	sip->dbip = dbip;
-
-	bn_mat_copy( sip->root2leaf, mat );
-
-	bu_vls_init( &str );
-	bu_vls_strcpy( &str, ep->ext_buf );
-#if 0
-bu_log("rt_submodel_import: '%s'\n", rp->ss.ss_args);
-#endif
-	if( bu_struct_parse( &str, rt_submodel_parse, (char *)sip ) < 0 )  {
-		bu_vls_free( &str );
-fail:
-		bu_free( (char *)sip , "rt_submodel_import: sip" );
-		ip->idb_type = ID_NULL;
-		ip->idb_ptr = (genptr_t)NULL;
-		return -2;
-	}
-	bu_vls_free( &str );
-
-	/* Check for reasonable values */
-	if( sip->treetop[0] == '\0' )  {
-		bu_log("rt_submodel_import() treetop= must be specified\n");
-		goto fail;
-	}
-#if 0
-bu_log("import: file='%s', treetop='%s', meth=%d\n", sip->file, sip->treetop, sip->meth);
-bn_mat_print("root2leaf", sip->root2leaf );
-#endif
-
-	return(0);			/* OK */
-}
-
-/*
- *			R T _ S U B M O D E L _ E X P O R T 5
- *
- *  The name is added by the caller, in the usual place.
- */
-int
-rt_submodel_export5( ep, ip, local2mm, dbip )
-struct bu_external		*ep;
-CONST struct rt_db_internal	*ip;
-double				local2mm;
-CONST struct db_i		*dbip;
-{
-	struct rt_submodel_internal	*sip;
-	struct bu_vls		str;
-
-	RT_CK_DB_INTERNAL(ip);
-	if( ip->idb_type != ID_SUBMODEL )  return(-1);
-	sip = (struct rt_submodel_internal *)ip->idb_ptr;
-	RT_SUBMODEL_CK_MAGIC(sip);
-#if 0
-bu_log("export: file='%s', treetop='%s', meth=%d\n", sip->file, sip->treetop, sip->meth);
-#endif
-
-	/* Ignores scale factor */
-	BU_ASSERT( local2mm == 1.0 );
-	BU_CK_EXTERNAL(ep);
-
-	bu_vls_init( &str );
-	bu_vls_struct_print( &str, rt_submodel_parse, (char *)sip );
-	ep->ext_nbytes = bu_vls_strlen( &str );
-	ep->ext_buf = bu_calloc( 1, ep->ext_nbytes, "submodel external");
-
-	strcpy( ep->ext_buf, bu_vls_addr(&str) );
 	bu_vls_free( &str );
 #if 0
 bu_log("rt_submodel_export: '%s'\n", rec->ss.ss_args);

@@ -83,7 +83,7 @@ rle_pixel *scanline[];
     }
 }
 
-int
+void
 main(argc, argv)
 int	argc;
 char	*argv[];

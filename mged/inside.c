@@ -25,7 +25,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -166,7 +166,7 @@ char **argv;
 
 	CHECK_DBI_NULL;
 
-	if(argc < 1){
+	if(argc < 1 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -231,7 +231,7 @@ char **argv;
 	  }
 	  ++arg;
 
-	  if( rt_db_get_internal( &intern, outdp, dbip, bn_mat_identity, &rt_uniresource ) < 0 ) {
+	  if( rt_db_get_internal( &intern, outdp, dbip, bn_mat_identity ) < 0 ) {
 	    (void)signal( SIGINT, SIG_IGN );
 	    TCL_READ_ERR_return;
 	  }
@@ -526,7 +526,7 @@ char **argv;
 	  (void)signal( SIGINT, SIG_IGN );
 	  TCL_ALLOC_ERR_return;
 	}
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 ) {
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 ) {
 	  (void)signal( SIGINT, SIG_IGN );
 	  TCL_WRITE_ERR_return;
 	}
@@ -583,7 +583,7 @@ plane_t	planes[6];
 
 	/* find the new vertices by intersecting the new face planes */
 	for(i=0; i<num_pts; i++) {
-	  if( rt_arb_3face_intersect( arb->pt[i], (const plane_t *)planes, cgtype, i*3 ) < 0 )  {
+	  if( rt_arb_3face_intersect( arb->pt[i], planes, cgtype, i*3 ) < 0 )  {
 	    Tcl_AppendResult(interp, "cannot find inside arb\n", (char *)NULL);
 	    return(1);
 	  }
@@ -700,7 +700,6 @@ plane_t	planes[6];
 		struct faceuse *fu;
 		struct rt_tess_tol ttol;
 		struct bu_ptbl vert_tab;
-		struct rt_bot_internal  *bot;
 
 		ttol.magic = RT_TESS_TOL_MAGIC;
 		ttol.abs = mged_abs_tol;
@@ -714,7 +713,7 @@ plane_t	planes[6];
 		if( rt_functab[ip->idb_type].ft_tessellate( &r , m , ip , &ttol , &mged_tol ) )
 		{
 		  Tcl_AppendResult(interp, "Cannot tessellate arb7\n", (char *)NULL);
-		  rt_db_free_internal( ip, &rt_uniresource );
+		  rt_functab[ip->idb_type].ft_ifree( ip );
 		  return( 1 );
 		}
 
@@ -794,16 +793,12 @@ plane_t	planes[6];
 		nmg_extrude_cleanup( s , 0 , &mged_tol );
 
 		/* free old ip pointer */
-		rt_db_free_internal( ip, &rt_uniresource );
-
-		/* convert the NMG to a BOT */
-		bot = (struct rt_bot_internal *)nmg_bot( s, &mged_tol );
-		nmg_km( m );
+		rt_db_free_internal( ip );
 
 		/* put new solid in "ip" */
-		ip->idb_type = ID_BOT;
-		ip->idb_meth = &rt_functab[ID_BOT];
-		ip->idb_ptr = (genptr_t)bot;
+		ip->idb_type = ID_NMG;
+		ip->idb_meth = &rt_functab[ID_NMG];
+		ip->idb_ptr = (genptr_t)m;
 	}
 
 	return(0);

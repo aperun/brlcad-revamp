@@ -20,7 +20,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -32,12 +32,9 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 #include "../rt/light.h"
 
-extern int rr_render(struct application	*ap,
-		     struct partition	*pp,
-		     struct shadework   *swp);
 #if !defined(M_PI)
 #define M_PI            3.14159265358979323846
 #endif
@@ -162,7 +159,7 @@ struct rt_i		*rtip;
 		/* bad thing */
 		rt_bomb("db_string_to_path() error");
 	}
-	if(! db_path_to_mat(rtip->rti_dbip, &full_path, region_to_model, 0, &rt_uniresource)) {
+	if(! db_path_to_mat(rtip->rti_dbip, &full_path, region_to_model, 0)) {
 		/* bad thing */
 		rt_bomb("db_path_to_mat() error");
 	}
@@ -341,6 +338,8 @@ char	*dp;
 		val = bn_noise_turb(pt, scloud_sp->h_val, 
 			scloud_sp->lacunarity, scloud_sp->octaves );
 
+		if (rdebug&RDEBUG_SHADE)
+			
 		density = scloud_sp->min_d_p_mm + val * delta_dpmm;
 
 		val = exp( - density * step_delta);

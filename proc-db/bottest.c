@@ -20,7 +20,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -29,15 +29,11 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <math.h>
 #include "machine.h"
 #include "externs.h"
-#include "bu.h"
 #include "vmath.h"
-#include "raytrace.h"
+#include "rtlist.h"
 #include "wdb.h"
 #include "rtgeom.h"
 
-struct rt_wdb *outfp;
-
-int
 main( argc, argv )
 int argc;
 char *argv[];
@@ -47,8 +43,7 @@ char *argv[];
 	struct bu_bitv *face_mode;
 	fastf_t thickness[4];
 
-	outfp = wdb_fopen( "bot-test.g" );
-	mk_id( outfp, "BOT test" );
+	mk_id( stdout, "BOT test" );
 
 	VSET( vertices, 0.0, 0.0, 0.0 )
 	VSET( &vertices[3], 0.0, 100.0, 0.0 )
@@ -75,7 +70,7 @@ char *argv[];
 	faces[10] = 2;
 	faces[11] = 3;
 
-	mk_bot( outfp, "bot_u_surf", RT_BOT_SURFACE, RT_BOT_UNORIENTED, 0, 4, 4, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
+	mk_bot( stdout, "bot_u_surf", RT_BOT_SURFACE, RT_BOT_UNORIENTED, 0, 4, 4, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
 
 	/* face #1 */
 	faces[0] = 0;
@@ -97,7 +92,7 @@ char *argv[];
 	faces[10] = 2;
 	faces[11] = 3;
 
-	mk_bot( outfp, "bot_ccw_surf", RT_BOT_SURFACE, RT_BOT_CCW, 0, 4, 4, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
+	mk_bot( stdout, "bot_ccw_surf", RT_BOT_SURFACE, RT_BOT_CCW, 0, 4, 4, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
 
 
 	/* face #1 */
@@ -120,7 +115,7 @@ char *argv[];
 	faces[10] = 2;
 	faces[11] = 1;
 
-	mk_bot( outfp, "bot_cw_surf", RT_BOT_SURFACE, RT_BOT_CW, 0, 4, 4, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
+	mk_bot( stdout, "bot_cw_surf", RT_BOT_SURFACE, RT_BOT_CW, 0, 4, 4, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
 
 
 	/* face #1 */
@@ -143,7 +138,7 @@ char *argv[];
 	faces[10] = 2;
 	faces[11] = 3;
 
-	mk_bot( outfp, "bot_u_solid", RT_BOT_SOLID, RT_BOT_UNORIENTED, 0, 4, 4, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
+	mk_bot( stdout, "bot_u_solid", RT_BOT_SOLID, RT_BOT_UNORIENTED, 0, 4, 4, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
 
 	/* face #1 */
 	faces[0] = 0;
@@ -165,7 +160,7 @@ char *argv[];
 	faces[10] = 2;
 	faces[11] = 3;
 
-	mk_bot( outfp, "bot_ccw_solid", RT_BOT_SOLID, RT_BOT_CCW, 0, 4, 4, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
+	mk_bot( stdout, "bot_ccw_solid", RT_BOT_SOLID, RT_BOT_CCW, 0, 4, 4, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
 
 
 	/* face #1 */
@@ -188,7 +183,7 @@ char *argv[];
 	faces[10] = 2;
 	faces[11] = 1;
 
-	mk_bot( outfp, "bot_cw_solid", RT_BOT_SOLID, RT_BOT_CW, 0, 4, 4, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
+	mk_bot( stdout, "bot_cw_solid", RT_BOT_SOLID, RT_BOT_CW, 0, 4, 4, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
 
 	face_mode = bu_bitv_new( 4 );
 	bu_bitv_clear( face_mode );
@@ -219,7 +214,7 @@ char *argv[];
 	faces[10] = 2;
 	faces[11] = 3;
 
-	mk_bot( outfp, "bot_u_plate", RT_BOT_PLATE, RT_BOT_UNORIENTED, 0, 4, 4, vertices, faces, thickness, face_mode );
+	mk_bot( stdout, "bot_u_plate", RT_BOT_PLATE, RT_BOT_UNORIENTED, 0, 4, 4, vertices, faces, thickness, face_mode );
 
 	/* face #1 */
 	faces[0] = 0;
@@ -241,7 +236,7 @@ char *argv[];
 	faces[10] = 2;
 	faces[11] = 3;
 
-	mk_bot( outfp, "bot_ccw_plate", RT_BOT_PLATE, RT_BOT_CCW, 0, 4, 4, vertices, faces, thickness, face_mode );
+	mk_bot( stdout, "bot_ccw_plate", RT_BOT_PLATE, RT_BOT_CCW, 0, 4, 4, vertices, faces, thickness, face_mode );
 
 
 	/* face #1 */
@@ -264,7 +259,7 @@ char *argv[];
 	faces[10] = 2;
 	faces[11] = 1;
 
-	mk_bot( outfp, "bot_cw_plate", RT_BOT_PLATE, RT_BOT_CW, 0, 4, 4, vertices, faces, thickness, face_mode );
+	mk_bot( stdout, "bot_cw_plate", RT_BOT_PLATE, RT_BOT_CW, 0, 4, 4, vertices, faces, thickness, face_mode );
 
 	/* Make a bot with duplicate vertices to test the "fuse" and "condense" code */
 	VSET( vertices, 0.0, 0.0, 0.0 )
@@ -301,14 +296,13 @@ char *argv[];
 	faces[10] = 10;
 	faces[11] = 11;
 
-	mk_bot( outfp, "bot_solid_dup_vs", RT_BOT_SOLID, RT_BOT_UNORIENTED, 0, 12, 4, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
+	mk_bot( stdout, "bot_solid_dup_vs", RT_BOT_SOLID, RT_BOT_UNORIENTED, 0, 12, 4, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
 
 	faces[12] = 9;
 	faces[13] = 10;
 	faces[14] = 11;
 
-	mk_bot( outfp, "bot_solid_dup_fs", RT_BOT_SOLID, RT_BOT_UNORIENTED, 0, 12, 5, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
+	mk_bot( stdout, "bot_solid_dup_fs", RT_BOT_SOLID, RT_BOT_UNORIENTED, 0, 12, 5, vertices, faces, (fastf_t *)NULL, (struct bu_bitv *)NULL );
 
 	bu_free( (char *)face_mode, "bottest: face_mode" );
-	return 0;
 }

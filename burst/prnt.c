@@ -5,7 +5,7 @@
 			Maryland 21005-5066
 */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #ifndef DEBUG
@@ -24,11 +24,8 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "conf.h"
 #include "./vecmath.h"
 #include "machine.h"
-#include "bu.h"
 #include "vmath.h"
-#include "bn.h"
 #include "raytrace.h"
-#include "libtermio.h"
 
 #include "./Sc.h"
 #include "./ascii.h"
@@ -488,7 +485,7 @@ unsigned rayno;		/* ray number for this burst point */
 		azim = atan2( cosyr, cosxr );
 	sinelev = Dot( gridver, raydir );
 	if(	fprintf( outfp,
-			"%c %8.3f %8.3f %6u\n",
+			"%c % 8.3f % 8.3f % 6u\n",
 			PB_RAY_HEADER,
 			azim,   /* ray azimuth angle WRT shotline (radians). */
 			sinelev, /* sine of ray elevation angle WRT shotline. */

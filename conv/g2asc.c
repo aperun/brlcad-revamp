@@ -21,24 +21,19 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
  
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <ctype.h>
 #include "machine.h"
 #include "vmath.h"
 #include "externs.h"
 #include "db.h"
-#include "raytrace.h"
 #include "wdb.h"
+#include "raytrace.h"
 #include "rtgeom.h"
 
 
@@ -72,13 +67,10 @@ Usage: g2asc < file.g > file.asc\n\
 
 FILE	*ifp;
 FILE	*ofp;
-char	*iname = "-";
 
-int
 main(argc, argv)
 char **argv;
 {
-	iname = "-";
 	ifp = stdin;
 	ofp = stdout;
 
@@ -88,18 +80,9 @@ char **argv;
 #endif
 
 	if( argc >= 3 ) {
-		iname = argv[1];
-		if( strcmp(iname, "-") == 0 )  {
-			ifp = stdin;
-		} else {
-			ifp = fopen(iname,"r");
-		}
-		if( !ifp )  perror(iname);
-		if( strcmp(argv[2], "-") == 0 )  {
-			ofp = stdout;
-		} else {
-			ofp = fopen(argv[2],"w");
-		}
+		ifp = fopen(argv[1],"r");
+		if( !ifp )  perror(argv[1]);
+		ofp = fopen(argv[2],"w");
 		if( !ofp )  perror(argv[2]);
 		if (ifp == NULL || ofp == NULL) {
 			(void)fprintf(stderr, "g2asc: can't open files.");
@@ -111,59 +94,9 @@ char **argv;
 		exit(1);
 	}
 
-	rt_init_resource( &rt_uniresource, 0, NULL );
-
-	/* First, determine what version database this is */
-	if( fread( (char *)&record, sizeof record, 1, ifp ) != 1 )  {
-		bu_log("g2asc(%s) ERROR, file too short to be BRL-CAD database\n",
-			iname);
-		exit(2);
-	}
-
-	if( db5_header_is_valid( (unsigned char *)&record ) )  {
-		Tcl_Interp	*interp;
-		struct db_i	*dbip;
-		struct directory *dp;
-
-		bu_log("Attempting to export v5 database\n");
-
-		interp = Tcl_CreateInterp();
-		/* This runs the init.tcl script */
-		if( Tcl_Init(interp) == TCL_ERROR )
-			bu_log("Tcl_Init error %s\n", interp->result);
-
-		if( (dbip = db_open( iname, "r" )) == NULL )  {
-			bu_log("Unable to db_open() file '%s', aborting\n", iname );
-			exit(4);
-		}
-		RT_CK_DBI(dbip);
-		db_dirbuild( dbip );
-		FOR_ALL_DIRECTORY_START(dp, dbip)  {
-			struct rt_db_internal	intern;
-
-			if( rt_db_get_internal( &intern, dp, dbip, NULL, &rt_uniresource ) < 0 )  {
-				bu_log("Unable to read '%s', skipping\n", dp->d_namep);
-				continue;
-			}
-			if( intern.idb_meth->ft_tclget( interp, &intern, NULL ) != TCL_OK )  {
-				rt_db_free_internal( &intern, &rt_uniresource );
-				bu_log("Unable to export '%s', skipping\n", dp->d_namep );
-				continue;
-			}
-			rt_db_free_internal( &intern, &rt_uniresource );
-			fprintf( ofp, "db put %s %s\n",
-				dp->d_namep,
-				interp->result );
-			Tcl_ResetResult( interp );
-		} FOR_ALL_DIRECTORY_END;
-		return 0;
-	} else {
-		/* A record is already in the input buffer */
-		goto top;
-	}
-
 	/* Read database file */
-	do {
+	while( fread( (char *)&record, sizeof record, 1, ifp ) == 1  &&
+	    !feof(ifp) )  {
 top:
 	    	if( argc > 1 )
 			(void)fprintf(stderr,"0%o (%c)\n", record.u_id, record.u_id);
@@ -234,8 +167,7 @@ top:
 				record.u_id, record.u_id);
 	    		continue;
 		}
-	}  while( fread( (char *)&record, sizeof record, 1, ifp ) == 1  &&
-	    !feof(ifp) );
+	}
 	exit(0);
 }
 
@@ -434,7 +366,7 @@ cline_dump()
 	get_ext( &ext, ngranules );
 
 	/* Hand off to librt's import() routine */
-	if( (rt_functab[ID_CLINE].ft_import( &intern, &ext, id_mat, DBI_NULL, &rt_uniresource )) != 0 )  {
+	if( (rt_cline_import( &intern, &ext, id_mat, DBI_NULL )) != 0 )  {
 		fprintf(stderr, "g2asc: cline import failure\n");
 		exit(-1);
 	}
@@ -449,7 +381,7 @@ cline_dump()
 	(void)fprintf(ofp, "%.12e %.12e", cli->radius, cli->thickness );
 	(void)fprintf(ofp, "\n");			/* Terminate w/ a newline */
 
-	rt_db_free_internal( &intern, &rt_uniresource );
+	rt_cline_ifree( &intern );
 	db_free_external( &ext );
 }
 
@@ -468,7 +400,7 @@ bot_dump()
 	get_ext( &ext, ngranules );
 
 	/* Hand off to librt's import() routine */
-	if( (rt_functab[ID_BOT].ft_import( &intern, &ext, id_mat, DBI_NULL, &rt_uniresource )) != 0 )  {
+	if( (rt_bot_import( &intern, &ext, id_mat, DBI_NULL )) != 0 )  {
 		fprintf(stderr, "g2asc: bot import failure\n");
 		exit(-1);
 	}
@@ -505,7 +437,7 @@ bot_dump()
 			fprintf(ofp,  "	%d: %d %d %d\n", i, V3ARGS( &bot->faces[i*3] ) );
 	}
 
-	rt_db_free_internal( &intern, &rt_uniresource );
+	rt_bot_ifree( &intern );
 	db_free_external( &ext );
 }
 
@@ -525,7 +457,7 @@ pipe_dump()	/* Print out Pipe record information */
 	get_ext( &ext, ngranules );
 
 	/* Hand off to librt's import() routine */
-	if( (rt_functab[ID_PIPE].ft_import( &intern, &ext, id_mat, NULL, &rt_uniresource )) != 0 )  {
+	if( (rt_pipe_import( &intern, &ext, id_mat )) != 0 )  {
 		fprintf(stderr, "g2asc: pipe import failure\n");
 		exit(-1);
 	}
@@ -539,7 +471,7 @@ pipe_dump()	/* Print out Pipe record information */
 
 	dump_pipe_segs(name, &pipe->pipe_segs_head);
 
-	rt_db_free_internal( &intern, &rt_uniresource );
+	rt_pipe_ifree( &intern );
 	db_free_external( &ext );
 }
 
@@ -576,7 +508,7 @@ particle_dump()
 	get_ext( &ext, 1 );
 
 	/* Hand off to librt's import() routine */
-	if( (rt_functab[ID_PARTICLE].ft_import( &intern, &ext, id_mat, NULL, &rt_uniresource )) != 0 )  {
+	if( (rt_part_import( &intern, &ext, id_mat )) != 0 )  {
 		fprintf(stderr, "g2asc: particle import failure\n");
 		exit(-1);
 	}
@@ -633,7 +565,7 @@ arbn_dump()
 	get_ext( &ext, ngranules );
 
 	/* Hand off to librt's import() routine */
-	if( (rt_functab[ID_ARBN].ft_import( &intern, &ext, id_mat, NULL, &rt_uniresource )) != 0 )  {
+	if( (rt_arbn_import( &intern, &ext, id_mat )) != 0 )  {
 		fprintf(stderr, "g2asc: arbn import failure\n");
 		exit(-1);
 	}
@@ -648,7 +580,7 @@ arbn_dump()
 			arbn->eqn[i][Z], arbn->eqn[i][3]);
 	}
 
-	rt_db_free_internal( &intern, &rt_uniresource );
+	rt_arbn_ifree( &intern );
 	db_free_external( &ext );
 }
 
@@ -1035,8 +967,7 @@ extrdump()
 	get_ext( &ext, ngranules );
 
 	/* Hand off to librt's import() routine */
-	RT_INIT_DB_INTERNAL(&intern);
-	if( (rt_functab[ID_EXTRUDE].ft_import( &intern, &ext, id_mat, DBI_NULL, &rt_uniresource )) != 0 )  {
+	if( (rt_extrude_import( &intern, &ext, id_mat, DBI_NULL )) != 0 )  {
 		fprintf(stderr, "g2asc: extrusion import failure\n");
 		exit(-1);
 	}
@@ -1070,8 +1001,7 @@ sketchdump()
 	get_ext( &ext, ngranules );
 
 	/* Hand off to librt's import() routine */
-	RT_INIT_DB_INTERNAL(&intern);
-	if( (rt_functab[ID_SKETCH].ft_import( &intern, &ext, id_mat, DBI_NULL, &rt_uniresource )) != 0 )  {
+	if( (rt_sketch_import( &intern, &ext, id_mat, DBI_NULL )) != 0 )  {
 		fprintf(stderr, "g2asc: sketch import failure\n");
 		exit( -1 );
 	}

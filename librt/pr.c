@@ -20,7 +20,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -45,7 +45,7 @@ register CONST struct soltab	*stp;
 {
 	register int	id = stp->st_id;
 
-	if( id <= 0 || id > ID_MAX_SOLID )  {
+	if( id <= 0 || id > ID_MAXIMUM )  {
 		bu_log("stp=x%x, id=%d.\n", stp, id);
 		rt_bomb("rt_pr_soltab:  bad st_id");
 	}
@@ -331,8 +331,6 @@ int lvl;			/* recursion level */
 {
 	register int i;
 
-	RT_CK_TREE(tp);
-
 	bu_log("%.8x ", tp);
 	for( i=lvl; i>0; i-- )
 		bu_log("  ");
@@ -514,7 +512,7 @@ CONST union tree *tree;
 {
 	char *left,*right;
 	char *return_str;
-	char op = OP_GUARD;
+	char op;
 	int return_length;
 
 	if( tree == NULL )

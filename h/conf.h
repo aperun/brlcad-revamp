@@ -424,8 +424,9 @@
 #       define  NATURAL_IEEE    yes
 #endif
 
-#if defined(i386) || defined(__i386) || defined(__alpha) \
-    || defined(n16) || defined(i860) ||defined(__stardent) 
+#if defined(n16) || defined(i386) || defined(i860) || \
+	defined(__i386) || \
+	defined(__stardent) || defined(__alpha)
 
         /* These systems operate in IEEE format, using little-endian order */
 #       define  REVERSED_IEEE   yes

@@ -22,7 +22,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "";
+static char RCSid[] = "";
 #endif
 
 #include "conf.h"
@@ -212,9 +212,9 @@ draw_grid()
 }
 
 void
-snap_to_grid(
-	fastf_t *mx,		/* input and return values */
-	fastf_t *my)		/* input and return values */
+snap_to_grid(mx, my)
+fastf_t *mx;		/* input and return values */
+fastf_t *my;		/* input and return values */
 {
   register int nh, nv;		/* whole grid units */
   point_t view_pt;
@@ -312,7 +312,8 @@ snap_view_center_to_grid()
  * Return values in the +-2.0 range that have been snapped to the nearest grid distance.
  */
 void
-round_to_grid(fastf_t *view_dx, fastf_t *view_dy)
+round_to_grid(view_dx, view_dy)
+fastf_t *view_dx, *view_dy;
 {
   fastf_t grid_units_h, grid_units_v;
   fastf_t sf, inv_sf;
@@ -352,7 +353,8 @@ round_to_grid(fastf_t *view_dx, fastf_t *view_dy)
 }
 
 void
-snap_view_to_grid(fastf_t view_dx, fastf_t view_dy)
+snap_view_to_grid(view_dx, view_dy)
+fastf_t view_dx, view_dy;
 {
   point_t model_pt, view_pt;
   point_t vcenter, diff;

@@ -22,7 +22,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -30,7 +30,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 #include "machine.h"
 #include "externs.h"			/* For getopt() */
-#include "bu.h"
 #include "fb.h"
 #include "png.h"
 
@@ -57,7 +56,6 @@ char usage[] = "\
 Usage: fb-png [-h -i -c] [-# nbytes/pixel] [-F framebuffer] [-g gamma]\n\
 	[-s squaresize] [-w width] [-n height] [file.png]\n";
 
-int
 get_args( argc, argv )
 register char **argv;
 {
@@ -124,13 +122,13 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main(argc, argv)
 int argc;
 char **argv;
 {
 	register FBIO *fbp;
 	register int y;
+	int i;
 	int got;
 	png_structp png_p;
 	png_infop info_p;

@@ -5,7 +5,7 @@
 			Maryland 21005-5066
 */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #ifndef DEBUG
@@ -23,12 +23,9 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <math.h>
 
 #include "machine.h"
-#include "bu.h"
 #include "vmath.h"
-#include "bn.h"
 #include "raytrace.h"
 #include "fb.h"
-#include "plot3.h"
 
 #include "./vecmath.h"
 #include "./ascii.h"
@@ -1279,12 +1276,11 @@ gridModel()
 	rt_prep_timer();
 	notify( "Raytracing", NOTIFY_ERASE );
 
-	if( TSTBIT(firemode,FM_BURST) )  {
+	if( TSTBIT(firemode,FM_BURST) )
 		if( ! doBursts() )
 			return;
 		else
 			goto	endvu;
-	}
 
 	/* get starting and ending shot number */
 	currshot = 0;
@@ -1785,7 +1781,6 @@ int	sig;
 #endif
 	}
 
-#if 0
 /*	i p o w ( )
 	Integer exponent pow() function.
 	Returns d to the nth power.
@@ -1801,7 +1796,6 @@ register int	n;
 		result *= d;
 	return	result;
 	}
-#endif
 
 /*	v i e w _ p i x ( ) */
 STATIC void

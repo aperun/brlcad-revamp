@@ -63,7 +63,7 @@
  *	the BRL-CAD package.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -78,7 +78,7 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "shadefuncs.h"
 #include "shadework.h"
 /*#include "../rt/mathtab.h"*/
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
 /*
  *	Sundry external references

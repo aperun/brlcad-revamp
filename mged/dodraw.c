@@ -22,17 +22,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include "machine.h"
 #include "bu.h"
 #include "vmath.h"
@@ -63,7 +58,6 @@ unsigned char geometry_default_color[] = { 255, 0, 0 };
  *  Red is a one-gun color, avoiding convergence problems too.
  */
 struct db_tree_state	mged_initial_tree_state = {
-	RT_DBTS_MAGIC,		/* magic */
 	0,			/* ts_dbip */
 	0,			/* ts_sofar */
 	0, 0, 0,		/* region, air, gmater */
@@ -72,7 +66,7 @@ struct db_tree_state	mged_initial_tree_state = {
 	{
 #endif
 		/* struct mater_info ts_mater */
-		{1.0, 0.0, 0.0},		/* color, RGB */
+		1.0, 0.0, 0.0,		/* color, RGB */
 		-1.0,			/* Temperature */
 		0,			/* ma_color_valid=0 --> use default */
 		0,			/* color inherit */
@@ -82,20 +76,10 @@ struct db_tree_state	mged_initial_tree_state = {
 	}
 #endif
 	,
-	{1.0, 0.0, 0.0, 0.0,
+	1.0, 0.0, 0.0, 0.0,
 	0.0, 1.0, 0.0, 0.0,
 	0.0, 0.0, 1.0, 0.0,
-	0.0, 0.0, 0.0, 1.0},
-	REGION_NON_FASTGEN,		/* ts_is_fastgen */
-	0,				/* ts_stop_at_regions */
-	NULL,				/* ts_region_start_func */
-	NULL,				/* ts_region_end_func */
-	NULL,				/* ts_leaf_func */
-	NULL,				/* ts_ttol */
-	NULL,				/* ts_tol */
-	NULL,				/* ts_m */
-	NULL,				/* ts_rtip */
-	NULL				/* ts_resp */
+	0.0, 0.0, 0.0, 1.0,
 };
 
 static int		mged_draw_nmg_only;
@@ -237,27 +221,27 @@ genptr_t		client_data;
  *
  *  This routine must be prepared to run in parallel.
  */
-HIDDEN union tree *mged_wireframe_leaf( tsp, pathp, ip, client_data )
+HIDDEN union tree *mged_wireframe_leaf( tsp, pathp, ep, id, client_data )
 struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
-struct rt_db_internal	*ip;
+struct bu_external	*ep;
+int			id;
 genptr_t		client_data;
 {
+	struct rt_db_internal	intern;
 	union tree	*curtree;
 	int		dashflag;		/* draw with dashed lines */
 	struct bu_list	vhead;
 
 	RT_CK_TESS_TOL(tsp->ts_ttol);
 	BN_CK_TOL(tsp->ts_tol);
-	RT_CK_DB_INTERNAL(ip);
 
 	BU_LIST_INIT( &vhead );
 
 	if(rt_g.debug&DEBUG_TREEWALK)  {
 	  char	*sofar = db_path_to_string(pathp);
 
-	  Tcl_AppendResult(interp, "mged_wireframe_leaf(",
-			   ip->idb_meth->ft_name,
+	  Tcl_AppendResult(interp, "mged_wireframe_leaf(", rt_functab[id].ft_name,
 			   ") path='", sofar, "'\n", (char *)NULL);
 	  bu_free((genptr_t)sofar, "path string");
 	}
@@ -267,11 +251,23 @@ genptr_t		client_data;
 	else
 		dashflag = (tsp->ts_sofar & (TS_SOFAR_MINUS|TS_SOFAR_INTER) );
 
-	if( ip->idb_meth->ft_plot(
-	    &vhead, ip,
+    	RT_INIT_DB_INTERNAL(&intern);
+	if( rt_functab[id].ft_import( &intern, ep, tsp->ts_mat, dbip ) < 0 )  {
+	  Tcl_AppendResult(interp, DB_FULL_PATH_CUR_DIR(pathp)->d_namep,
+			   ":  solid import failure\n", (char *)NULL);
+
+	  if( intern.idb_ptr )  rt_functab[id].ft_ifree( &intern );
+	  return(TREE_NULL);		/* ERROR */
+	}
+	RT_CK_DB_INTERNAL( &intern );
+
+	if( rt_functab[id].ft_plot(
+	    &vhead,
+	    &intern,
 	    tsp->ts_ttol, tsp->ts_tol ) < 0 )  {
 	  Tcl_AppendResult(interp, DB_FULL_PATH_CUR_DIR(pathp)->d_namep,
 			   ": plot failure\n", (char *)NULL);
+	  rt_functab[id].ft_ifree( &intern );
 	  return(TREE_NULL);		/* ERROR */
 	}
 
@@ -281,7 +277,7 @@ genptr_t		client_data;
 	 * solids, this needs to be something different and drawH
 	 * has no idea or need to know what type of solid this is.
 	 */
-	if (ip->idb_type == ID_GRIP) {
+	if (intern.idb_type == ID_GRIP) {
 		int r,g,b;
 		r= tsp->ts_mater.ma_color[0];
 		g= tsp->ts_mater.ma_color[1];
@@ -296,6 +292,7 @@ genptr_t		client_data;
 	} else {
 		drawH_part2( dashflag, &vhead, pathp, tsp, SOLID_NULL );
 	}
+	rt_functab[id].ft_ifree( &intern );
 
 	/* Indicate success by returning something other than TREE_NULL */
 	BU_GETUNION( curtree, tree );
@@ -324,7 +321,6 @@ static struct bn_vlblock	*mged_draw_edge_uses_vbp;
  *  further processing of this region.
  *  A hack to view polygonal models (converted from FASTGEN) more rapidly.
  */
-int
 mged_nmg_region_start( tsp, pathp, combp, client_data )
 struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
@@ -376,7 +372,7 @@ genptr_t client_data;
 			matp = (matp_t)NULL;
 		}
 	}
-	if( rt_db_get_internal(&intern, dp, tsp->ts_dbip, matp, &rt_uniresource ) < 0 )
+	if( rt_db_get_internal(&intern, dp, tsp->ts_dbip, matp) < 0 )
 		return 0;	/* proceed as usual */
 
 	switch( intern.idb_type )  {
@@ -434,7 +430,7 @@ genptr_t client_data;
 	default:
 		break;
 	}
-	rt_db_free_internal(&intern, &rt_uniresource);
+	rt_db_free_internal(&intern);
 	return 0;
 
 out:
@@ -442,7 +438,7 @@ out:
 	db_add_node_to_full_path( pathp, dp );
 	drawH_part2( 0, &vhead, pathp, tsp, SOLID_NULL );
 	DB_FULL_PATH_POP(pathp);
-	rt_db_free_internal(&intern, &rt_uniresource);
+	rt_db_free_internal(&intern);
 	mged_fastpath_count++;
 	return -1;	/* SKIP THIS REGION */
 }
@@ -489,27 +485,27 @@ genptr_t client_data;
 				" failed!!!\n", (char *)NULL );
 			bu_free((genptr_t)sofar, "path string");
 			if( curtree )
-				db_free_tree( curtree, &rt_uniresource );
+				db_free_tree( curtree );
 			return (union tree *)NULL;
 		}
-		failed = nmg_boolean( curtree, *tsp->ts_m, tsp->ts_tol, &rt_uniresource );
+		failed = nmg_boolean( curtree, *tsp->ts_m, tsp->ts_tol );
 		BU_UNSETJUMP;
 		if( failed )  {
-			db_free_tree( curtree, &rt_uniresource );
+			db_free_tree( curtree );
 			return (union tree *)NULL;
 		}
 	}
 	else if( curtree->tr_op != OP_NMG_TESS )
 	{
 	  Tcl_AppendResult(interp, "Cannot use '-d' option when Boolean evaluation is required\n", (char *)NULL);
-	  db_free_tree( curtree, &rt_uniresource );
+	  db_free_tree( curtree );
 	  return (union tree *)NULL;
 	}
 	r = curtree->tr_d.td_r;
 	NMG_CK_REGION(r);
 
 	if( mged_do_not_draw_nmg_solids_during_debugging && r )  {
-		db_free_tree( curtree, &rt_uniresource );
+		db_free_tree( curtree );
 		return (union tree *)NULL;
 	}
 
@@ -524,7 +520,7 @@ genptr_t client_data;
 				" failed!!!\n", (char *)NULL );
 			bu_free((genptr_t)sofar, "path string");
 			if( curtree )
-				db_free_tree( curtree, &rt_uniresource );
+				db_free_tree( curtree );
 			return (union tree *)NULL;
 		}
 		nmg_triangulate_model(*tsp->ts_m, tsp->ts_tol);
@@ -560,7 +556,7 @@ genptr_t client_data;
 			nmg_vlblock_r(mged_draw_edge_uses_vbp, r, 1);
 		}
 		/* NMG region is no longer necessary, only vlist remains */
-		db_free_tree( curtree, &rt_uniresource );
+		db_free_tree( curtree );
 		return (union tree *)NULL;
 	}
 
@@ -585,10 +581,10 @@ genptr_t client_data;
  *	-1	On major error
  */
 int
-drawtrees(
-	int	argc,
-	char	**argv,
-	int	kind)
+drawtrees( argc, argv, kind )
+int	argc;
+char	**argv;
+int	kind;
 {
 	int		ret = 0;
 	register int	c;
@@ -877,12 +873,12 @@ register struct solid *sp;
  *  This routine must be prepared to run in parallel.
  */
 void
-drawH_part2(
-	int			dashflag,
-	struct bu_list		*vhead,
-	struct db_full_path	*pathp,
-	struct db_tree_state	*tsp,
-	struct solid		*existing_sp)
+drawH_part2( dashflag, vhead, pathp, tsp, existing_sp )
+int			dashflag;
+struct bu_list		*vhead;
+struct db_full_path	*pathp;
+struct db_tree_state	*tsp;
+struct solid		*existing_sp;
 {
 	register struct solid *sp;
 	register int	i;
@@ -1032,10 +1028,9 @@ register struct solid	*sp;
  *	sp may have fields updated.
  */
 void
-pathHmat(
-	register struct solid *sp,
-	matp_t matp,
-	int depth)
+pathHmat( sp, matp, depth )
+register struct solid *sp;
+matp_t matp;
 {
 	struct db_tree_state	ts;
 	struct db_full_path	null_path;
@@ -1098,7 +1093,7 @@ pathHmat(
 		  return;		/* ERROR */
 		}
 
-		if( rt_db_get_internal( &intern, parentp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )
+		if( rt_db_get_internal( &intern, parentp, dbip, (fastf_t *)NULL ) < 0 )
 			READ_ERR_return;
 		comb = (struct rt_comb_internal *)intern.idb_ptr;
 		if( comb->tree )
@@ -1108,7 +1103,7 @@ pathHmat(
 
 			db_tree_funcleaf( dbip, comb, comb->tree, Do_getmat,
 				(genptr_t)xmat, (genptr_t)kidp->d_namep, (genptr_t)&found );
-			rt_db_free_internal( &intern, &rt_uniresource );
+			rt_comb_ifree( &intern );
 
 			if( found )
 			{
@@ -1138,11 +1133,14 @@ pathHmat(
  *	 0	OK
  */
 int
-replot_original_solid( struct solid *sp )
+replot_original_solid( sp )
+struct solid	*sp;
 {
+	struct bu_external	ext;
 	struct rt_db_internal	intern;
 	struct directory	*dp;
 	mat_t			mat;
+	int			id;
 
 	if(dbip == DBI_NULL)
 	  return 0;
@@ -1155,17 +1153,33 @@ replot_original_solid( struct solid *sp )
 	}
 	pathHmat( sp, mat, sp->s_last-1 );
 
-	if( rt_db_get_internal( &intern, dp, dbip, mat, &rt_uniresource ) < 0 )  {
+	BU_INIT_EXTERNAL( &ext );
+	if( db_get_external( &ext, dp, dbip ) < 0 )  return(-1);
+
+	if( (id = rt_id_solid( &ext )) == ID_NULL )  {
+	  Tcl_AppendResult(interp, "replot_original_solid() unable to identify type of solid ",
+			   dp->d_namep, "\n", (char *)NULL);
+	  db_free_external( &ext );
+	  return(-1);
+	}
+
+    	RT_INIT_DB_INTERNAL(&intern);
+	if( rt_functab[id].ft_import( &intern, &ext, mat, dbip ) < 0 )  {
 	  Tcl_AppendResult(interp, dp->d_namep, ":  solid import failure\n", (char *)NULL);
+	  if( intern.idb_ptr )  rt_functab[id].ft_ifree( &intern );
+	  db_free_external( &ext );
 	  return(-1);		/* ERROR */
 	}
 	RT_CK_DB_INTERNAL( &intern );
 
 	if( replot_modified_solid( sp, &intern, bn_mat_identity ) < 0 )  {
-		rt_db_free_internal( &intern, &rt_uniresource );
+	    	if( intern.idb_ptr )  rt_functab[id].ft_ifree( &intern );
+		db_free_external( &ext );
 		return(-1);
 	}
-	rt_db_free_internal( &intern, &rt_uniresource );
+	if( intern.idb_type > ID_NULL && intern.idb_ptr )
+		rt_functab[id].ft_ifree( &intern );
+	db_free_external( &ext );
 	return(0);
 }
 
@@ -1182,10 +1196,10 @@ replot_original_solid( struct solid *sp )
  *	 0	OK
  */
 int
-replot_modified_solid(
-	struct solid			*sp,
-	struct rt_db_internal		*ip,
-	const mat_t			mat)
+replot_modified_solid( sp, ip, mat )
+struct solid			*sp;
+struct rt_db_internal		*ip;
+CONST mat_t			mat;
 {
 	struct rt_db_internal	intern;
 	struct bu_list		vhead;
@@ -1215,7 +1229,7 @@ replot_modified_solid(
 			   ": re-plot failure\n", (char *)NULL);
 	  return(-1);
 	}
-	rt_db_free_internal( &intern, &rt_uniresource );
+    	if( intern.idb_ptr )  rt_functab[ip->idb_type].ft_ifree( &intern );
 
 	/* Write new displaylist */
 	drawH_part2( sp->s_soldash, &vhead,
@@ -1236,10 +1250,10 @@ replot_modified_solid(
  *			C V T _ V L B L O C K _ T O _ S O L I D S
  */
 void
-cvt_vlblock_to_solids(
-	struct bn_vlblock	*vbp,
-	const char		*name,
-	int			copy)
+cvt_vlblock_to_solids( vbp, name, copy )
+struct bn_vlblock	*vbp;
+char			*name;
+int			copy;
 {
 	int		i;
 	char		shortname[32];
@@ -1284,11 +1298,11 @@ cvt_vlblock_to_solids(
  *  This parallels much of the code in dodraw.c
  */
 int
-invent_solid(
-	const char	*name,
-	struct bu_list	*vhead,
-	long		rgb,
-	int		copy)
+invent_solid( name, vhead, rgb, copy )
+char		*name;
+struct bu_list	*vhead;
+long		rgb;
+int		copy;
 {
 	struct directory	*dp;
 	struct directory	*dpp[2] = {DIR_NULL, DIR_NULL};
@@ -1423,7 +1437,7 @@ char	**argv;
 
 	CHECK_DBI_NULL;
 
-	if(argc < 3){
+	if(argc < 3 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -1540,14 +1554,14 @@ char	**argv;
 			BU_UNSETJUMP;
 			Tcl_AppendResult(interp, "WARNING: facetization failed!!!\n", (char *)NULL );
 			if( mged_facetize_tree )
-				db_free_tree( mged_facetize_tree, &rt_uniresource );
+				db_free_tree( mged_facetize_tree );
 			mged_facetize_tree = (union tree *)NULL;
 			nmg_km( mged_nmg_model );
 			mged_nmg_model = (struct model *)NULL;
 			return TCL_ERROR;
 		}
 
-		failed = nmg_boolean( mged_facetize_tree, mged_nmg_model, &mged_tol, &rt_uniresource );
+		failed = nmg_boolean( mged_facetize_tree, mged_nmg_model, &mged_tol );
 		BU_UNSETJUMP;
 	}
 	else
@@ -1556,7 +1570,7 @@ char	**argv;
 	if( failed )  {
 	  Tcl_AppendResult(interp, "facetize:  no resulting region, aborting\n", (char *)NULL);
 	  if( mged_facetize_tree )
-		db_free_tree( mged_facetize_tree, &rt_uniresource );
+		db_free_tree( mged_facetize_tree );
 	  mged_facetize_tree = (union tree *)NULL;
 	  nmg_km( mged_nmg_model );
 	  mged_nmg_model = (struct model *)NULL;
@@ -1576,7 +1590,7 @@ char	**argv;
 			BU_UNSETJUMP;
 			Tcl_AppendResult(interp, "WARNING: triangulation failed!!!\n", (char *)NULL );
 			if( mged_facetize_tree )
-				db_free_tree( mged_facetize_tree, &rt_uniresource );
+				db_free_tree( mged_facetize_tree );
 			mged_facetize_tree = (union tree *)NULL;
 			nmg_km( mged_nmg_model );
 			mged_nmg_model = (struct model *)NULL;
@@ -1601,16 +1615,16 @@ char	**argv;
 		return TCL_ERROR;
 	}
 
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )
 	{
-		rt_db_free_internal( &intern, &rt_uniresource );
+		rt_db_free_internal( &intern );
 		TCL_WRITE_ERR_return;
 	}
 	
 	mged_facetize_tree->tr_d.td_r = (struct nmgregion *)NULL;
 
 	/* Free boolean tree, and the regions in it */
-	db_free_tree( mged_facetize_tree, &rt_uniresource );
+	db_free_tree( mged_facetize_tree );
     	mged_facetize_tree = (union tree *)NULL;
 
 	return TCL_OK;					/* OK */
@@ -1643,7 +1657,7 @@ char	**argv;
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
 
-	if(argc < 2){
+	if(argc < 2 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -1779,7 +1793,7 @@ char	**argv;
 				    Tcl_AppendResult(interp, bu_vls_addr(&tmp_vls),
 						     "Aborting\n", (char *)NULL);
 				    bu_vls_free(&tmp_vls);
-				    db_free_tree( mged_facetize_tree, &rt_uniresource );
+				    db_free_tree( mged_facetize_tree );
 				    nmg_km( mged_nmg_model );
 				    return TCL_ERROR;
 				  }
@@ -1817,14 +1831,14 @@ char	**argv;
 
 			Tcl_AppendResult(interp, "WARNING: Boolean evaluation failed!!!\n", (char *)NULL );
 			if( tmp_tree )
-				db_free_tree( tmp_tree, &rt_uniresource );
+				db_free_tree( tmp_tree );
 			tmp_tree = (union tree *)NULL;
 			nmg_km( mged_nmg_model );
 			mged_nmg_model = (struct model *)NULL;
 			return TCL_ERROR;
 		}
 
-		failed = nmg_boolean( tmp_tree, mged_nmg_model, &mged_tol, &rt_uniresource );
+		failed = nmg_boolean( tmp_tree, mged_nmg_model, &mged_tol );
 		BU_UNSETJUMP;
 	}
 	else
@@ -1833,7 +1847,7 @@ char	**argv;
 	if( failed )  {
 	  Tcl_AppendResult(interp, "bev:  no resulting region, aborting\n", (char *)NULL);
 	  if( tmp_tree )
-		db_free_tree( tmp_tree, &rt_uniresource );
+		db_free_tree( tmp_tree );
 	  tmp_tree = (union tree *)NULL;
 	  nmg_km( mged_nmg_model );
 	  mged_nmg_model = (struct model *)NULL;
@@ -1854,7 +1868,7 @@ char	**argv;
 			BU_UNSETJUMP;
 			Tcl_AppendResult(interp, "WARNING: Triangulation failed!!!\n", (char *)NULL );
 			if( tmp_tree )
-				db_free_tree( tmp_tree, &rt_uniresource );
+				db_free_tree( tmp_tree );
 			tmp_tree = (union tree *)NULL;
 			nmg_km( mged_nmg_model );
 			mged_nmg_model = (struct model *)NULL;
@@ -1879,16 +1893,16 @@ char	**argv;
 		return TCL_ERROR;
 	}
 
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )
 	{
-		rt_db_free_internal( &intern, &rt_uniresource );
+		rt_db_free_internal( &intern );
 		TCL_WRITE_ERR_return;
 	}
 
 	tmp_tree->tr_d.td_r = (struct nmgregion *)NULL;
 
 	/* Free boolean tree, and the regions in it. */
-	db_free_tree( tmp_tree, &rt_uniresource );
+	db_free_tree( tmp_tree );
 
 
 	{

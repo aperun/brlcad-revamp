@@ -22,7 +22,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -147,10 +147,11 @@ genptr_t		client_data;
 }
 
 static union tree *
-leaf_stub( tsp, pathp, ip, client_data )
+leaf_stub( tsp, pathp, ep, id, client_data )
 struct db_tree_state    *tsp;
 struct db_full_path     *pathp;
-struct rt_db_internal	*ip;
+struct bu_external      *ep;
+int                     id;
 genptr_t		client_data;
 {
 	struct directory *fp_name;	/* name from pathp */
@@ -160,7 +161,6 @@ genptr_t		client_data;
 	return( (union tree *)NULL );
 }
 
-#if 0
 /* Routine to identify external/void shells
  *	Marks external shells with a +1 in the flags array
  *	Marks void shells with a -1 in the flags array
@@ -316,7 +316,6 @@ CONST struct bn_tol *ttol;
 		}
 	}
 }
-#endif
 
 /*	Routine to write an nmgregion in the TANKILL format */
 static void
@@ -689,8 +688,6 @@ char	*argv[];
 		nmg_eue_dist = 2.0;
 	}
 
-	rt_init_resource( &rt_uniresource, 0, NULL );
-
 	BU_LIST_INIT( &rt_g.rtg_vlfree );	/* for vlist macros */
 
 	/* Get command line arguments. */
@@ -721,7 +718,7 @@ char	*argv[];
 			break;
 		case 'P':
 /*			ncpu = atoi( optarg ); */
-			bu_debug = BU_DEBUG_COREDUMP;	/* to get core dumps */
+			rt_g.debug = 1;	/* XXX DEBUG_ALLRAYS -- to get core dumps */
 			break;
 		case 'x':
 			sscanf( optarg, "%x", &rt_g.debug );
@@ -749,7 +746,7 @@ char	*argv[];
 		perror(argv[0]);
 		exit(1);
 	}
-	db_dirbuild( dbip );
+	db_scan(dbip, (int (*)())db_diradd, 1, NULL);
 
 	if( out_file == NULL )
 		fp_out = stdout;
@@ -855,6 +852,7 @@ struct db_full_path	*pathp;
 union tree		*curtree;
 genptr_t		client_data;
 {
+	extern FILE		*fp_fig;
 	struct nmgregion	*r;
 	struct bu_list		vhead;
 	union tree		*ret_tree;
@@ -913,8 +911,7 @@ genptr_t		client_data;
 		goto out;
 	}
 	(void)nmg_model_fuse(*tsp->ts_m, tsp->ts_tol);
-	/* librt/nmg_bool.c */
-	ret_tree = nmg_booltree_evaluate(curtree, tsp->ts_tol, &rt_uniresource);
+	ret_tree = nmg_booltree_evaluate(curtree, tsp->ts_tol);	/* librt/nmg_bool.c */
 
 	if( ret_tree )
 		r = ret_tree->tr_d.td_r;
@@ -1007,7 +1004,7 @@ out:
 	 *  A return of TREE_NULL from this routine signals an error,
 	 *  so we need to cons up an OP_NOP node to return.
 	 */
-	db_free_tree(curtree, &rt_uniresource);		/* Does an nmg_kr() */
+	db_free_tree(curtree);		/* Does an nmg_kr() */
 
 	BU_GETUNION(curtree, tree);
 	curtree->magic = RT_TREE_MAGIC;

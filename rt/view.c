@@ -32,13 +32,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSview[] = "@(#)$Header$ (BRL)";
+static char RCSview[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 
 #ifdef HAVE_UNIX_IO
@@ -55,9 +54,8 @@ static const char RCSview[] = "@(#)$Header$ (BRL)";
 #include "shadefuncs.h"
 #include "shadework.h"
 #include "./ext.h"
-#include "rtprivate.h"
+#include "./rdebug.h"
 #include "./light.h"
-#include "plot3.h"
 
 int		use_air = 0;		/* Handling of air in librt */
 
@@ -87,12 +85,6 @@ extern int	max_bounces;		/* from refract.c */
 extern int	max_ireflect;		/* from refract.c */
 extern int	curframe;		/* from main.c */
 extern fastf_t	frame_delta_t;		/* from main.c */
-
-extern int viewshade(struct application *ap,
-		     register const struct partition *pp,
-		     register struct shadework *swp);
-
-
 
 struct region	env_region;		/* environment map region */
 
@@ -502,8 +494,8 @@ register struct application *ap;
 /*
  *			V I E W _ E N D
  */
-void
-view_end(struct application *ap)
+view_end(ap)
+struct application *ap;
 {
 	if( fullfloat_mode )  {
 		struct floatpixel	*tmp;
@@ -517,6 +509,7 @@ view_end(struct application *ap)
 	}
 
 	if( scanline )  free_scanlines();
+	return(0);		/* OK */
 }
 
 /*
@@ -552,7 +545,7 @@ struct rt_i	*rtip;
 			{
 				struct region *r = BU_LIST_NEXT( region, &regp->l );
 				/* zap reg_udata? beware of light structs */
-				rt_del_regtree( rtip, regp, &rt_uniresource );
+				rt_del_regtree( rtip, regp );
 				regp = r;
 				continue;
 			}
@@ -575,7 +568,9 @@ struct rt_i	*rtip;
  *
  *  Called before rt_clean() in do.c
  */
-void view_cleanup(struct rt_i	*rtip)
+void
+view_cleanup(rtip)
+struct rt_i	*rtip;
 {
 	register struct region	*regp;
 
@@ -599,7 +594,7 @@ void view_cleanup(struct rt_i	*rtip)
  *  Background texture mapping could be done here.
  *  For now, return a pleasant dark blue.
  */
-static int hit_nothing( ap )
+static hit_nothing( ap )
 register struct application *ap;
 {
 	if( rdebug&RDEBUG_MISSPLOT )  {
@@ -854,9 +849,10 @@ out:
  *
  *  a_hit() routine for simple lighting model.
  */
-int viewit(register struct application *ap,
-	   struct partition *PartHeadp,
-	   struct seg	*segHeadp)
+viewit( ap, PartHeadp, segHeadp )
+register struct application *ap;
+struct partition *PartHeadp;
+struct seg	*segHeadp;
 {
 	register struct partition *pp;
 	register struct hit *hitp;
@@ -976,11 +972,9 @@ free_scanlines()
  *
  *  Called once, early on in RT setup, before view size is set.
  */
-int
 view_init( ap, file, obj, minus_o )
 register struct application *ap;
 char *file, *obj;
-int minus_o;
 {
 	extern char	liboptical_version[];
 
@@ -1382,7 +1376,7 @@ bu_log("mallocing curr_float_frame\n");
 	default:
 		rt_bomb("bad lighting model #");
 	}
-	ap->a_rt_i->rti_nlights = light_init(ap);
+	ap->a_rt_i->rti_nlights = light_init();
 
 	/* Create integer version of background color */
 	inonbackground[0] = ibackground[0] = background[0] * 255;

@@ -29,7 +29,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -352,18 +352,18 @@ char *name;
 	if( !(dp->d_flags & DIR_COMB) )
 		return( 1 );
 
-	id = rt_db_get_internal( &intern, dp, dbip, (matp_t)NULL , &rt_uniresource);
+	id = rt_db_get_internal( &intern, dp, dbip, (matp_t)NULL );
 
 	if( id < 0 )
 	{
-		rt_db_free_internal( &intern , &rt_uniresource);
+		rt_db_free_internal( &intern );
 		bu_log( "Could not get internal form of %s\n", dp->d_namep );
 		return( 1 );
 	}
 
 	if( id != ID_COMBINATION )
 	{
-		rt_db_free_internal( &intern , &rt_uniresource);
+		rt_db_free_internal( &intern );
 		bu_log( "Directory/Database mismatch!!!! is %s a combination or not???\n", dp->d_namep );
 		return( 1 );
 	}
@@ -372,7 +372,7 @@ char *name;
 	RT_CK_COMB( comb );
 
 	get_props( props , comb );
-	rt_db_free_internal( &intern , &rt_uniresource);
+	rt_db_free_internal( &intern );
 	return( 0 );
 }
 
@@ -763,14 +763,13 @@ char c;		/* 'G' for global section
 }
 
 void
-w_start_global(
-	FILE *fp_dir,
-	FILE *fp_param,
-	const char *db_name,
-	const char *prog_name,
-	const char *output_file,
-	const char *id,
-	const char *version)
+w_start_global(fp_dir , fp_param , db_name , prog_name , output_file , id , version )
+FILE *fp_dir,*fp_param;
+char *db_name;
+char *prog_name;
+char *output_file;
+char *id;
+char *version;
 {
 	struct bu_vls str;
 	time_t now;

@@ -23,7 +23,7 @@
  *  With thanks to Russ Moulton Jr, EOSoft Inc. for his "rad.c" module.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include <stdio.h>

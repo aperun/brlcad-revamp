@@ -20,13 +20,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <unistd.h>
 #ifdef USE_STRING_H
 #include <string.h>
 #else
@@ -40,70 +39,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "raytrace.h"
 
 #include "./debug.h"
-
-/*
- *			D B _ R E A D
- *
- *  Reads 'count' bytes at file offset 'offset' into buffer at 'addr'.
- *  A wrapper for the UNIX read() sys-call that takes into account
- *  syscall semaphores, stdio-only machines, and in-memory buffering.
- *
- *  Returns -
- *	 0	OK
- *	-1	failure
- */
-/* should be HIDDEN */
-int
-db_read( dbip, addr, count, offset )
-CONST struct db_i	*dbip;
-genptr_t	addr;
-long		count;		/* byte count */
-long		offset;		/* byte offset from start of file */
-{
-	register int	got;
-	register long	s;
-
-	RT_CK_DBI(dbip);
-	if(rt_g.debug&DEBUG_DB)  {
-		bu_log("db_read(dbip=x%x, addr=x%x, count=%d., offset=x%x)\n",
-			dbip, addr, count, offset );
-	}
-	if( count <= 0 || offset < 0 )  {
-		return(-1);
-	}
-	if( dbip->dbi_inmem )  {
-		if( offset+count > dbip->dbi_eof )  {
-			/* Attempt to read off the end of the (mapped) file */
-			bu_log("db_read(%s) ERROR offset=%d, count=%d, dbi_eof=%d\n",
-				dbip->dbi_filename,
-				offset, count, dbip->dbi_eof );
-			return -1;
-		}
-		memcpy( addr, ((char *)dbip->dbi_inmem) + offset, count );
-		return(0);
-	}
-	bu_semaphore_acquire( BU_SEM_SYSCALL );
-#ifdef HAVE_UNIX_IO
-	if ((s=(long)lseek( dbip->dbi_fd, (off_t)offset, 0 )) != offset) {
-		bu_log("db_read: lseek returns %d not %d\n", s, offset);
-		bu_bomb("db_read: Goodbye");
-	}
-	got = read( dbip->dbi_fd, addr, count );
-#else
-	if (fseek( dbip->dbi_fp, offset, 0 ))
-		bu_bomb("db_read: fseek error\n");
-	got = fread( addr, 1, count, dbip->dbi_fp );
-#endif
-	bu_semaphore_release( BU_SEM_SYSCALL );
-
-	if( got != count )  {
-		perror("db_read");
-		bu_log("db_read(%s):  read error.  Wanted %d, got %d bytes\n",
-			dbip->dbi_filename, count, got );
-		return(-1);
-	}
-	return(0);			/* OK */
-}
 
 /*
  *  			D B _ G E T M R E C
@@ -199,63 +134,6 @@ int		len;
 }
 
 /*
- *			D B _ W R I T E
- *
- *  Writes 'count' bytes into at file offset 'offset' from buffer at 'addr'.
- *  A wrapper for the UNIX write() sys-call that takes into account
- *  syscall semaphores, stdio-only machines, and in-memory buffering.
- *
- *  Returns -
- *	 0	OK
- *	-1	failure
- */
-/* should be HIDDEN */
-int
-db_write( dbip, addr, count, offset )
-struct db_i	*dbip;
-CONST genptr_t	addr;
-long		count;
-long		offset;
-{
-	register int	got;
-
-	RT_CK_DBI(dbip);
-	if(rt_g.debug&DEBUG_DB)  {
-		bu_log("db_write(dbip=x%x, addr=x%x, count=%d., offset=x%x)\n",
-			dbip, addr, count, offset );
-	}
-	if( dbip->dbi_read_only )  {
-		bu_log("db_write(%s):  READ-ONLY file\n",
-			dbip->dbi_filename);
-		return(-1);
-	}
-	if( count <= 0 || offset < 0 )  {
-		return(-1);
-	}
-	if( dbip->dbi_inmem )  {
-		bu_log("db_write() in memory?\n");
-		return(-1);
-	}
-	bu_semaphore_acquire( BU_SEM_SYSCALL );
-#ifdef HAVE_UNIX_IO
-	(void)lseek( dbip->dbi_fd, offset, 0 );
-	got = write( dbip->dbi_fd, addr, count );
-#else
-	(void)fseek( dbip->dbi_fp, offset, 0 );
-	got = fwrite( addr, 1, count, dbip->dbi_fp );
-#endif
-	bu_semaphore_release( BU_SEM_SYSCALL );
-	if( got != count )  {
-		perror("db_write");
-		bu_log("db_write(%s):  write error.  Wanted %d, got %d bytes.\nFile forced read-only.\n",
-			dbip->dbi_filename, count, got );
-		dbip->dbi_read_only = 1;
-		return(-1);
-	}
-	return(0);			/* OK */
-}
-
-/*
  *  			D B _ P U T
  *
  *  Store 'len' records to the database,
@@ -267,8 +145,8 @@ long		offset;
  */
 int
 db_put( dbip, dp, where, offset, len )
-struct db_i	*dbip;
-const struct directory	*dp;
+CONST struct db_i	*dbip;
+CONST struct directory	*dp;
 union record	*where;
 int		offset;
 int		len;
@@ -305,7 +183,125 @@ int		len;
 	return(0);
 }
 
+/*
+ *			D B _ R E A D
+ *
+ *  Reads 'count' bytes at file offset 'offset' into buffer at 'addr'.
+ *  A wrapper for the UNIX read() sys-call that takes into account
+ *  syscall semaphores, stdio-only machines, and in-memory buffering.
+ *
+ *  Returns -
+ *	 0	OK
+ *	-1	failure
+ */
+/* should be HIDDEN */
+int
+db_read( dbip, addr, count, offset )
+CONST struct db_i	*dbip;
+genptr_t	addr;
+long		count;		/* byte count */
+long		offset;		/* byte offset from start of file */
+{
+	register int	got;
+	register long	s;
 
+	RT_CK_DBI(dbip);
+	if(rt_g.debug&DEBUG_DB)  {
+		bu_log("db_read(dbip=x%x, addr=x%x, count=%d., offset=%d.)\n",
+			dbip, addr, count, offset );
+	}
+	if( count <= 0 || offset < 0 )  {
+		return(-1);
+	}
+	if( dbip->dbi_inmem )  {
+		if( offset+count > dbip->dbi_eof )  {
+			/* Attempt to read off the end of the (mapped) file */
+			bu_log("db_read(%s) ERROR offset=%d, count=%d, dbi_eof=%d\n",
+				dbip->dbi_filename,
+				offset, count, dbip->dbi_eof );
+			return -1;
+		}
+		memcpy( addr, ((char *)dbip->dbi_inmem) + offset, count );
+		return(0);
+	}
+	bu_semaphore_acquire( BU_SEM_SYSCALL );
+#ifdef HAVE_UNIX_IO
+	if ((s=(long)lseek( dbip->dbi_fd, (off_t)offset, 0 )) != offset) {
+		bu_log("db_read: lseek returns %d not %d\n", s, offset);
+		bu_bomb("db_read: Goodbye");
+	}
+	got = read( dbip->dbi_fd, addr, count );
+#else
+	if (fseek( dbip->dbi_fp, offset, 0 ))
+		bu_bomb("db_read: fseek error\n");
+	got = fread( addr, 1, count, dbip->dbi_fp );
+#endif
+	bu_semaphore_release( BU_SEM_SYSCALL );
+
+	if( got != count )  {
+		perror("db_read");
+		bu_log("db_read(%s):  read error.  Wanted %d, got %d bytes\n",
+			dbip->dbi_filename, count, got );
+		return(-1);
+	}
+	return(0);			/* OK */
+}
+
+/*
+ *			D B _ W R I T E
+ *
+ *  Writes 'count' bytes into at file offset 'offset' from buffer at 'addr'.
+ *  A wrapper for the UNIX write() sys-call that takes into account
+ *  syscall semaphores, stdio-only machines, and in-memory buffering.
+ *
+ *  Returns -
+ *	 0	OK
+ *	-1	failure
+ */
+/* should be HIDDEN */
+int
+db_write( dbip, addr, count, offset )
+CONST struct db_i	*dbip;
+CONST genptr_t	addr;
+long		count;
+long		offset;
+{
+	register int	got;
+
+	RT_CK_DBI(dbip);
+	if(rt_g.debug&DEBUG_DB)  {
+		bu_log("db_write(dbip=x%x, addr=x%x, count=%d., offset=%d.)\n",
+			dbip, addr, count, offset );
+	}
+	if( dbip->dbi_read_only )  {
+		bu_log("db_write(%s):  READ-ONLY file\n",
+			dbip->dbi_filename);
+		return(-1);
+	}
+	if( count <= 0 || offset < 0 )  {
+		return(-1);
+	}
+	if( dbip->dbi_inmem )  {
+		bu_log("db_write() in memory?\n");
+		return(-1);
+	}
+	bu_semaphore_acquire( BU_SEM_SYSCALL );
+#ifdef HAVE_UNIX_IO
+	(void)lseek( dbip->dbi_fd, offset, 0 );
+	got = write( dbip->dbi_fd, addr, count );
+#else
+	(void)fseek( dbip->dbi_fp, offset, 0 );
+	got = fwrite( addr, 1, count, dbip->dbi_fp );
+#endif
+	bu_semaphore_release( BU_SEM_SYSCALL );
+	if( got != count )  {
+		perror("db_write");
+		bu_log("db_write(%s):  write error.  Wanted %d, got %d bytes\n",
+			dbip->dbi_filename, count, got );
+		return(-1);
+	}
+	return(0);			/* OK */
+}
 
 /*
  *			D B _ G E T _ E X T E R N A L
@@ -315,7 +311,7 @@ int		len;
  *  The bu_external structure represented by 'ep' is initialized here,
  *  the caller need not pre-initialize it.  On error, 'ep' is left
  *  un-initialized and need not be freed, to simplify error recovery.
- *  On success, the caller is responsible for calling bu_free_external(ep);
+ *  On success, the caller is responsible for calling db_free_external(ep);
  *
  *  Returns -
  *	-1	error
@@ -336,10 +332,7 @@ CONST struct db_i		*dbip;
 		return( -1 );		/* was dummy DB entry */
 
 	BU_INIT_EXTERNAL(ep);
-	if( dbip->dbi_version <= 4 )
-		ep->ext_nbytes = dp->d_len * sizeof(union record);
-	else
-		ep->ext_nbytes = dp->d_len;
+	ep->ext_nbytes = dp->d_len * sizeof(union record);
 	ep->ext_buf = (genptr_t)bu_malloc(
 		ep->ext_nbytes, "db_get_ext ext_buf");
 
@@ -362,21 +355,12 @@ CONST struct db_i		*dbip;
  *
  *			D B _ P U T _ E X T E R N A L
  *
- *  Given that caller already has an external representation of
- *  the database object,  update it to have a new name
- *  (taken from dp->d_namep) in that external representation,
- *  and write the new object into the database, obtaining different storage if
- *  the size has changed.
+ *  Add name from dp->d_namep to external representation of solid,
+ *  and write it into the database, obtaining different storage if
+ *  the size has changed since last write.
  *
  *  Caller is responsible for freeing memory of external representation,
- *  using bu_free_external().
- *
- *  This routine is used to efficiently support MGED's "cp" and "keep"
- *  commands, which don't need to import objects just to rename and copy them.
- *
- *  Returns -
- *	-1	error
- *	 0	success
+ *  using db_free_external().
  */
 int
 db_put_external( ep, dp, dbip )
@@ -384,55 +368,46 @@ struct bu_external	*ep;
 struct directory	*dp;
 struct db_i		*dbip;
 {
+	union record		*rec;
+	int	ngran;
 
 	RT_CK_DBI(dbip);
 	RT_CK_DIR(dp);
-	BU_CK_EXTERNAL(ep);
 	if(rt_g.debug&DEBUG_DB) bu_log("db_put_external(%s) ep=x%x, dbip=x%x, dp=x%x\n",
 		dp->d_namep, ep, dbip, dp );
 
+	BU_CK_EXTERNAL(ep);
 
-	if( dbip->dbi_read_only )  {
-		bu_log("db_put_external(%s):  READ-ONLY file\n",
-			dbip->dbi_filename);
-		return(-1);
+	ngran = (ep->ext_nbytes+sizeof(union record)-1)/sizeof(union record);
+	if( ngran != dp->d_len )  {
+		if( ngran < dp->d_len )  {
+			if( db_trunc( dbip, dp, dp->d_len - ngran ) < 0 )
+			    	return(-2);
+		} else if( ngran > dp->d_len )  {
+			if( db_delete( dbip, dp ) < 0 || 
+			    db_alloc( dbip, dp, ngran ) < 0 )  {
+			    	return(-3);
+			}
+		}
+	}
+	/* Sanity check */
+	if( ngran != dp->d_len )  {
+		bu_log("db_put_external(%s) ngran=%d != dp->d_len %d\n",
+			dp->d_namep, ngran, dp->d_len );
+		bu_bomb("db_io.c: db_put_external()");
 	}
 
-	if( dbip->dbi_version == 5 )
-		return db_put_external5( ep, dp, dbip );
-
-	if( dbip->dbi_version <= 4 )  {
-		int	ngran;
-
-		ngran = (ep->ext_nbytes+sizeof(union record)-1)/sizeof(union record);
-		if( ngran != dp->d_len )  {
-			if( dp->d_addr != -1L )  {
-				if( db_delete( dbip, dp ) < 0 )
-					return -2;
-			}
-			if( db_alloc( dbip, dp, ngran ) < 0 )  {
-			    	return -3;
-			}
-		}
-		/* Sanity check */
-		if( ngran != dp->d_len )  {
-			bu_log("db_put_external(%s) ngran=%d != dp->d_len %d\n",
-				dp->d_namep, ngran, dp->d_len );
-			bu_bomb("db_io.c: db_put_external()");
-		}
-
-		db_wrap_v4_external( ep, dp->d_namep );
-	} else
-		bu_bomb("db_put_external(): unknown dbi_version\n");
+	/* Add name.  Depends on solid names always being in the same place */
+	rec = (union record *)ep->ext_buf;
+	NAMEMOVE( dp->d_namep, rec->s.s_name );
 
 	if( dp->d_flags & RT_DIR_INMEM )  {
 		bcopy( (char *)ep->ext_buf, dp->d_un.ptr, ep->ext_nbytes );
 		return 0;
 	}
 
-	if( db_write( dbip, (char *)ep->ext_buf, ep->ext_nbytes, dp->d_addr ) < 0 )  {
+	if( db_put( dbip, dp, (union record *)(ep->ext_buf), 0, ngran ) < 0 )
 		return(-1);
-	}
 	return(0);
 }
 
@@ -445,7 +420,7 @@ struct db_i		*dbip;
  *  and write it into a file.
  *
  *  Caller is responsible for freeing memory of external representation,
- *  using bu_free_external().
+ *  using db_free_external().
  *
  *  The 'name' field of the external representation is modified to
  *  contain the desired name.
@@ -453,8 +428,6 @@ struct db_i		*dbip;
  *  Returns -
  *	<0	error
  *	0	OK
- *
- *  NOTE:  Callers of this should be using wdb_export_external() instead.
  */
 int
 db_fwrite_external( fp, name, ep )
@@ -462,26 +435,32 @@ FILE			*fp;
 CONST char		*name;
 struct bu_external	*ep;			/* can't be const */
 {
+	union record		*rec;
 
 	if(rt_g.debug&DEBUG_DB) bu_log("db_fwrite_external(%s) ep=x%x\n",
 		name, ep);
 
 	BU_CK_EXTERNAL(ep);
 
-	db_wrap_v4_external( ep, name );
+	/* Add name.  Depends on solid names always being in the same place */
+	rec = (union record *)ep->ext_buf;
+	NAMEMOVE( name, rec->s.s_name );
 
-	return bu_fwrite_external( fp, ep );
+	if( fwrite( ep->ext_buf, ep->ext_nbytes, 1, fp ) != 1 )
+		return -1;
+	return 0;
 }
 
 /*
  *			D B _ F R E E _ E X T E R N A L
- *
- *  XXX This is a leftover.  You should call bu_free_external() instead.
  */
 void
 db_free_external( ep )
 register struct bu_external	*ep;
 {
 	BU_CK_EXTERNAL(ep);
-	bu_free_external(ep);
+	if( ep->ext_buf )  {
+		bu_free( ep->ext_buf, "db_get_ext ext_buf" );
+		ep->ext_buf = GENPTR_NULL;
+	}
 }

@@ -11,7 +11,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "";
+static char RCSid[] = "";
 #endif
 
 #include "conf.h"

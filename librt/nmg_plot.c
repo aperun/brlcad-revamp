@@ -35,12 +35,11 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 #include <stdio.h>
-#include <string.h>
 #include <fcntl.h>
 #include <signal.h>
 #include "machine.h"
@@ -1595,7 +1594,7 @@ int			show_mates;
 	static int	num = 1;
 	struct bn_vlblock	*vbp;
 
-	if( (rt_g.NMG_debug & (DEBUG_PLOTEM|DEBUG_PL_ANIM)) == 0 )  return;
+	if( rt_g.NMG_debug & (DEBUG_PLOTEM|DEBUG_PL_ANIM) == 0 )  return;
 
 	m = nmg_find_model( &fu1->l.magic );
 	NMG_CK_MODEL(m);
@@ -2055,7 +2054,7 @@ CONST char	*a_string;
 	case NMG_VERTEXUSE_MAGIC:
 		show_broken_vu( vbp, (struct vertexuse *)p, fancy);
 		break;
-	default: fprintf(stderr, "Unknown magic number %ld %0lx %lu %0lx\n", *p, *p, (unsigned long)p, (unsigned long)p);
+	default: fprintf(stderr, "Unknown magic number %ld %0lx %lu %0lx\n", *p, *p, p, p);
 				break;
 	}
 
@@ -2089,7 +2088,7 @@ CONST char	*a_string;
 		FILE		*fp;
 
 		sprintf( buf, "cbroke%d.pl", num++ );
-		if( (fp = fopen(buf, "w")) )  {
+		if( fp = fopen(buf, "w") )  {
 			rt_plot_vlblock(fp, vbp);
 			fclose(fp);
 			bu_log("overlay %s for %s\n", buf, a_string);
@@ -2119,7 +2118,7 @@ CONST struct faceuse	*fu;
 	int		fancy;
 	static int	num = 1;
 
-	if( (rt_g.NMG_debug & (DEBUG_PLOTEM|DEBUG_PL_ANIM)) == 0 )  return;
+	if( rt_g.NMG_debug & (DEBUG_PLOTEM|DEBUG_PL_ANIM) == 0 )  return;
 
 	NMG_CK_FACEUSE(fu);
 

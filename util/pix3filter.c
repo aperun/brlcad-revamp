@@ -23,7 +23,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -90,7 +90,6 @@ Usage: pix3filter [-f<type>] [-v] [-d#] [-o#]\n\
         [-s squaresize] [-w width] [-n height]\n\
 	file.pix.n | file.pix1 file.pix2 file.pix3  > file.pix\n";
 
-int
 get_args( argc, argv )
 register char **argv;
 {
@@ -215,7 +214,6 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main( argc, argv )
 int argc; char **argv;
 {

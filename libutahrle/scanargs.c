@@ -320,12 +320,10 @@ reswitch:				/* after finding '*' or ',' */
 				{
 				    /* Eat the arg, too, if necessary */
 				    if ( list_cnt == 0 )
-				    {
 					if ( typchr == 's' )
 					    (void)va_arg( argl, char * );
 					else
 					    (void)va_arg( argl, ptr );
-				    }
 				    break;
 				}
 				else
@@ -507,7 +505,6 @@ reswitch:				/* after finding '*' or ',' */
 				     */
 				    tmpflg = typchr;
 				    if (typchr == 'n' || typchr == 'N' )
-				    {
 					if (*argp != '0')
 					    tmpflg = 'd';
 					else if (*(argp+1) == 'x' ||
@@ -518,7 +515,6 @@ reswitch:				/* after finding '*' or ',' */
 					}
 					else
 					    tmpflg = 'o';
-				    }
 				    if (typchr == 'N')
 					tmpflg = toupper( tmpflg );
 

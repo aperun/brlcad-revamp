@@ -13,7 +13,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -86,7 +86,7 @@ char **argv;
 	plane_t		planes[6];
 	int status = TCL_OK;
 
-	if(argc < 2){
+	if(argc < 2 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -297,7 +297,7 @@ char **argv;
 	for(i=0; i<8; i++){
 		MAT4X3PNT( arbo->pt[i], es_invmat, arb->pt[i] );
 	}
-	rt_db_free_internal(&intern, &rt_uniresource);
+	rt_db_free_internal(&intern);
 
 	/* draw the new solid */
 	replot_editing_solid();

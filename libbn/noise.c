@@ -27,7 +27,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -758,7 +758,7 @@ double offset;
 	struct fbm_spec		*ep;
 	double			result, weight, signal, *spec_wgts;
 	point_t			pt;
-	int			i;
+	int			i, oct;
 	
 	/* The first order of business is to see if we have pre-computed
 	 * the spectral weights table for these parameters in a previous
@@ -808,7 +808,8 @@ double offset;
 
 /***********************************************************************
  *
- *	From "Texturing and Modeling, A Procedural Approach" 2nd ed
+ *
+ *
  *
  */
 
@@ -820,11 +821,11 @@ double lacunarity;
 double octaves;
 double offset;
 {
-	double 			frequency = 1.0;
+	double 			frequency;
 	struct fbm_spec		*ep;
 	double			result, weight, signal, *spec_wgts;
 	point_t			pt;
-	int			i;
+	int			i, oct;
 	
 	/* The first order of business is to see if we have pre-computed
 	 * the spectral weights table for these parameters in a previous

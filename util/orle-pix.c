@@ -14,7 +14,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Id$ (BRL)";
+static char RCSid[] = "@(#)$Id$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -45,7 +45,6 @@ static void	prnt_Usage();
 static int	non_linear_cmap = 0;
 
 /*	m a i n ( )							*/
-int
 main( argc, argv )
 int	argc;
 char	*argv[];

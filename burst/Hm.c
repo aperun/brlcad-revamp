@@ -12,7 +12,7 @@
 */
 /*LINTLIBRARY*/
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #ifndef DEBUG

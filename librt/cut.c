@@ -26,23 +26,17 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCScut[] = "@(#)$Header$ (BRL)";
+static char RCScut[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include "machine.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "nmg.h"
-#include "plot3.h"
 #include "./debug.h"
 
 HIDDEN int		rt_ck_overlap BU_ARGS((CONST vect_t min,
@@ -66,10 +60,7 @@ HIDDEN void		rt_plot_cut BU_ARGS((FILE *fp, struct rt_i *rtip,
 
 BU_EXTERN(void		rt_pr_cut_info, (CONST struct rt_i *rtip,
 					CONST char *str));
-HIDDEN int		rt_ct_old_assess(register union cutter *,
-					 register int,
-					 double *,
-					 double *);
+
 
 #define AXIS(depth)	((depth)%3)	/* cuts: X, Y, Z, repeat */
 
@@ -2016,7 +2007,9 @@ struct rt_i	*rtip;
  *			R T _ P R _ C U T _ I N F O
  */
 void
-rt_pr_cut_info(const struct rt_i *rtip, const char *str)
+rt_pr_cut_info( rtip, str )
+CONST struct rt_i	*rtip;
+CONST char		*str;
 {
 	CONST struct nugridnode	*nugnp;
 	int			i;

@@ -29,12 +29,10 @@
 
 #include "conf.h"
 #include "tcl.h"
-#include "tk.h"
 
 #include "machine.h"
 #include "externs.h"
 #include "cmd.h"
-#include "libtermio.h"
 
 extern Tcl_Interp *interp;
 
@@ -49,14 +47,12 @@ HIDDEN struct bu_cmdhist *currHist;
 
 HIDDEN struct bu_cmdtab bwish_cmds[] =
 {
-	{"exit",		cmd_quit},
-	{"history",		cmd_history},
-	{"hist",		cmd_hist},
-	{"q",			cmd_quit},
-	{(char *)NULL,		CMD_NULL}
+	"exit",		cmd_quit,
+	"history",	cmd_history,
+	"hist",		cmd_hist,
+	"q",		cmd_quit,
+	(char *)NULL,	CMD_NULL
 };
-
-extern Tk_PhotoImageFormat tkImgFmtPIX;
 
 int
 cmdInit(interp)
@@ -64,9 +60,6 @@ cmdInit(interp)
 {
 	/* Register bwish commands */
 	bu_register_cmds(interp, bwish_cmds);
-
-	/* Add pix format for images */
-	Tk_CreatePhotoImageFormat(&tkImgFmtPIX);
 
 	/* initialize command history */
 	historyInit();

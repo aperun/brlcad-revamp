@@ -18,15 +18,10 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
-#include "conf.h"
-
 #include <stdio.h>
-
-#include "machine.h"
-#include "externs.h"
 
 static int scanbytes;			/* # of bytes of scanline */
 
@@ -40,7 +35,6 @@ char usage[] =
 
 int infd;
 
-int
 main(argc, argv)
 int argc;
 char **argv;

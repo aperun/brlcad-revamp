@@ -27,7 +27,6 @@
 #include "./iges_struct.h"
 #include "./iges_extern.h"
 
-int
 Readrec( recno )
 int recno;
 {

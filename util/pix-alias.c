@@ -118,7 +118,6 @@ void usage()
 }
 
 
-int
 main(ac,av)
 int ac;
 char *av[];

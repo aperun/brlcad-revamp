@@ -32,13 +32,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSview[] = "@(#)$Header$ (BRL)";
+static char RCSview[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 
 #ifdef HAVE_UNIX_IO
@@ -55,9 +54,8 @@ static const char RCSview[] = "@(#)$Header$ (BRL)";
 #include "shadefuncs.h"
 #include "shadework.h"
 #include "./ext.h"
-#include "rtprivate.h"
+#include "./rdebug.h"
 #include "./light.h"
-#include "plot3.h"
 
 int		use_air = 0;		/* Handling of air in librt */
 
@@ -87,12 +85,6 @@ extern int	max_bounces;		/* from refract.c */
 extern int	max_ireflect;		/* from refract.c */
 extern int	curframe;		/* from main.c */
 extern fastf_t	frame_delta_t;		/* from main.c */
-
-extern int viewshade(struct application *ap,
-		     register const struct partition *pp,
-		     register struct shadework *swp);
-
-
 
 struct region	env_region;		/* environment map region */
 
@@ -133,19 +125,12 @@ struct mfuncs *mfHead = MF_NULL;	/* Head of list of shaders */
 
 fastf_t	gamma_corr = 0.0;			/* gamma correction if !0 */
 
-/* The default a_onehit = -1 requires at least one non-air hit,
- * (stop at first surface) and stops ray/geometry intersection after that.
- * Set to 0 to turn off first hit optimization, with -c 'set a_onehit=0'
- */
-int a_onehit = -1;
-
 /* Viewing module specific "set" variables */
 struct bu_structparse view_parse[] = {
 #if !defined(__alpha)   /* XXX Alpha does not support this initialization! */
 	{"%f",	1, "gamma",	bu_byteoffset(gamma_corr),		BU_STRUCTPARSE_FUNC_NULL },
 	{"%d",	1, "bounces",	bu_byteoffset(max_bounces),		BU_STRUCTPARSE_FUNC_NULL },
 	{"%d",	1, "ireflect",	bu_byteoffset(max_ireflect),		BU_STRUCTPARSE_FUNC_NULL },
-	{"%d",	1, "a_onehit",	bu_byteoffset(a_onehit),		BU_STRUCTPARSE_FUNC_NULL },
 	{"%f", ELEMENTS_PER_VECT, "background",bu_byteoffset(background[0]),	BU_STRUCTPARSE_FUNC_NULL },
 #endif
 	{"",	0, (char *)0,	0,				BU_STRUCTPARSE_FUNC_NULL }
@@ -509,8 +494,8 @@ register struct application *ap;
 /*
  *			V I E W _ E N D
  */
-void
-view_end(struct application *ap)
+view_end(ap)
+struct application *ap;
 {
 	if( fullfloat_mode )  {
 		struct floatpixel	*tmp;
@@ -524,6 +509,7 @@ view_end(struct application *ap)
 	}
 
 	if( scanline )  free_scanlines();
+	return(0);		/* OK */
 }
 
 /*
@@ -559,7 +545,7 @@ struct rt_i	*rtip;
 			{
 				struct region *r = BU_LIST_NEXT( region, &regp->l );
 				/* zap reg_udata? beware of light structs */
-				rt_del_regtree( rtip, regp, &rt_uniresource );
+				rt_del_regtree( rtip, regp );
 				regp = r;
 				continue;
 			}
@@ -582,7 +568,9 @@ struct rt_i	*rtip;
  *
  *  Called before rt_clean() in do.c
  */
-void view_cleanup(struct rt_i	*rtip)
+void
+view_cleanup(rtip)
+struct rt_i	*rtip;
 {
 	register struct region	*regp;
 
@@ -606,7 +594,7 @@ void view_cleanup(struct rt_i	*rtip)
  *  Background texture mapping could be done here.
  *  For now, return a pleasant dark blue.
  */
-static int hit_nothing( ap )
+static hit_nothing( ap )
 register struct application *ap;
 {
 	if( rdebug&RDEBUG_MISSPLOT )  {
@@ -615,10 +603,8 @@ register struct application *ap;
 		/* XXX length should be 1 model diameter */
 		VJOIN1( out, ap->a_ray.r_pt,
 			10000, ap->a_ray.r_dir );	/* to imply direction */
-		bu_semaphore_acquire( BU_SEM_SYSCALL );
 		pl_color( stdout, 190, 0, 0 );
 		pdv_3line( stdout, ap->a_ray.r_pt, out );
-		bu_semaphore_release( BU_SEM_SYSCALL );
 	}
 
 	if( env_region.reg_mfuncs )  {
@@ -816,10 +802,8 @@ struct seg *finished_segs;
 			VJOIN1( inhit, ap->a_ray.r_pt,
 				hitp->hit_dist, ap->a_ray.r_dir );
 			if( rdebug&RDEBUG_RAYPLOT )  {
-				bu_semaphore_acquire( BU_SEM_SYSCALL );
 				pl_color( stdout, i, 0, i );
 				pdv_3line( stdout, ap->a_ray.r_pt, inhit );
-				bu_semaphore_release( BU_SEM_SYSCALL );
 			}
 			bu_log("From ray start to inhit (purple):\n \
 vdraw o oray;vdraw p c %2.2x%2.2x%2.2x;vdraw w n 0 %g %g %g;vdraw w n 1 %g %g %g;vdraw s\n",
@@ -833,10 +817,8 @@ vdraw o oray;vdraw p c %2.2x%2.2x%2.2x;vdraw w n 0 %g %g %g;vdraw w n 1 %g %g %g
 				ap->a_ray.r_pt, out,
 				ap->a_ray.r_dir );
 			if( rdebug&RDEBUG_RAYPLOT )  {
-				bu_semaphore_acquire( BU_SEM_SYSCALL );
 				pl_color( stdout, i, i, i );
 				pdv_3line( stdout, inhit, outhit );
-				bu_semaphore_release( BU_SEM_SYSCALL );
 			}
 			bu_log("From inhit to outhit (grey):\n \
 vdraw o iray;vdraw p c %2.2x%2.2x%2.2x;vdraw w n 0 %g %g %g;vdraw w n 1 %g %g %g;vdraw s\n",
@@ -885,9 +867,10 @@ out:
  *
  *  a_hit() routine for simple lighting model.
  */
-int viewit(register struct application *ap,
-	   struct partition *PartHeadp,
-	   struct seg	*segHeadp)
+viewit( ap, PartHeadp, segHeadp )
+register struct application *ap;
+struct partition *PartHeadp;
+struct seg	*segHeadp;
 {
 	register struct partition *pp;
 	register struct hit *hitp;
@@ -1007,11 +990,9 @@ free_scanlines()
  *
  *  Called once, early on in RT setup, before view size is set.
  */
-int
 view_init( ap, file, obj, minus_o )
 register struct application *ap;
 char *file, *obj;
-int minus_o;
 {
 	extern char	liboptical_version[];
 
@@ -1204,9 +1185,8 @@ char	*framename;
 	if (rpt_overlap)
 		ap->a_logoverlap = ((void (*)())0);
 	else
-		ap->a_overlap = rt_overlap_quietly;
-	ap->a_onehit = a_onehit;
-
+		ap->a_logoverlap = rt_silent_logoverlap;
+	ap->a_onehit = -1;		/* Require at least one non-air hit */
 	if (rpt_dist)
 		pwidth = 3+8;
 	else
@@ -1414,7 +1394,7 @@ bu_log("mallocing curr_float_frame\n");
 	default:
 		rt_bomb("bad lighting model #");
 	}
-	ap->a_rt_i->rti_nlights = light_init(ap);
+	ap->a_rt_i->rti_nlights = light_init();
 
 	/* Create integer version of background color */
 	inonbackground[0] = ibackground[0] = background[0] * 255;

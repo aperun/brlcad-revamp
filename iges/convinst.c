@@ -88,7 +88,7 @@ Convinst()
 			struct wmember head;
 
 			BU_LIST_INIT( &head.l );
-			(void)mk_addmember( dir[pointer]->name , &head.l , WMOP_INTERSECT );
+			(void)mk_addmember( dir[pointer]->name , &head , WMOP_INTERSECT );
 
 			/* Make the object */
 			if( dir[i]->colorp != 0 )
@@ -137,7 +137,7 @@ Convinst()
 				   these matrices need to be combined */
 
 				rot = (mat_t *)bu_malloc( sizeof( mat_t ), "Convinst: rot" );
-				Matmult( *(dir[i]->rot) , *(dir[pointer]->rot) , *rot );
+				Matmult( *(dir[i]->rot) , dir[pointer]->rot , rot );
 				dir[i]->rot = rot;
 			}
 		}

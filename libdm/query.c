@@ -1,7 +1,4 @@
 #include "conf.h"
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include "tk.h"
 #include "machine.h"
 #include "externs.h"
@@ -18,10 +15,8 @@ char *dpy_string;
 char *name;
 {
   Display *dpy;
-  int val = 0;
-#if !defined(USE_MESA_GL) && defined(DM_OGL)
   int return_val;
-#endif
+  int val = 0;
 
 #ifdef USE_MESA_GL
 
@@ -64,10 +59,8 @@ dm_bestXType(dpy_string)
 char *dpy_string;
 {
   Display *dpy;
-  char *name = (char *)NULL;
-#if !defined(USE_MESA_GL) && defined(DM_OGL)
   int return_val;
-#endif
+  char *name = (char *)NULL;
 
 #ifdef USE_MESA_GL
 

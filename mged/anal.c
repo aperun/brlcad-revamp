@@ -18,7 +18,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -79,7 +79,7 @@ char	*argv[];
 
 	CHECK_DBI_NULL;
 
-	if(argc < 1){
+	if(argc < 1 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -97,7 +97,7 @@ char	*argv[];
 		  state_err( "Default SOLID Analyze" );
 		  return TCL_ERROR;
 		}
-		ndp = LAST_SOLID(illump);
+		ndp = illump->s_path[illump->s_last];
 		if(illump->s_Eflag) {
 		  Tcl_AppendResult(interp, "analyze: cannot analyze evaluated region containing ",
 				   ndp->d_namep, "\n", (char *)NULL);
@@ -121,7 +121,7 @@ char	*argv[];
 		}
 		bn_mat_mul(new_mat, modelchanges, es_mat);
 
-		if( rt_db_get_internal( &intern, ndp, dbip, new_mat, &rt_uniresource ) < 0 )  {
+		if( rt_db_get_internal( &intern, ndp, dbip, new_mat ) < 0 )  {
 		  Tcl_AppendResult(interp, "rt_db_get_internal() error\n", (char *)NULL);
 		  return TCL_ERROR;
 		}
@@ -129,7 +129,7 @@ char	*argv[];
 		do_anal(&v, &intern);
 		Tcl_AppendResult(interp, bu_vls_addr(&v), (char *)NULL);
 		bu_vls_free(&v);
-		rt_db_free_internal( &intern, &rt_uniresource );
+		rt_db_free_internal( &intern );
 		return TCL_OK;
 	}
 
@@ -138,7 +138,7 @@ char	*argv[];
 		if( (ndp = db_lookup( dbip,  argv[i], LOOKUP_NOISY )) == DIR_NULL )
 			continue;
 
-		if( rt_db_get_internal( &intern, ndp, dbip, bn_mat_identity, &rt_uniresource ) < 0 )  {
+		if( rt_db_get_internal( &intern, ndp, dbip, bn_mat_identity ) < 0 )  {
 		  Tcl_AppendResult(interp, "rt_db_get_internal() error\n", (char *)NULL);
 		  return TCL_ERROR;
 		}
@@ -151,7 +151,7 @@ char	*argv[];
 		do_anal(&v, &intern);
 		Tcl_AppendResult(interp, bu_vls_addr(&v), (char *)NULL);
 		bu_vls_free(&v);
-		rt_db_free_internal( &intern, &rt_uniresource );
+		rt_db_free_internal( &intern );
 	}
 
 	return TCL_OK;

@@ -88,7 +88,8 @@
  * Given a matrix designed to operate on an object, yield a matrix which 
  * operates on the view.
  */
-void anim_v_permute(mat_t m)
+void anim_v_permute(m)
+mat_t m;
 {
 	int i;
 	fastf_t store;
@@ -108,7 +109,8 @@ void anim_v_permute(mat_t m)
  * Given a matrix designed to operate on the view, yield a matrix which 
  * operates on an object.
  */
-void anim_v_unpermute(mat_t m)
+void anim_v_unpermute(m)
+mat_t m;
 {
 	int i;
 	fastf_t store;
@@ -122,7 +124,8 @@ void anim_v_unpermute(mat_t m)
 }
 
 /* Transpose matrix in place */
-void anim_tran(mat_t m)
+void anim_tran(m)
+mat_t m;
 {
 	int i;
 	fastf_t store;
@@ -168,7 +171,9 @@ void anim_tran(mat_t m)
  * x,y,z. A return value of ERROR1 means that arbitrary assumptions were 
  * necessary. ERROR2 means that the conversion failed.
  */
-int anim_mat2zyx(const mat_t viewrot, vect_t angle)
+int anim_mat2zyx(angle,viewrot)
+mat_t viewrot;
+vect_t angle;
 {
         int i, return_value, id_x, id_z;
         fastf_t sin_x, sin_z, cos_x, cos_z, big_x, big_z;
@@ -235,7 +240,9 @@ int anim_mat2zyx(const mat_t viewrot, vect_t angle)
  * A return of ERROR1 means that arbitrary assumptions were necessary.
  * ERROR2 means that the conversion failed.
  */
-int anim_mat2ypr(mat_t viewrot, vect_t angle)
+int anim_mat2ypr(angle,viewrot)
+mat_t viewrot;
+vect_t angle;
 {
         int i, return_value, id_y, id_r;
         fastf_t sin_y, sin_r, cos_y, cos_r, big_y, big_r;
@@ -301,7 +308,9 @@ int anim_mat2ypr(mat_t viewrot, vect_t angle)
  * The algorithm is from Ken Shoemake, Animating Rotation with Quaternion 
  * Curves, 1985 SIGGraph Conference Proceeding, p.245.
  */
-int anim_mat2quat(quat_t quat, const mat_t viewrot)
+int anim_mat2quat(quat,viewrot)
+quat_t quat;
+mat_t viewrot;
 {
 	int i;	
 	fastf_t qdiff[4], square, mag1, mag2;
@@ -364,7 +373,9 @@ int anim_mat2quat(quat_t quat, const mat_t viewrot)
  * of an object (its x-axis) to the given yaw, pitch, and roll, 
  * which is stored in radians in the vector a.
  */
-void anim_ypr2mat(mat_t m, const vect_t a)
+void anim_ypr2mat(m,a)
+mat_t m;
+vect_t a;
 {
 	fastf_t cos_y,cos_p,cos_r,sin_y,sin_p,sin_r;
 
@@ -403,7 +414,9 @@ void anim_ypr2mat(mat_t m, const vect_t a)
  * 	v_permute(matrix);
  *	transpose(matrix;
  */
-void anim_ypr2vmat(mat_t m, const vect_t a)
+void anim_ypr2vmat(m,a)
+mat_t m;
+vect_t a;
 {
 	fastf_t cos_y,cos_p,cos_r,sin_y,sin_p,sin_r;
 
@@ -435,7 +448,9 @@ void anim_ypr2vmat(mat_t m, const vect_t a)
 /* ANIM_Y_P_R2MAT - Make matrix to rotate an object to the given yaw,
  * pitch, and roll. (Specified in radians.)
  */
-void anim_y_p_r2mat(mat_t m, double y, double p, double r)
+void anim_y_p_r2mat(m,y,p,r) /*make object rotation matrix from radian ypr*/
+mat_t m;
+fastf_t y, p, r;
 {
         fastf_t cos_y = cos(y);
         fastf_t sin_y = sin(y);
@@ -463,7 +478,9 @@ void anim_y_p_r2mat(mat_t m, double y, double p, double r)
 /* ANIM_DY_P_R2MAT - Make matrix to rotate an object to the given yaw,
  * pitch, and roll. (Specified in degrees.)
  */
-void anim_dy_p_r2mat(mat_t m, double y, double p, double r)
+void anim_dy_p_r2mat(m,y,p,r) /*make object rotation matrix from ypr*/
+mat_t m;
+fastf_t y, p, r;
 {
         fastf_t radian_yaw = y*(M_PI*0.0055555555556);
         fastf_t radian_pitch = p*(M_PI*0.0055555555556);
@@ -494,7 +511,9 @@ void anim_dy_p_r2mat(mat_t m, double y, double p, double r)
  * and roll. (Note that the matrix is a permutation of the object rotation
  * matrix).
  */
-void anim_dy_p_r2vmat(mat_t m, double yaw, double pch, double rll)
+void anim_dy_p_r2vmat(m,yaw,pch,rll) /*make view rotation matrix from ypr*/
+mat_t m;
+fastf_t yaw, pch, rll;
 {
 
 	float ryaw = yaw*(M_PI*0.0055555555556);
@@ -527,7 +546,9 @@ void anim_dy_p_r2vmat(mat_t m, double yaw, double pch, double rll)
  * "x" radians about the x-axis, "y" radians about the y-axis, and
  * then "z" radians about the z-axis.
  */
-void anim_x_y_z2mat(mat_t m, double x, double y, double z)
+void anim_x_y_z2mat(m, x, y, z)
+mat_t m;
+fastf_t x, y, z;
 {
         fastf_t cosx = cos(x);
         fastf_t sinx = sin(x);
@@ -555,7 +576,9 @@ void anim_x_y_z2mat(mat_t m, double x, double y, double z)
  * "x" degrees about the x-axis, "y" degrees about the y-axis, and
  * then "z" degrees about the z-axis.
  */
-void anim_dx_y_z2mat(mat_t m, double x, double y, double z)
+void anim_dx_y_z2mat(m, x, y, z)
+mat_t m;
+fastf_t x, y, z;
 {
 	fastf_t cosx,cosy,cosz,sinx,siny,sinz;
 
@@ -587,7 +610,9 @@ void anim_dx_y_z2mat(mat_t m, double x, double y, double z)
  * "z" radians about the z-axis, "y" radians about the y-axis, and
  * then "x" radians about the x-axis. 
  */
-void anim_zyx2mat(mat_t m, const vect_t a)
+void anim_zyx2mat(m,a)
+mat_t m;
+vect_t a;
 {
 	fastf_t cosX,cosY,cosZ,sinX,sinY,sinZ;
 
@@ -621,7 +646,9 @@ void anim_zyx2mat(mat_t m, const vect_t a)
  * "z" radians about the z-axis, "y" radians about the y-axis, and
  * then "x" radians about the x-axis.
  */
-void anim_z_y_x2mat(mat_t m, double x, double y, double z)
+void anim_z_y_x2mat(m,x,y,z)
+mat_t m;
+fastf_t x, y, z;
 {
         fastf_t cosx = cos(x);
         fastf_t sinx = sin(x);
@@ -648,7 +675,9 @@ void anim_z_y_x2mat(mat_t m, double x, double y, double z)
  * "z" degrees about the z-axis, "y" degrees about the y-axis, and
  * then "x" degrees about the x-axis.
  */
-void anim_dz_y_x2mat(mat_t m, double x, double y, double z)
+void anim_dz_y_x2mat(m,x,y,z)
+mat_t m;
+fastf_t x, y, z;
 {
 	fastf_t cosx,cosy,cosz,sinx,siny,sinz;
 
@@ -682,12 +711,13 @@ void anim_dz_y_x2mat(mat_t m, double x, double y, double z)
  * used in the librt/qmath.c quat_quat2mat()
  */
 
-void anim_quat2mat(mat_t m, const quat_t qq)
+void anim_quat2mat(m, q)
+mat_t m;
+quat_t q;
 {
 	fastf_t two_q[4];
-	quat_t q;
 
-	QMOVE(q, qq);
+
 	QUNITIZE(q);
 
 	VADD2N(two_q,q,q,4);
@@ -718,12 +748,11 @@ void anim_quat2mat(mat_t m, const quat_t qq)
  * the given direction is vertical. This is intended to represent the
  * the direction from a previous frame.
  */
-void anim_dir2mat(mat_t m, const vect_t d, const vect_t d2b)
+void anim_dir2mat(m,d,d2)
+mat_t m;
+vect_t d, d2;
 {
         fastf_t hypotenuse, sign;
-	vect_t d2;
-
-	VMOVE( d2, d2b );
         sign = 1.0;
         hypotenuse = sqrt(d[0]*d[0]+d[1]*d[1]);
         if (hypotenuse < VDIVIDE_TOL){ /* vertical direction - use d2 to
@@ -766,13 +795,13 @@ void anim_dir2mat(mat_t m, const vect_t d, const vect_t d2b)
  * x and z axes should be put. A good choice to put here is the direction 
  * of the vehicle's y-axis in the previous frame.
  */
-void anim_dirn2mat(mat_t m, const vect_t dx2, const vect_t dn)
+void anim_dirn2mat(m,dx,dn)
+mat_t m;
+vect_t dx,dn;
 {
 	vect_t temp;
 	fastf_t hyp, sign,inv,mag;
-	vect_t dx;
 
-	VMOVE( dx, dx2 );
 	sign = 1.0;
 	mag = MAGNITUDE(dx);
 	if (mag < VDIVIDE_TOL) {
@@ -840,7 +869,10 @@ in the direction defined by those two positions. Return new matrix, and the
 remembered value of the current position, as arguments; return 1 as the 
 normal value, and 0 when there is not yet information to remember.
 */
-int anim_steer_mat(mat_t  mat, vect_t point, int end)
+int anim_steer_mat(mat,point,end)
+mat_t  mat;
+vect_t point;
+int end;
 {
 	void anim_dir2mat(), anim_add_trans(), anim_view_rev();
 	static vect_t p1, p2, p3;
@@ -901,7 +933,9 @@ int anim_steer_mat(mat_t  mat, vect_t point, int end)
  * The resulting matrix has the effect of performing the first
  * translation, followed by the rotation, followed by the second translation.
  */
-void anim_add_trans(mat_t m, const vect_t post, const vect_t pre)
+void anim_add_trans(m,post,pre)
+mat_t m; 
+vect_t post, pre;
 {
         int i;
         for (i=0; i<3; i++)
@@ -911,7 +945,9 @@ void anim_add_trans(mat_t m, const vect_t post, const vect_t pre)
 
 /* ANIM_ROTATEZ - Rotate the vector "d" through "a" radians about the z-axis.
  */
-void anim_rotatez(fastf_t a, vect_t d)
+void anim_rotatez(a,d)
+fastf_t a;
+vect_t d;
 {
         fastf_t temp[3];
         fastf_t cos_y = cos(a);
@@ -924,7 +960,10 @@ void anim_rotatez(fastf_t a, vect_t d)
 
 /* ANIM_MAT_PRINT - print out 4X4 matrix, with optional colon
  */
-void anim_mat_print(FILE *fp, const mat_t m, int s_colon)
+void anim_mat_print(fp,m,s_colon)
+FILE *fp;
+mat_t m;
+int s_colon;
 {
         bu_flog( fp,"%.10g %.10g %.10g %.10g\n", m[0], m[1], m[2], m[3]);
         bu_flog( fp,"%.10g %.10g %.10g %.10g\n", m[4], m[5], m[6], m[7]);
@@ -940,12 +979,12 @@ void anim_mat_print(FILE *fp, const mat_t m, int s_colon)
 /* ANIM_MAT_PRINTF - print out 4X4 matrix
  * formstr must be less than twenty chars
  */
-void anim_mat_printf(
-	FILE *fp,
-	const mat_t m,
-	const char *formstr,
-	const char *linestr,
-	const char *endstr)
+void anim_mat_printf(fp,m,formstr,linestr,endstr)
+FILE *fp;
+mat_t m;
+char *formstr;
+char *linestr;
+char *endstr;
 {
 	char mystr[80];
 	sprintf(mystr,"%s%s%s%s%%s",formstr,formstr,formstr,formstr);
@@ -958,7 +997,8 @@ void anim_mat_printf(
 /* ANIM_VIEW_REV - Reverse the direction of a view matrix, keeping it
  * right-side up
  */
-void anim_view_rev(mat_t m)
+void anim_view_rev(m) /* reverses view matrix, but keeps it 'right-side-up'*/
+mat_t m;
 {
         m[0] = -m[0];
         m[1] = -m[1];

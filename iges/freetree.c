@@ -20,17 +20,17 @@ void
 Freetree( root )
 struct node *root;
 {
-	struct node *ptr;
+	struct node *ptr,*Pop();
 
 	ptr = root;
 	while( 1 )
 	{
 		while( ptr != NULL )
 		{
-			Push( (union tree *)ptr );
+			Push( ptr );
 			ptr = ptr->left;
 		}
-		ptr = (struct node *)Pop();
+		ptr = Pop();
 		bu_free( (char *)ptr, "Freetree: ptr" );
 
 		if( ptr->parent == NULL )

@@ -359,15 +359,17 @@ struct rt_eto_internal {
 #define DSP_NAME_LEN 128
 struct rt_dsp_internal{
 	long		magic;
-	struct bu_vls	dsp_file;		/* name of data file */
-	unsigned int	dsp_xcnt;		/* # samples in row of data */
-	unsigned int	dsp_ycnt;		/* # of columns in data */
-	unsigned short	dsp_smooth;		/* bool: surf normal interp */
+	char		dsp_file[DSP_NAME_LEN];	/* name of data file */
+	unsigned	dsp_xcnt;		/* # samples in row of data */
+	unsigned	dsp_ycnt;		/* # of columns in data */
+	int		dsp_smooth;		/* bool: surf normal interp */
+	double		dsp_xs;			/* pirated for pieces */
+	double		dsp_ys;			/* not used */
+	double		dsp_zs;			/* not used */
 	mat_t		dsp_mtos;		/* model to solid space */
 	/* END OF USER SETABLE VARIABLES, BEGIN INTERNAL STUFF */
-	mat_t		dsp_stom;		/* solid to model space 
-						 * computed from dsp_mtos */
-	unsigned short	*dsp_buf;
+	mat_t		dsp_stom;		/* solid to model space */
+	unsigned short	*dsp_buf;		/* set to dsp_mp buffer addr */
 	struct bu_mapped_file *dsp_mp;	/* actual data */
 };
 #define RT_DSP_INTERNAL_MAGIC	0xde6
@@ -425,7 +427,7 @@ struct rt_extrude_internal
 	vect_t		u_vec;	/* vector in U parameter direction */
 	vect_t		v_vec;	/* vector in V parameter direction */
 	int		keypoint;	/* index of keypoint vertex */
-	char		*sketch_name;	/* name of sketch object that defines
+	char		sketch_name[SKETCH_NAME_LEN];	/* name of sketch object that defines
 						 * the curve to be extruded */
 	struct rt_sketch_internal	*skt;	/* pointer to referenced sketch */
 };

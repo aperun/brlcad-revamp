@@ -17,7 +17,7 @@
  *  Distribution Status -
  *      Public Domain, Distribution Unlimitied.
  */
-static const char libbu_vls_RCSid[] = "@(#)$Header$ (BRL)";
+static char libbu_vls_RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "conf.h"
 
@@ -44,9 +44,6 @@ static const char libbu_vls_RCSid[] = "@(#)$Header$ (BRL)";
 #if defined(HAVE_VARARGS_H) || defined(HAVE_STDARG_H)
 BU_EXTERN(void	bu_vls_vprintf, (struct bu_vls *vls, CONST char *fmt, va_list ap));
 #endif
-
-const char bu_vls_message[] = "bu_vls_str";
-extern const char bu_strdup_message[];
 
 /*
  *			B U _ V L S _ I N I T
@@ -149,7 +146,8 @@ int			extra;
 	if( extra < 40 )  extra = 40;
 	if( vp->vls_max <= 0 || vp->vls_str == (char *)0 )  {
 		vp->vls_max = extra;
-		vp->vls_str = (char *)bu_malloc( vp->vls_max, bu_vls_message );
+		vp->vls_str = (char *)bu_malloc( vp->vls_max,
+			"bu_vls_extend (initial)" );
 		vp->vls_len = 0;
 		vp->vls_offset = 0;
 		*vp->vls_str = '\0';
@@ -159,7 +157,7 @@ int			extra;
 		vp->vls_max += extra;
 		if( vp->vls_max < 120 )  vp->vls_max = 120;
 		vp->vls_str = (char *)bu_realloc( vp->vls_str, vp->vls_max,
-			bu_vls_message );
+			 "bu_vls_extend (grow)" );
 	}
 }
 
@@ -308,7 +306,7 @@ register CONST struct bu_vls *vp;
 	register int len;
 
 	len = bu_vls_strlen(vp);
-	str = bu_malloc(len+1, bu_strdup_message );
+	str = bu_malloc(len+1, "bu_vls_strdup");
 	strncpy(str, bu_vls_addr(vp), len);
 	str[len] = '\0';
 	return str;
@@ -587,7 +585,9 @@ CONST struct bu_vls	*vp;
  *			B U _ V L S _ W R I T E
  */
 void
-bu_vls_write( int fd, const struct bu_vls *vp )
+bu_vls_write( fd, vp )
+int			fd;
+CONST struct bu_vls	*vp;
 {
 	int status;
 
@@ -619,7 +619,9 @@ bu_vls_write( int fd, const struct bu_vls *vp )
  *	-1	read error
  */
 int
-bu_vls_read( struct bu_vls *vp, int fd )
+bu_vls_read( vp, fd )
+struct bu_vls	*vp;
+int		fd;
 {
 	int	ret = 0;
 	int	todo;
@@ -716,7 +718,8 @@ int			c;
  *  Remove leading and trailing white space from a vls string.
  */
 void
-bu_vls_trimspace( struct bu_vls *vp )
+bu_vls_trimspace( vp )
+struct bu_vls	*vp;
 {
 	BU_CK_VLS(vp);
 
@@ -756,7 +759,7 @@ va_list ap;
 #define FIELDLEN 0x002
 
     int flags;
-    int fieldlen=-1;
+    int fieldlen;
     char fbuf[64], buf[1024];			/* % format buffer */
 
     BU_CK_VLS(vls);
@@ -813,7 +816,7 @@ va_list ap;
 				int	stringlen = strlen(str);
 				int	left_justify;
 
-				if ((left_justify = (fieldlen < 0)))
+				if (left_justify = (fieldlen < 0))
 					fieldlen *= -1;
 
 				if (stringlen >= fieldlen)
@@ -856,7 +859,7 @@ va_list ap;
 				int	stringlen = bu_vls_strlen(vp);
 				int	left_justify;
 
-				if ((left_justify = (fieldlen < 0)))
+				if (left_justify = (fieldlen < 0))
 					fieldlen *= -1;
 
 				if (stringlen >= fieldlen)

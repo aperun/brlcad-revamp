@@ -25,7 +25,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -37,7 +37,7 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
 #define MFUNCS(_name)	\
 	{ extern struct mfuncs _name[]; mlib_add_shader( headp, _name ); }
@@ -46,7 +46,8 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
  *			O P T I C A L _ S H A D E R _ I N I T
  */
 void
-optical_shader_init(struct mfuncs	**headp)
+optical_shader_init(headp)
+struct mfuncs	**headp;
 {
 	/*
 	 *  Connect up shader ("material") interfaces

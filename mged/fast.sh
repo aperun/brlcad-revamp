@@ -3,23 +3,16 @@
 #
 # A quick way of recompiling MGED using multiple processors.
 #
-# Optional flag:  -s	for silent running
-#
 #  $Header$
 
-SILENT="$1"
-
-# Prevent the massive compilation from degrading interactive windows.
-renice 12 $$ > /dev/null 2>&1
-
-cake ${SILENT} \
+cake \
  adc.o \
  anal.o \
  arb.o \
  arbs.o \
  attach.o &
 
-cake ${SILENT} \
+cake \
  buttons.o \
  chgmodel.o \
  chgtree.o \
@@ -27,7 +20,7 @@ cake ${SILENT} \
  cmd.o \
  columns.o &
 
-cake ${SILENT} \
+cake \
  grid.o \
  axes.o \
  qray.o \
@@ -38,7 +31,7 @@ cake ${SILENT} \
  edpipe.o \
  edars.o &
 
-cake ${SILENT} \
+cake \
  red.o \
  set.o \
  animedit.o \
@@ -50,21 +43,21 @@ cake ${SILENT} \
  fbserv.o \
  rect.o &
 
-cake ${SILENT} \
+cake \
  dir.o \
  dodraw.o \
  dozoom.o \
  edarb.o \
  edsol.o &
 
-cake ${SILENT} \
+cake \
  facedef.o \
  ged.o \
  history.o \
  inside.o \
  mater.o &
 
-cake ${SILENT} \
+cake \
  menu.o \
  mover.o \
  overlay.o \
@@ -72,28 +65,19 @@ cake ${SILENT} \
  proc_reg.o \
  rtif.o &
 
-cake ${SILENT} \
+cake \
  scroll.o \
  tedit.o \
  titles.o \
  track.o &
 
-cake ${SILENT} \
+cake \
  typein.o \
  usepen.o \
  concat.o \
  utility1.o \
  utility2.o &
 
-cake ${SILENT} \
- dm-plot.o dm-ps.o \
- vparse.o \
- doevent.o muves.o \
- bodyio.o &
-
 wait
-if test "${SILENT}" = ""
-then
-	echo --- Collecting any stragglers.
-fi
-cake ${SILENT}
+echo --- Collecting any stragglers.
+cake

@@ -38,11 +38,10 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 
 #include "machine.h"

@@ -27,7 +27,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char RCSmalloc[] = "@(#)$Header$ (ARL)";
+static char RCSmalloc[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -45,11 +45,6 @@ static const char RCSmalloc[] = "@(#)$Header$ (ARL)";
 
 int	bu_debug = 0;
 
-/* These counters are not semaphore-protected, and thus are only estimates */
-long	bu_n_malloc = 0;
-long	bu_n_free = 0;
-long	bu_n_realloc = 0;
-
 #define MDB_MAGIC	0x12348969
 struct memdebug {
 	long		magic;		/* corruption can be everywhere */
@@ -61,9 +56,6 @@ static struct memdebug	*bu_memdebug = (struct memdebug *)NULL;
 static struct memdebug	*bu_memdebug_lowat = (struct memdebug *)NULL;
 static size_t		bu_memdebug_len = 0;
 #define MEMDEBUG_NULL	((struct memdebug *)0)
-
-const char bu_strdup_message[] = "bu_strdup string";
-extern const char bu_vls_message[];	/* from vls.c */
 
 /*
  *			B U _ M E M D E B U G _ A D D
@@ -171,7 +163,6 @@ CONST char	*str;
  *			B U _ M A L L O C
  *
  *  This routine only returns on successful allocation.
- *  We promise never to return a NULL pointer; caller doesn't have to check.
  *  Failure results in bu_bomb() being called.
  */
 genptr_t
@@ -213,7 +204,6 @@ CONST char	*str;
 
 		*((long *)(((char *)ptr)+cnt-sizeof(long))) = MDB_MAGIC;
 	}
-	bu_n_malloc++;
 	return(ptr);
 }
 
@@ -253,7 +243,6 @@ CONST char	*str;
 #if defined(MALLOC_NOT_MP_SAFE)
 	bu_semaphore_release(BU_SEM_SYSCALL);
 #endif
-	bu_n_free++;
 }
 
 /*
@@ -271,7 +260,7 @@ register genptr_t	ptr;
 unsigned int		cnt;
 CONST char		*str;
 {
-	struct memdebug		*mp=NULL;
+	struct memdebug		*mp;
 	char	*original_ptr = ptr;
 
 	if( bu_debug&BU_DEBUG_MEM_CHECK )  {
@@ -312,7 +301,6 @@ CONST char		*str;
 		*((long *)(((char *)ptr)+cnt-sizeof(long))) = MDB_MAGIC;
 		bu_semaphore_release(BU_SEM_SYSCALL);
 	}
-	bu_n_realloc++;
 	return(ptr);
 }
 
@@ -359,19 +347,8 @@ CONST char *str;
 		if( mp->magic != MDB_MAGIC )  bu_bomb("bu_memdebug_check() malloc tracing table corrupted!\n");
 		if( mp->mdb_len <= 0 )  continue;
 		ip = (long *)(((char *)mp->mdb_addr)+mp->mdb_len-sizeof(long));
-		if( mp->mdb_str == bu_strdup_message )  {
-			fprintf(stderr,"%8lx %6d bu_strdup: \"%s\"\n",
-				(long)(mp->mdb_addr), mp->mdb_len,
-				((char *)mp->mdb_addr) );
-		} else if( mp->mdb_str == bu_vls_message )  {
-			fprintf(stderr,"%8lx %6d bu_vls: \"%s\"\n",
-				(long)(mp->mdb_addr), mp->mdb_len,
-				((char *)mp->mdb_addr) );
-		} else {
-			fprintf(stderr,"%8lx %6d %s\n",
-				(long)(mp->mdb_addr), mp->mdb_len,
-				mp->mdb_str);
-		}
+		fprintf(stderr,"%8lx %6d %s\n",
+			(long)(mp->mdb_addr), mp->mdb_len, mp->mdb_str);
 		if( *ip != MDB_MAGIC )  {
 			fprintf(stderr,"\tCorrupted end marker was=x%lx\ts/b=x%x\n",
 				*ip, MDB_MAGIC);
@@ -392,14 +369,15 @@ register CONST char *cp;
 	register char	*base;
 	register int	len;
 
-	len = strlen( cp )+2;
-	base = bu_malloc( len, bu_strdup_message );
-
 	if(bu_debug&BU_DEBUG_MEM_LOG) {
 		bu_semaphore_acquire(BU_SEM_SYSCALL);
-		fprintf(stderr, "%8lx strdup%7d \"%s\"\n", (long)base, len, cp );
+		fprintf(stderr,"bu_strdup(%s) x%lx\n", cp, (long)cp);
 		bu_semaphore_release(BU_SEM_SYSCALL);
 	}
+
+	len = strlen( cp )+2;
+	if( (base = bu_malloc( len, "bu_strdup duplicate string" )) == (char *)0 )
+		bu_bomb("bu_strdup:  unable to allocate memory");
 
 	memcpy( base, cp, len );
 	return(base);

@@ -16,7 +16,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "./iges_struct.h"
@@ -30,8 +30,7 @@ int do_projection=1;
 char eor,eof,card[256];
 fastf_t scale,inv_scale,conv_factor;
 int units,counter,pstart,dstart,totentities,dirarraylen;
-FILE *fd;
-struct rt_wdb *fdout;
+FILE *fd,*fdout;
 char brlcad_file[256];
 int reclen,currec,ntypes;
 int brlcad_att_de=0;
@@ -58,7 +57,7 @@ extern char	version[];
 static int do_splines=0;
 static int do_drawings=0;
 static int trimmed_surf=0;
-int do_bots=1;
+int do_polysolids=1;
 
 static char *iges_file;
 
@@ -98,19 +97,19 @@ Suggestions()
 	 */
 	for( i=0 ; i<NTYPES ; i++ )
 	{
-		if( (typecount[i].type >= 150 && typecount[i].type <= 184) ||
+		if( typecount[i].type >= 150 && typecount[i].type <= 184 ||
 		    typecount[i].type == 430 )
 			csg += typecount[i].count;
 		else if( typecount[i].type == 186 ||
-			 (typecount[i].type >= 502 && typecount[i].type <=514) )
+			 typecount[i].type >= 502 && typecount[i].type <=514 )
 			brep += typecount[i].count;
 		else if( typecount[i].type == 128 )
 			splines += typecount[i].count;
 		else if( typecount[i].type == 144 )
 			tsurfs += typecount[i].count;
-		else if( (typecount[i].type >= 100 && typecount[i].type <= 112) ||
+		else if( typecount[i].type >= 100 && typecount[i].type <= 112 ||
 			 typecount[i].type == 126 ||
-			 (typecount[i].type >= 202 && typecount[i].type <= 230) ||
+			 typecount[i].type >= 202 && typecount[i].type <= 230 ||
 			 typecount[i].type == 404 || typecount[i].type == 410 )
 			drawing += typecount[i].count;
 	}
@@ -128,7 +127,6 @@ Suggestions()
 		bu_log( msg4 , iges_file );
 }
 
-int
 main( argc , argv )
 int argc;
 char *argv[];
@@ -137,7 +135,6 @@ char *argv[];
 	int c;
 	int file_count=0;
 	char *output_file=(char *)NULL;
-
 
 	while( (c=getopt( argc , argv , "3dntpo:x:X:N:" )) != EOF )
 	{
@@ -160,7 +157,7 @@ char *argv[];
 				trimmed_surf = 1;
 				break;
 			case 'p':
-				do_bots = 0;
+				do_polysolids = 0;
 				break;
 			case 'N':
 				solid_name = optarg;
@@ -187,11 +184,8 @@ char *argv[];
 		exit(1);
 	}
 
-	if( bu_debug & BU_DEBUG_MEM_CHECK )
-	{
-		bu_log( "Memory checking enabled\n" );
+	if( rt_g.debug & DEBUG_MEM_FULL )
 		bu_mem_barriercheck();
-	}
 
 	bu_log( "%s", version+5);
 	bu_log( "Please direct bug reports to <jra@brl.mil>\n\n" );
@@ -219,7 +213,7 @@ char *argv[];
 			(*identity)[i] = 0.0;
 	}
 
-	if( (fdout = wdb_fopen( output_file )) == NULL )
+	if( (fdout = fopen( output_file , "w" )) == NULL )
 	{
 		bu_log( "Cannot open %s\n" , output_file );
 		perror( "iges-g" );
@@ -331,5 +325,4 @@ char *argv[];
 
 	iges_file = argv[0];
 	Suggestions();
-	return 0;
 }

@@ -23,7 +23,7 @@
  *  With thanks to Russ Moulton Jr, EOSoft Inc. for his "rad.c" module.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include <stdio.h>
@@ -186,7 +186,7 @@ again:
 void
 rt_spect_reflectance_rgb( curve, rgb )
 struct bn_tabdata	*curve;
-CONST float		rgb[3];
+CONST point_t		rgb;
 {
 	register int	i;
 	register CONST struct bn_table	*tabp;

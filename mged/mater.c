@@ -24,7 +24,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -46,7 +46,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
  * increasing).
  */
 extern struct mater *rt_material_head;	/* now defined in librt/mater.c */
-extern void rt_insert_color( struct mater *newp );
 
 void color_soltab();
 void color_putrec(), color_zaprec();
@@ -344,7 +343,7 @@ register struct mater *mp;
  *  mater structure.
  */
 void
-color_soltab(void)
+color_soltab()
 {
 	register struct solid *sp;
 	register struct mater *mp;

@@ -147,15 +147,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSrpc[] = "@(#)$Header$ (BRL)";
+static char RCSrpc[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include <math.h>
 #include "machine.h"
 #include "vmath.h"
@@ -181,8 +178,7 @@ CONST struct bu_structparse rt_rpc_parse[] = {
     { "%f", 3, "H", offsetof(struct rt_rpc_internal, rpc_H[X]), BU_STRUCTPARSE_FUNC_NULL },
     { "%f", 3, "B", offsetof(struct rt_rpc_internal, rpc_B[X]), BU_STRUCTPARSE_FUNC_NULL },
     { "%f", 1, "r", offsetof(struct rt_rpc_internal, rpc_r),    BU_STRUCTPARSE_FUNC_NULL },
-    { {'\0','\0','\0','\0'}, 0, (char *)NULL, 0, BU_STRUCTPARSE_FUNC_NULL }
- };
+    {0} };
 	    
 /*
  *  			R T _ R P C _ P R E P
@@ -1218,7 +1214,7 @@ CONST struct db_i		*dbip;
 		return(-1);
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_RPC;
 	ip->idb_meth = &rt_functab[ID_RPC];
 	ip->idb_ptr = bu_malloc( sizeof(struct rt_rpc_internal), "rt_rpc_internal");
@@ -1262,7 +1258,7 @@ CONST struct db_i		*dbip;
 	xip = (struct rt_rpc_internal *)ip->idb_ptr;
 	RT_RPC_CK_MAGIC(xip);
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 	ep->ext_nbytes = sizeof(union record);
 	ep->ext_buf = (genptr_t)bu_calloc( 1, ep->ext_nbytes, "rpc external");
 	rpc = (union record *)ep->ext_buf;
@@ -1289,104 +1285,6 @@ CONST struct db_i		*dbip;
 	VSCALE( &rpc->s.s_values[1*3], xip->rpc_H, local2mm );
 	VSCALE( &rpc->s.s_values[2*3], xip->rpc_B, local2mm );
 	rpc->s.s_values[3*3] = xip->rpc_r * local2mm;
-
-	return(0);
-}
-
-/*
- *			R T _ R P C _ I M P O R T 5
- *
- *  Import an RPC from the database format to the internal format.
- *  Apply modeling transformations as well.
- */
-int
-rt_rpc_import5( ip, ep, mat, dbip )
-struct rt_db_internal		*ip;
-CONST struct bu_external	*ep;
-register CONST mat_t		mat;
-CONST struct db_i		*dbip;
-{
-	struct rt_rpc_internal	*xip;
-	fastf_t			vec[10];
-
-	BU_CK_EXTERNAL( ep );
-
-	BU_ASSERT_LONG( ep->ext_nbytes, ==, SIZEOF_NETWORK_DOUBLE * 10 );
-
-	RT_CK_DB_INTERNAL( ip );
-	ip->idb_type = ID_RPC;
-	ip->idb_meth = &rt_functab[ID_RPC];
-	ip->idb_ptr = bu_malloc( sizeof(struct rt_rpc_internal), "rt_rpc_internal");
-
-	xip = (struct rt_rpc_internal *)ip->idb_ptr;
-	xip->rpc_magic = RT_RPC_INTERNAL_MAGIC;
-
-	/* Convert from database (network) to internal (host) format */
-	ntohd( (unsigned char *)vec, ep->ext_buf, 10 );
-
-	/* Apply modeling transformations */
-	MAT4X3PNT( xip->rpc_V, mat, &vec[0*3] );
-	MAT4X3VEC( xip->rpc_H, mat, &vec[1*3] );
-	MAT4X3VEC( xip->rpc_B, mat, &vec[2*3] );
-	xip->rpc_r = vec[3*3] / mat[15];
-
-	if( xip->rpc_r < SMALL_FASTF )
-	{
-		bu_log( "rt_rpc_import: r is zero\n" );
-		bu_free( (char *)ip->idb_ptr , "rt_rpc_import: ip->idp_ptr" );
-		return( -1 );
-	}
-
-	return(0);			/* OK */
-}
-
-/*
- *			R T _ R P C _ E X P O R T 5
- *
- *  The name is added by the caller, in the usual place.
- */
-int
-rt_rpc_export5( ep, ip, local2mm, dbip )
-struct bu_external		*ep;
-CONST struct rt_db_internal	*ip;
-double				local2mm;
-CONST struct db_i		*dbip;
-{
-	struct rt_rpc_internal	*xip;
-	fastf_t			vec[10];
-	fastf_t			f,mag_b,mag_h;
-
-	RT_CK_DB_INTERNAL(ip);
-	if( ip->idb_type != ID_RPC )  return(-1);
-	xip = (struct rt_rpc_internal *)ip->idb_ptr;
-	RT_RPC_CK_MAGIC(xip);
-
-	BU_CK_EXTERNAL(ep);
-	ep->ext_nbytes = SIZEOF_NETWORK_DOUBLE * 10;
-	ep->ext_buf = (genptr_t)bu_malloc( ep->ext_nbytes, "rpc external");
-
-	mag_b = MAGNITUDE( xip->rpc_B );
-	mag_h = MAGNITUDE( xip->rpc_H );
-	
-	if( mag_b < RT_LEN_TOL || mag_h < RT_LEN_TOL || xip->rpc_r < RT_LEN_TOL) {
-		bu_log("rt_rpc_export: not all dimensions positive!\n");
-		return(-1);
-	}
-
-	f = VDOT(xip->rpc_B, xip->rpc_H) / (mag_b * mag_h );
-	if ( !NEAR_ZERO( f , RT_DOT_TOL) ) {
-		bu_log("rt_rpc_export: B and H are not perpendicular! (dot = %g)\n",f );
-		return(-1);
-	}
-
-	/* scale 'em into local buffer */
-	VSCALE( &vec[0*3], xip->rpc_V, local2mm );
-	VSCALE( &vec[1*3], xip->rpc_H, local2mm );
-	VSCALE( &vec[2*3], xip->rpc_B, local2mm );
-	vec[3*3] = xip->rpc_r * local2mm;
-
-	/* Convert from internal (host) to database (network) format */
-	htond( ep->ext_buf, (unsigned char *)vec, 10 );
 
 	return(0);
 }

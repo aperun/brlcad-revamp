@@ -18,7 +18,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -45,7 +45,6 @@ static double	scalefactor;
 static unsigned char	line[512*3];
 static FILE	*fp;
 
-int
 main( argc, argv )
 int argc;
 char **argv;

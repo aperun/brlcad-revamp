@@ -79,7 +79,7 @@ void usage() {
     exit(-1);
 }
 
-int
+void
 main(argc,argv) 
 int argc;
 char *argv[];

@@ -32,7 +32,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -60,7 +60,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "./mged_solid.h"
 #include "./mged_dm.h"
 #include "./sedit.h"
-#include "./cmd.h"
 
 extern struct bn_tol mged_tol;
 
@@ -84,7 +83,7 @@ int	argc;
 char	**argv;
 {
 	register struct directory *dp;
-	int			ident, air, GIFTmater=0, los=0;
+	int			ident, air, GIFTmater, los;
 	int			GIFTmater_set, los_set;
 	struct rt_db_internal	intern;
 	struct rt_comb_internal	*comb;
@@ -134,7 +133,7 @@ char	**argv;
 		los_set = 1;
 	}
 
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR_return;
 	}
 	comb = (struct rt_comb_internal *)intern.idb_ptr;
@@ -147,7 +146,7 @@ char	**argv;
 	if ( los_set )  {
 		comb->los = los;
 	}
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 	return TCL_OK;
@@ -189,7 +188,7 @@ char	**argv;
 	  return TCL_ERROR;
 	}
 
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR_return;
 	}
 	comb = (struct rt_comb_internal *)intern.idb_ptr;
@@ -321,13 +320,13 @@ color_prompt:
 	  Tcl_AppendResult(interp, "Unknown response ignored\n", (char *)NULL);
 	  break;
 	}		
-
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+out:
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 	return TCL_OK;
 fail:
-	rt_db_free_internal( &intern, &rt_uniresource );
+	rt_db_free_internal( &intern );
 	return TCL_ERROR;
 }
 
@@ -346,7 +345,7 @@ char    *argv[];
   CHECK_DBI_NULL;
   CHECK_READ_ONLY;
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -394,11 +393,11 @@ char    *argv[];
 
 
 int
-f_wmater(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int     argc,
-	char    *argv[])
+f_wmater(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int     argc;
+char    *argv[];
 {
   int i;
   int status = TCL_OK;
@@ -409,7 +408,7 @@ f_wmater(
 
   CHECK_DBI_NULL;
 
-  if(argc < 3){
+  if(argc < 3 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -435,7 +434,7 @@ f_wmater(
       status = TCL_ERROR;
       continue;
     }
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR;
 		status = TCL_ERROR;
 		continue;
@@ -448,7 +447,7 @@ f_wmater(
 			bu_vls_addr(&comb->shader) : "-",
 	  	comb->rgb[0], comb->rgb[1], comb->rgb[2],
 	  	comb->rgb_valid, comb->inherit);
-	rt_db_free_internal( &intern, &rt_uniresource );
+	rt_db_free_internal( &intern );
   }
 
   (void)fclose(fp);
@@ -457,11 +456,11 @@ f_wmater(
 
 
 int
-f_rmater(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int     argc,
-	char    *argv[])
+f_rmater(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int     argc;
+char    *argv[];
 {
 #ifndef LINELEN
 #define LINELEN 256
@@ -507,7 +506,7 @@ f_rmater(
 		continue;
 	}
 
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR;
 		status = TCL_ERROR;
 	}
@@ -527,7 +526,7 @@ f_rmater(
   	comb->inherit = inherit;
 
 	/* Write new values to database */
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 		TCL_WRITE_ERR;
 		status = TCL_ERROR;
 	}
@@ -538,13 +537,14 @@ f_rmater(
 }
 
 int
-extract_mater_from_line(
-	char *line,
-	char *name,
-	char *shader,
-	int *r, int *g, int *b,
-	int *override,
-	int *inherit)
+extract_mater_from_line(line, name, shader, r, g, b, override, inherit)
+char *line;
+char *name;
+char *shader;
+int *r, *g, *b;
+int *override;
+
+int *inherit;
 {
   int i,j,k;
   char *str[3];
@@ -624,7 +624,7 @@ char	**argv;
       return TCL_ERROR;
     }
 
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR_return;
 	}
 	comb = (struct rt_comb_internal *)intern.idb_ptr;
@@ -635,7 +635,7 @@ char	**argv;
 	{
 	  Tcl_AppendResult(interp, "RGB value out of range: ", argv[i + 2],
 			   "\n", (char *)NULL);
-	  rt_db_free_internal( &intern, &rt_uniresource );
+	  rt_db_free_internal( &intern );
 	  return TCL_ERROR;
 	}
 	else
@@ -643,7 +643,7 @@ char	**argv;
     }
 
 	comb->rgb_valid = 1;
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 	return TCL_OK;
@@ -668,7 +668,7 @@ char	**argv;
 
 	CHECK_DBI_NULL;
 
-	if(argc < 2){
+	if(argc < 2 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -685,7 +685,7 @@ char	**argv;
 	  return TCL_ERROR;
 	}
 
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR_return;
 	}
 	comb = (struct rt_comb_internal *)intern.idb_ptr;
@@ -694,7 +694,7 @@ char	**argv;
 	if(argc == 2)  {
 		/* Return the current shader string */
 		Tcl_AppendResult( interp, bu_vls_addr(&comb->shader), (char *)NULL);
-		rt_db_free_internal( &intern, &rt_uniresource );
+		rt_db_free_internal( &intern );
 	} else {
 		CHECK_READ_ONLY;
 
@@ -704,7 +704,7 @@ char	**argv;
 		/* Bunch up the rest of the args, space separated */
 		bu_vls_from_argv( &comb->shader, argc-2, argv+2 );
 
-		if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+		if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 			TCL_WRITE_ERR_return;
 		}
 		/* Internal representation has been freed by rt_db_put_internal */
@@ -763,7 +763,7 @@ char	**argv;
 	  return TCL_ERROR;
 	}
 
-	id = rt_db_get_internal( &internal, proto, dbip, NULL, &rt_uniresource );
+	id = rt_db_get_internal( &internal, proto, dbip, NULL );
 	if( id < 0 )  {
 	  Tcl_AppendResult(interp, "f_mirror(", argv[1], argv[2],
 		   "):  solid import failure\n", (char *)NULL);
@@ -1087,7 +1087,7 @@ char	**argv;
 				{
 					Tcl_AppendResult(interp, "Sorry, Can only mirror NMG solids with planar faces", (char *)0 );
 					bu_ptbl_free( &table );
-					rt_db_free_internal( &internal, &rt_uniresource );
+					rt_functab[internal.idb_type].ft_ifree( &internal );   /* free internal rep */
 					return TCL_ERROR;
 				}
 
@@ -1114,7 +1114,7 @@ char	**argv;
 				{
 					Tcl_AppendResult(interp, "nmg_calc_face_g() failed", (char *)0 );
 					bu_ptbl_free( &table );
-					rt_db_free_internal( &internal, &rt_uniresource );
+					rt_functab[internal.idb_type].ft_ifree( &internal );   /* free internal rep */
 					return TCL_ERROR;
 				}
 
@@ -1122,7 +1122,7 @@ char	**argv;
 				{
 					Tcl_AppendResult(interp, "nmg_calc_face_g() failed", (char *)0 );
 					bu_ptbl_free( &table );
-					rt_db_free_internal( &internal, &rt_uniresource );
+					rt_functab[internal.idb_type].ft_ifree( &internal );   /* free internal rep */
 					return TCL_ERROR;
 				}
 			}
@@ -1212,7 +1212,7 @@ char	**argv;
 		}
 		default:
 		{
-			rt_db_free_internal( &internal, &rt_uniresource );
+			rt_functab[internal.idb_type].ft_ifree( &internal );   /* free internal rep */
 			Tcl_AppendResult(interp, "Cannot mirror this solid type\n", (char *)NULL);
 			return TCL_ERROR;
 		}
@@ -1224,7 +1224,7 @@ char	**argv;
 	if( (dp = db_diradd( dbip, argv[2], -1L, 0, proto->d_flags, NULL)) == DIR_NULL )  {
 	    	TCL_ALLOC_ERR_return;
 	}
-	if( rt_db_put_internal( dp, dbip, &internal, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &internal ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 
@@ -1278,7 +1278,7 @@ char	**argv;
 	los = atoi( argv[5] );
 	mat = atoi( argv[6] );
 
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR_return;
 	}
 	comb = (struct rt_comb_internal *)intern.idb_ptr;
@@ -1292,7 +1292,7 @@ char	**argv;
 	comb->aircode = air;
 	comb->los = los;
 	comb->GIFTmater = mat;
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 	return TCL_OK;
@@ -1313,6 +1313,7 @@ int	argc;
 char	**argv;
 {
 	double	loc2mm;
+	int	new_unit = 0;
 	struct bu_vls vls;
 	CONST char	*str;
 	fastf_t sf;
@@ -1359,12 +1360,24 @@ char	**argv;
 		return TCL_ERROR;
 	}
 
-	if( db_update_ident( dbip, dbip->dbi_title, loc2mm ) < 0 )  {
+	/* See if this is a known v4 database unit */
+	if( (new_unit = db_v4_get_units_code(bu_units_string(loc2mm))) >= 0 ) {
+		/* One of the recognized db.h units */
+		/* change database to remember the new local unit */
+		if( dbip->dbi_read_only ||
+		 db_ident( dbip, dbip->dbi_title, new_unit ) < 0 )
 		  Tcl_AppendResult(interp,
 			   "Warning: unable to stash working units into database\n",
 			   (char *)NULL);
+	} else {
+		/*
+		 *  Can't stash requested units into the database for next session,
+		 *  but there is no problem with the user editing in these units.
+		 */
+		Tcl_AppendResult(interp, "\
+Due to a database restriction in the current format of .g files,\n\
+this choice of units will not be remembered on your next editing session.\n", (char *)NULL);
 	}
-
 	dbip->dbi_local2base = loc2mm;
 	dbip->dbi_base2local = 1.0 / loc2mm;
 
@@ -1395,10 +1408,11 @@ char	**argv;
 {
 	struct bu_vls	title;
 	int bad = 0;
+	int code;
 
 	CHECK_DBI_NULL;
 
-	if(argc < 1){
+	if(argc < 1 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -1418,7 +1432,8 @@ char	**argv;
 	bu_vls_init( &title );
 	bu_vls_from_argv( &title, argc-1, argv+1 );
 
-	if( db_update_ident( dbip, bu_vls_addr(&title), dbip->dbi_base2local ) < 0 )  {
+	code = db_v4_get_units_code(bu_units_string(dbip->dbi_base2local));
+	if( db_ident( dbip, bu_vls_addr(&title), code ) < 0 ) {
 	  Tcl_AppendResult(interp, "Error: unable to change database title\n");
 	  bad = 1;
 	}
@@ -1909,7 +1924,7 @@ char	**argv;
 		av[1] = "skt_";
 		Tcl_ResetResult( interp );
 		f_make_name( (ClientData)NULL, interp, 2, av );
-		extrude_ip->sketch_name = bu_strdup( interp->result );
+		strcpy( extrude_ip->sketch_name, interp->result );
 		Tcl_ResetResult( interp );
 		extrude_ip->skt = (struct rt_sketch_internal *)NULL;
 		av[0] = "make";
@@ -1918,6 +1933,7 @@ char	**argv;
 		f_make( clientData, interp, 3, av );
 	} else if( strcmp( argv[2], "sketch" ) == 0 ) {
 		struct carc_seg *csg;
+		struct nurb_seg *nsg;
 		struct line_seg *lsg;
 
 		internal.idb_type = ID_SKETCH;
@@ -2013,7 +2029,7 @@ char	**argv;
 	if( (dp = db_diradd( dbip, argv[1], -1L, 0, DIR_SOLID, NULL)) == DIR_NULL )  {
 	    	TCL_ALLOC_ERR_return;
 	}
-	if( rt_db_put_internal( dp, dbip, &internal, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &internal ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 
@@ -2232,13 +2248,7 @@ char	**argv;
 	return TCL_OK;
 }
 
-/*
- *			F _ T R _ O B J
- *
- *  Bound to command "translate"
- *
- *  Allow precise changes to object translation
- */
+/* allow precise changes to object translation */
 int
 f_tr_obj(clientData, interp, argc, argv)
 ClientData clientData;
@@ -2263,19 +2273,8 @@ char	**argv;
 	  return TCL_ERROR;
 	}
 
-	if( state == ST_S_EDIT )  {
-		/* In solid edit mode,
-		 * perform the equivalent of "press sxy" and "p xyz"
-		 */
-		if( be_s_trans(clientData, interp, argc, argv) == TCL_ERROR )
-			return TCL_ERROR;
-		return f_param(clientData, interp, argc, argv);
-	}
-
 	if( not_state( ST_O_EDIT, "Object Translation") )
 	  return TCL_ERROR;
-
-	/* Remainder of code concerns object edit case */
 
 	update_views = 1;
 
@@ -2401,7 +2400,7 @@ struct model *m;
 	new_intern.idb_meth = &rt_functab[ID_NMG];
 	new_intern.idb_ptr = (genptr_t)m;
 
-	if( rt_db_put_internal( new_dp, dbip, &new_intern, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( new_dp, dbip, &new_intern ) < 0 )  {
 		/* Free memory */
 		nmg_km(m);
 		Tcl_AppendResult(interp, "rt_db_put_internal() failure\n", (char *)NULL);
@@ -2461,7 +2460,7 @@ char	**argv;
 	if( (old_dp = db_lookup( dbip,  argv[1], LOOKUP_NOISY )) == DIR_NULL )
 		return TCL_ERROR;
 
-	if( rt_db_get_internal( &old_intern, old_dp, dbip, bn_mat_identity, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &old_intern, old_dp, dbip, bn_mat_identity ) < 0 )  {
 	  Tcl_AppendResult(interp, "rt_db_get_internal() error\n", (char *)NULL);
 	  return TCL_ERROR;
 	}
@@ -2469,7 +2468,7 @@ char	**argv;
 	if( old_intern.idb_type != ID_NMG )
 	{
 		Tcl_AppendResult(interp, argv[1], " is not an NMG solid!!\n", (char *)NULL );
-		rt_db_free_internal( &old_intern, &rt_uniresource );
+		rt_db_free_internal( &old_intern );
 		return TCL_ERROR;
 	}
 

@@ -530,8 +530,7 @@ int ac;
 char *av[];
 {
 	struct bn_tol tol;
-	FILE *fdplot;
-	struct rt_wdb *fdmodel;
+	FILE *fdplot, *fdmodel;
 
 	if (parse_args(ac, av) < ac) usage((char *)NULL);
 	if (!manifold[0] && !manifold[1] && !manifold[2] && !manifold[3])
@@ -557,7 +556,7 @@ char *av[];
 
 	
 	/* write the database */
-	if ((fdmodel = wdb_fopen(mfilename)) == NULL)
+	if ((fdmodel = fopen(mfilename, "w")) == (FILE *)NULL)
 		perror(mfilename);
 	else {
 		mk_id(fdmodel, "hairy NMG");
@@ -566,7 +565,7 @@ char *av[];
 		/* build a database region mentioning the solid */
 		mk_comb1( fdmodel, "r.NMG", "s.NMG", 1 );
 
-		wdb_close(fdmodel);
+		fclose(fdmodel);
 	}
 
 

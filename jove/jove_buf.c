@@ -4,9 +4,6 @@
  * $Revision$
  *
  * $Log$
- * Revision 11.3  1997/01/03  13:32:22  jra
- * Mods for Irix 6.2.
- *
  * Revision 11.2  1995/06/21  03:38:49  gwyn
  * Eliminated trailing blanks.
  * Changed memcpy calls back to bcopy.
@@ -41,7 +38,7 @@
  *
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$";
+static char RCSid[] = "@(#)$Header$";
 #endif
 
 /* Jonathan Payne at Lincoln-Sudbury Regional High School 5-25-83
@@ -81,7 +78,6 @@ itoa(num)
 	return line;
 }
 
-int
 AllInts(str)
 register char	*str;
 {
@@ -150,7 +146,6 @@ char	*fname;
 	return 0;
 }
 
-int
 max(a, b)
 int a, b;
 {

@@ -24,7 +24,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -810,7 +810,7 @@ CONST struct bn_tol *ttol;
 			{
 				vect_t test_norm;
 				struct face *test_f;
-				int test_dir = 0;
+				int test_dir;
 
 				/* don't check against the outer shell or the candidate void shell */
 				if( test_s == void_s || test_s == outer_shell )
@@ -1192,12 +1192,8 @@ CONST int wires;
 		rt_bomb( "nmg_find_radial_eu: wire edges not specified, but eu is a wire!!\n" );
 
 	ret_eu = eu->eumate_p->radial_p;
-	while(
-	      (!wires & (nmg_find_fu_of_eu(ret_eu) == (struct faceuse *)NULL))
-	      ||
-	      ( (s != (struct shell *)NULL) &&
-		nmg_find_s_of_eu(ret_eu) != s  )
-	      )
+	while( ( !wires & (nmg_find_fu_of_eu( ret_eu ) == (struct faceuse *)NULL)) ||
+		( (s != (struct shell *)NULL) & nmg_find_s_of_eu( ret_eu ) != s  ) )
 			ret_eu = ret_eu->eumate_p->radial_p;
 
 	return( ret_eu );
@@ -2534,7 +2530,7 @@ CONST struct bn_tol *tol;
 	int loop_size;			/* number of edgeueses in loop */
 	struct faceuse *fu;
 	struct loopuse *lu;
-	struct edgeuse *eu;
+	struct edgeuse *eu,*eu1,*eu2,*eu3,*eu_new;
 	int start_loop;
 	int i;
 	int found;
@@ -2605,9 +2601,8 @@ CONST struct bn_tol *tol;
 		/* Create new faces to close the shell */
 		while( loop_size > 3 )
 		{
-			struct edgeuse *eu1, *eu2=NULL, *eu_new = NULL;
 			struct edgeuse **eu_used;	/* array of edgueses used, for deletion */
-			int edges_used=0;			/* number of edges used in making a face */
+			int edges_used;			/* number of edges used in making a face */
 			int found_face=0;		/* flag - indicates that a face with the correct normal will be created */
 			int start_index,end_index;	/* start and stop index for loop */
 			int coplanar;			/* flag - indicates entire loop is coplanar */
@@ -2973,16 +2968,12 @@ CONST struct bn_tol *tol;
 			bu_log( "Not makeing face, edges are collinear!\n" );
 
 		/* remove the last three edges from the table */
-		{
-			struct edgeuse *eu1,*eu2,*eu3;
-
-			eu1 = (struct edgeuse *)BU_PTBL_GET( &eu_tbl , index[0] );
-			eu2 = (struct edgeuse *)BU_PTBL_GET( &eu_tbl , index[1] );
-			eu3 = (struct edgeuse *)BU_PTBL_GET( &eu_tbl , index[2] );
-			bu_ptbl_rm( &eu_tbl , (long *)eu1 );
-			bu_ptbl_rm( &eu_tbl , (long *)eu2 );
-			bu_ptbl_rm( &eu_tbl , (long *)eu3 );
-		}
+		eu1 = (struct edgeuse *)BU_PTBL_GET( &eu_tbl , index[0] );
+		eu2 = (struct edgeuse *)BU_PTBL_GET( &eu_tbl , index[1] );
+		eu3 = (struct edgeuse *)BU_PTBL_GET( &eu_tbl , index[2] );
+		bu_ptbl_rm( &eu_tbl , (long *)eu1 );
+		bu_ptbl_rm( &eu_tbl , (long *)eu2 );
+		bu_ptbl_rm( &eu_tbl , (long *)eu3 );
 	}
 
 	/* Free up all the memory */
@@ -4586,7 +4577,7 @@ CONST struct bn_tol *tol;
 	struct loopuse *lu;
 	struct edgeuse *eu;
 	struct edgeuse *eu1;
-	struct faceuse *missed_fu = NULL;
+	struct faceuse *missed_fu;
 	struct bu_ptbl stack;
 	struct bu_ptbl shared_edges;
 	long *flags;
@@ -4713,7 +4704,7 @@ CONST struct bn_tol *tol;
 
 	while( missed_faces )
 	{
-		struct edgeuse *unassigned_eu = NULL;
+		struct edgeuse *unassigned_eu;
 		int *shells_at_edge;
 		int new_shell_no=0;
 
@@ -5031,8 +5022,6 @@ CONST struct bn_tol *tol;
  *
  *  Store an NMG model as a separate .g file, for later examination.
  *  Don't free the model, as the caller may still have uses for it.
- *
- *  NON-PARALLEL because of rt_uniresource.
  */
 void
 nmg_stash_model_to_file( filename, m, title )
@@ -5040,15 +5029,17 @@ CONST char		*filename;
 CONST struct model	*m;
 CONST char		*title;
 {
-	struct rt_wdb		*fp;
+	FILE	*fp;
+	struct bu_external	ext;
 	struct rt_db_internal	intern;
+	union record		rec;
 
 	bu_log("nmg_stash_model_to_file('%s', x%x, %s)\n", filename, m, title);
 
 	NMG_CK_MODEL(m);
 	nmg_vmodel(m);
 
-	if( (fp = wdb_fopen(filename)) == NULL )  {
+	if( (fp = fopen(filename, "w")) == NULL )  {
 		perror(filename);
 		return;
 	}
@@ -5057,15 +5048,25 @@ CONST char		*title;
 	intern.idb_type = ID_NMG;
 	intern.idb_meth = &rt_functab[ID_NMG];
 	intern.idb_ptr = (genptr_t)m;
+	BU_INIT_EXTERNAL( &ext );
 
 	/* Scale change on export is 1.0 -- no change */
-	if( wdb_put_internal( fp, "error.s", &intern, 1.0 ) < 0 )  {
-		bu_bomb("nmg_stash_model_to_file() wdb_put_internal failure\n");
+	if( rt_functab[ID_NMG].ft_export( &ext, &intern, 1.0, DBI_NULL ) < 0 )  {
+		bu_log("nmg_stash_model_to_file: solid export failure\n");
+		db_free_external( &ext );
+		rt_bomb("nmg_stash_model_to_file() ft_export() error\n");
 	}
-	/* intern has been freed */
+	NAMEMOVE( "error", ((union record *)ext.ext_buf)->s.s_name );
 
-	bu_log("nmg_stash_model_to_file(): wrote error.s to '%s'\n",
-		filename);
+	bzero( (char *)&rec, sizeof(rec) );
+	rec.u_id = ID_IDENT;
+	strcpy( rec.i.i_version, ID_VERSION );
+	strncpy( rec.i.i_title, title, sizeof(rec.i.i_title)-1 );
+	fwrite( (char *)&rec, sizeof(rec), 1, fp );
+	fwrite( ext.ext_buf, ext.ext_nbytes, 1, fp );
+	fclose(fp);
+	db_free_external( &ext );
+	bu_log("nmg_stash_model_to_file(): wrote '%s' in %d bytes\n", filename, ext.ext_nbytes);
 }
 
 /* state for nmg_unbreak_edge */
@@ -5897,12 +5898,7 @@ CONST struct bn_tol *tol;
 			/* find the new edge line at the intersection of these two faces
 			 * the line is defined by start and dir */
 
-			ret_val = bn_isect_2planes( start, dir, 
-						    fu1->f_p->g.plane_p->N,
-						    fu2->f_p->g.plane_p->N,
-						    new_v->vg_p->coord,
-						    &tol_tmp );
-			if( ret_val )
+			if( ret_val=bn_isect_2planes( start , dir , fu1->f_p->g.plane_p->N , fu2->f_p->g.plane_p->N , new_v->vg_p->coord , &tol_tmp ) )
 			{
 				/* Cannot find line for this edge */
 				bu_log( "nmg_inside_vert: Cannot find new edge between two planes\n" );
@@ -7709,7 +7705,7 @@ CONST struct bn_tol *tol;
 
 	for( BU_LIST_FOR( fu , faceuse , &s->fu_hd ) )
 	{
-		fastf_t area = -1;
+		fastf_t area;
 
 		NMG_CK_FACEUSE( fu );
 
@@ -8481,7 +8477,6 @@ CONST struct bn_tol *tol;
 	}
 }
 
-#if 0
 static int
 nmg_vert_is_normalward( v, vbase, norm )
 struct vertex *v;
@@ -8499,7 +8494,6 @@ vect_t norm;
 	else
 		return( 0 );
 }
-
 
 /* Join EU's running from v1 to v2 and from v2 to v3 */
 static void
@@ -8563,7 +8557,6 @@ CONST struct bn_tol *tol;
 		}
 	}
 }
-#endif
 
 static int
 nmg_make_connect_faces( dst , vpa , vpb , verts , tol )
@@ -9832,7 +9825,7 @@ struct bu_list	*crv_head;
 	struct edge_g_cnurb *crv,*next_crv;
 	struct edge_g_cnurb *new_crv=(struct edge_g_cnurb *)NULL;
 	fastf_t knot_delta=0.0;
-	fastf_t last_knot=0.0;
+	fastf_t last_knot;
 	int ncoords;
 	int knot_index=(-1);
 	int max_order=0;
@@ -10031,7 +10024,7 @@ CONST struct bn_tol *tol;
 	point_t end1;
 	int nsegs;
 	int pt_type;
-	int ncoords = 0;
+	int ncoords;
 	int i;
 
 	BN_CK_TOL( tol );
@@ -10504,7 +10497,9 @@ not_arb:
  *	The newly constructed arb is in "arb_int"
  */
 int
-nmg_to_arb( const struct model *m, struct rt_arb_internal *arb_int )
+nmg_to_arb( m, arb_int )
+CONST struct model *m;
+struct rt_arb_internal *arb_int;
 {
 	struct nmgregion *r;
 	struct shell *s;
@@ -10518,7 +10513,7 @@ nmg_to_arb( const struct model *m, struct rt_arb_internal *arb_int )
 	int face_verts;
 	int i,j;
 	int found;
-	int ret_val = 0;
+	int ret_val;
 
 	NMG_CK_MODEL( m );
 
@@ -10755,10 +10750,10 @@ nmg_to_arb( const struct model *m, struct rt_arb_internal *arb_int )
  *	Currently only supports RCC, and creates circumscribed RCC
  */
 int
-nmg_to_tgc(
-	const struct model *m,
-	struct rt_tgc_internal *tgc_int,
-	const struct bn_tol *tol )
+nmg_to_tgc( m, tgc_int,  tol )
+CONST struct model *m;
+struct rt_tgc_internal *tgc_int;
+CONST struct bn_tol *tol;
 {
 	struct nmgregion *r;
 	struct shell *s;
@@ -11064,11 +11059,6 @@ CONST struct bn_tol *tol;
 	return( 1 );
 }
 
-/*
- *			N M G _ T O _ P O L Y
- *
- * XXX This routine is deprecated in favor of BoTs
- */
 int
 nmg_to_poly( m, poly_int, tol )
 CONST struct model *m;

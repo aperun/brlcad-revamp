@@ -28,24 +28,17 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 
 #include "machine.h"
-#include "externs.h"
-#include "bu.h"
 #include "vmath.h"
-#include "bn.h"
+#include "rtstring.h"
 #include "raytrace.h"
 
 #include "../librt/debug.h"
@@ -104,44 +97,42 @@ void		pr_ichan();
 void		next_interpolate();
 void		step_interpolate();
 void		quat_interpolate();
-int get_args(int argc, char **argv);
-int create_chan( char *num, int len, char *itag );
-int chan_not_loaded_or_specified( int ch );
-int spline( struct chan *chp, fastf_t *times );
-
 
 struct command_tab cmdtab[] = {
-	{"file", "filename chan_num(s)", "load channels from file",
-		cm_file,	3, 999},
-	{"times", "start stop fps", "specify time range and fps rate",
-		cm_times,	4, 4},
-	{"interp", "{step|linear|spline|cspline|quat} chan_num(s)", "set interpolation type",
-		cm_interp,	3, 999},
-	{"next", "dest_chan src_chan [+/- #nsamp]", "lookahead in time",
-		cm_next,	3, 4},
-	{"idump", "[chan_num(s)]", "dump input channel values",
-		cm_idump,	1, 999},
-	{"rate", "chan_num init_value incr_per_sec [comment]", "create rate based channel",
-		cm_rate,	4, 5},
-	{"accel", "chan_num init_value mult_per_sec [comment]", "create acceleration based channel",
-		cm_accel,	4, 5},
-	{"help", "", "print help message",
-		cm_help,	1, 999},
-	{(char *)0, (char *)0, (char *)0,
-		0,		0, 0}	/* END */
+	"file", "filename chan_num(s)", "load channels from file",
+		cm_file,	3, 999,
+	"times", "start stop fps", "specify time range and fps rate",
+		cm_times,	4, 4,
+	"interp", "{step|linear|spline|cspline|quat} chan_num(s)", "set interpolation type",
+		cm_interp,	3, 999,
+	"next", "dest_chan src_chan [+/- #nsamp]", "lookahead in time",
+		cm_next,	3, 4,
+	"idump", "[chan_num(s)]", "dump input channel values",
+		cm_idump,	1, 999,
+	"rate", "chan_num init_value incr_per_sec [comment]", "create rate based channel",
+		cm_rate,	4, 5,
+	"accel", "chan_num init_value mult_per_sec [comment]", "create acceleration based channel",
+		cm_accel,	4, 5,
+	"help", "", "print help message",
+		cm_help,	1, 999,
+	(char *)0, (char *)0, (char *)0,
+		0,		0, 0	/* END */
 };
 
 
 /*
  *			M A I N
  */
-int
 main( argc, argv )
 int	argc;
 char	**argv;
 {
 	register char	*buf;
 	register int	ret;
+
+#if 0
+	rt_g.debug = DEBUG_MEM;
+#endif
 
 	get_args(argc,argv);
 	/*
@@ -328,7 +319,10 @@ out:
  *			C R E A T E _ C H A N
  */
 int
-create_chan( char *num, int len, char *itag )
+create_chan( num, len, itag )
+char	*num;
+int	len;
+char	*itag;
 {
 	int	n;
 
@@ -348,7 +342,7 @@ create_chan( char *num, int len, char *itag )
 				max_chans *= 2;
 			if(verbose) bu_log("reallocating from %d to %d chans\n",
 				prev, max_chans);
-			chan = (struct chan *)bu_realloc( (char *)chan,
+			chan = (struct chan *)rt_realloc( (char *)chan,
 				max_chans * sizeof(struct chan),
 				"chan[]" );
 			bzero( (char *)(&chan[prev]),
@@ -377,7 +371,6 @@ create_chan( char *num, int len, char *itag )
  *
  *  Dump the indicated input channels, or all, if none specified.
  */
-int
 cm_idump( argc, argv )
 int	argc;
 char	**argv;
@@ -455,7 +448,6 @@ output()
 /*
  *			C M _ T I M E S
  */
-int
 cm_times( argc, argv )
 int	argc;
 char	**argv;
@@ -492,7 +484,6 @@ char	**argv;
 /*
  *			C M _ I N T E R P
  */
-int
 cm_interp( argc, argv )
 int	argc;
 char	**argv;
@@ -847,7 +838,9 @@ register fastf_t	*times;
  *	1	OK
  */
 int
-spline( register struct chan *chp, fastf_t *times )
+spline( chp, times )
+register struct chan	*chp;
+fastf_t			*times;
 {
 	double	d,s;
 	double	u = 0;
@@ -1000,7 +993,6 @@ bad:
  *  First is initial value, second is change PER SECOND
  *  Input time values are meaningless.
  */
-int
 cm_rate( argc, argv )
 int	argc;
 char	**argv;
@@ -1027,7 +1019,6 @@ char	**argv;
  *  First is initial value, second is change PER SECOND
  *  Input time values are meaningless.
  */
-int
 cm_accel( argc, argv )
 int	argc;
 char	**argv;
@@ -1229,7 +1220,8 @@ char	*argv[];
  *	 1 if no data, or interpolator already set (message printed)
  */
 int
-chan_not_loaded_or_specified( int ch )
+chan_not_loaded_or_specified( ch )
+int	ch;
 {
 	if( ch < 0 || ch >= nchans )  return -1;
 	if( chan[ch].c_ilen <= 0 )  {
@@ -1244,7 +1236,9 @@ chan_not_loaded_or_specified( int ch )
 }
 
 #define OPT_STR "q"
-int get_args(int argc, char **argv)
+int get_args(argc,argv)
+int argc;
+char **argv;
 {
 	int c;
 	while ( (c=getopt(argc,argv,OPT_STR)) != EOF) {

@@ -25,7 +25,6 @@
 #include "machine.h"
 #include "db.h"
 #include "vmath.h"
-#include "raytrace.h"
 #include "wdb.h"
 
 #define MAXSEG 10		/*  Maximum number of segments.  The  */
@@ -40,7 +39,7 @@ int argc;
 char *argv[];
 
 {							/*  START # 1  */
-   struct rt_wdb *fpw;		/*  File to be created.  */
+   FILE *fpw;			/*  File to be created.  */
    char filemged[26];		/*  Mged file name.  */
    double numseg;		/*  Number of segments.  */
    double strtpt[MAXSEG][3];	/*  Start point of segment.  */
@@ -207,7 +206,7 @@ char *argv[];
    }							/*  END # 5  */
 
    /*  Open mged file.  */
-   fpw = wdb_fopen(filemged);
+   fpw = fopen(filemged,"w");
 
    /*  Write ident record.  */
    mk_id(fpw,"Wiring");
@@ -355,11 +354,11 @@ char *argv[];
 	   (void)fflush(stdout);
 	}						/*  END # 37  */
 
-	(void)mk_addmember(solcyl,&comb.l,WMOP_INTERSECT);
+	(void)mk_addmember(solcyl,&comb,WMOP_INTERSECT);
 
 	if(i < (numseg - 1) )
 	{						/*  START # 38  */
-	   (void)mk_addmember(solsub1,&comb.l,WMOP_SUBTRACT);
+	   (void)mk_addmember(solsub1,&comb,WMOP_SUBTRACT);
 	}						/*  END # 38  */
 
 	mk_lfcomb(fpw,regcyl,&comb,1);
@@ -402,9 +401,9 @@ char *argv[];
 	   (void)fflush(stdout);
 	}						/*  END # 43  */
 
-	(void)mk_addmember(solsph,&comb.l,WMOP_INTERSECT);
-	(void)mk_addmember(solsub1,&comb.l,WMOP_SUBTRACT);
-	(void)mk_addmember(solsub2,&comb.l,WMOP_SUBTRACT);
+	(void)mk_addmember(solsph,&comb,WMOP_INTERSECT);
+	(void)mk_addmember(solsub1,&comb,WMOP_SUBTRACT);
+	(void)mk_addmember(solsub2,&comb,WMOP_SUBTRACT);
 
 	mk_lfcomb(fpw,regsph,&comb,1);
    }							/*  END # 40  */
@@ -443,11 +442,10 @@ char *argv[];
 	   (void)fflush(stdout);
 	}						/*  END # 54  */
 
-	(void)mk_addmember(regcyl,&comb1.l,WMOP_UNION);
-	if(i != 0)(void)mk_addmember(regsph,&comb1.l,WMOP_UNION);
+	(void)mk_addmember(regcyl,&comb1,WMOP_UNION);
+	if(i != 0)(void)mk_addmember(regsph,&comb1,WMOP_UNION);
    }							/*  END # 50  */
 
    mk_lfcomb(fpw,group,&comb1,0);
-   wdb_close(fpw);
    return 0;
 }							/*  END # 1  */

@@ -30,19 +30,15 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCScheckview[] = "@(#)$Header$ (BRL)";
+static char RCScheckview[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include "machine.h"
 #include "vmath.h"
 #include "raytrace.h"
-#include "plot3.h"
 
 #define OVLP_TOL	0.1
 

@@ -20,7 +20,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include <stdio.h>
@@ -30,10 +30,8 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include <fcntl.h>
 #include <math.h>
 #include "machine.h"
-#include "externs.h"
-#include "bu.h"
 #include "vmath.h"
-#include "bn.h"
+#include "raytrace.h"
 
 extern int errno;
 

@@ -21,7 +21,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -37,18 +37,14 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <sys/time.h>
 #include <time.h>
 
-#include "tcl.h"
 #include "tk.h"
-#include "itcl.h"
-/* #include "tclIntDecls.h" */
 
 #include "machine.h"
-#include "externs.h"
 #include "bu.h"
 #include "vmath.h"
-#include "bn.h"
-#include "rtgeom.h"
 #include "raytrace.h"
+#include "rtgeom.h"
+#include "externs.h"
 #include "./ged.h"
 #include "./cmd.h"
 #include "./mged_solid.h"
@@ -57,44 +53,12 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "./mgedtcl.h"
 
-int bv_zoomin(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_zoomout(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_rate_toggle(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_top(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_bottom(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_right(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_left(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_front(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_rear(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_vrestore(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_vsave(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_adcursor(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_reset(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_45_45(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_35_25(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_illuminate(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_s_illuminate(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_scale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_x(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_y(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_xy(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_rotate(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_accept(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_reject(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_s_edit(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_s_rotate(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_s_trans(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_s_scale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_xscale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_yscale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_zscale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-
 void mged_setup(), cmd_setup(), mged_compat();
 void mged_print_result();
 void mged_global_variable_setup();
 int f_bot_fuse(), f_bot_condense(), f_bot_face_fuse();
 
-#ifndef HAVE_UNISTD_H
+#if !defined( HAVE_UNISTD_H )
 extern void sync();
 #endif
 extern void init_qray();			/* in qray.c */
@@ -102,6 +66,7 @@ extern int gui_setup();				/* in attach.c */
 extern int mged_default_dlist;			/* in attach.c */
 extern int classic_mged;			/* in ged.c */
 extern int bot_vertex_fuse(), bot_condense();
+
 struct cmd_list head_cmd_list;
 struct cmd_list *curr_cmd_list;
 
@@ -119,288 +84,248 @@ struct cmdtab {
 	int (*ct_func)();
 };
 
-#if 1
-int f_test_bomb_hook(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-#endif
-
 static struct cmdtab cmdtab[] = {
-#if 1
-	{"test_bomb_hook", f_test_bomb_hook},
-#endif
-	{"%", f_comm},
-	{"35,25",	bv_35_25},
-	{"3ptarb", f_3ptarb},
-	{"45,45",	bv_45_45},
-	{"accept",	be_accept},
-	{"adc", f_adc},
-	{"ae", f_aetview},
-	{"aip", f_aip},
-	{"analyze", f_analyze},
-	{"arb", f_arbdef},
-	{"arced", f_arced},
-	{"area", f_area},
-	{"arot", f_arot},
-	{"attach", f_attach},
-	{"autoview", f_autoview},
-	{"B", f_blast},
-	{"bev", f_bev},
-	{"bodyread", cmd_bodyread},
-	{"bodywrite", cmd_bodywrite},
-	{"bot_face_fuse", f_bot_face_fuse},
-	{"bot_vertex_fuse", f_bot_fuse},
-	{"bot_condense", f_bot_condense},
-	{"bottom",	bv_bottom},
-	{"c", f_comb_std},
-	{"cat", f_cat},
-	{"center", f_center},
-	{"cmd_win", cmd_cmd_win},
-	{"color", f_color},
-	{"comb", f_comb},
-	{"comb_color", f_comb_color},
-	{"copyeval", f_copyeval},
-	{"copymat", f_copymat},
-	{"cp", f_copy},
-	{"cpi", f_copy_inv},
-	{"d", f_erase},
-	{"dall", f_erase_all},
-	{"db_glob", cmd_mged_glob},
-	{"dbconcat", f_concat},
-	{"dbfind", f_find},
-	{"debugbu", f_debugbu},
-	{"debugdir", f_debugdir},
-	{"debuglib", f_debuglib},
-	{"debugmem", f_debugmem},
-	{"debugnmg", f_debugnmg},
-	{"decompose", f_decompose},
-	{"delay", f_delay},
-	{"dm", f_dm},
-	{"draw", f_edit},
-	{"dup", f_dup},
-	{"E", f_evedit},
-	{"e", f_edit},
-	{"eac", f_eac},
-	{"echo", cmd_echo},
-	{"edcodes", f_edcodes},
-	{"edcolor", f_edcolor},
-	{"edcomb", f_edcomb},
-	{"edgedir", f_edgedir},
-	{"edmater", f_edmater},
-	{"erase", f_erase},
-	{"erase_all", f_erase_all},
-	{"ev", f_ev},
-	{"eqn", f_eqn},
-	{"exit", f_quit},
-	{"extrude", f_extrude},
-	{"expand", cmd_expand},
-	{"eye_pt", f_eye_pt},
-	{"e_muves", f_e_muves},
-	{"facedef", f_facedef},
-	{"facetize", f_facetize},
-	{"fracture", f_fracture},
-	{"front",	bv_front},
-	{"g", f_group},
-	{"get_comb", cmd_get_comb},
-	{"get_dbip", cmd_get_ptr},
-	{"get_dm_list", f_get_dm_list},
-	{"get_more_default", cmd_get_more_default},
-	{"get_sed", f_get_sedit},
-	{"get_sed_menus", f_get_sedit_menus},
-	{"get_solid_keypoint", f_get_solid_keypoint},
-	{"grid2model_lu", f_grid2model_lu},
-	{"grid2view_lu", f_grid2view_lu},
+	"%", f_comm,
+	"3ptarb", f_3ptarb,
+	"adc", f_adc,
+	"ae", f_aetview,
+	"aip", f_aip,
+	"analyze", f_analyze,
+	"arb", f_arbdef,
+	"arced", f_arced,
+	"area", f_area,
+	"arot", f_arot,
+	"attach", f_attach,
+	"autoview", f_autoview,
+	"B", f_blast,
+	"bev", f_bev,
+	"bot_face_fuse", f_bot_face_fuse,
+	"bot_vertex_fuse", f_bot_fuse,
+	"bot_condense", f_bot_condense,
+	"c", f_comb_std,
+	"cat", f_cat,
+	"center", f_center,
+	"cmd_win", cmd_cmd_win,
+	"color", f_color,
+	"comb", f_comb,
+	"comb_color", f_comb_color,
+	"copyeval", f_copyeval,
+	"copymat", f_copymat,
+	"cp", f_copy,
+	"cpi", f_copy_inv,
+	"d", f_erase,
+	"dall", f_erase_all,
+	"db_glob", cmd_mged_glob,
+	"dbconcat", f_concat,
+	"dbfind", f_find,
+	"debugbu", f_debugbu,
+	"debugdir", f_debugdir,
+	"debuglib", f_debuglib,
+	"debugmem", f_debugmem,
+	"debugnmg", f_debugnmg,
+	"decompose", f_decompose,
+	"delay", f_delay,
+	"dm", f_dm,
+	"draw", f_edit,
+	"dup", f_dup,
+	"E", f_evedit,
+	"e", f_edit,
+	"eac", f_eac,
+	"echo", cmd_echo,
+	"edcodes", f_edcodes,
+	"edcolor", f_edcolor,
+	"edcomb", f_edcomb,
+	"edgedir", f_edgedir,
+	"edmater", f_edmater,
+	"erase", f_erase,
+	"erase_all", f_erase_all,
+	"ev", f_ev,
+	"eqn", f_eqn,
+	"exit", f_quit,
+	"extrude", f_extrude,
+	"expand", cmd_expand,
+	"eye_pt", f_eye_pt,
+	"e_muves", f_e_muves,
+	"facedef", f_facedef,
+	"facetize", f_facetize,
+	"fracture", f_fracture,
+	"g", f_group,
+	"get_comb", cmd_get_comb,
+	"get_dbip", cmd_get_ptr,
+	"get_dm_list", f_get_dm_list,
+	"get_more_default", cmd_get_more_default,
+	"get_sed", f_get_sedit,
+	"get_sed_menus", f_get_sedit_menus,
+	"get_solid_keypoint", f_get_solid_keypoint,
+	"grid2model_lu", f_grid2model_lu,
+	"grid2view_lu", f_grid2view_lu,
 #ifdef HIDELINE
-	{"H", f_hideline},
+	"H", f_hideline,
 #endif
-	{"history", f_history},
-	{"hist", cmd_hist},
-	{"i", f_instance},
-	{"idents", f_tables},
-	{"ill", f_ill},
-	{"in", f_in},
-	{"inside", f_inside},
-	{"item", f_itemair},
-	{"joint", f_joint},
-	{"journal", f_journal},
-	{"keep", f_keep},
-	{"keypoint", f_keypoint},
-	{"kill", f_kill},
-	{"killall", f_killall},
-	{"killtree", f_killtree},
-	{"knob", f_knob},
-	{"l", cmd_list},
-	{"l_muves", f_l_muves},
-	{"labelvert", f_labelvert},
-	{"left",		bv_left},
-	{"listeval", f_pathsum},
-	{"loadtk", cmd_tk},
-	{"lookat", f_lookat},
-	{"ls", dir_print},
-	{"M", f_mouse},
-	{"make", f_make},
-	{"make_bb", f_make_bb},
-	{"make_name", f_make_name},
-	{"mater", f_mater},
-	{"matpick", f_matpick},
-	{"memprint", f_memprint},
-	{"mged_update", f_update},
-	{"mged_wait", f_wait},
-	{"mirface", f_mirface},
-	{"mirror", f_mirror},
-	{"mmenu_get", cmd_mmenu_get},
-	{"mmenu_set", cmd_nop},
-	{"model2grid_lu", f_model2grid_lu},
-	{"model2view", f_model2view},
-	{"model2view_lu", f_model2view_lu},
-	{"mrot", f_mrot},
-	{"mv", f_name},
-	{"mvall", f_mvall},
-	{"nirt", f_nirt},
-	{"nmg_collapse", f_edge_collapse},
-	{"nmg_simplify", f_nmg_simplify},
-	{"o_rotate",		be_o_rotate},
-	{"o_scale",	be_o_scale},
-	{"oed", cmd_oed},
-	{"oed_apply", f_oedit_apply},
-	{"oed_reset", f_oedit_reset},
-	{"oill",		be_o_illuminate},
-	{"opendb", f_opendb},
-	{"orientation", f_orientation},
-	{"orot", f_rot_obj},
-	{"oscale", f_sc_obj},
-	{"output_hook", cmd_output_hook},
-	{"overlay", f_overlay},
-	{"ox",		be_o_x},
-	{"oxy",		be_o_xy},
-	{"oxscale",	be_o_xscale},
-	{"oy",		be_o_y},
-	{"oyscale",	be_o_yscale},
-	{"ozscale",	be_o_zscale},
-	{"p", f_param},
-	{"pathlist", cmd_pathlist},
-	{"paths", f_pathsum},
-	{"permute", f_permute},
-	{"plot", f_plot},
-	{"pl", f_pl},
-	{"polybinout", f_polybinout},
-	{"pov", f_pov},
-	{"prcolor", f_prcolor},
-	{"prefix", f_prefix},
-	{"press", f_press},
-	{"preview", f_preview},
-	{"ps", f_ps},
-	{"push", f_push},
-	{"put_comb", cmd_put_comb},
-	{"put_sed", f_put_sedit},
-	{"putmat", f_putmat},
-	{"q", f_quit},
-	{"qray", f_qray},
-	{"query_ray", f_nirt},
-	{"quit", f_quit},
-	{"qorot", f_qorot},
-	{"qvrot", f_qvrot},
-	{"r", f_region},
-	{"rate",		bv_rate_toggle},
-	{"rcodes", f_rcodes},
-	{"read_muves", f_read_muves},
-	{"rear",	bv_rear},
-	{"red", f_red},
-	{"redraw_vlist", cmd_redraw_vlist},
-	{"refresh", f_refresh},
-	{"regdebug", f_regdebug},
-	{"regdef", f_regdef},
-	{"regions", f_tables},
-	{"reject",	be_reject},
-	{"release", f_release},
-	{"reset",	bv_reset},
-	{"restore",	bv_vrestore},
-	{"right",	bv_right},
-	{"rfarb", f_rfarb},
-	{"rm", f_rm},
-	{"rmater", f_rmater},
-	{"rmats", f_rmats},
-	{"rot", f_rot},
-	{"rotobj", f_rot_obj},
-	{"rrt", f_rrt},
-	{"rset", f_rset},
-	{"rt", f_rt},
-	{"rt_abort", cmd_rt_abort},
-	{"rtcheck", f_rtcheck},
-	{"save",		bv_vsave},
+	"history", f_history,
+	"hist", cmd_hist,
+	"i", f_instance,
+	"idents", f_tables,
+	"ill", f_ill,
+	"in", f_in,
+	"inside", f_inside,
+	"item", f_itemair,
+	"joint", f_joint,
+	"journal", f_journal,
+	"keep", f_keep,
+	"keypoint", f_keypoint,
+	"kill", f_kill,
+	"killall", f_killall,
+	"killtree", f_killtree,
+	"knob", f_knob,
+	"l", cmd_list,
+	"l_muves", f_l_muves,
+	"labelvert", f_labelvert,
+	"listeval", f_pathsum,
+	"loadtk", cmd_tk,
+	"lookat", f_lookat,
+	"ls", dir_print,
+	"M", f_mouse,
+	"make", f_make,
+	"make_bb", f_make_bb,
+	"make_name", f_make_name,
+	"mater", f_mater,
+	"matpick", f_matpick,
+	"memprint", f_memprint,
+	"mged_update", f_update,
+	"mged_wait", f_wait,
+	"mirface", f_mirface,
+	"mirror", f_mirror,
+	"mmenu_get", cmd_mmenu_get,
+	"mmenu_set", cmd_nop,
+	"model2grid_lu", f_model2grid_lu,
+	"model2view", f_model2view,
+	"model2view_lu", f_model2view_lu,
+	"mrot", f_mrot,
+	"mv", f_name,
+	"mvall", f_mvall,
+	"nirt", f_nirt,
+	"nmg_collapse", f_edge_collapse,
+	"nmg_simplify", f_nmg_simplify,
+	"oed", cmd_oed,
+	"oed_apply", f_oedit_apply,
+	"oed_reset", f_oedit_reset,
+	"opendb", f_opendb,
+	"orientation", f_orientation,
+	"orot", f_rot_obj,
+	"oscale", f_sc_obj,
+	"output_hook", cmd_output_hook,
+	"overlay", f_overlay,
+	"p", f_param,
+	"pathlist", cmd_pathlist,
+	"paths", f_pathsum,
+	"permute", f_permute,
+	"plot", f_plot,
+	"pl", f_pl,
+	"polybinout", f_polybinout,
+	"pov", f_pov,
+	"prcolor", f_prcolor,
+	"prefix", f_prefix,
+	"press", f_press,
+	"preview", f_preview,
+	"ps", f_ps,
+	"push", f_push,
+	"put_comb", cmd_put_comb,
+	"put_sed", f_put_sedit,
+	"putmat", f_putmat,
+	"q", f_quit,
+	"qray", f_qray,
+	"query_ray", f_nirt,
+	"quit", f_quit,
+	"qorot", f_qorot,
+	"qvrot", f_qvrot,
+	"r", f_region,
+	"rcodes", f_rcodes,
+	"read_muves", f_read_muves,
+	"red", f_red,
+	"redraw_vlist", cmd_redraw_vlist,
+	"refresh", f_refresh,
+	"regdebug", f_regdebug,
+	"regdef", f_regdef,
+	"regions", f_tables,
+	"release", f_release,
+	"rfarb", f_rfarb,
+	"rm", f_rm,
+	"rmater", f_rmater,
+	"rmats", f_rmats,
+	"rot", f_rot,
+	"rotobj", f_rot_obj,
+	"rrt", f_rrt,
+	"rset", f_rset,
+	"rt", f_rt,
+	"rt_abort", cmd_rt_abort,
+	"rtcheck", f_rtcheck,
 #if 0
-	{"savedit", f_savedit},
+	"savedit", f_savedit,
 #endif
-	{"savekey", f_savekey},
-	{"saveview", f_saveview},
-	{"sca", f_sca},
-	{"sed", f_sed},
-	{"sedit",	be_s_edit},
-	{"sed_apply", f_sedit_apply},
-	{"sed_reset", f_sedit_reset},
-	{"set_more_default", cmd_set_more_default},
-	{"setview", f_setview},
-	{"shader", f_shader},
-	{"share", f_share},
-	{"shells", f_shells},
-	{"showmats", f_showmats},
-	{"sill",		be_s_illuminate},
-	{"size", f_size},
-	{"solids", f_tables},
-	{"solids_on_ray", cmd_solids_on_ray},
-	{"srot",		be_s_rotate},
-	{"sscale",	be_s_scale},
-	{"status", f_status},
-	{"stuff_str", cmd_stuff_str},
-	{"summary", f_summary},
-	{"sv", f_slewview},
-	{"svb", f_svbase},
-	{"sync", f_sync},
-	{"sxy",		be_s_trans},
-	{"t", dir_print},
-	{"ted", f_tedit},
-	{"tie", f_tie},
-	{"title", f_title},
-	{"tol", f_tol},
-	{"top",		bv_top},
-	{"tops", f_tops},
-	{"tra", f_tra},
-	{"track", f_amtrack},
-	{"translate", f_tr_obj},
-	{"tree", f_tree},
-	{"t_muves", f_t_muves},
-	{"units", f_units},
-	{"vars", f_set},
-	{"vdraw", cmd_vdraw},
-	{"view", f_view},
-	{"view_ring", f_view_ring},
-	{"viewget", cmd_viewget},
-	{"viewset", cmd_viewset},
-	{"viewsize", f_size},		/* alias "size" for saveview scripts */
-	{"view2grid_lu", f_view2grid_lu},
-	{"view2model", f_view2model},
-	{"view2model_vec", f_view2model_vec},
-	{"view2model_lu", f_view2model_lu},
-	{"vnirt", f_vnirt},
-	{"vquery_ray", f_vnirt},
-	{"vrmgr", f_vrmgr},
-	{"vrot", f_vrot},
+	"savekey", f_savekey,
+	"saveview", f_saveview,
+	"sca", f_sca,
+	"sed", f_sed,
+	"sed_apply", f_sedit_apply,
+	"sed_reset", f_sedit_reset,
+	"set_more_default", cmd_set_more_default,
+	"setview", f_setview,
+	"shader", f_shader,
+	"share", f_share,
+	"shells", f_shells,
+	"showmats", f_showmats,
+	"size", f_size,
+	"solids", f_tables,
+	"solids_on_ray", cmd_solids_on_ray,
+	"status", f_status,
+	"stuff_str", cmd_stuff_str,
+	"summary", f_summary,
+	"sv", f_slewview,
+	"svb", f_svbase,
+	"sync", f_sync,
+	"t", dir_print,
+	"ted", f_tedit,
+	"tie", f_tie,
+	"title", f_title,
+	"tol", f_tol,
+	"tops", f_tops,
+	"tra", f_tra,
+	"track", f_amtrack,
+	"translate", f_tr_obj,
+	"tree", f_tree,
+	"t_muves", f_t_muves,
+	"units", f_units,
+	"vars", f_set,
+	"vdraw", cmd_vdraw,
+	"view", f_view,
+	"view_ring", f_view_ring,
+	"viewget", cmd_viewget,
+	"viewset", cmd_viewset,
+	"view2grid_lu", f_view2grid_lu,
+	"view2model", f_view2model,
+	"view2model_vec", f_view2model_vec,
+	"view2model_lu", f_view2model_lu,
+	"vnirt", f_vnirt,
+	"vquery_ray", f_vnirt,
+	"vrmgr", f_vrmgr,
+	"vrot", f_vrot,
 #if 0
-	{"vrot_center", f_vrot_center},
+	"vrot_center", f_vrot_center,
 #endif
-	{"wcodes", f_wcodes},
-	{"whatid", f_whatid},
-	{"whichair", f_which},
-	{"whichid", f_which},
-	{"which_shader", f_which_shader},
-	{"who", cmd_who},
-	{"winset", f_winset},
-	{"wmater", f_wmater},
-	{"x", f_debug},
-	{"xpush", f_xpush},
-	{"Z", f_zap},
-	{"zoom", f_zoom},
-	{"zoomin",	bv_zoomin},
-	{"zoomout",	bv_zoomout},
-	{0, 0}
+	"wcodes", f_wcodes,
+	"whatid", f_whatid,
+	"whichair", f_which,
+	"whichid", f_which,
+	"which_shader", f_which_shader,
+	"who", cmd_who,
+	"winset", f_winset,
+	"wmater", f_wmater,
+	"x", f_debug,
+	"xpush", f_xpush,
+	"Z", f_zap,
+	"zoom", f_zoom,
+	0, 0
 };
 
 
@@ -750,17 +675,6 @@ mged_setup()
 		       "::itcl::*", /* allowOverwrite */ 1) != TCL_OK)
 	  bu_log("Tcl_Import error %s\n", interp->result);
 
-	/* Initialize libbu */
-	Bu_Init(interp);
-
-	/* Initialize libbn */
-	Bn_Init(interp);
-
-	/* Initialize librt */
-	if (Rt_Init(interp) == TCL_ERROR) {
-		bu_log("Rt_Init error %s\n", interp->result);
-	}
-
 	/* register commands */
 	cmd_setup();
 
@@ -851,7 +765,6 @@ cmd_setup()
 	bu_vls_free(&temp);
 }
 
-int
 cmd_cmd_win(clientData, interp, argc, argv)
 	ClientData clientData;
 	Tcl_Interp *interp;
@@ -1274,7 +1187,9 @@ mged_compat( dest, src, use_first )
  */
 
 int
-cmdline( struct bu_vls *vp, int record )
+cmdline(vp, record)
+	struct bu_vls *vp;
+	int record;
 {
 	int	status;
 	struct bu_vls globbed;
@@ -1401,7 +1316,8 @@ cmdline( struct bu_vls *vp, int record )
 
 
 void
-mged_print_result(int status)
+mged_print_result(status)
+	int status;
 {
 	int len;
 	extern void pr_prompt();
@@ -1455,10 +1371,10 @@ mged_print_result(int status)
  */
 
 int
-mged_cmd(
-	int argc,
-	char **argv,
-	struct funtab in_functions[])
+mged_cmd(argc, argv, in_functions)
+	int argc;
+	char **argv;
+	struct funtab in_functions[];
 {
 	register struct funtab *ftp;
 	struct funtab *functions;
@@ -1555,11 +1471,11 @@ f_comm(clientData, interp, argc, argv)
 /* Format: q	*/
 
 int
-f_quit(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_quit(clientData, interp, argc, argv )
+	ClientData clientData;
+	Tcl_Interp *interp;
+	int	argc;
+	char	**argv;
 {
 	if(argc < 1 || 1 < argc){
 		struct bu_vls vls;
@@ -1576,7 +1492,6 @@ f_quit(
 
 	quit();			/* Exiting time */
 	/* NOTREACHED */
-	return TCL_OK;
 }
 
 /* wrapper for sync() */
@@ -1692,6 +1607,32 @@ f_fhelp2( argc, argv, functions)
 	return helpcomm( argc, argv, functions );
 }
 
+/* Hook for displays with no buttons */
+int
+f_press(clientData, interp, argc, argv )
+	ClientData clientData;
+	Tcl_Interp *interp;
+	int	argc;
+	char	**argv;
+{
+	register int i;
+
+	if(argc < 2 || MAXARGS < argc){
+		struct bu_vls vls;
+
+		bu_vls_init(&vls);
+		bu_vls_printf(&vls, "help press");
+		Tcl_Eval(interp, bu_vls_addr(&vls));
+		bu_vls_free(&vls);
+		return TCL_ERROR;
+	}
+
+	for( i = 1; i < argc; i++ )
+		press( argv[i] );
+
+	return TCL_OK;
+}
+
 int
 f_summary(clientData, interp, argc, argv )
 	ClientData clientData;
@@ -1755,7 +1696,7 @@ cmd_echo(clientData, interp, argc, argv)
 {
 	register int i;
 
-	if(argc < 1){
+	if(argc < 1 || MAXARGS < argc){
 		struct bu_vls vls;
 
 		bu_vls_init(&vls);
@@ -1968,7 +1909,7 @@ f_ps(clientData, interp, argc, argv)
 	struct dm_list *dml;
 	struct _view_state *vsp;
 
-	if(argc < 2){
+	if(argc < 2 || MAXARGS < argc){
 		struct bu_vls vls;
 
 		bu_vls_init(&vls);
@@ -2024,7 +1965,7 @@ f_pl(clientData, interp, argc, argv)
 	struct dm_list *dml;
 	struct _view_state *vsp;
 
-	if(argc < 2){
+	if(argc < 2 || MAXARGS < argc){
 		struct bu_vls vls;
 
 		bu_vls_init(&vls);
@@ -2150,7 +2091,7 @@ f_bot_face_fuse( clientData, interp, argc, argv)
 	if( (old_dp = db_lookup( dbip, argv[2], LOOKUP_NOISY )) == DIR_NULL )
 		return TCL_ERROR;
 
-	if( rt_db_get_internal( &intern, old_dp, dbip, bn_mat_identity, &rt_uniresource ) < 0 )
+	if( rt_db_get_internal( &intern, old_dp, dbip, bn_mat_identity ) < 0 )
 	{
 	  Tcl_AppendResult(interp, "rt_db_get_internal() error\n", (char *)NULL);
 	  return TCL_ERROR;
@@ -2165,7 +2106,7 @@ f_bot_face_fuse( clientData, interp, argc, argv)
 	bot = (struct rt_bot_internal *)intern.idb_ptr;
 	RT_BOT_CK_MAGIC( bot );
 
-	(void) rt_bot_face_fuse( bot );
+	(void) bot_face_fuse( bot );
 
 	if( (new_dp=db_diradd( dbip, argv[1], -1L, 0, DIR_SOLID, NULL)) == DIR_NULL )
 	{
@@ -2173,9 +2114,9 @@ f_bot_face_fuse( clientData, interp, argc, argv)
 		return TCL_ERROR;
 	}
 
-	if( rt_db_put_internal( new_dp, dbip, &intern, &rt_uniresource ) < 0 )
+	if( rt_db_put_internal( new_dp, dbip, &intern ) < 0 )
 	{
-		rt_db_free_internal( &intern, &rt_uniresource );
+		rt_db_free_internal( &intern );
 		TCL_WRITE_ERR_return;
 	}
 	return TCL_OK;
@@ -2204,7 +2145,7 @@ f_bot_fuse(clientData, interp, argc, argv)
 	if( (old_dp = db_lookup( dbip, argv[2], LOOKUP_NOISY )) == DIR_NULL )
 		return TCL_ERROR;
 
-	if( rt_db_get_internal( &intern, old_dp, dbip, bn_mat_identity, &rt_uniresource ) < 0 )
+	if( rt_db_get_internal( &intern, old_dp, dbip, bn_mat_identity ) < 0 )
 	{
 	  Tcl_AppendResult(interp, "rt_db_get_internal() error\n", (char *)NULL);
 	  return TCL_ERROR;
@@ -2219,9 +2160,9 @@ f_bot_fuse(clientData, interp, argc, argv)
 	bot = (struct rt_bot_internal *)intern.idb_ptr;
 	RT_BOT_CK_MAGIC( bot );
 
-	count1 = rt_bot_vertex_fuse( bot );
+	count1 = bot_vertex_fuse( bot );
 	if( count1 )
-		(void)rt_bot_condense( bot );
+		(void)bot_condense( bot );
 
 	if( (new_dp=db_diradd( dbip, argv[1], -1L, 0, DIR_SOLID, NULL)) == DIR_NULL )
 	{
@@ -2229,9 +2170,9 @@ f_bot_fuse(clientData, interp, argc, argv)
 		return TCL_ERROR;
 	}
 
-	if( rt_db_put_internal( new_dp, dbip, &intern, &rt_uniresource ) < 0 )
+	if( rt_db_put_internal( new_dp, dbip, &intern ) < 0 )
 	{
-		rt_db_free_internal( &intern, &rt_uniresource );
+		rt_db_free_internal( &intern );
 		TCL_WRITE_ERR_return;
 	}
 	return TCL_OK;
@@ -2261,7 +2202,7 @@ f_bot_condense(clientData, interp, argc, argv)
 	if( (old_dp = db_lookup( dbip, argv[2], LOOKUP_NOISY )) == DIR_NULL )
 		return TCL_ERROR;
 
-	if( rt_db_get_internal( &intern, old_dp, dbip, bn_mat_identity, &rt_uniresource ) < 0 )
+	if( rt_db_get_internal( &intern, old_dp, dbip, bn_mat_identity ) < 0 )
 	{
 	  Tcl_AppendResult(interp, "rt_db_get_internal() error\n", (char *)NULL);
 	  return TCL_ERROR;
@@ -2276,7 +2217,7 @@ f_bot_condense(clientData, interp, argc, argv)
 	bot = (struct rt_bot_internal *)intern.idb_ptr;
 	RT_BOT_CK_MAGIC( bot );
 
-	count2 = rt_bot_condense( bot );
+	count2 = bot_condense( bot );
 	sprintf( count_str, "%d", count2 );
 	Tcl_AppendResult(interp, count_str, " dead vertices eliminated\n", (char *)NULL );
 
@@ -2286,25 +2227,10 @@ f_bot_condense(clientData, interp, argc, argv)
 		return TCL_ERROR;
 	}
 
-	if( rt_db_put_internal( new_dp, dbip, &intern, &rt_uniresource ) < 0 )
+	if( rt_db_put_internal( new_dp, dbip, &intern ) < 0 )
 	{
-		rt_db_free_internal( &intern, &rt_uniresource );
+		rt_db_free_internal( &intern );
 		TCL_WRITE_ERR_return;
 	}
 	return TCL_OK;
 }
-
-#if 1
-int
-f_test_bomb_hook(clientData, interp, argc, argv)
-	ClientData clientData;
-	Tcl_Interp *interp;
-	int     argc;
-	char    **argv;
-{
-	bu_bomb("\nTesting MGED's bomb hook!\n");
-
-	/* This is never reached */
-	return TCL_OK;
-}
-#endif

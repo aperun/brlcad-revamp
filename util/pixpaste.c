@@ -19,7 +19,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$";
+static char RCSid[] = "@(#)$Header$";
 #endif
 
 #include "conf.h"
@@ -164,7 +164,6 @@ register char **argv;
 }
 
 			
-int
 main(argc, argv)
 int argc; char **argv;
 {

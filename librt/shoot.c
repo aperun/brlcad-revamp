@@ -37,7 +37,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSshoot[] = "@(#)$Header$ (BRL)";
+static char RCSshoot[] = "@(#)$Header$ (BRL)";
 #endif
 
 char rt_CopyRight_Notice[] = "@(#) Copyright (C) 1985,1991,2000 by the United States Army";
@@ -46,16 +46,10 @@ char rt_CopyRight_Notice[] = "@(#) Copyright (C) 1985,1991,2000 by the United St
 
 #include <stdio.h>
 #include <math.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include "machine.h"
 #include "vmath.h"
 #include "bu.h"
 #include "raytrace.h"
-#include "plot3.h"
 #include "./debug.h"
 
 struct resource rt_uniresource;		/* Resources for uniprocessor */
@@ -102,7 +96,6 @@ struct rt_i	*rtip;
 		psp->stp = stp;
 		psp->shot = bu_bitv_new(stp->st_npieces);
 		rt_htbl_init( &psp->htab, 8, "psp->htab" );
-		psp->cutp = CUTTER_NULL;
 	} RT_VISIT_ALL_SOLTABS_END
 }
 
@@ -115,6 +108,7 @@ struct resource	*resp;
 struct rt_i	*rtip;
 {
 	struct rt_piecestate	*psp;
+	struct soltab		*stp;
 	int			i;
 
 	RT_CK_RESOURCE(resp);
@@ -706,6 +700,7 @@ register struct application *ap;
 	struct rt_i		*rtip;
 	CONST int		debug_shoot = rt_g.debug & DEBUG_SHOOT;
 	fastf_t			pending_hit = 0; /* dist of closest odd hit pending */
+	int			odd_hits_pending = 0;	/* boolean.  are odd hits pending? */
 
 	RT_AP_CHECK(ap);
 	if( ap->a_magic )  {
@@ -720,9 +715,8 @@ register struct application *ap;
 	}
 	if( ap->a_resource == RESOURCE_NULL )  {
 		ap->a_resource = &rt_uniresource;
+		rt_uniresource.re_magic = RESOURCE_MAGIC;
 		if(rt_g.debug)bu_log("rt_shootray:  defaulting a_resource to &rt_uniresource\n");
-		if( rt_uniresource.re_magic == 0 )
-			rt_init_resource( &rt_uniresource, 0, ap->a_rt_i );
 	}
 	ss.ap = ap;
 	rtip = ap->a_rt_i;
@@ -769,8 +763,6 @@ register struct application *ap;
 	ap->a_finished_segs_hdp = &finished_segs;
 
 	if( BU_LIST_UNINITIALIZED( &resp->re_parthead ) )  {
-		/* XXX This shouldn't happen any more */
-		bu_log("rt_shootray() resp=x%x uninitialized, fixing it\n", resp);
 		/*
 		 *  We've been handed a mostly un-initialized resource struct,
 		 *  with only a magic number and a cpu number filled in.
@@ -778,11 +770,12 @@ register struct application *ap;
 		 *  This is how application-provided resource structures
 		 *  are remembered for later cleanup by the library.
 		 */
-		rt_init_resource( resp, resp->re_cpu, rtip );
+		rt_init_resource( resp, resp->re_cpu );
 	}
 	/* Ensure that this CPU's resource structure is registered */
-	if( resp != &rt_uniresource )
-		BU_ASSERT_PTR( BU_PTBL_GET(&rtip->rti_resources, resp->re_cpu), !=, NULL );
+	if( BU_PTBL_GET(&rtip->rti_resources, resp->re_cpu) == NULL )  {
+		BU_PTBL_GET(&rtip->rti_resources, resp->re_cpu) = (long *)resp;
+	}
 
 	if( BU_LIST_IS_EMPTY( &resp->re_solid_bitv ) )  {
 		solidbits = bu_bitv_new( rtip->nsolids );
@@ -981,6 +974,7 @@ start_cell:
 			for( ; plp >= cutp->bn.bn_piecelist; plp-- )  {
 				struct rt_piecestate *psp;
 				struct soltab	*stp;
+				int piecenum;
 				int ret;
 				int had_hits_before;
 
@@ -998,7 +992,7 @@ start_cell:
 					psp->ray_seqno = resp->re_nshootray;
 					rt_htbl_reset( &psp->htab );
 
-					/* Compute ray entry and exit to entire solid's bounding box */
+					/* Compute ray entry and exit */
 					if( !rt_in_rpp( &ss.newray, ss.inv_dir,
 					    stp->st_min, stp->st_max ) )  {
 						if(debug_shoot)bu_log("rpp miss %s (all pieces)\n", stp->st_name);
@@ -1019,17 +1013,8 @@ start_cell:
 					had_hits_before = psp->htab.end;
 				}
 
-				/*
-				 *  Allow this solid to shoot at all of its
-				 *  'pieces' in this cell, all at once.
-				 *  'newray' has been transformed to be near
-				 *  to this cell, and
-				 *  'dist_corr' is the additive correction
-				 *  factor that ft_piece_shot() must apply
-				 *  to hits calculated using 'newray'.
-				 */
+				/* Allow solid to shoot all pieces in this cell at once */
 				resp->re_piece_shots++;
-				psp->cutp = cutp;
 
 				if( (ret = stp->st_meth->ft_piece_shot(
 				    psp, plp, ss.dist_corr, &ss.newray, ap, &waiting_segs )) <= 0 )  {
@@ -1042,7 +1027,6 @@ start_cell:
 
 				/*  See if this solid has been fully processed yet.
 				 *  If ray has passed through bounding volume, we're done.
-				 *  ft_piece_hitsegs() will only be called once per ray.
 				 */
 				if( ss.box_end > psp->maxdist && psp->htab.end > 0 ) {
 					/* Convert hits into segs */
@@ -1330,9 +1314,8 @@ int	n;		/* First cell is #0 */
 	}
 	if( ap->a_resource == RESOURCE_NULL )  {
 		ap->a_resource = &rt_uniresource;
+		rt_uniresource.re_magic = RESOURCE_MAGIC;
 		if(rt_g.debug)bu_log("rt_cell_n_on_ray:  defaulting a_resource to &rt_uniresource\n");
-		if( rt_uniresource.re_magic == 0 )
-			rt_init_resource( &rt_uniresource, 0, ap->a_rt_i );
 	}
 	ss.ap = ap;
 	rtip = ap->a_rt_i;
@@ -1368,8 +1351,6 @@ int	n;		/* First cell is #0 */
 		rt_prep_parallel(rtip, 1);	/* Stay on our CPU */
 
 	if( BU_LIST_UNINITIALIZED( &resp->re_parthead ) )  {
-		/* XXX This shouldn't happen any more */
-		bu_log("rt_cell_n_on_ray() resp=x%x uninitialized, fixing it\n", resp);
 		/*
 		 *  We've been handed a mostly un-initialized resource struct,
 		 *  with only a magic number and a cpu number filled in.
@@ -1377,10 +1358,12 @@ int	n;		/* First cell is #0 */
 		 *  This is how application-provided resource structures
 		 *  are remembered for later cleanup by the library.
 		 */
-		rt_init_resource( resp, resp->re_cpu, rtip );
+		rt_init_resource( resp, resp->re_cpu );
 	}
 	/* Ensure that this CPU's resource structure is registered */
-	BU_ASSERT_PTR( BU_PTBL_GET(&rtip->rti_resources, resp->re_cpu), !=, NULL );
+	if( BU_PTBL_GET(&rtip->rti_resources, resp->re_cpu) == NULL )  {
+		BU_PTBL_GET(&rtip->rti_resources, resp->re_cpu) = (long *)resp;
+	}
 
 	/* Verify that direction vector has unit length */
 	if(rt_g.debug) {
@@ -1543,7 +1526,6 @@ int	n;		/* First cell is #0 */
  *	rp->r_min = dist from start of ray to point at which ray ENTERS solid
  *	rp->r_max = dist from start of ray to point at which ray LEAVES solid
  */
-int
 rt_in_rpp( rp, invdir, min, max )
 struct xray		*rp;
 register CONST fastf_t *invdir;	/* inverses of rp->r_dir[] */
@@ -1628,7 +1610,6 @@ register CONST fastf_t *max;
 }
 
 /* For debugging */
-int
 rt_DB_rpp( rp, invdir, min, max )
 register struct xray *rp;
 register CONST fastf_t *invdir;	/* inverses of rp->r_dir[] */
@@ -1926,7 +1907,7 @@ struct rt_i		*rtip;
 	for( ; stpp >= cutp->bn.bn_list; stpp-- )  {
 		register struct soltab *stp = *stpp;
 
-		rt_plot_solid( fp, rtip, stp, ap->a_resource );
+		rt_plot_solid( fp, rtip, stp );
 	}
 
 	/* Plot interval of ray in box, in green */

@@ -18,7 +18,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include <stdio.h>
@@ -30,7 +30,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 int fildes,indx;
 
-int
 main(argc,argv)
 int argc;
 char **argv;

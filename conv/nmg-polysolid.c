@@ -19,7 +19,7 @@
 
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
  
 #include "conf.h"
@@ -30,25 +30,45 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "vmath.h"
 #include "externs.h"
 #include "db.h"
-#include "bu.h"
+#include "wdb.h"
+#include "rtlist.h"
 #include "nmg.h"
 #include "raytrace.h"
 #include "rtgeom.h"
-#include "wdb.h"
 
+static union record record;
 static struct db_i *dbip;
 static int verbose=0;
-static struct rt_wdb *fdout=NULL;
+static FILE *fdout=NULL;
+static long out_offset=0;
 
 static void
-nmg_conv(struct rt_db_internal *intern, const char *name )
+nmg_conv()
 {
+	struct directory *dp;
+	struct rt_db_internal intern;
 	struct model *m;
 	struct nmgregion *r;
 	struct shell *s;
+	int id;
 
-	RT_CK_DB_INTERNAL(intern);
-	m = (struct model *)intern->idb_ptr;
+	if( (dp=db_lookup( dbip, record.nmg.N_name, LOOKUP_NOISY)) == DIR_NULL )
+	{
+		bu_log( "Cannot find NMG solid named %s (skipping)\n", record.nmg.N_name );
+		return;
+	}
+
+	id = rt_db_get_internal( &intern, dp, dbip, bn_mat_identity );
+	if( id != ID_NMG )
+	{
+		bu_log( "ERROR: rt_db_get_internal returned %d (was expecting %d)\n", id, ID_NMG);
+		bu_bomb( "ERROR: rt_db_get_internal returned wrong type\n" );
+	}
+
+	if( verbose )
+		bu_log( "%s\n", record.nmg.N_name );
+
+	m = (struct model *)intern.idb_ptr;
 	NMG_CK_MODEL( m );
 	r = BU_LIST_FIRST( nmgregion, &m->r_hd );
 	if( BU_LIST_NEXT( nmgregion, &r->l ) !=  (struct nmgregion *)&m->r_hd )
@@ -61,22 +81,23 @@ nmg_conv(struct rt_db_internal *intern, const char *name )
 	if( BU_SETJUMP )
 	{
 		BU_UNSETJUMP;
-		bu_log( "Failed to convert %s\n", name );
-		rt_db_free_internal( intern, &rt_uniresource );
+		bu_log( "Failed to convert %s\n", record.nmg.N_name );
+		(void)fseek( fdout, out_offset, SEEK_SET );
+		rt_db_free_internal( &intern );
 		return;
 	}
-	mk_bot_from_nmg( fdout, name, s);
+	write_shell_as_polysolid( fdout, record.nmg.N_name, s);
 	BU_UNSETJUMP;
-	if(verbose) bu_log("Wrote %s\n", name);
-	rt_db_free_internal( intern, &rt_uniresource );
+	rt_db_free_internal( &intern );
 }
 
-int
 main( argc, argv )
 int argc;
 char *argv[];
 {
-	struct directory *dp;
+
+	long offset=0;
+	long granules;
 
 	if( argc != 3 && argc != 4 )
 	{
@@ -96,8 +117,6 @@ char *argv[];
 		}
 	}
 
-	rt_init_resource( &rt_uniresource, 0, NULL );
-
 	dbip = db_open( argv[argc-2], "r" );
 	if( dbip == DBI_NULL )
 	{
@@ -106,41 +125,34 @@ char *argv[];
 		bu_bomb( "Cannot open database file\n" );
 	}
 
-	if( (fdout=wdb_fopen( argv[argc-1] )) == NULL )
+	if( (fdout=fopen( argv[argc-1], "w")) == NULL )
 	{
 		bu_log( "Cannot open file (%s)\n", argv[argc-1] );
 		perror( argv[0] );	
 		bu_bomb( "Cannot open output file\n" );
 	}
-	db_dirbuild( dbip );
 
-	/* Visit all records in input database, and spew them out,
-	 * modifying NMG objects into BoTs.
-	 */
-	FOR_ALL_DIRECTORY_START(dp, dbip)  {
-		struct rt_db_internal	intern;
-		int id;
-		int ret;
-		id = rt_db_get_internal( &intern, dp, dbip, NULL, &rt_uniresource );
-		if( id < 0 )  {
-			fprintf(stderr,
-				"%s: rt_db_get_internal(%s) failure, skipping\n",
-				argv[0], dp->d_namep);
-			continue;
+	db_scan(dbip, (int (*)())db_diradd, 1, NULL);
+
+	fseek( dbip->dbi_fp, 0, SEEK_SET );
+	while( fread( (char *)&record, sizeof record, 1, dbip->dbi_fp ) == 1  &&
+		!feof(stdin) )
+	{
+		switch( record.u_id )
+		{
+		    	case ID_FREE:
+				break;
+		    	case DBID_NMG:
+				offset = ftell( dbip->dbi_fp );
+				out_offset = ftell( fdout );
+				granules = bu_glong(record.nmg.N_count);
+				offset += granules * sizeof( union record );
+		    		nmg_conv();
+				fseek( dbip->dbi_fp, offset, SEEK_SET );
+		    		break;
+		    	default:
+				fwrite( (char *)&record, sizeof( union record ), 1, fdout );
+		    		break;
 		}
-		if ( id == ID_NMG ) {
-	    		nmg_conv( &intern, dp->d_namep );
-		}
-		ret = wdb_put_internal( fdout, dp->d_namep, &intern, 1.0 );
-		if( ret < 0 )  {
-			fprintf(stderr,
-				"%s: wdb_put_internal(%s) failure, skipping\n",
-				argv[0], dp->d_namep);
-			rt_db_free_internal( &intern, &rt_uniresource );
-			continue;
-		}
-		rt_db_free_internal( &intern, &rt_uniresource );
-	} FOR_ALL_DIRECTORY_END
-	wdb_close(fdout);
-	return 0;
+	}
 }

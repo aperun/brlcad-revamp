@@ -18,7 +18,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #define USE_OLD_MENUS 0
@@ -68,9 +68,11 @@ extern struct rt_db_internal	es_int;
  *  Prepare the numerical display of the currently edited solid/object.
  */
 void
-create_text_overlay( struct bu_vls *vp )
+create_text_overlay( vp )
+register struct bu_vls	*vp;
 {
 	struct directory	*dp;
+	register int	i;
 	struct bu_vls vls;
 
 	BU_CK_VLS(vp);
@@ -84,7 +86,7 @@ create_text_overlay( struct bu_vls *vp )
 
 	/* print solid info at top of screen */
 	if( es_edflag >= 0 ) {
-		dp = LAST_SOLID(illump);
+		dp = illump->s_path[illump->s_last];
 
 		bu_vls_strcat( vp, "** SOLID -- " );
 		bu_vls_strcat( vp, dp->d_namep );
@@ -92,9 +94,12 @@ create_text_overlay( struct bu_vls *vp )
 
 		vls_solid( vp, &es_int, bn_mat_identity );
 
-		if(illump->s_fullpath.fp_len > 1) {
+		if(illump->s_last) {
 			bu_vls_strcat( vp, "\n** PATH --  ");
-			db_path_to_vls( vp, &illump->s_fullpath );
+			for(i=0; i <= illump->s_last; i++) {
+				bu_vls_strcat( vp, "/" );
+				bu_vls_strcat( vp, illump->s_path[i]->d_namep);
+			}
 			bu_vls_strcat( vp, ": " );
 
 			/* print the evaluated (path) solid parameters */
@@ -105,7 +110,10 @@ create_text_overlay( struct bu_vls *vp )
 	/* display path info for object editing also */
 	if( state == ST_O_EDIT ) {
 		bu_vls_strcat( vp, "** PATH --  ");
-		db_path_to_vls( vp, &illump->s_fullpath );
+		for(i=0; i <= illump->s_last; i++) {
+			bu_vls_strcat( vp, "/" );
+			bu_vls_strcat( vp, illump->s_path[i]->d_namep);
+		}
 		bu_vls_strcat( vp, ": " );
 
 		/* print the evaluated (path) solid parameters */
@@ -181,10 +189,10 @@ create_text_overlay( struct bu_vls *vp )
  * so each line is written with a separate call to DM_DRAW_STRING_2D().
  */
 void
-screen_vls(
-	int	xbase,
-	int	ybase,
-	struct bu_vls	*vp)
+screen_vls( xbase, ybase, vp )
+int	xbase;
+int	ybase;
+register struct bu_vls	*vp;
 {
   register char	*start;
   register char	*end;
@@ -218,7 +226,8 @@ screen_vls(
  * NOTE that this routine depends on being called AFTER dozoom();
  */
 void
-dotitles(struct bu_vls *overlay_vls)
+dotitles(overlay_vls)
+struct bu_vls *overlay_vls;
 {
 	register int    i;
 	register int    x, y;			/* for menu computations */
@@ -243,9 +252,9 @@ dotitles(struct bu_vls *overlay_vls)
 	  bu_vls_init(&path_lhs);
 	  bu_vls_init(&path_rhs);
 	  for (i = 0; i < ipathpos; i++)
-	    bu_vls_printf(&path_lhs, "/%s", DB_FULL_PATH_GET(&illump->s_fullpath,i)->d_namep);
-	  for (; i < illump->s_fullpath.fp_len; i++)
-	    bu_vls_printf(&path_rhs, "/%s", DB_FULL_PATH_GET(&illump->s_fullpath,i)->d_namep);
+	    bu_vls_printf(&path_lhs, "/%s", illump->s_path[i]->d_namep);
+	  for (; i <= illump->s_last; i++)
+	    bu_vls_printf(&path_rhs, "/%s", illump->s_path[i]->d_namep);
 
 	  bu_vls_printf(&vls, "%s(path_lhs)", MGED_DISPLAY_VAR);
 	  Tcl_SetVar(interp, bu_vls_addr(&vls), bu_vls_addr(&path_lhs), TCL_GLOBAL_ONLY);
@@ -382,7 +391,7 @@ if(mged_variables->mv_faceplate){
 	 */
 	if( illump != SOLID_NULL &&
 	    (state==ST_O_PATH || state==ST_O_PICK || state==ST_S_PICK) )  {
-	  for( i=0; i < illump->s_fullpath.fp_len; i++ )  {
+	  for( i=0; i <= illump->s_last; i++ )  {
 	    if( i == ipathpos  &&  state == ST_O_PATH )  {
 	      DM_SET_FGCOLOR(dmp,
 			     color_scheme->cs_state_text1[0],
@@ -396,9 +405,8 @@ if(mged_variables->mv_faceplate){
 			   color_scheme->cs_state_text2[0],
 			   color_scheme->cs_state_text2[1],
 			   color_scheme->cs_state_text2[2], 1);
-	    DM_DRAW_STRING_2D( dmp,
-			DB_FULL_PATH_GET(&illump->s_fullpath,i)->d_namep,
-			GED2PM1(x), GED2PM1(y), 0, 0 );
+	    DM_DRAW_STRING_2D( dmp, illump->s_path[i]->d_namep,
+			       GED2PM1(x), GED2PM1(y), 0, 0 );
 	    y += MENU_DY;
 	  }
 	}
@@ -555,12 +563,11 @@ if(mged_variables->mv_faceplate){
 
 	    /* Illuminated path */
 	    bu_vls_strcat(&vls, " Path: ");
-	    for( i=0; i < illump->s_fullpath.fp_len; i++ )  {
+	    for( i=0; i <= illump->s_last; i++ )  {
 	      if( i == ipathpos  &&
 		  (state == ST_O_PATH || state == ST_O_EDIT) )
 		bu_vls_strcat( &vls, "/__MATRIX__" );
-	      bu_vls_printf(&vls, "/%s",
-	    		DB_FULL_PATH_GET(&illump->s_fullpath,i)->d_namep );
+	      bu_vls_printf(&vls, "/%s", illump->s_path[i]->d_namep);
 	    }
 	    DM_SET_FGCOLOR(dmp,
 			   color_scheme->cs_status_text2[0],

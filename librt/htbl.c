@@ -15,12 +15,11 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char librt_htbl_RCSid[] = "@(#)$Header$ (ARL)";
+static char librt_htbl_RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 #include <stdio.h>
-#include <string.h>
 #include "machine.h"
 #include "externs.h"
 #include "bu.h"

@@ -23,7 +23,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char libbu_convert_RCSid[] = "@(#)$Header$ (ARL)";
+static char libbu_convert_RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -39,6 +39,33 @@ static const char libbu_convert_RCSid[] = "@(#)$Header$ (ARL)";
 #include "vmath.h"
 #include "bu.h"
 
+/*
+ * Theses should be moved to a header file soon.
+ */
+#define CV_CHANNEL_MASK	0x00ff
+#define CV_HOST_MASK	0x0100
+#define CV_SIGNED_MASK	0x0200
+#define CV_TYPE_MASK	0x1c00
+#define CV_CONVERT_MASK 0x6000
+
+#define CV_TYPE_SHIFT	10
+#define CV_CONVERT_SHIFT 13
+
+#define CV_8	0x0400
+#define	CV_16	0x0800
+#define CV_32	0x0c00
+#define CV_64	0x1000
+#define CV_D	0x1400
+
+#define CV_CLIP		0x0000
+#define CV_NORMAL	0x2000
+#define CV_LIT		0x4000
+
+#define	IND_NOTSET	0
+#define IND_BIG		1
+#define IND_LITTLE	2
+#define IND_ILL		3		/* PDP-11 */
+#define IND_CRAY	4
 
 /* bu_cv_cookie	Set's a bit vector after parsing an input string.
  *
@@ -60,7 +87,8 @@ static const char libbu_convert_RCSid[] = "@(#)$Header$ (ARL)";
  * Normalize | Clip | low-order
  */
 int
-bu_cv_cookie(char *in)			/* input format */
+bu_cv_cookie(in)
+char *in;			/* input format */
 {
 	char *p;
 	int collector;
@@ -373,7 +401,8 @@ register int	cookie;
  *  Returns the number of bytes each "item" of type "cookie" occupies.
  */
 int
-bu_cv_itemlen(register int cookie)
+bu_cv_itemlen( cookie )
+register int	cookie;
 {
 	register int	fmt = (cookie & CV_TYPE_MASK) >> CV_TYPE_SHIFT;
 	static int host_size_table[8] = {0, sizeof(char),

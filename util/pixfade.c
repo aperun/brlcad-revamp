@@ -28,7 +28,7 @@
  *	Christopher T. Johnson - 88/12/27
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -49,7 +49,6 @@ FILE	*inp;
 static char usage[] = "\
 Usage: pixfade [-m max] [-p percent] [-f fraction] [pix-file]\n";
 
-int
 get_args( argc, argv )
 register char **argv;
 {
@@ -110,7 +109,6 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main( argc, argv )
 int argc;
 char *argv[];
@@ -156,5 +154,4 @@ char *argv[];
 
 		fwrite(&cur_color,1,3,stdout);
 	}
-	return 0;
 }

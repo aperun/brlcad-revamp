@@ -16,7 +16,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include <stdio.h>
@@ -37,7 +37,6 @@ int	verbose = 0;
 
 static char *Usage = "usage: ap-pix [-v] file.ap > file.pix (3456 x ?)\n";
 
-int
 main( argc, argv )
 int argc; char **argv;
 {
@@ -82,5 +81,4 @@ int argc; char **argv;
 		if( verbose )
 			fprintf( stderr, "wrote line %d\n", line );
 	}
-	return 0;
 }

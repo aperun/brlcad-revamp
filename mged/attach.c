@@ -21,15 +21,11 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
-#ifdef USE_STRING_H
-#  include <string.h>
-#else
-#  include <strings.h>
-#endif
+
 #include <stdio.h>
 #include <sys/time.h>		/* for struct timeval */
 #include "machine.h"
@@ -87,9 +83,7 @@ void mged_slider_init_vls();
 void mged_slider_free_vls();
 void mged_link_vars();
 
-#if 0
 static int do_2nd_attach_prompt();
-#endif
 void mged_fb_open();
 void mged_fb_close();
 
@@ -227,7 +221,6 @@ char	**argv;
     return release((char *)NULL, 1);
 }
 
-#if 0
 static int
 do_2nd_attach_prompt()
 {
@@ -255,7 +248,6 @@ do_2nd_attach_prompt()
 
   return TCL_ERROR;
 }
-#endif
 
 int
 f_attach(clientData, interp, argc, argv)
@@ -266,7 +258,7 @@ char    **argv;
 {
   register struct w_dm *wp;
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -277,7 +269,6 @@ char    **argv;
     return TCL_ERROR;
   }
 
-  /* Look at last argument, skipping over any options which preceed it */
   for( wp = &which_dm[2]; wp->type != -1; wp++ )
     if( strcmp(argv[argc - 1], wp->name ) == 0 )
       break;
@@ -308,10 +299,10 @@ print_valid_dm()
 }
 
 int
-mged_attach(
-	struct w_dm *wp,
-	int argc,
-	char *argv[])
+mged_attach(wp, argc, argv)
+register struct w_dm *wp;
+int argc;
+char *argv[];
 {
   register struct dm_list *o_dm_list;
 
@@ -528,7 +519,7 @@ char	**argv;
     return TCL_ERROR;
   }
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);

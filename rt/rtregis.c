@@ -39,7 +39,7 @@
 *	All rights reserved.
 */
 #ifndef lint
-static const char RCSregis[] = "@(#)$Header$";
+static char RCSregis[] = "@(#)$Header$";
 #endif
 
 #include "conf.h"
@@ -74,7 +74,7 @@ int		verbose;		/* to be used for debugging */
  *  Main exists to coordinate the actions of the parts of this program.
  *  It also processes its own arguments (argc and argv).
  */
-int
+
 main(argc, argv)
 int	argc;
 char	**argv;

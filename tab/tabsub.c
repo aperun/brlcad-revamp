@@ -26,7 +26,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -52,15 +52,11 @@ char	*prototype;		/* Contains full text of prototype document */
 void	get_proto();
 void	do_lines();
 void	out_mat();
-int	str2chan_index( char *s );
-int	multi_words( char *words[], int	nwords );
-
 
 /*
  *			M A I N
  *
  */
-int
 main( argc, argv )
 int	argc;
 char	**argv;
@@ -84,7 +80,6 @@ char	**argv;
 		}
 	}
 	do_lines( table );
-	return 0;
 }
 
 void
@@ -253,7 +248,9 @@ FILE	*fp;
  *	 0	OK
  */
 int
-multi_words( char *words[], int	nwords )
+multi_words( words, nwords )
+char	*words[];
+int	nwords;
 {
 
 	if( strcmp( words[0], "rot" ) == 0 )  {
@@ -337,7 +334,7 @@ multi_words( char *words[], int	nwords )
 		bn_mat_idn( mat );
 		bn_mat_angles( mat, args[4], args[5], args[6] );
 		MAT_DELTAS( mat, args[1], args[2], args[3] );
-		if( NEAR_ZERO( args[7], VDIVIDE_TOL ) )  {
+		if( args[7] > -1e-17 && args[7] < 1e-17 )  {
 			/* Nearly zero, signal error */
 			fprintf(stderr,"Orient scale arg is near zero ('%s')\n",
 				words[7] );
@@ -476,7 +473,8 @@ multi_words( char *words[], int	nwords )
  *  To signal an error, 0 is returned;  this will index the time column.
  */
 int
-str2chan_index( char *s )
+str2chan_index( s )
+char	*s;
 {
 	int	chan;
 

@@ -316,24 +316,18 @@ reswitch:				/* after finding '*' or ',' */
 				;	/* it's ok, then */
 			    }
 			    else if ( *argp == '-' && argp[1] != '\0' )
-			    {
 				if ( optarg > 0 ) /* end optional args? */
 				{
 				    /* Eat the arg, too, if necessary */
 				    if ( list_cnt == 0 )
-				    {
 					if ( typchr == 's' )
 					    (void)va_arg( argl, char * );
 					else
 					    (void)va_arg( argl, ptr );
-				    }
 				    break;
 				}
 				else
-				{
 				    continue;
-				}
-			    }
 			    else if ( typchr != 's' )
 				continue;	/* not number, keep looking */
 			    
@@ -511,7 +505,6 @@ reswitch:				/* after finding '*' or ',' */
 				     */
 				    tmpflg = typchr;
 				    if (typchr == 'n' || typchr == 'N' )
-				    {
 					if (*argp != '0')
 					    tmpflg = 'd';
 					else if (*(argp+1) == 'x' ||
@@ -522,7 +515,6 @@ reswitch:				/* after finding '*' or ',' */
 					}
 					else
 					    tmpflg = 'o';
-				    }
 				    if (typchr == 'N')
 					tmpflg = toupper( tmpflg );
 

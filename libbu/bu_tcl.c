@@ -23,7 +23,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char libbu_bu_tcl_RCSid[] = "@(#)$Header$ (ARL)";
+static char libbu_bu_tcl_RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 
@@ -36,7 +36,6 @@ static const char libbu_bu_tcl_RCSid[] = "@(#)$Header$ (ARL)";
 #else
 #include <strings.h>
 #endif
-#include <ctype.h>
 
 #include "tcl.h"
 
@@ -106,19 +105,13 @@ register struct bu_structparse *sp;
 	while (sp->sp_name != NULL) {
 		Tcl_AppendElement(interp, sp->sp_name);
 		bu_vls_trunc(&str, 0);
-		/* These types are specified by lengths, e.g. %80s */
 		if (strcmp(sp->sp_fmt, "%c") == 0 ||
-		    strcmp(sp->sp_fmt, "%s") == 0 ||
-		    strcmp(sp->sp_fmt, "%S") == 0) {
-			if (sp->sp_count > 1)  {
-				/* Make them all look like %###s */
+		    strcmp(sp->sp_fmt, "%s") == 0) {
+			if (sp->sp_count > 1)
 				bu_vls_printf(&str, "%%%ds", sp->sp_count);
-			} else {
-				/* Singletons are specified by their actual character */
+			else
 				bu_vls_printf(&str, "%%c");
-			}
 		} else {
-			/* Vectors are specified by repetition, e.g. {%f %f %f} */
 			bu_vls_printf(&str, "%s", sp->sp_fmt);
 			for (i = 1; i < sp->sp_count; i++)
 				bu_vls_printf(&str, " %s", sp->sp_fmt);
@@ -156,8 +149,7 @@ char				*base;		/* base addr of users struct */
 {
 	register char				*cp, *loc;
 	register CONST struct bu_structparse	*sdp;
-	register int				 j;
-	register int				ii;
+	register int				 i, j;
 	struct bu_vls				 str;
 
 	if( desc == (struct bu_structparse *)NULL ) {
@@ -213,12 +205,12 @@ char				*base;		/* base addr of users struct */
 					bu_vls_free( &str );
 					return TCL_ERROR;
 				}
-				for( ii = j = 0;
-				     j < sdp->sp_count && argv[0][ii] != '\0';
-				     loc[j++] = argv[0][ii++] )
+				for( i = j = 0;
+				     j < sdp->sp_count && argv[0][i] != '\0';
+				     loc[j++] = argv[0][i++] )
 					;
-				if( ii < sdp->sp_count )
-					loc[ii] = '\0';
+				if( i < sdp->sp_count )
+					loc[i] = '\0';
 				if( sdp->sp_count > 1 ) {
 					loc[sdp->sp_count-1] = '\0';
 					Tcl_AppendResult( interp,
@@ -233,13 +225,9 @@ char				*base;		/* base addr of users struct */
 							  bu_vls_addr(&str),
 							  (char *)NULL );
 				}
+				--argc;
+				++argv;
 				break;
-			case 'S': {
-				struct bu_vls *vls = (struct bu_vls *)loc;
-				bu_vls_init_if_uninit( vls );
-				bu_vls_strcpy(vls, *argv);
-				break;
-			}
 			case 'i':
 				bu_log(
 			 "Error: %%i not implemented. Contact developers.\n" );
@@ -253,12 +241,12 @@ char				*base;		/* base addr of users struct */
 				register int tmpi;
 				register char CONST *cp;
 
-				if( argc < 1 ) { /* XXX - when was ii defined */
+				if( argc < 1 ) {
 					bu_vls_trunc( &str, 0 );
 					bu_vls_printf( &str,
-      "not enough values for \"%s\" argument: should have %d",
+      "not enough values for \"%s\" argument: should have %d, only %d given",
 						       sdp->sp_name,
-						       sdp->sp_count);
+						       sdp->sp_count, i );
 					Tcl_AppendResult( interp,
 							  bu_vls_addr(&str),
 							  (char *)NULL );
@@ -277,11 +265,13 @@ char				*base;		/* base addr of users struct */
 					Tcl_AppendResult( interp,
 							  bu_vls_addr(&str),
 							  (char *)NULL );
+					++argv;
+					--argc;
 					break;
 				}
 				/* Normal case: an integer */
 				cp = *argv;
-				for( ii = 0; ii < sdp->sp_count; ++ii ) {
+				for( i = 0; i < sdp->sp_count; ++i ) {
 					if( *cp == '\0' ) {
 						bu_vls_trunc( &str, 0 );
 						bu_vls_printf( &str,
@@ -329,6 +319,8 @@ char				*base;		/* base addr of users struct */
 						  argv[0],
 						  sdp->sp_count > 1 ? "}" : "",
 						  " ", (char *)NULL);
+				--argc;
+				++argv;
 				break; }
 			case 'f': {
 				int		dot_seen;
@@ -355,14 +347,14 @@ char				*base;		/* base addr of users struct */
 						  (char *)NULL );
 
 				cp = *argv;
-				for( ii = 0; ii < sdp->sp_count; ii++ ) {
+				for( i = 0; i < sdp->sp_count; i++ ) {
 					if( *cp == '\0' ) {
 						bu_vls_trunc( &str, 0 );
 						bu_vls_printf( &str,
        "not enough values for \"%s\" argument: should have %d, only %d given",
 							       sdp->sp_name,
 							       sdp->sp_count,
-							       ii );
+							       i );
 						Tcl_AppendResult( interp,
 							    bu_vls_addr(&str),
 							    (char *)NULL );
@@ -438,36 +430,17 @@ char				*base;		/* base addr of users struct */
 						  argv[0],
 						  sdp->sp_count > 1 ? "}" : "",
 						  " ", (char *)NULL );
+				--argc;
+				++argv;
 				break; }
-			default: {
-				struct bu_vls vls;
-
-				bu_vls_init(&vls);
-				bu_vls_printf(&vls,
-				"%s line:%d Parse error, unknown format: '%s' for element \"%s\"",
-				__FILE__, __LINE__, sdp->sp_fmt,
-				sdp->sp_name);
-
-				Tcl_AppendResult( interp, bu_vls_addr(&vls),
-					(char *)NULL );
-
-				bu_vls_free( &vls );
+			default:
+				Tcl_AppendResult( interp, "unknown format",
+						  (char *)NULL );
 				return TCL_ERROR;
-				}
 			}
-
-			if( sdp->sp_hook )  {
-				sdp->sp_hook( sdp, sdp->sp_name, base, *argv);
-
-			}
-			--argc;
-			++argv;
-
-
 			break;
 		}
 		
-
 		if( sdp->sp_name == NULL ) {
 			bu_vls_trunc( &str, 0 );
 			bu_vls_printf( &str, "invalid attribute %s\n", argv[0] );
@@ -1111,7 +1084,7 @@ Tcl_Interp *interp;
 }
 
 /*
- *  Allows LIBBU to be dynamically loaded to a vanilla tclsh/wish with
+ *  Allows LIBBU to be dynamically loade to a vanilla tclsh/wish with
  *  "load /usr/brlcad/lib/libbu.so"
  */
 int
@@ -1119,9 +1092,5 @@ Bu_Init(interp)
 Tcl_Interp *interp;
 {
 	bu_tcl_setup(interp);
-#if 0
-	bu_hook_list_init(&bu_log_hook_list);
-	bu_hook_list_init(&bu_bomb_hook_list);
-#endif
 	return TCL_OK;
 }

@@ -43,7 +43,6 @@
 #include "machine.h"
 #include "externs.h"
 #include "bu.h"
-#include "libtermio.h"
 
 #define CTRL_A      1
 #define CTRL_B      2

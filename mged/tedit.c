@@ -21,7 +21,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -49,6 +49,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #define V3BASE2LOCAL( _pt )	(_pt)[X]*base2local , (_pt)[Y]*base2local , (_pt)[Z]*base2local
 #define V4BASE2LOCAL( _pt )	(_pt)[X]*base2local , (_pt)[Y]*base2local , (_pt)[Z]*base2local , (_pt)[W]*base2local
 
+extern struct bu_external	es_ext;
 extern struct rt_db_internal	es_int;
 extern struct rt_db_internal	es_int_orig;
 
@@ -750,8 +751,8 @@ readsolid()
 }
 
 /* Run $EDITOR on temp file */
-int
-editit( const char *file )
+editit( file )
+char *file;
 {
 #if 0
 #ifdef BSD

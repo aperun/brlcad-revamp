@@ -18,7 +18,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 /*
@@ -219,7 +219,6 @@ CONST genptr_t	b;
 /*
  *			M A I N
  */
-int
 main( argc, argv )
 char	*argv[];
 {
@@ -232,11 +231,9 @@ char	*argv[];
 		exit( 1 );
 	}
 
-	rt_init_resource( &rt_uniresource, 0, NULL );
-
 	/* Build directory from object file.	 	*/
-	if( db_dirbuild(dbip) < 0 )  {
-		fprintf(stderr,"db_dirbuild() failure\n");
+	if( db_scan( dbip, (int (*)())db_diradd, 1, NULL ) < 0 )  {
+		fprintf(stderr,"db_scan failure\n");
 		exit(1);
 	}
 
@@ -470,7 +467,7 @@ genptr_t		client_data;
 		rt_vls_strcat( &flat, "" );
 	} else {
 		/* Rewrite tree so that all unions are at tree top */
-		db_non_union_push( curtree, &rt_uniresource );
+		db_non_union_push( curtree );
 		flatten_tree( &flat, curtree, "  ", 0 );
 	}
 
@@ -556,23 +553,25 @@ genptr_t		client_data;
  *
  *  Re-use the librt "soltab" structures here, for our own purposes.
  */
-union tree *gettree_leaf( tsp, pathp, ip, client_data )
+union tree *gettree_leaf( tsp, pathp, ep, id, client_data )
 struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
-struct rt_db_internal	*ip;
+struct rt_external	*ep;
+int			id;
 genptr_t		client_data;
 {
 	register fastf_t	f;
 	register struct soltab	*stp;
 	union tree		*curtree;
 	struct directory	*dp;
+	struct rt_db_internal	intern;
 	struct rt_vls		sol;
 	register int		i;
 	register matp_t		mat;
 
 	RT_VLS_INIT( &sol );
 
-	RT_CK_DB_INTERNAL(ip);
+	RT_CK_EXTERNAL(ep);
 	dp = DB_FULL_PATH_CUR_DIR(pathp);
 
 	/* Determine if this matrix is an identity matrix */
@@ -627,7 +626,7 @@ next_one:
 
 	GETSTRUCT(stp, soltab);
 	stp->l.magic = RT_SOLTAB_MAGIC;
-	stp->st_id = ip->idb_type;
+	stp->st_id = id;
 	stp->st_dp = dp;
 	if( mat )  {
 		stp->st_matp = (matp_t)rt_malloc( sizeof(mat_t), "st_matp" );
@@ -641,18 +640,26 @@ next_one:
 	VSETALL( stp->st_max, -INFINITY );
 	VSETALL( stp->st_min,  INFINITY );
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL(&intern);
+	if( rt_functab[id].ft_import( &intern, ep, stp->st_matp ? stp->st_matp : rt_identity, tsp->ts_dbip ) < 0 )  {
+		rt_log("rt_gettree_leaf(%s):  solid import failure\n", dp->d_namep );
+		if( intern.idb_ptr )  rt_functab[id].ft_ifree( &intern );
+		if( stp->st_matp )  rt_free( (char *)stp->st_matp, "st_matp");
+		rt_free( (char *)stp, "struct soltab");
+		return( TREE_NULL );		/* BAD */
+	}
+	RT_CK_DB_INTERNAL( &intern );
 
 	if(debug)  {
 		struct rt_vls	str;
 		rt_vls_init( &str );
 		/* verbose=1, mm2local=1.0 */
-		if( ip->idb_meth->ft_describe( &str, ip, 1, 1.0, &rt_uniresource ) < 0 )  {
+		if( rt_functab[id].ft_describe( &str, &intern, 1, 1.0 ) < 0 )  {
 			rt_log("rt_gettree_leaf(%s):  solid describe failure\n",
 			    dp->d_namep );
 		}
-		bu_log( "%s:  %s", dp->d_namep, rt_vls_addr( &str ) );
-		bu_vls_free( &str );
+		rt_log( "%s:  %s", dp->d_namep, rt_vls_addr( &str ) );
+		rt_vls_free( &str );
 	}
 
 	/* For now, just link them all onto the same list */
@@ -663,33 +670,33 @@ next_one:
 	/* Solid number is stp->st_bit + delsol */
 
 	/* Process appropriate solid type.				*/
-	switch( ip->idb_type )  {
+	switch( intern.idb_type )  {
 	case ID_TOR:
-		addtor( &sol, (struct rt_tor_internal *)ip->idb_ptr,
+		addtor( &sol, (struct rt_tor_internal *)intern.idb_ptr,
 		    dp->d_namep, stp->st_bit+delsol );
 		break;
 	case ID_ARB8:
-		addarb( &sol, (struct rt_arb_internal *)ip->idb_ptr,
+		addarb( &sol, (struct rt_arb_internal *)intern.idb_ptr,
 		    dp->d_namep, stp->st_bit+delsol );
 		break;
 	case ID_ELL:
-		addell( &sol, (struct rt_ell_internal *)ip->idb_ptr,
+		addell( &sol, (struct rt_ell_internal *)intern.idb_ptr,
 		    dp->d_namep, stp->st_bit+delsol );
 		break;
 	case ID_TGC:
-		addtgc( &sol, (struct rt_tgc_internal *)ip->idb_ptr,
+		addtgc( &sol, (struct rt_tgc_internal *)intern.idb_ptr,
 		    dp->d_namep, stp->st_bit+delsol );
 		break;
 	case ID_ARS:
-		addars( &sol, (struct rt_ars_internal *)ip->idb_ptr,
+		addars( &sol, (struct rt_ars_internal *)intern.idb_ptr,
 		    dp->d_namep, stp->st_bit+delsol );
 		break;
 	case ID_HALF:
-		addhalf( &sol, (struct rt_half_internal *)ip->idb_ptr,
+		addhalf( &sol, (struct rt_half_internal *)intern.idb_ptr,
 		    dp->d_namep, stp->st_bit+delsol );
 		break;
 	case ID_ARBN:
-		addarbn( &sol, (struct rt_arbn_internal *)ip->idb_ptr,
+		addarbn( &sol, (struct rt_arbn_internal *)intern.idb_ptr,
 		    dp->d_namep, stp->st_bit+delsol );
 		break;
 	case ID_PIPE:
@@ -697,9 +704,9 @@ next_one:
 	default:
 		(void) fprintf( stderr,
 		    "vdeck: '%s' Solid type %s has no corresponding COMGEOM solid, skipping\n",
-		    dp->d_namep, ip->idb_meth->ft_name );
+		    dp->d_namep, rt_functab[id].ft_name );
 		vls_itoa( &sol, stp->st_bit+delsol, 5 );
-		rt_vls_strcat( &sol, ip->idb_meth->ft_name );
+		rt_vls_strcat( &sol, rt_functab[id].ft_name );
 		vls_blanks( &sol, 5*10 );
 		rt_vls_strcat( &sol, dp->d_namep );
 		rt_vls_strcat( &sol, "\n");
@@ -708,6 +715,9 @@ next_one:
 
 	rt_vls_fwrite( solfp, &sol );
 	rt_vls_free( &sol );
+
+	/* Free storage for internal form */
+	if( intern.idb_ptr )  rt_functab[id].ft_ifree( &intern );
 
 found_it:
 	GETUNION( curtree, tree );
@@ -1386,7 +1396,6 @@ register char *prefix;
 /*	s h e l l ( )
 	Execute shell command.
  */
-int
 shell( args )
 char  *args[];
 {
@@ -1516,7 +1525,6 @@ char	 *args[];
 /*	c o l _ p r t ( )
 	Print list of names in tabular columns.
  */
-int
 col_prt( list, ct )
 register char	*list[];
 register int	ct;
@@ -1551,7 +1559,6 @@ register int	ct;
 	Insert each member of the table of contents 'toc_list' which
 	matches one of the arguments into the current list 'curr_list'.
  */
-int
 insert(  args,	ct )
 char		*args[];
 register int	ct;
@@ -1582,7 +1589,6 @@ register int	ct;
 	delete all members of current list 'curr_list' which match
 	one of the arguments
  */
-int
 delete(  args )
 char	*args[];
 {

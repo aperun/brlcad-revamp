@@ -29,12 +29,9 @@ set mged_help_data(attach)	{{[-d display_string] [-i init_script] [-n name]
 set mged_help_data(autoview)	{{}	{set view size and center so that all displayed solids are in view}}
 set mged_help_data(B)		{{-C#/#/# <objects>}	{clear screen, edit objects}}
 set mged_help_data(bev)		{{[-t] [-P#] new_obj obj1 op obj2 op obj3 op ...}	{boolean evaluation of objects via NMG's}}
-set mged_help_data(bodyread)	{{object file type}	{read an object's body from a file}}
-set mged_help_data(bodywrite)	{{file object}	{write an object's body to a file}}
 set mged_help_data(bot_condense) {{new_bot_solid old_bot_solid} {remove unreferenced vertices in a BOT solid}}
 set mged_help_data(bot_face_fuse) {{new_bot_solid old_bot_solid} {eliminate duplicate faces in a BOT solid}}
 set mged_help_data(bot_vertex_fuse) {{new_bot_solid old_bot_solid} {fuse duplicate vertices in a BOT solid}}
-set mged_help_data(build_region) {{[-a region_number] tag start end} {build a region from solids matching RE "tag.s*"}}
 set mged_help_data(c)		{{[-gr] comb_name [boolean_expr]}	{create or extend a combination using standard notation}}
 set mged_help_data(cat)		{{<objects>}	{list attributes (brief)}}
 set mged_help_data(center)	{{x y z}	{set view center}}
@@ -82,7 +79,7 @@ set mged_help_data(expand)	{{expression}	{globs expression against MGED database
 set mged_help_data(eye_pt)	{{mx my mz}	{set eye point to given model coordinates (in mm)}}
 set mged_help_data(e_muves)	{{MUVES_component_1 MUVES_component2 ...}	{display listed MUVES components/systems}}
 set mged_help_data(facedef)	{{####}	{define new face for an arb}}
-set mged_help_data(facetize)	{{[-ntT] [-P#] new_obj old_obj(s)}	{convert objects to faceted BOT objects (or NMG for -n option) at current tol}}
+set mged_help_data(facetize)	{{[-ntT] [-P#] new_obj old_obj(s)}	{convert objects to faceted BOT (or NMG for -n option) objects at current tol}}
 set mged_help_data(fracture)	{{NMGsolid [prefix]}	{fracture an NMG solid into many NMG solids, each containing one face}}
 set mged_help_data(g)		{{groupname <objects>}	{group objects}}
 set mged_help_data(garbage_collect)	{{}	{eliminate unused space in database file}}
@@ -145,7 +142,7 @@ set mged_help_data(pov)		{{args}	{experimental:  set point-of-view}}
 set mged_help_data(prcolor)	{{}	{print color&material table}}
 set mged_help_data(prefix)	{{new_prefix object(s)}	{prefix each occurrence of object name(s)}}
 set mged_help_data(press)	{{button_label}	{emulate button press}}
-set mged_help_data(prj_add)	{{ [-t] [-b] [-n] shaderfile [image_file] [image_width] [image_height]} {Appends image filename + current view parameters to shaderfile}}
+set mged_help_data(prj_add)	{{[-t] [-n] [-b] shaderfile [image_file] [image_width] [image_height]} {Appends image filename + current view parameters to shaderfile}}
 set mged_help_data(preview)	{{[-v] [-d sec_delay] [-D start frame] [-K last frame] rt_script_file}	{preview new style RT animation script}}
 set mged_help_data(ps)		{{[-f font] [-t title] [-c creator] [-s size in inches] [-l linewidth] file}	{creates a postscript file of the current view}}
 set mged_help_data(push)	{{object[s]}	{pushes object's path transformations to solids}}

@@ -484,8 +484,7 @@ int	fd;
 #if defined(SO_RCVBUF)
 	/* try to set our buffers up larger */
 	{
-		int	m = 0;
-		int	n = 0;
+		int	m, n;
 		int	val;
 		int	size;
 

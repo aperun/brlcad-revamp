@@ -37,9 +37,8 @@ NFS=1
 # Label number for this CAD Release,
 # RCS main Revision number, and date.
 #RELEASE=M.N;	RCS_REVISION=X;		REL=DATE=dd-mmm-yy
-RELEASE=6.0;	RCS_REVISION=14;	REL_DATE=today		# 6.0
-#RELEASE=5.2;	RCS_REVISION=13;	REL_DATE=21-Aug-00	# 5.2
-#RELEASE=5.1;	RCS_REVISION=13;	REL_DATE=Today		# beyond 5.1
+RELEASE=5.3;	RCS_REVISION=14;	REL_DATE=5-Mar-01	# 5.3
+#RELEASE=5.2;	RCS_REVISION=13;	REL_DATE=7-Oct-00	# 5.2
 #RELEASE=5.0;	RCS_REVISION=12;	REL_DATE=15-Sept-99	# 5.0 production
 #RELEASE=4.6;	RCS_REVISION=11;	REL_DATE=7-Jul-99	# 5.0beta
 #RELEASE=4.5;	RCS_REVISION=11;	REL_DATE=14-Feb-98	# 4.5 production
@@ -192,6 +191,7 @@ BDIRS="bench \
 	conv \
 	db \
 	rt \
+	anim \
 	mged \
 	remrt \
 	libcursor \
@@ -213,7 +213,6 @@ BDIRS="bench \
 	sig \
 	tab \
 	tools \
-	anim \
 	off \
 	halftone \
 	nirt \
@@ -348,35 +347,10 @@ benchmark)
 #  clobber	clean + noprod
 #  lint
 #  ls		ls -al of all subdirectories
-#
-#  If operations are enclosed in sub-shells "(...)",
-#  then on newer systems, ^C will only terminate the sub-shell
 all)
 	for dir in ${BDIRS}; do
 		echo -------------------------------- ${DIRPRE}${dir}${DIRSUF};
-		if test ! -d ${DIRPRE}${dir}${DIRSUF}
-		then	continue;
-		fi
-		cd ${DIRPRE}${dir}${DIRSUF}
-		cake -k ${SILENT}
-		cd ..
-	done;;
-
-# Just like "all", but will use the "fast.sh" scripts when available.
-fast)
-	for dir in ${BDIRS}; do
-		echo -------------------------------- ${DIRPRE}${dir}${DIRSUF};
-		if test ! -d ${DIRPRE}${dir}${DIRSUF}
-		then	continue;
-		fi
-		cd ${DIRPRE}${dir}${DIRSUF}
-		if test -f ../${dir}/fast.sh
-		then
-			../${dir}/fast.sh ${SILENT}
-		else
-			cake -k ${SILENT}
-		fi
-		cd ..
+		( cd ${DIRPRE}${dir}${DIRSUF} && cake -k ${SILENT} )
 	done;;
 
 clean|noprod|clobber|lint)
@@ -529,8 +503,7 @@ etags)
 	/bin/rm -f etags;
 	for dir in ${BDIRS}; do
 		echo -------------------------------- ${dir};
-#		etags -a -o etags ${dir}/*.c
-		find ${dir} -name \*.c -exec etags -a -o etags {} \;
+		etags -a -o etags ${dir}/*.c
 	done;;
 shell)
 	for dir in ${BDIRS}; do

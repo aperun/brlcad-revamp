@@ -25,7 +25,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -293,13 +293,13 @@ int	fd;
 
 #if defined(SO_KEEPALIVE)
   if(setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *)&on, sizeof(on)) < 0){
-    bu_log("setsockopt (SO_KEEPALIVE): %m\n");
+    bu_log("setsockopt (SO_KEEPALIVE): %m");
   }
 #endif
 #if defined(SO_RCVBUF)
   /* try to set our buffers up larger */
   {
-    int	m = -1, n = -1;
+    int	m, n;
     int	val;
     int	size;
 
@@ -314,7 +314,7 @@ int	fd;
     }
 
     if(m < 0 || n < 0)
-      bu_log("setup_socket: setsockopt() SO_RCVBUF/SO_SNDBUF failed: %m\n");
+      bu_log("setup_socket: setsockopt()");
   }
 #endif
 }

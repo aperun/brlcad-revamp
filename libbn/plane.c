@@ -15,18 +15,13 @@
  *	Public Domain, Distribution Unlimited
  */
 #ifndef lint
-static const char RCSplane[] = "@(#)$Header$ (BRL)";
+static char RCSplane[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 
 #include "machine.h"
 #include "externs.h"
@@ -2391,21 +2386,14 @@ fail:
 	return 0;
 }
 
-/*
- *			B N _ D O E S _ R A Y _ I S E C T _ T R I
- *
- *  Returns -
- *	0	No intersection
- *	1	Intersection, 'inter' has intersect point.
- */
 int
-bn_does_ray_isect_tri(
-	const point_t pt,
-	const vect_t dir,
-	const point_t V,
-	const point_t A,
-	const point_t B,
-	point_t	inter)			/* output variable */
+bn_does_ray_isect_tri( pt, dir, V, A, B, inter )
+CONST point_t pt;
+CONST vect_t dir;
+CONST point_t V;
+CONST point_t A;
+CONST point_t B;
+point_t inter;			/* output variable */
 {
 	vect_t VP, VA, VB, AB, AP, N;
 	fastf_t NdotDir;
@@ -2635,7 +2623,7 @@ point_t Q;
 vect_t e_in;
 point_t pt1, pt2;
 {
-	fastf_t de, denom;
+	fastf_t de, Qe, Pe, denom;
 	vect_t diff, PmQ, tmp;
 	vect_t d, e;
 	fastf_t len_e, inv_len_e, len_d, inv_len_d;
@@ -2676,6 +2664,8 @@ point_t pt1, pt2;
 		{
 			VBLEND2( tmp, 1.0, e, -de, d );
 			dist[1] = VDOT( PmQ, tmp )/denom;
+			Qe = VDOT( Q, e );
+			Pe = VDOT( P, e );
 			dist[0] = dist[1] * de - VDOT( PmQ, d );
 		}
 	}

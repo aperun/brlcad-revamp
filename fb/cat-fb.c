@@ -26,7 +26,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -34,7 +34,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 #include "machine.h"
 #include "externs.h"			/* For getopt() */
-#include "bu.h"
 #include "fb.h"
 #include "vfont-if.h"
 

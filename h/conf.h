@@ -89,20 +89,6 @@
 #	define HAVE_TERMIOS_H	1
 #endif
 
-#if defined(_WIN32) && defined(_MSC_VER) && defined(_M_IX86)
-#	define USE_PROTOTYPES 1
-#	define HAVE_STRING_H 1
-#	define HAVE_STDLIB_H 1
-#	define HAVE_STDARG_H 1
-#	define HAVE_VARARGS_H 1
-#	define USE_STRING_H 1
-#	define HAVE_DRAND48 1
-#	define HAVE_GETHOSTNAME 1
-#	define HAVE_GETOPT 1
-#	define HAVE_STRCHR 1
-#	define HAVE_UNIX_IO 1
-#endif
-
 #if defined(sgi) || defined(__sgi) || defined(IRIX)
 #	if IRIX < 6
 #		define HAS_SGIGL	1	/* Old GL */
@@ -216,7 +202,6 @@
 #	define HAVE_STDLIB_H	1
 #	define HAVE_UNISTD_H	1
 #	define HAVE_TERMIOS_H	1
-#	define HAVE_TERMCAP_H	1
 #	define HAVE_IOCTL_COMPAT_H 1
 #	define HAVE_SYS_MMAN_H	1
 #       define HAVE_FLOAT_H     1
@@ -263,7 +248,6 @@
 #	define HAVE_GETOPT_H	1
 #	define HAVE_XOSDEFS_H	1
 #	define HAVE_STRING_H	1
-#	define USE_STRING_H	1
 #	define HAVE_POSIX_REGEXEC	1
 #	define HAVE_STRCHR	1
 #	define HAVE_VFORK	1
@@ -276,12 +260,10 @@
 #	define HAVE_UNIX_IO	1
 #	define HAVE_DRAND48	1
 #	define HAVE_TERMIOS_H	1
-#	define HAVE_TERMCAP_H	1
 #	define HAVE_SYS_MMAN_H	1
 #	define HAVE_LIMITS_H	1
 #	define HAVE_BZERO	1
 #	define TK_READ_DATA_PENDING(f)	((f)->_IO_read_ptr != (f)->_IO_read_end)
-
 #endif
 
 #if defined(__NetBSD__)
@@ -442,8 +424,9 @@
 #       define  NATURAL_IEEE    yes
 #endif
 
-#if defined(i386) || defined(__i386) || defined(__alpha) \
-    || defined(n16) || defined(i860) ||defined(__stardent) 
+#if defined(n16) || defined(i386) || defined(i860) || \
+	defined(__i386) || \
+	defined(__stardent) || defined(__alpha)
 
         /* These systems operate in IEEE format, using little-endian order */
 #       define  REVERSED_IEEE   yes

@@ -16,14 +16,13 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include <stdio.h>
 
 static char usage[] = "Usage: plcolor r g b\n";
 
-int
 main( argc, argv )
 int argc; char **argv;
 {

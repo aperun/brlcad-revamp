@@ -154,8 +154,7 @@ char *formatInterp();
 bool argGiven();
 char **gargv;
 
-int
-main(argc, argv)
+main (argc, argv)
 int	argc;
 char	*argv[];
 {
@@ -276,7 +275,6 @@ char	*argv[];
      */
 
     rasterWrite(stdout);
-    return 0;
 }
 void
 ifImageSet(i, j, value, color)
@@ -933,7 +931,6 @@ if(Debug)fprintf(stderr, "Stack growing to %d\n", Stack.allocked);
 	Stack.s[Stack.top].y = y;
 	Stack.s[Stack.top].dir = dir;
 }
-int
 stackPop()
 {
 	Stack.top -= 1;

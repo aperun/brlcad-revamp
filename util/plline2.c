@@ -16,7 +16,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -30,7 +30,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 static char usage[] = "Usage: plline2 x1 y1 x2 y2 [r g b]\n";
 
-int
 main( argc, argv )
 int argc; char **argv;
 {

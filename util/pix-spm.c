@@ -16,7 +16,6 @@
 
 static	char *Usage = "usage: pix-spm file.pix size > file.spm\n";
 
-int
 main( argc, argv )
 int argc; char **argv;
 {

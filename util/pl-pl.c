@@ -17,7 +17,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include <stdio.h>
@@ -118,7 +118,6 @@ int	no3d = 1;
 static char usage[] = "\
 Usage: pl-pl [-v] [-S] < unix_plot > unix_plot\n";
 
-int
 main( argc, argv )
 int	argc;
 char	**argv;

@@ -124,7 +124,7 @@ struct _mged_variables {
   int		mv_fb;				/* toggle image on/off */
   int		mv_fb_all;			/* 0 - use part of image as defined by the rectangle
 						   1 - use the entire image */
-  int		mv_fb_overlay;			/* 0 - underlay    1 - interlay    2 - overlay */
+  int		mv_fb_overlay;			/* 0 - underlay     1 - overlay */
   char		mv_mouse_behavior;
   char		mv_coords;
   char		mv_rotate_about;
@@ -515,6 +515,7 @@ struct dm_list {
 #define BE_ACCEPT	1+16
 #define BE_REJECT	0+16
 
+#define BV_SLICEMODE	15
 #define BE_S_EDIT	14
 #define BE_S_ROTATE	13
 #define BE_S_TRANS	12

@@ -100,7 +100,7 @@ static CONST char *MY_NAME = "rlequant";
  * Algorithm:
  * 	Read image, call colorquant, write image with new colormap.
  */
-int
+void
 main( argc, argv )
 int argc;
 char **argv;
@@ -117,7 +117,7 @@ char **argv;
     int		fflag = 0;
     int		dflag = 0;
     int		rle_cnt, rle_err, width, height, shift;
-    int		colors = -1;
+    int		colors;
     long	entries;
     FILE       *outfile = stdout;
     rle_hdr in_hdr, out_hdr;	/* Headers for input and output files. */

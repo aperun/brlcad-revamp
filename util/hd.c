@@ -13,7 +13,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -104,7 +104,6 @@ void usage()
  *
  *    Parse arguemnts and  call 'dump' to perform primary task.
  */
-int
 main(ac,av)
 int ac;
 char *av[];
@@ -156,5 +155,4 @@ char *av[];
 			(void)fclose(fd);
 		}
 	}
-	return 0;
 }

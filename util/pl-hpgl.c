@@ -18,7 +18,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include <stdio.h>
@@ -27,7 +27,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #define	geti(x)	{ (x) = getchar(); (x) |= (short)(getchar()<<8); }
 #define getb(x)	((x) = getchar())
 
-int
 main(argc,argv)
 int argc;
 char **argv;

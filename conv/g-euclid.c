@@ -16,7 +16,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -175,10 +175,11 @@ genptr_t		client_data;
 }
 
 static union tree *
-leaf_stub( tsp, pathp, ip, client_data )
+leaf_stub( tsp, pathp, ep, id, client_data )
 struct db_tree_state    *tsp;
 struct db_full_path     *pathp;
-struct rt_db_internal	*ip;
+struct bu_external      *ep;
+int                     id;
 genptr_t		client_data;
 {
 	bu_log( "leaf stub called, this shouldn't happen\n" );
@@ -246,7 +247,7 @@ struct nmgregion *r;
 struct db_tree_state *tsp;
 {
 	struct shell *s;
-	struct facets *faces=NULL;
+	struct facets *faces;
 	int i,j;
 
 	NMG_CK_REGION( r );
@@ -337,7 +338,7 @@ struct db_tree_state *tsp;
 			}
 			else if( no_of_loops == no_of_holes + 1 )
 			{
-				struct loopuse *outer_lu=(struct loopuse *)NULL;
+				struct loopuse *outer_lu;
 
 				/* only one outer loop, so find it */
 				for( i=0 ; i<no_of_loops ; i++ )
@@ -531,8 +532,6 @@ char	*argv[];
 	tree_state.ts_tol = &tol;
 	tree_state.ts_ttol = &ttol;
 
-	rt_init_resource( &rt_uniresource, 0, NULL );
-
 	/* XXX For visualization purposes, in the debug plot files */
 	{
 		extern fastf_t	nmg_eue_dist;	/* librt/nmg_plot.c */
@@ -591,7 +590,7 @@ char	*argv[];
 		perror(argv[0]);
 		exit(1);
 	}
-	db_dirbuild( dbip );
+	db_scan(dbip, (int (*)())db_diradd, 1, NULL);
 
 	if( out_file == NULL )
 		fp_out = stdout;
@@ -670,7 +669,7 @@ char	*argv[];
 		regions_written, percent );
 
 	/* Release dynamic storage */
-	rt_vlist_cleanup();
+	bn_vlist_cleanup();
 	db_close(dbip);
 
 #if MEMORY_LEAK_CHECKING
@@ -693,6 +692,7 @@ struct db_full_path	*pathp;
 union tree		*curtree;
 genptr_t		client_data;
 {
+	extern FILE		*fp_fig;
 	struct nmgregion	*r;
 	struct bu_list		vhead;
 	union tree		*ret_tree;
@@ -734,7 +734,7 @@ genptr_t		client_data;
 		nmg_isect2d_final_cleanup();
 
 		/* Release the tree memory & input regions */
-		db_free_tree(curtree, &rt_uniresource);	/* Does an nmg_kr() */
+		db_free_tree(curtree);		/* Does an nmg_kr() */
 
 		/* Get rid of (m)any other intermediate structures */
 		if( (*tsp->ts_m)->magic == NMG_MODEL_MAGIC )
@@ -750,9 +750,7 @@ genptr_t		client_data;
 	if( verbose )
 		bu_log( "\tEvaluating region\n" );
 	(void)nmg_model_fuse(*tsp->ts_m, tsp->ts_tol);
-
-	/* librt/nmg_bool.c */
-	ret_tree = nmg_booltree_evaluate(curtree, tsp->ts_tol, &rt_uniresource);
+	ret_tree = nmg_booltree_evaluate(curtree, tsp->ts_tol);	/* librt/nmg_bool.c */
 
 	if( ret_tree )
 		r = ret_tree->tr_d.td_r;
@@ -807,7 +805,7 @@ genptr_t		client_data;
 	 *  A return of TREE_NULL from this routine signals an error,
 	 *  so we need to cons up an OP_NOP node to return.
 	 */
-	db_free_tree(curtree, &rt_uniresource);		/* Does an nmg_kr() */
+	db_free_tree(curtree);		/* Does an nmg_kr() */
 
 out:
 	BU_GETUNION(curtree, tree);

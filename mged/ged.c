@@ -37,7 +37,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 char MGEDCopyRight_Notice[] = "@(#) \
@@ -70,7 +70,6 @@ in all countries except the USA.  All rights reserved.";
 #include "bn.h"
 #include "raytrace.h"
 #include "mater.h"
-#include "libtermio.h"
 #include "./ged.h"
 #include "./titles.h"
 #include "./mged_solid.h"
@@ -132,7 +131,6 @@ extern struct _rubber_band default_rubber_band;
 int pipe_out[2];
 int pipe_err[2];
 struct db_i *dbip = DBI_NULL;	/* database instance pointer */
-struct rt_wdb *wdbp = RT_WDB_NULL;
 int update_views = 0;
 int (*cmdline_hook)() = NULL;
 jmp_buf	jmp_env;		/* For non-local gotos */
@@ -164,7 +162,6 @@ struct bn_tol	mged_tol;		/* calculation tolerance */
 
 struct bu_vls mged_prompt;
 void pr_prompt(), pr_beep();
-int mged_bomb_hook();
 
 #ifdef USE_PROTOTYPES
 Tcl_FileProc stdin_input;
@@ -251,7 +248,6 @@ char **argv;
 	cur_sigint = signal( SIGINT, SIG_IGN );		/* sample */
 	(void)signal( SIGINT, cur_sigint );		/* restore */
 
-#if 1
 	/* If multiple processors might be used, initialize for it.
 	 * Do not run any commands before here.
 	 * Do not use bu_log() or bu_malloc() before here.
@@ -260,7 +256,6 @@ char **argv;
 	  rt_g.rtg_parallel = 1;
 	  bu_semaphore_init( RT_SEM_LAST );
 	}
-#endif
 
 	/* Set up linked lists */
 	BU_LIST_INIT(&HeadSolid.l);
@@ -350,8 +345,6 @@ char **argv;
 	mged_tol.dist_sq = mged_tol.dist * mged_tol.dist;
 	mged_tol.perp = 1e-6;
 	mged_tol.para = 1 - mged_tol.perp;
-
-	rt_init_resource( &rt_uniresource, 0, NULL );
 
 	rt_prep_timer();		/* Initialize timer */
 
@@ -469,8 +462,6 @@ char **argv;
 	    }else{
 	      exit(0);
 	    }
-
-	    bu_add_hook(&bu_bomb_hook_list, mged_bomb_hook, GENPTR_NULL);
 	  }
 	}
 
@@ -1203,7 +1194,8 @@ int mask;
  */
 
 int
-event_check( int non_blocking )
+event_check( non_blocking )
+int	non_blocking;
 {
     register struct dm_list *p;
     struct dm_list *save_dm_list;
@@ -1677,7 +1669,7 @@ refresh()
   }
 
   curr_dm_list = save_dm_list;
-
+  
   if(!do_overlay){
     bu_vls_free(&overlay_vls);
     bu_vls_free(&tmp_vls);
@@ -1746,8 +1738,9 @@ int	exitcode;
 	}
 
 	/* Be certain to close the database cleanly before exiting */
+	/* Close the Tcl database objects */
 	Tcl_Eval(interp, "db close; .inmem close");
-	if( wdbp )  wdb_close(wdbp);
+
 	if( dbip )  db_close(dbip);
 
 	if (cbreak_mode > 0)
@@ -1902,11 +1895,13 @@ new_edit_mats()
 static int
 do_rc()
 {
-	FILE	*fp = NULL;
+	FILE	*fp;
 	char	*path;
+	int 	found;
 	struct	bu_vls str;
 	int bogus;
 
+	found = 0;
 	bu_vls_init( &str );
 
 #define ENVRC	"MGED_RCFILE"
@@ -1915,28 +1910,31 @@ do_rc()
 	if( (path = getenv(ENVRC)) != (char *)NULL ) {
 		if ((fp = fopen(path, "r")) != NULL ) {
 			bu_vls_strcpy( &str, path );
+			found = 1;
 		}
 	}
 
-	if( !fp ) {
+	if( !found ) {
 		if( (path = getenv("HOME")) != (char *)NULL )  {
 			bu_vls_strcpy( &str, path );
 			bu_vls_strcat( &str, "/" );
 			bu_vls_strcat( &str, RCFILE );
 
-			fp = fopen(bu_vls_addr(&str), "r");
+			if( (fp = fopen(bu_vls_addr(&str), "r")) != NULL )
+			  found = 1;
 		}
 	}
 
-	if( !fp ) {
+	if( !found ) {
 		if( (fp = fopen( RCFILE, "r" )) != NULL )  {
 			bu_vls_strcpy( &str, RCFILE );
+			found = 1;
 		}
 	}
 
     /* At this point, if none of the above attempts panned out, give up. */
 
-	if( !fp ){
+	if( !found ){
 	  bu_vls_free(&str);
 	  return -1;
 	}
@@ -1984,11 +1982,11 @@ do_rc()
  *	cmdline()		Only one arg is permitted.
  */
 int
-f_opendb(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_opendb(clientData, interp, argc, argv )
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	struct db_i *save_dbip;
 	struct mater *save_materp;
@@ -2107,7 +2105,7 @@ f_opendb(
 		}
 
 	    	/* File does not exist, and should be created */
-		if( (dbip = db_create( argv[1], 5 )) == DBI_NULL )  {
+		if( (dbip = db_create( argv[1] )) == DBI_NULL )  {
 			dbip = save_dbip; /* restore previous database */
 			rt_material_head = save_materp;
 			bu_vls_free(&vls);
@@ -2156,7 +2154,6 @@ f_opendb(
 
 		/* Close the Tcl database objects */
 		Tcl_Eval(interp, "db close; .inmem close");
-		wdb_close(wdbp);
 
 		/* Close current database.  Releases MaterHead, etc. too. */
 		db_close(dbip);
@@ -2172,11 +2169,6 @@ f_opendb(
 	/* Quick -- before he gets away -- write a logfile entry! */
 	log_event( "START", argv[1] );
 
-	/* Provide LIBWDB C access to the on-disk database */
-	if( (wdbp = wdb_dbopen( dbip, RT_WDB_TYPE_DB_DISK )) == RT_WDB_NULL )  {
-		Tcl_AppendResult(interp, "wdb_dbopen() failed?\n", (char *)NULL);
-		return TCL_ERROR;
-	}
 	/* Establish LIBWDB TCL access to both disk and in-memory databases */
 	/* This creates "db" and ".inmem" Tcl objects */
 	bu_vls_strcpy(&vls, "set wdbp [wdb_open db disk [get_dbip]]; wdb_open .inmem inmem [get_dbip]");
@@ -2219,23 +2211,3 @@ f_opendb(
 	bu_vls_free(&msg);
 	return TCL_OK;
 }
-
-int
-mged_bomb_hook(clientData, str)
-     genptr_t clientData;
-     genptr_t str;
-{
-	struct bu_vls vls;
-
-	bu_vls_init(&vls);
-	bu_vls_printf(&vls, "set mbh_dialog [Dialog .#auto -modality application];");
-	bu_vls_printf(&vls, "$mbh_dialog hide 1; $mbh_dialog hide 2; $mbh_dialog hide 3;");
-	bu_vls_printf(&vls, "label [$mbh_dialog childsite].l -text {%s};", str);
-	bu_vls_printf(&vls, "pack [$mbh_dialog childsite].l;");
-	bu_vls_printf(&vls, "update; $mbh_dialog activate");
-	Tcl_Eval(interp, bu_vls_addr(&vls));
-	bu_vls_free(&vls);
-	
-	return TCL_OK;
-}
-	     

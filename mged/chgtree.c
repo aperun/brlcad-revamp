@@ -28,7 +28,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -44,15 +44,22 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "bu.h"
 #include "vmath.h"
 #include "bn.h"
+#include "wdb.h"
 #include "./sedit.h"
 #include "raytrace.h"
-#include "wdb.h"
 #include "rtgeom.h"
 #include "./ged.h"
 #include "externs.h"
 #include "./mged_solid.h"
 #include "./mged_dm.h"
 #include "./mgedtcl.h"
+
+/* XXX Move to raytrace.h */
+BU_EXTERN(struct animate	*db_parse_1anim, (struct db_i *dbip,
+				int argc, CONST char **argv));
+BU_EXTERN(union tree		*db_find_named_leaf, (union tree *tp,
+				CONST char *cp));
+
 
 extern void solid_list_callback(); /* chgview.c */
 extern struct db_tree_state	mged_initial_tree_state;	/* dodraw.c */
@@ -64,11 +71,11 @@ void	aexists();
 /* Rename an object */
 /* Format: mv oldname newname	*/
 int
-f_name(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_name(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	register struct directory *dp;
 	struct rt_db_internal	intern;
@@ -94,13 +101,13 @@ f_name(
 	  return TCL_ERROR;
 	}
 
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR_return;
 	}
 
 	/*  Change object name in the in-memory directory. */
 	if( db_rename( dbip, dp, argv[2] ) < 0 )  {
-		rt_db_free_internal( &intern, &rt_uniresource );
+		rt_db_free_internal( &intern );
 	  Tcl_AppendResult(interp, "error in db_rename to ", argv[2],
 			   ", aborting\n", (char *)NULL);
 	  TCL_ERROR_RECOVERY_SUGGESTION;
@@ -108,7 +115,7 @@ f_name(
 	}
 
 	/* Re-write to the database.  New name is applied on the way out. */
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 	return TCL_OK;
@@ -155,7 +162,8 @@ char	**argv;
 	/* no interuprts */
 	(void)signal( SIGINT, SIG_IGN );
 
-	if( (dp=db_diradd( dbip, argv[2], -1L, 0, proto->d_flags, NULL)) == DIR_NULL )  {
+	if( (dp=db_diradd( dbip, argv[2], -1, proto->d_len, proto->d_flags, NULL)) == DIR_NULL ||
+	    db_alloc( dbip, dp, proto->d_len ) < 0 )  {
 	  TCL_ALLOC_ERR_return;
 	}
 
@@ -187,13 +195,11 @@ Tcl_Interp *interp;
 int	argc;
 char	**argv;
 {
+	register struct directory *dp;
 	char oper;
-	struct bu_list	head;
 
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
-
-	BU_LIST_INIT(&head);
 
 	if(argc < 3 || 4 < argc){
 	  struct bu_vls vls;
@@ -205,7 +211,7 @@ char	**argv;
 	  return TCL_ERROR;
 	}
 
-	if( db_lookup( dbip, argv[1], LOOKUP_NOISY ) == DIR_NULL )
+	if( (dp = db_lookup( dbip,  argv[1], LOOKUP_NOISY )) == DIR_NULL )
 	  return TCL_ERROR;
 
 	oper = WMOP_UNION;
@@ -220,19 +226,9 @@ char	**argv;
 	  bu_vls_free(&tmp_vls);
 	  return TCL_ERROR;
 	}
-	mk_addmember( argv[2], &head, oper );
+	if( combadd( dp, argv[2], 0, oper, 0, 0 ) == DIR_NULL )
+	  return TCL_ERROR;
 
-	if( mk_comb( wdbp, argv[1], &head,
-	    0, NULL, NULL, NULL,
-	    0, 0, 0, 0,
-	    0, 1, 1 ) < 0 )
-	{
-		Tcl_AppendResult(interp,
-			"An error has occured while adding '",
-			argv[1], "' to the database.\n", (char *)NULL);
-		TCL_ERROR_RECOVERY_SUGGESTION;
-		return TCL_ERROR;
-	}
 	return TCL_OK;
 }
 
@@ -250,14 +246,11 @@ char	**argv;
 	int i;
 	int ident, air;
 	char oper;
-	struct bu_list head;
 
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
 
-	BU_LIST_INIT(&head);
-
-	if(argc < 4){
+	if(argc < 4 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -319,24 +312,19 @@ char	**argv;
 				     " is a region\n", (char *)NULL);
 		}
 
-		mk_addmember( argv[i+1], &head, oper );
+		if( combadd( dp, argv[1], 1, oper, ident, air ) == DIR_NULL )  {
+		  Tcl_AppendResult(interp, "error in combadd\n", (char *)NULL);
+		  return TCL_ERROR;
+		}
 	}
 
-	if( mk_comb( wdbp, argv[1], &head,
-	    1, NULL, NULL, NULL,
-	    ident, air, mat_default, los_default,
-	    0, 1, 1 ) < 0 )
-	{
+	if( db_lookup( dbip, argv[1], LOOKUP_QUIET) == DIR_NULL ) {
 		/* failed to create region */
 		if(item_default > 1)
 			item_default--;
-
-		Tcl_AppendResult(interp,
-			"An error has occured while adding '",
-			argv[1], "' to the database.\n", (char *)NULL);
-		TCL_ERROR_RECOVERY_SUGGESTION;
 		return TCL_ERROR;
 	}
+
 	return TCL_OK;
 }
 
@@ -359,14 +347,11 @@ char	**argv;
 	char	*comb_name;
 	register int	i;
 	char	oper;
-	struct bu_list	head;
 
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
 
-	BU_LIST_INIT( &head );
-
-	if(argc < 4){
+	if(argc < 4 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -406,7 +391,7 @@ char	**argv;
 		  continue;
 		}
 
-		if(oper != WMOP_UNION && oper != WMOP_SUBTRACT && oper != WMOP_INTERSECT) {
+		if(oper != WMOP_UNION && oper != WMOP_SUBTRACT &&	oper != WMOP_INTERSECT) {
 		  struct bu_vls tmp_vls;
 
 		  bu_vls_init(&tmp_vls);
@@ -416,33 +401,29 @@ char	**argv;
 			continue;
 		}
 
-		/* Add to the list */
-		(void)mk_addmember( argv[i+1], &head, oper );
+		if( combadd( dp, comb_name, 0, oper, 0, 0 ) == DIR_NULL )  {
+		  Tcl_AppendResult(interp, "error in combadd\n", (char *)NULL);
+		  return TCL_ERROR;
+		}
 	}
 
-	/* Do them all at once */
-	if( mk_comb( wdbp, comb_name, &head,
-	    0, NULL, NULL, NULL,
-	    0, 0, 0, 0,
-	    0, 1, 1 ) < 0 )
-	{
-		Tcl_AppendResult(interp,
-			"An error has occured while adding '",
-			comb_name, "' to the database.\n", (char *)NULL);
-		TCL_ERROR_RECOVERY_SUGGESTION;
-		return TCL_ERROR;
+	if( db_lookup( dbip, comb_name, LOOKUP_QUIET) == DIR_NULL ) {
+	  Tcl_AppendResult(interp, "Error:  ", comb_name,
+			   " not created\n", (char *)NULL);
+	  return TCL_ERROR;
 	}
+
 	return TCL_OK;
 }
 
 /* Remove an object or several from the description */
 /* Format: kill [-f] object1 object2 .... objectn	*/
 int
-f_kill(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_kill(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	register int		i;
 	struct directory	*dp;
@@ -453,7 +434,7 @@ f_kill(
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
 
-	if(argc < 2){
+	if(argc < 2 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -498,15 +479,13 @@ Tcl_Interp *interp;
 int	argc;
 char	**argv;
 {
+	register struct directory *dp;
 	register int i;
-	struct bu_list	head;
 
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
 
-	BU_LIST_INIT(&head);
-
-	if(argc < 3){
+	if(argc < 3 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -518,24 +497,12 @@ char	**argv;
 
 	/* get objects to add to group */
 	for( i = 2; i < argc; i++ )  {
-		if( db_lookup( dbip,  argv[i], LOOKUP_NOISY) != DIR_NULL )  {
-			/* Add to list */
-			(void)mk_addmember( argv[i], &head, WMOP_UNION );
+		if( (dp = db_lookup( dbip,  argv[i], LOOKUP_NOISY)) != DIR_NULL )  {
+			if( combadd( dp, argv[1], 0,
+				     WMOP_UNION, 0, 0) == DIR_NULL )
+			  return TCL_ERROR;
 		}  else
 		  Tcl_AppendResult(interp, "skip member ", argv[i], "\n", (char *)NULL);
-	}
-
-	/* Do them all at once */
-	if( mk_comb( wdbp, argv[1], &head,
-	    0, NULL, NULL, NULL,
-	    0, 0, 0, 0,
-	    0, 1, 1 ) < 0 )
-	{
-		Tcl_AppendResult(interp,
-			"An error has occured while adding '",
-			argv[1], "' to the database.\n", (char *)NULL);
-		TCL_ERROR_RECOVERY_SUGGESTION;
-		return TCL_ERROR;
 	}
 	return TCL_OK;
 }
@@ -559,7 +526,7 @@ char	**argv;
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
 
-	if(argc < 3){
+	if(argc < 3 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -578,7 +545,7 @@ char	**argv;
 		return TCL_ERROR;
 	}
 
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR_return;
 	}
 	comb = (struct rt_comb_internal *)intern.idb_ptr;
@@ -588,7 +555,7 @@ char	**argv;
 	num_deleted = 0;
 	ret = TCL_OK;
 	for( i = 2; i < argc; i++ )  {
-		if( db_tree_del_dbleaf( &(comb->tree), argv[i], &rt_uniresource ) < 0 )  {
+		if( db_tree_del_dbleaf( &(comb->tree), argv[i] ) < 0 )  {
 			Tcl_AppendResult(interp, "  ERROR_deleting ",
 				dp->d_namep, "/", argv[i],
 				"\n", (char *)NULL);
@@ -601,7 +568,7 @@ char	**argv;
 		}
 	}
 
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 	return ret;
@@ -647,7 +614,7 @@ char	**argv;
 	  return TCL_ERROR;
 	}
 
-	if( (id = rt_db_get_internal( &internal, proto, dbip, (fastf_t *)NULL, &rt_uniresource )) < 0 )  {
+	if( (id = rt_db_get_internal( &internal, proto, dbip, (fastf_t *)NULL )) < 0 )  {
 		TCL_READ_ERR_return;
 	}
 	/* make sure it is a TGC */
@@ -655,7 +622,7 @@ char	**argv;
 	{
 	  Tcl_AppendResult(interp, "f_copy_inv: ", argv[1],
 			   " is not a cylinder\n", (char *)NULL);
-		rt_db_free_internal( &internal, &rt_uniresource );
+		rt_db_free_internal( &internal );
 		return TCL_ERROR;
 	}
 	tgc_ip = (struct rt_tgc_internal *)internal.idb_ptr;
@@ -669,7 +636,7 @@ char	**argv;
 	if( (dp = db_diradd( dbip, argv[2], -1L, 0, proto->d_flags, NULL)) == DIR_NULL )  {
 	    	TCL_ALLOC_ERR_return;
 	}
-	if( rt_db_put_internal( dp, dbip, &internal, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &internal ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 
@@ -728,7 +695,7 @@ char	**argv;
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
 
-	if(argc < 3){
+	if(argc < 3 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -777,7 +744,7 @@ char	**argv;
 	  Tcl_AppendResult(interp, dp->d_namep, ": not a combination\n", (char *)NULL);
 	  return TCL_ERROR;
 	}
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		db_free_1anim( anp );
 		TCL_READ_ERR_return;
 	}
@@ -811,7 +778,7 @@ char	**argv;
 		tp->tr_l.tl_mat = (matp_t)NULL;
 	}
 
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 		TCL_WRITE_ERR;
 		goto fail;
 	}
@@ -819,7 +786,7 @@ char	**argv;
 	return TCL_OK;
 		
 fail:
-	rt_db_free_internal( &intern, &rt_uniresource );
+	rt_db_free_internal( &intern );
 	db_free_1anim( anp );
 	return TCL_ERROR;
 }
@@ -828,16 +795,16 @@ fail:
  *			P A T H L I S T _ L E A F _ F U N C
  */
 static union tree *
-pathlist_leaf_func( tsp, pathp, ip, client_data )
+pathlist_leaf_func( tsp, pathp, ext, id, client_data )
 struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
-struct rt_db_internal	*ip;
+struct bu_external	*ext;
+int			id;
 genptr_t		client_data;
 {
 	char	*str;
 
 	RT_CK_FULL_PATH( pathp );
-	RT_CK_DB_INTERNAL(ip);
 
 	str = db_path_to_string( pathp );
 
@@ -864,7 +831,7 @@ char	        **argv;
 {
   CHECK_DBI_NULL;
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -896,12 +863,28 @@ register struct db_full_path	*pathp;
 {
 	register struct solid	*sp;
 	int			count = 0;
+	int			i;
 	struct solid		*ret = (struct solid *)NULL;
 
 	RT_CK_FULL_PATH(pathp);
 
 	FOR_ALL_SOLIDS(sp, &HeadSolid.l)  {
-		if( !db_identical_full_paths( pathp, &sp->s_fullpath ) )  continue;
+		int not_this_solid=0;
+
+		if( pathp->fp_len != sp->s_last+1 )
+			continue;
+
+		for( i=0 ; i<pathp->fp_len ; i++ )
+		{
+			if( pathp->fp_names[i] != sp->s_path[i] )
+			{
+				not_this_solid = 1;
+				break;
+			}
+		}
+
+		if( not_this_solid )
+			continue;
 
 		/* Paths are the same */
 		ret = sp;
@@ -1079,7 +1062,7 @@ char	**argv;
     CHECK_DBI_NULL;
     CHECK_READ_ONLY;
 
-    if(argc < 3 || 18 < argc){
+    if(argc < 3 || MAXARGS < argc){
       struct bu_vls vls;
 
       bu_vls_init(&vls);
@@ -1203,9 +1186,8 @@ char **argv;
     BU_GETSTRUCT(anp, animate);
     anp -> magic = ANIMATE_MAGIC;
 
-    ts = mged_initial_tree_state;	/* struct copy */
+    bzero((char *) &ts, sizeof(ts));
     ts.ts_dbip = dbip;
-    ts.ts_resp = &rt_uniresource;
     mat_idn(ts.ts_mat);
     db_full_path_init(&anp -> an_path);
     if (db_follow_path_for_state(&ts, &(anp -> an_path), argv[1], LOOKUP_NOISY)
@@ -1222,7 +1204,7 @@ char **argv;
     parent = bu_vls_addr(&pvls);
     sep = strchr(parent, '/') - parent;
     bu_vls_trunc(&pvls, sep);
-    switch (rt_db_lookup_internal(dbip, parent, &dp, &intern, LOOKUP_NOISY, &rt_uniresource))
+    switch (rt_db_lookup_internal(dbip, parent, &dp, &intern, LOOKUP_NOISY))
     {
 	case ID_COMBINATION:
 	    if (dp -> d_flags & DIR_COMB)
@@ -1274,7 +1256,7 @@ char **argv;
 	tp -> tr_l.tl_mat = (matp_t) 0;
     }
 
-    if (rt_db_put_internal(dp, dbip, &intern, &rt_uniresource) < 0)
+    if (rt_db_put_internal(dp, dbip, &intern) < 0)
     {
 	TCL_WRITE_ERR;
 	status = TCL_ERROR;
@@ -1287,6 +1269,6 @@ wrapup:
 
     bu_vls_free(&pvls);
     if (status == TCL_ERROR)
-	rt_db_free_internal(&intern, &rt_uniresource);
+	rt_db_free_internal(&intern);
     return status;
 }

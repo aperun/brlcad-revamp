@@ -54,8 +54,6 @@
 #include "bu.h"
 #include "compat4.h"
 #include "bn.h"
-#include "db5.h"
-#include "tcl.h"
 
 #ifndef NMG_H
 #include "nmg.h"
@@ -216,12 +214,10 @@ struct rt_db_internal  {
 	int		idb_type;		/* ID_xxx */
 	CONST struct rt_functab *idb_meth;	/* for ft_ifree(), etc. */
 	genptr_t	idb_ptr;
-	struct bu_attribute_value_set idb_avs;
 };
 #define RT_DB_INTERNAL_MAGIC	0x0dbbd867
 #define RT_INIT_DB_INTERNAL(_p)	{(_p)->idb_magic = RT_DB_INTERNAL_MAGIC; \
-	(_p)->idb_type = -1; (_p)->idb_ptr = GENPTR_NULL;\
-	(_p)->idb_avs.magic = -1;}
+	(_p)->idb_type = -1; (_p)->idb_ptr = GENPTR_NULL;}
 #define RT_CK_DB_INTERNAL(_p)	BU_CKMAG(_p, RT_DB_INTERNAL_MAGIC, "rt_db_internal")
 
 /*
@@ -237,7 +233,6 @@ struct db_full_path {
 };
 #define DB_FULL_PATH_POP(_pp)	{(_pp)->fp_len--;}
 #define DB_FULL_PATH_CUR_DIR(_pp)	((_pp)->fp_names[(_pp)->fp_len-1])
-#define DB_FULL_PATH_GET(_pp,_i)	((_pp)->fp_names[(_i)])
 #define DB_FULL_PATH_MAGIC	0x64626670
 #define RT_CK_FULL_PATH(_p)	BU_CKMAG(_p, DB_FULL_PATH_MAGIC, "db_full_path")
 
@@ -520,16 +515,9 @@ struct soltab {
 #define ID_SUBMODEL	28	/* Instanced submodel */
 #define	ID_CLINE	29	/* FASTGEN4 CLINE solid */
 #define	ID_BOT		30	/* Bag o' triangles */
-#define	ID_MAX_SOLID	30	/* Maximum defined ID_xxx for solids */
+#define ID_MAXIMUM	30	/* Maximum defined ID_xxx value */
 
-/*
- *	Non-geometric objects
- */
-#define ID_COMBINATION	31	/* Combination Record */
-#define ID_BINEXPM	32	/* Experimental binary */
-#define ID_BINUNIF	33	/* Uniform-array binary */
-#define ID_BINMIME	34	/* MIME-typed binary */
-#define ID_MAXIMUM	35	/* Maximum defined ID_xxx value */
+#define ID_COMBINATION	(ID_MAXIMUM+1)	/* Combination Record (non-geometric) */
 
 /*
  *			M A T E R _ I N F O
@@ -732,7 +720,7 @@ struct mem_map {
  *  The directory is organized as forward linked lists hanging off of
  *  one of RT_DBNHASH headers in the db_i structure.
  */
-#define	RT_DBNHASH		1024	/* size of hash table */
+#define	RT_DBNHASH		128	/* size of hash table */
 
 #if	((RT_DBNHASH)&((RT_DBNHASH)-1)) != 0
 #define	RT_DBHASH(sum)	((unsigned)(sum) % (RT_DBNHASH))
@@ -783,28 +771,6 @@ struct db_i  {
 
 /*
  *			D I R E C T O R Y
- *
- *  One of these structures is allocated in memory to represent each
- *  named object in the database.
- *
- *  Note that a d_addr of RT_DIR_PHONY_ADDR (-1L) means that database
- *  storage has not been allocated yet.
- *
- *  Note that there is special handling for RT_DIR_INMEM "in memory" overrides.
- *
- *  Construction should be done only by using RT_GET_DIRECTORY()
- *  Destruction should be done only by using db_dirdelete().
- *
- *  Special note:  In order to reduce the overhead of calling bu_malloc()
- *  (really bu_strdup()) to stash the name in d_namep, we carry along
- *  enough storage for small names right in the structure itself (d_shortname).
- *  Thus, d_namep should never be assigned to directly, it should always
- *  be accessed using RT_DIR_SET_NAMEP() and RT_DIR_FREE_NAMEP().
- *
- *  The in-memory name of an object should only be changed using db_rename(),
- *  so that it can be requeued on the correct linked list, based on new hash.
- *  This should be followed by rt_db_put_internal() on the object to
- *  modify the on-disk name.
  */
 struct directory  {
 	long		d_magic;		/* Magic number */
@@ -820,7 +786,6 @@ struct directory  {
 	long		d_nref;			/* # times ref'ed by COMBs */
 	int		d_flags;		/* flags */
 	struct bu_list	d_use_hd;		/* heads list of uses (struct soltab l2) */
-	char		d_shortname[16];	/* Stash short names locally */
 };
 #define DIR_NULL	((struct directory *)0)
 #define RT_DIR_MAGIC	0x05551212		/* Directory assistance */
@@ -832,48 +797,11 @@ struct directory  {
 #define DIR_SOLID	0x1		/* this name is a solid */
 #define DIR_COMB	0x2		/* combination */
 #define DIR_REGION	0x4		/* region */
-#define DIR_USED	0x80		/* One bit, used similar to d_nref */
 #define RT_DIR_INMEM	0x100		/* object is in memory (only) */
 
 /* Args to db_lookup() */
 #define LOOKUP_NOISY	1
 #define LOOKUP_QUIET	0
-
-#define FOR_ALL_DIRECTORY_START(_dp,_dbip)	{ int _i; \
-	for( _i = RT_DBNHASH-1; _i >= 0; _i-- )  { \
-		for( (_dp) = (_dbip)->dbi_Head[_i]; (_dp); (_dp) = (_dp)->d_forw )  {
-
-#define FOR_ALL_DIRECTORY_END	}}}
-
-#define RT_DIR_SET_NAMEP(_dp,_name)	{ \
-	if( strlen(_name) < sizeof((_dp)->d_shortname) )  {\
-		strncpy( (_dp)->d_shortname, (_name), sizeof((_dp)->d_shortname) ); \
-		(_dp)->d_namep = (_dp)->d_shortname; \
-	} else { \
-		(_dp)->d_namep = bu_strdup(_name); /* Calls bu_malloc() */ \
-	} }
-
-/* Use this macro to free the d_namep member, which is sometimes not dynamic. */
-#define RT_DIR_FREE_NAMEP(_dp)	{ \
-	if( (_dp)->d_namep != (_dp)->d_shortname )  \
-		bu_free((_dp)->d_namep, "d_namep"); \
-	(_dp)->d_namep = NULL; }
-
-#if 1
-/* The efficient way */
-#define RT_GET_DIRECTORY(_p,_res)    { \
-	while( ((_p) = (_res)->re_directory_hd) == NULL ) \
-		db_get_directory(_res); \
-	(_res)->re_directory_hd = (_p)->d_forw; \
-	(_p)->d_forw = NULL; }
-#else
-/* XXX Conservative, for testing parallel problems with Ft. AP Hill */
-#define RT_GET_DIRECTORY(_p,_res)    {BU_GETSTRUCT(_p, directory); \
-	(_p)->d_magic = RT_DIR_MAGIC; \
-	BU_LIST_INIT( &((_p)->d_use_hd) ); }
-#endif
-
-	
 
 /*
  *			R T _ C O M B _ I N T E R N A L
@@ -907,42 +835,12 @@ struct rt_comb_internal  {
 #define RT_CK_COMB_TCL(_interp,_p)	RT_CHECK_COMB_TCL(_interp,_p)
 
 /*
- *			R T _ B I N U N I F _ I N T E R N A L
- *
- *  In-memory format for database uniform-array binary object.
- *  Perhaps move to h/wdb.h or h/rtgeom.h?
- */
-struct rt_binunif_internal {
-	long		magic;
-	char		type;
-	long		count;
-	union		{
-			    float		*flt;
-			    double		*dbl;
-			    char		*int8;
-			    short		*int16;
-			    int			*int32;
-			    long		*int64;
-			    unsigned char	*uint8;
-			    unsigned short	*uint16;
-			    unsigned int	*uint32;
-			    unsigned long	*uint64;
-	}		u;
-};
-#define RT_BINUNIF_INTERNAL_MAGIC	0x42696e55	/* "BinU" */
-#define RT_CHECK_BINUNIF(_p)		BU_CKMAG( _p , RT_BINUNIF_INTERNAL_MAGIC , "rt_binunif_internal" )
-#define RT_CK_BINUNIF(_p)		RT_CHECK_BINUNIF(_p)
-#define RT_CHECK_BINUNIF_TCL(_interp,_p)	BU_CKMAG_TCL(interp,_p,RT_BINUNIF_MAGIC, "rt_binunif_internal" )
-#define RT_CK_BINUNIF_TCL(_interp,_p)	RT_CHECK_BINUNIF_TCL(_interp,_p)
-
-/*
  *			D B _ T R E E _ S T A T E
  *
  *  State for database tree walker db_walk_tree()
  *  and related user-provided handler routines.
  */
 struct db_tree_state {
-	long		magic;
 	struct db_i	*ts_dbip;
 	int		ts_sofar;		/* Flag bits */
 
@@ -952,7 +850,6 @@ struct db_tree_state {
 	int		ts_los;		/* equivalent LOS estimate .. */
 	struct mater_info ts_mater;	/* material properties */
 
-			/* XXX ts_mat should be a matrix pointer, not a matrix */
 	mat_t		ts_mat;		/* transform matrix */
 	int		ts_is_fastgen;	/* REGION_NON_FASTGEN/_PLATE/_VOLUME */
 
@@ -972,7 +869,8 @@ struct db_tree_state {
 	union tree *	(*ts_leaf_func) BU_ARGS((
 				struct db_tree_state * /*tsp*/,
 				struct db_full_path * /*pathp*/,
-				struct rt_db_internal * /*ip*/,
+				struct bu_external * /*ep*/,
+				int /*id*/,
 				genptr_t client_data
 			));
 	CONST struct rt_tess_tol *ts_ttol;	/* Tessellation tolerance */
@@ -983,14 +881,10 @@ struct db_tree_state {
 	genptr_t		*ts_m;		/* ptr to genptr */
 #endif
 	struct rt_i		*ts_rtip;	/* Helper for rt_gettrees() */
-	struct resource		*ts_resp;	/* Per-CPU data */
 };
 #define TS_SOFAR_MINUS	1		/* Subtraction encountered above */
 #define TS_SOFAR_INTER	2		/* Intersection encountered above */
 #define TS_SOFAR_REGION	4		/* Region encountered above */
-
-#define RT_DBTS_MAGIC	0x64627473	/* "dbts" */
-#define RT_CK_DBTS(_p)	BU_CKMAG(_p, RT_DBTS_MAGIC, "db_tree_state")
 
 /*
  *			C O M B I N E D _ T R E E _ S T A T E
@@ -1024,7 +918,6 @@ struct combined_tree_state {
 #define OP_NMG_TESS	MKOP(11)	/* Leaf: tr_stp -> nmgregion */
 /* LIBWDB import/export interface to combinations */
 #define OP_DB_LEAF	MKOP(12)	/* Leaf of combination, db fmt */
-#define OP_FREE		MKOP(13)	/* Unary:  L has free chain */
 
 union tree {
 	long	magic;				/* First word: magic number */
@@ -1102,15 +995,15 @@ struct rt_tree_array
 struct rt_wdb  {
 	struct bu_list	l;
 	int		type;
+	FILE		*fp;
 	struct db_i	*dbip;
 	struct bu_vls	wdb_name;	/* database object name */
 	struct db_tree_state	wdb_initial_tree_state;
 	struct rt_tess_tol	wdb_ttol;
 	struct bn_tol		wdb_tol;
-	struct resource		*wdb_resp;
 
 	/* variables for name prefixing */
-	struct bu_vls	wdb_prestr;
+	char		wdb_prestr[RT_NAMESIZE];
 	int		wdb_ncharadd;
 	int		wdb_num_dups;
 
@@ -1128,6 +1021,7 @@ struct rt_wdb  {
 #define RT_CK_WDB(_p)			RT_CHECK_WDB(_p)
 #define RT_CK_WDB_TCL(_interp,_p)	RT_CHECK_WDB_TCL(_interp,_p)
 #define RT_WDB_NULL		((struct rt_wdb *)NULL)
+#define RT_WDB_TYPE_FILE			1
 #define RT_WDB_TYPE_DB_DISK			2
 #define RT_WDB_TYPE_DB_DISK_APPEND_ONLY		3
 #define RT_WDB_TYPE_DB_INMEM			4
@@ -1201,9 +1095,6 @@ struct view_obj {
 	fastf_t			vo_base2local;		/* scale base units (i.e. mm) to local units */
 	vect_t			vo_aet;
 	vect_t			vo_eye_pos;		/* eye position */
-	vect_t			vo_keypoint;
-	char			vo_coord;		/* coordinate system */
-	char			vo_rotate_about;	/* indicates what point rotations are about */
 	mat_t			vo_rotation;
 	mat_t			vo_center;
 	mat_t			vo_model2view;
@@ -1304,7 +1195,6 @@ struct rt_piecestate  {
 	fastf_t		mindist;	/* dist ray enters solids bounding volume */
 	fastf_t		maxdist;	/* dist ray leaves solids bounding volume */
 	struct rt_htbl	htab;		/* accumulating hits here */
-	const union cutter *cutp;		/* current bounding volume */
 };
 #define RT_PIECESTATE_MAGIC	0x70637374	/* pcst */
 #define RT_CK_PIECESTATE(_p)	BU_CKMAG(_p, RT_PIECESTATE_MAGIC, "struct rt_piecestate")
@@ -1336,19 +1226,16 @@ struct rt_piecelist  {
 /*
  *			R E S O U R C E
  *
- *  Per-CPU statistics and resources.
- *
  *  One of these structures is allocated per processor.
  *  To prevent excessive competition for free structures,
  *  memory is now allocated on a per-processor basis.
  *  The application structure a_resource element specifies
  *  the resource structure to be used;  if uniprocessing,
  *  a null a_resource pointer results in using the internal global
- *  structure (&rt_uniresource),
- *  making initial application development simpler.
+ *  structure, making initial application development simpler.
  *
- *  Applications are responsible for calling rt_init_resource()
- *  for each resource structure before letting LIBRT use them.
+ *  Applications are responsible for filling the resource structure
+ *  with zeros before letting librt use them.
  *
  *  Note that if multiple models are being used, the partition and bitv
  *  structures (which are variable length) will require there to be
@@ -1387,45 +1274,19 @@ struct resource {
 	long		re_prune_solrpp;/* shot missed solid RPP, ft_shot skipped */
 	long		re_ndup;	/* ft_shot() calls skipped for already-ft_shot() solids */
 	long		re_nempty_cells; /* number of empty NUgrid cells passed through */
-	/* Data for accelerating "pieces" of solids */
+	/* Experimental stuff for accelerating "pieces" of solids */
 	struct rt_piecestate *re_pieces; /* array [rti_nsolids_with_pieces] */
 	long		re_piece_ndup;	/* ft_piece_shot() calls skipped for already-ft_shot() solids */
 	long		re_piece_shots;	/* # calls to ft_piece_shot() */
 	long		re_piece_shot_hit;	/* ft_piece_shot() returned a miss */
 	long		re_piece_shot_miss;	/* ft_piece_shot() returned a hit */
 	struct bu_ptbl	re_pieces_pending; /* pieces with an odd hit pending */
-	/* Per-processor cache of tree unions, to accelerate "tops" and treewalk */
-	union tree	*re_tree_hd;  /* Head of free trees */
-	long		re_tree_get;
-	long		re_tree_malloc;
-	long		re_tree_free;
-	struct directory *re_directory_hd;
-	struct bu_ptbl	re_directory_blocks;	/* Table of malloc'ed blocks */
 };
 extern struct resource	rt_uniresource;	/* default.  Defined in librt/shoot.c */
 #define RESOURCE_NULL	((struct resource *)0)
 #define RESOURCE_MAGIC	0x83651835
 #define RT_RESOURCE_CHECK(_p)	BU_CKMAG(_p, RESOURCE_MAGIC, "struct resource")
 #define RT_CK_RESOURCE(_p)	BU_CKMAG(_p, RESOURCE_MAGIC, "struct resource")
-
-/* More malloc-efficient replacement for BU_GETUNION(tp, tree) */
-#define RT_GET_TREE(_tp,_res)	{ \
-	if( ((_tp) = (_res)->re_tree_hd) != TREE_NULL )  { \
-		(_res)->re_tree_hd = (_tp)->tr_b.tb_left; \
-		(_tp)->tr_b.tb_left = TREE_NULL; \
-		(_res)->re_tree_get++; \
-	} else { \
-		GETUNION( _tp, tree ); \
-		(_res)->re_tree_malloc++; \
-	}\
-	}
-#define RT_FREE_TREE(_tp,_res)  { \
-		(_tp)->tr_b.tb_left = (_res)->re_tree_hd; \
-		(_tp)->tr_b.tb_right = TREE_NULL; \
-		(_res)->re_tree_hd = (_tp); \
-		(_tp)->tr_b.tb_op = OP_FREE; \
-		(_res)->re_tree_free++; \
-	}
 
 /*
  *			P I X E L _ E X T
@@ -1651,8 +1512,8 @@ struct rt_i {
 	int		rti_ncut_by_type[CUT_MAXIMUM+1];	/* number of cuts by type */
 	int		rti_cut_totobj;	/* # objs in all bins, total */
 	int		rti_cut_maxdepth;/* max depth of cut tree */
-	struct soltab	**rti_sol_by_type[ID_MAX_SOLID+1];
-	int		rti_nsol_by_type[ID_MAX_SOLID+1];
+	struct soltab	**rti_sol_by_type[ID_MAXIMUM+1];
+	int		rti_nsol_by_type[ID_MAXIMUM+1];
 	int		rti_maxsol_by_type;
 	int		rti_air_discards;/* # of air regions discarded */
 	struct bu_hist rti_hist_cellsize; /* occupancy of cut cells */
@@ -1664,10 +1525,11 @@ struct rt_i {
 	double		rti_nu_gfactor;	/* constant in numcells computation */
 	int		rti_cutlen;	/* goal for # solids per boxnode */
 	int		rti_cutdepth;	/* goal for depth of NUBSPT cut tree */
-	/* Parameters required for rt_submodel */
+	/* Experimental stuff for rt_submodel */
+/*	struct soltab	*rti_up;	/_* 'up' ptr for rt_submodel rti's only */
 	char		*rti_treetop;	/* bu_strduped, for rt_submodel rti's only */
 	int		rti_uses;	/* for rt_submodel */
-	/* Parameters for accelerating "pieces" of solids */
+	/* Experimental stuff for accelerating "pieces" of solids */
 	int		rti_nsolids_with_pieces; /* #solids using pieces */
 };
 
@@ -1827,7 +1689,7 @@ struct rt_functab {
 			struct rt_i * /*rtip*/ ));
 	int 	(*ft_shot) BU_ARGS((struct soltab * /*stp*/,
 			struct xray * /*rp*/,
-			struct application * /*ap*/,	/* has resource */
+			struct application * /*ap*/,
 			struct seg * /*seghead*/ ));
 	void	(*ft_print) BU_ARGS((CONST struct soltab * /*stp*/));
 	void	(*ft_norm) BU_ARGS((struct hit * /*hitp*/,
@@ -1836,15 +1698,15 @@ struct rt_functab {
 	int 	(*ft_piece_shot) BU_ARGS((
 			struct rt_piecestate * /*psp*/,
 			struct rt_piecelist * /*plp*/,
-			double /* dist_correction to apply to hit distances */,
-			struct xray * /* ray transformed to be near cut cell */,
+			double /* dist_corr */,
+			struct xray * /*rp*/,
 			struct application * /*ap*/,	/* has resource */
 			struct seg * /*seghead*/));	/* used only for PLATE mode hits */
 	void 	(*ft_piece_hitsegs) BU_ARGS((
 			struct rt_piecestate * /*psp*/,
 			struct seg * /*seghead*/,
-			struct application * /*ap*/));	/* has resource */
-	void	(*ft_uv) BU_ARGS((struct application * /*ap*/,	/* has resource */
+			struct application * /*ap*/));
+	void	(*ft_uv) BU_ARGS((struct application * /*ap*/,
 			struct soltab * /*stp*/,
 			struct hit * /*hitp*/,
 			struct uvcoord * /*uvp*/));
@@ -1891,39 +1753,22 @@ struct rt_functab {
 			struct rt_db_internal * /*ip*/,
 			CONST struct bn_tol * /*tol*/));
 #endif
-	int	(*ft_import5) BU_ARGS((struct rt_db_internal * /*ip*/,
-			CONST struct bu_external * /*ep*/,
-			CONST mat_t /*mat*/,
-			CONST struct db_i * /*dbip*/,
-			struct resource * /*resp*/,
-			CONST int minor_type));
-	int	(*ft_export5) BU_ARGS((struct bu_external * /*ep*/,
-			CONST struct rt_db_internal * /*ip*/,
-			double /*local2mm*/,
-			CONST struct db_i * /*dbip*/,
-			struct resource * /*resp*/,
-			CONST int minor_type));
 	int	(*ft_import) BU_ARGS((struct rt_db_internal * /*ip*/,
 			CONST struct bu_external * /*ep*/,
 			CONST mat_t /*mat*/,
-			CONST struct db_i * /*dbip*/,
-			struct resource * /*resp*/));
+			CONST struct db_i * /*dbip*/));
 	int	(*ft_export) BU_ARGS((struct bu_external * /*ep*/,
 			CONST struct rt_db_internal * /*ip*/,
 			double /*local2mm*/,
-			CONST struct db_i * /*dbip*/,
-			struct resource * /*resp*/));
-	void	(*ft_ifree) BU_ARGS((struct rt_db_internal * /*ip*/,
-			struct resource * /*resp*/));
+			CONST struct db_i * /*dbip*/));
+	void	(*ft_ifree) BU_ARGS((struct rt_db_internal * /*ip*/));
 	int	(*ft_describe) BU_ARGS((struct bu_vls * /*str*/,
 			CONST struct rt_db_internal * /*ip*/,
 			int /*verbose*/,
-			double /*mm2local*/,
-			struct resource * /*resp*/));
+			double /*mm2local*/));
 	int	(*ft_xform) BU_ARGS((struct rt_db_internal * /*op*/,
 			CONST mat_t /*mat*/, struct rt_db_internal * /*ip*/,
-			int /*free*/, struct db_i * /*dbip*/,
-			struct resource * /*resp*/));
+			int /*free*/, struct db_i * /*dbip*/));
 	CONST struct bu_structparse *ft_parsetab;	/* rt_xxx_parse */
 	size_t	ft_internal_size;	/* sizeof(struct rt_xxx_internal) */
 	unsigned long	ft_internal_magic;	/* RT_XXX_INTERNAL_MAGIC */
@@ -1932,8 +1777,7 @@ struct rt_functab {
 			CONST struct rt_db_internal *, CONST char *item));
 	int	(*ft_tcladjust) BU_ARGS((Tcl_Interp *,
 			struct rt_db_internal *,
-			int /*argc*/, char ** /*argv*/,
-			struct resource * /*resp*/));
+			int /*argc*/, char ** /*argv*/));
 	int	(*ft_tclform) BU_ARGS((CONST struct rt_functab *,
 			Tcl_Interp *));
 #else
@@ -1941,8 +1785,7 @@ struct rt_functab {
 			CONST struct rt_db_internal *, CONST char *item));
 	int	(*ft_tcladjust) BU_ARGS((genptr_t /*interp*/,
 			struct rt_db_internal *,
-			int /*argc*/, char ** /*argv*/,
-			struct resource * /*resp*/));
+			int /*argc*/, char ** /*argv*/));
 	int	(*ft_tclform) BU_ARGS((CONST struct rt_functab *,
 			genptr_t /*interp*/));
 #endif
@@ -2158,7 +2001,7 @@ struct ray_data {
 	struct application	*ap;
 	struct seg		*seghead;
 	struct soltab 		*stp;
-	const struct bn_tol	*tol;
+	struct bn_tol		*tol;
 	struct hitmiss	**hitmiss;	/* 1 struct hitmiss ptr per elem. */
 	struct bu_list	rd_hit;		/* list of hit elements */
 	struct bu_list	rd_miss;	/* list of missed/sub-hit elements */
@@ -2323,6 +2166,10 @@ BU_EXTERN(void rt_pr_partitions, (CONST struct rt_i *rtip,
 					/* Find solid by leaf name */
 BU_EXTERN(struct soltab *rt_find_solid, (CONST struct rt_i *rtip,
 	CONST char *name) );
+
+BU_EXTERN(char *rt_read_cmd, (FILE *fp) );	/* Read semi-colon terminated line */
+					/* do cmd from string via cmd table */
+BU_EXTERN(int rt_do_cmd, (struct rt_i *rtip, char *lp, struct command_tab *ctp) );
 					/* Start the timer */
 BU_EXTERN(void rt_prep_timer, (void) );
 					/* Read timer, return time + str */
@@ -2330,14 +2177,10 @@ BU_EXTERN(double rt_get_timer, (struct bu_vls *vp, double *elapsed));
 					/* Return CPU time, text, & wall clock time */
 BU_EXTERN(double rt_read_timer, (char *str, int len) );
 					/* Plot a solid */
-int rt_plot_solid(
-	FILE			*fp,
-	struct rt_i		*rtip,
-	const struct soltab	*stp,
-	struct resource		*resp);
+BU_EXTERN(int rt_plot_solid, (FILE *fp, struct rt_i *rtip, struct soltab *stp) );
 					/* Release storage assoc with rt_i */
 BU_EXTERN(void rt_clean, (struct rt_i *rtip) );
-BU_EXTERN(int rt_del_regtree, (struct rt_i *rtip, struct region *delregp, struct resource *resp));
+BU_EXTERN(int rt_del_regtree, (struct rt_i *rtip, struct region *delregp));
 					/* Check in-memory data structures */
 BU_EXTERN(void rt_ck, (struct rt_i *rtip));
 BU_EXTERN(void rt_pr_library_version, () );
@@ -2389,26 +2232,11 @@ BU_EXTERN(void rt_pr_cut, (CONST union cutter *cutp, int lvl) );
 					/* free a cut tree */
 BU_EXTERN(void rt_fr_cut, (struct rt_i *rtip, union cutter *cutp) );
 					/* regionid-driven color override */
-
-/* bool.c */
-extern void rt_rebuild_overlaps(struct partition	*PartHdp,
-				struct application	*ap,
-				int		rebuild_fastgen_plates_only);
-int rt_partition_len( const struct partition *partheadp );
-
-
-/* mater.c */
-
 BU_EXTERN(void rt_region_color_map, (struct region *regp) );
 					/* process ID_MATERIAL record */
-void rt_color_addrec( int low, int hi, int r, int g, int b, long addr );
+BU_EXTERN(void rt_color_addrec, () );
 BU_EXTERN(void rt_color_free, () );
 					/* extend a cut box */
-
-/* cut.c */
-extern void rt_pr_cut_info(const struct rt_i	*rtip,
-			   const char		*str);
-
 BU_EXTERN(void rt_cut_extend, (union cutter *cutp, struct soltab *stp,
 	CONST struct rt_i *rtip) );
 					/* find RPP of one region */
@@ -2418,253 +2246,45 @@ BU_EXTERN(void rt_bomb, (CONST char *s));
 BU_EXTERN(int rt_in_rpp, (struct xray *rp, CONST fastf_t *invdir,
 		CONST fastf_t *min, CONST fastf_t *max));
 BU_EXTERN(CONST union cutter *rt_cell_n_on_ray, (struct application *ap, int n));
-extern void rt_cut_clean(struct rt_i *rtip);
-
-/* cmd.c */
-char *rt_read_cmd( FILE *fp );	/* Read semi-colon terminated line */
-int rt_split_cmd(char **argv, int lim, char *lp);
-int rt_do_cmd(struct rt_i *rtip, char *lp, const struct command_tab *tp );  /* do cmd from string via cmd table */
-
 
 /* The database library */
 
 /* wdb.c */
-struct rt_wdb *wdb_fopen( const char *filename );
-struct rt_wdb *wdb_dbopen( struct db_i *dbip, int mode );
-int wdb_import(
-	struct rt_wdb *wdbp,
-	struct rt_db_internal *internp,
-	const char *name,
-	const mat_t mat );
-int wdb_export_external(
-	struct rt_wdb *wdbp,
-	struct bu_external *ep,
-	const char *name,
-	int flags );
-int wdb_put_internal(
-	struct rt_wdb *wdbp,
-	const char *name,
-	struct rt_db_internal *ip,
-	double local2mm );
-int wdb_export(
-	struct rt_wdb *wdbp,
-	const char *name,
-	genptr_t gp,
-	int id,
-	double local2mm );
-void wdb_close( struct rt_wdb *wdbp );
+BU_EXTERN(struct rt_wdb *wdb_dbopen, (struct db_i *dbip, int mode));
+BU_EXTERN(struct rt_wdb *wdb_fopen, (CONST char *filename));
 
 /* db_anim.c */
-extern struct animate  *db_parse_1anim(struct db_i     *dbip,
-				       int             argc,
-				       const char      **argv);
-
-extern int db_parse_anim(struct db_i     *dbip,
-			 int             argc,
-			 const char              **argv);
-
-
-
 BU_EXTERN(int db_add_anim, (struct db_i *dbip, struct animate *anp, int root) );
 BU_EXTERN(int db_do_anim, (struct animate *anp, mat_t stack, mat_t arc,
 	struct mater_info *materp) );
 BU_EXTERN(void db_free_anim, (struct db_i *dbip) );
 BU_EXTERN(void db_write_anim, (FILE *fop, struct animate *anp));
-BU_EXTERN(struct animate	*db_parse_1anim, (struct db_i *dbip,
-				int argc, CONST char **argv));
-void			db_free_1anim( struct animate *anp );
 
 /* db_path.c */
-void db_full_path_init( struct db_full_path *pathp );
-void db_add_node_to_full_path( struct db_full_path *pp, struct directory *dp );
-void db_dup_full_path(struct db_full_path *newp,
-	const struct db_full_path *oldp );
-void db_extend_full_path( struct db_full_path *pathp, int incr );
-void db_append_full_path( struct db_full_path *dest, const struct db_full_path *src );
-void db_dup_path_tail(struct db_full_path	*newp,
-			     const struct db_full_path	*oldp,
-			     int			start);
-char *db_path_to_string( const struct db_full_path *pp );
-void db_path_to_vls( struct bu_vls *str, const struct db_full_path *pp );
-void db_pr_full_path( const char *msg, const struct db_full_path *pathp );
-int db_string_to_path(struct db_full_path *pp, const struct db_i *dbip, const char *str);
-int db_argv_to_path(register struct db_full_path	*pp,
-			   struct db_i			*dbip,
-			   int				argc,
-			   CONST char			*CONST*argv);
-void db_free_full_path(struct db_full_path *pp);
-int db_identical_full_paths( const struct db_full_path *a,
-				const struct db_full_path *b );
-int db_full_path_subset(
-	const struct db_full_path *a,
-	const struct db_full_path *b );
-int db_full_path_search( const struct db_full_path *a,
-	const struct directory *dp );
-
-
+BU_EXTERN(void db_add_node_to_full_path, (struct db_full_path *pp,
+	struct directory *dp) );
+BU_EXTERN(void db_dup_full_path, (struct db_full_path *newp,
+	CONST struct db_full_path *oldp) );
+BU_EXTERN(char *db_path_to_string, (CONST struct db_full_path *pp) );
+BU_EXTERN(void db_free_full_path, (struct db_full_path *pp) );
+BU_EXTERN(int db_region_mat, (mat_t m, CONST struct db_i *dbip,
+				CONST char *name) );
+BU_EXTERN(int db_shader_mat, (mat_t model_to_shader, CONST struct rt_i *rtip,
+				CONST struct region *rp, point_t p_min,
+				point_t p_max) );
 /* db_open.c */
-extern void db_sync( struct db_i	*dbip );
-
 					/* open an existing model database */
 BU_EXTERN(struct db_i *db_open, ( CONST char *name, CONST char *mode ) );
 					/* create a new model database */
-struct db_i *db_create( CONST char *name, int version );
+BU_EXTERN(struct db_i *db_create, ( CONST char *name ) );
 					/* close a model database */
 BU_EXTERN(void db_close_client, (struct db_i *dbip, long *client));
 BU_EXTERN(void db_close, ( struct db_i *dbip ) );
 					/* dump a full copy of a database */
 BU_EXTERN(int db_dump, (struct rt_wdb *wdbp, struct db_i *dbip));
 BU_EXTERN(struct db_i *db_clone_dbi, (struct db_i *dbip, long *client));
-/* db5_alloc.c */
-
-extern int db5_write_free( struct db_i *dbip,
-			   struct directory *dp,
-			   long length );
-extern int db5_realloc( struct db_i *dbip,
-			struct directory *dp,
-			struct bu_external *ep );
-
-/* db5_io.c */
-extern void db5_export_object3 (struct bu_external *out, 
-		int				dli,
-		CONST char			*name,
-		CONST struct bu_external	*attrib,
-		CONST struct bu_external	*body,
-		int				major,
-		int				minor,
-		int				a_zzz,
-		int				b_zzz );
-extern int rt_db_cvt_to_external5(struct bu_external *ext,
-				  const char *name,
-				  const struct rt_db_internal *ip,
-				  double conv2mm,
-				  struct db_i *dbip,
-				struct resource *resp);
-
-extern int db_wrap_v5_external( struct bu_external *ep, const char *name );
-
-extern int rt_db_get_internal5(struct rt_db_internal	*ip,
-			       const struct directory	*dp,
-			       const struct db_i	*dbip,
-			       const mat_t		mat,
-				struct resource		*resp);
-extern int rt_db_put_internal5(struct directory	*dp,
-			       struct db_i		*dbip,
-			       struct rt_db_internal	*ip,
-				struct resource		*resp);
-
-extern void db5_make_free_object_hdr( struct bu_external *ep, long length );
-extern void db5_make_free_object( struct bu_external *ep, long length );
-extern int db5_decode_signed(long			*lenp,
-			     const unsigned char	*cp,
-			     int			format);
-
-extern int db5_decode_length(long			*lenp,
-			     const unsigned char	*cp,
-			     int			format);
-
-extern int db5_select_length_encoding( long len );
-
-extern void db5_import_color_table( char *cp );
-
-extern int db5_import_attributes( struct bu_attribute_value_set *avs,
-				  const struct bu_external *ap );
-
-extern int db5_get_raw_internal_fp( struct db5_raw_internal	*rip,
-				    FILE			*fp);
-
-extern int db5_header_is_valid( const unsigned char *hp );
-#define rt_fwrite_internal5	+++__deprecated_rt_fwrite_internal5__+++
-BU_EXTERN(int db5_fwrite_ident, (FILE *, CONST char *, double));
-
-extern int db5_put_color_table( struct db_i *dbip );
-extern int db5_update_ident( struct db_i *dbip, const char *title, double local2mm );
-extern int db_put_external5(struct bu_external *ep, struct directory *dp, struct db_i *dbip);
-
-/* db_comb.c */
-int db_tree_nleaves( const union tree *tp );
-struct rt_tree_array *db_flatten_tree(
-	struct rt_tree_array	*rt_tree_array,
-	union tree		*tp,
-	int			op,
-	int			free,
-	struct resource		*resp);
-int rt_comb_import4(
-	struct rt_db_internal		*ip,
-	const struct bu_external	*ep,
-	const mat_t			matrix,		/* NULL if identity */
-	const struct db_i		*dbip,
-	struct resource			*resp);
-int rt_comb_export4(
-	struct bu_external		*ep,
-	const struct rt_db_internal	*ip,
-	double				local2mm,
-	const struct db_i		*dbip,
-	struct resource			*resp);
-void db_tree_flatten_describe(
-	struct bu_vls		*vls,
-	const union tree	*tp,
-	int			indented,
-	int			lvl,
-	double			mm2local,
-	struct resource		*resp);
-void db_tree_describe( 
-	struct bu_vls		*vls,
-	const union tree	*tp,
-	int			indented,
-	int			lvl,
-	double			mm2local);
-void db_comb_describe(
-	struct bu_vls	*str,
-	const struct rt_comb_internal	*comb,
-	int		verbose,
-	double		mm2local,
-	struct resource	*resp);
-void rt_comb_ifree( struct rt_db_internal *ip, struct resource *resp );
-int rt_comb_describe(
-	struct bu_vls	*str,
-	const struct rt_db_internal *ip,
-	int		verbose,
-	double		mm2local,
-	struct resource *resp);
-void db_wrap_v4_external( struct bu_external *op, const char *name );
-int db_ck_left_heavy_tree(
-	const union tree	*tp,
-	int			no_unions);
-int db_ck_v4gift_tree( CONST union tree *tp );
-union tree *db_mkbool_tree(
-	struct rt_tree_array *rt_tree_array,
-	int		howfar,
-	struct resource	*resp);
-union tree *db_mkgift_tree(
-	struct rt_tree_array	*trees,
-	int			subtreecount,
-	struct resource		*resp);
-
-/* g_tgc.c */
-extern void rt_pt_sort(register fastf_t t[], int npts);
-
-/* g_ell.c */
-extern void rt_ell_16pts(register fastf_t *ov,
-			 register fastf_t *V,
-			 fastf_t *A,
-			 fastf_t *B);
-
-
-/* roots.c */
-extern int rt_poly_roots(bn_poly_t *eqn, bn_complex_t roots[]);
-
 
 /* db_io.c */
-extern int db_write(struct db_i	*dbip,
-		    const genptr_t	addr,
-		    long		count,
-		    long		offset);
-extern int db_fwrite_external(FILE			*fp,
-			      CONST char		*name,
-			      struct bu_external	*ep);
-
-
 /* It is normal to test for __STDC__ when using *_DEFINED tests but in
  * in this case "union record" is used for db_getmrec's return type.  This
  * requires that the "union_record *db_getmrec" be used whenever 
@@ -2677,7 +2297,7 @@ BU_EXTERN(union record *db_getmrec, ( CONST struct db_i *, CONST struct director
 BU_EXTERN(int db_get, (CONST struct db_i *, CONST struct directory *dp,
 	union record *where, int offset, int len ) );
 					/* put several records into db */
-BU_EXTERN(int db_put, (struct db_i *, CONST struct directory *dp, union record *where,
+BU_EXTERN(int db_put, ( CONST struct db_i *, CONST struct directory *dp, union record *where,
 	int offset, int len ) );
 #else /* RECORD_DEFINED */
 					/* malloc & read records */
@@ -2702,39 +2322,9 @@ BU_EXTERN(int db_scan, ( struct db_i *,
 	int nrec, int flags, genptr_t client_data)),
 	int do_old_matter, genptr_t client_data ) );
 					/* update db unit conversions */
-#define db_ident(a,b,c)		+++error+++
-int db_update_ident( struct db_i *dbip, const char *title, double local2mm );
-int db_fwrite_ident( FILE *fp, const char *title, double local2mm );
 BU_EXTERN(void db_conversions, ( struct db_i *, int units ) );
-int db_v4_get_units_code( const char *str );
-
-/* db5_scan.c */
-extern int db_dirbuild( struct db_i *dbip );
-extern struct directory *db5_diradd( struct db_i *dbip, const struct db5_raw_internal *rip, long laddr, genptr_t client_data );
-extern int db_get_version( struct db_i *dbip );
-extern int db5_scan( struct db_i *dbip, void (*handler)(struct db_i *,
-				const struct db5_raw_internal *,
-				long addr, genptr_t client_data ), genptr_t client_data );
-
-/* db5_comb.c */
-extern int rt_comb_import5( struct rt_db_internal   *ip,
-        const struct bu_external *ep,
-        const mat_t             mat,
-        const struct db_i       *dbip,
-        struct resource         *resp,
-	const int		minor_type);
-
 
 /* db_lookup.c */
-extern int db_get_directory_size( const struct db_i	*dbip );
-void db_ck_directory(const struct db_i *dbip);
-
-extern void db_inmem(struct directory	*dp,
-		     struct bu_external	*ext,
-		     int			flags);
-
-extern int db_is_directory_non_empty( const struct db_i	*dbip);
-
 BU_EXTERN(int db_dirhash, (CONST char *str) );
 					/* convert name to directory ptr */
 BU_EXTERN(struct directory *db_lookup,( CONST struct db_i *, CONST char *name, int noisy ) );
@@ -2743,22 +2333,20 @@ BU_EXTERN(struct directory *db_diradd, ( struct db_i *, CONST char *name, long l
 	int len, int flags, genptr_t ptr ) );
 					/* delete entry from directory */
 BU_EXTERN(int db_dirdelete, ( struct db_i *, struct directory *dp ) );
-BU_EXTERN(int db_fwrite_ident, (FILE *, CONST char *, double));
-BU_EXTERN(void db_pr_dir, ( CONST struct db_i *dbip ) );
 BU_EXTERN(int db_rename, ( struct db_i *, struct directory *, CONST char *newname) );
-
+BU_EXTERN(void db_pr_dir, ( CONST struct db_i *dbip ) );
 
 /* db_match.c */
-extern void db_update_nref( struct db_i *dbip, struct resource *resp );
-
 BU_EXTERN(int db_regexp_match, (CONST char *pattern, CONST char *string));
 BU_EXTERN(int db_regexp_match_all, (struct bu_vls *dest, struct db_i *dbip, CONST char *pattern));
 
 /* db_alloc.c */
-extern int db_flags_internal( const struct rt_db_internal *intern);
-
 					/* allocate "count" granules */
 BU_EXTERN(int db_alloc, ( struct db_i *, struct directory *dp, int count ) );
+					/* grow by "count" granules */
+BU_EXTERN(int db_grow, ( struct db_i *, struct directory *dp, int count ) );
+					/* truncate by "count" */
+BU_EXTERN(int db_trunc, ( struct db_i *, struct directory *dp, int count ) );
 					/* delete "recnum" from entry */
 BU_EXTERN(int db_delrec, ( struct db_i *, struct directory *dp, int recnum ) );
 					/* delete all granules assigned dp */
@@ -2767,9 +2355,6 @@ BU_EXTERN(int db_delete, ( struct db_i *, struct directory *dp ) );
 BU_EXTERN(int db_zapper, ( struct db_i *, struct directory *dp, int start ) );
 
 /* db_tree.c */
-void db_dup_db_tree_state(struct db_tree_state *otsp, const struct db_tree_state *itsp);
-void db_free_db_tree_state( struct db_tree_state *tsp );
-void db_init_db_tree_state( struct db_tree_state *tsp, struct db_i *dbip, struct resource *resp );
 BU_EXTERN(struct combined_tree_state *db_new_combined_tree_state,
 	(CONST struct db_tree_state *tsp, CONST struct db_full_path *pathp));
 BU_EXTERN(struct combined_tree_state *db_dup_combined_tree_state,
@@ -2783,49 +2368,17 @@ BU_EXTERN(int db_apply_state_from_comb, (struct db_tree_state *tsp,
 	CONST struct db_full_path *pathp, CONST struct rt_comb_internal *comb));
 BU_EXTERN(int db_apply_state_from_memb, (struct db_tree_state *tsp,
 	struct db_full_path *pathp, CONST union tree *tp));
-int db_apply_state_from_one_member( struct db_tree_state *tsp,
-	struct db_full_path *pathp, const char *cp, int sofar,
-	const union tree *tp );
-union tree *db_find_named_leaf( union tree *tp, const char *cp );
-union tree *db_find_named_leafs_parent( int *side, union tree *tp, const char *cp );
-void db_tree_del_lhs( union tree *tp, struct resource *resp );
-void db_tree_del_rhs( union tree *tp, struct resource *resp );
-int db_tree_del_dbleaf(union tree **tp, const char *cp, struct resource *resp);
-void db_tree_mul_dbleaf( union tree *tp, const mat_t mat );
-void db_tree_funcleaf(
-	struct db_i		*dbip,
-	struct rt_comb_internal	*comb,
-	union tree		*comb_tree,
-	void			(*leaf_func)(),
-	genptr_t		user_ptr1,
-	genptr_t		user_ptr2,
-	genptr_t		user_ptr3 );
-int
-db_follow_path(
-	struct db_tree_state		*tsp,
-	struct db_full_path		*total_path,
-	CONST struct db_full_path	*new_path,
-	int				noisy,
-	int				depth );
 BU_EXTERN(int db_follow_path_for_state, (struct db_tree_state *tsp,
 	struct db_full_path *pathp, CONST char *orig_str, int noisy));
 BU_EXTERN(union tree *db_recurse, (struct db_tree_state	*tsp,
 	struct db_full_path *pathp,
 	struct combined_tree_state **region_start_statepp, genptr_t client_data));
-union tree *db_dup_subtree( const union tree *tp, struct resource *resp );
-void db_ck_tree( const union tree *tp );
-void db_free_tree( union tree *tp, struct resource *resp );
-void db_left_hvy_node( union tree *tp );
-void db_non_union_push( union tree *tp, struct resource *resp );
-int db_count_tree_nodes( const union tree *tp, int count );
-int db_is_tree_all_unions( const union tree *tp );
-int db_count_subtree_regions( const union tree *tp );
-int db_tally_subtree_regions(
-	union tree	*tp,
-	union tree	**reg_trees,
-	int		cur,
-	int		lim,
-	struct resource *resp);
+BU_EXTERN(union tree *db_dup_subtree, (CONST union tree	*tp));
+BU_EXTERN(void db_free_tree, (union tree *tp));
+BU_EXTERN(void db_non_union_push, (union tree *tp));
+BU_EXTERN(int db_count_subtree_regions, (CONST union tree *tp));
+BU_EXTERN(int db_tally_subtree_regions, (union tree *tp,
+	union tree **reg_trees, int cur, int lim));
 BU_EXTERN(int db_walk_tree, (struct db_i *dbip, int argc, CONST char **argv,
 	int ncpu, CONST struct db_tree_state *init_state,
 	int (*reg_start_func) (
@@ -2841,88 +2394,34 @@ BU_EXTERN(int db_walk_tree, (struct db_i *dbip, int argc, CONST char **argv,
 	union tree * (*leaf_func) (
 		struct db_tree_state * /*tsp*/,
 		struct db_full_path * /*pathp*/,
-		struct rt_db_internal * /*ip*/,
+		struct bu_external * /*ep*/,
+		int /*id*/,
 		genptr_t client_data ),
 	genptr_t client_data ));
-int db_path_to_mat(
-	struct db_i		*dbip,
-	struct db_full_path	*pathp,
-	mat_t			mat,		/* result */
-	int			depth,		/* number of arcs */
-	struct resource		*resp);
+BU_EXTERN(int db_path_to_mat, (struct db_i *dbip, struct db_full_path *pathp,
+	mat_t mat, int depth));
 BU_EXTERN(void db_apply_anims, (struct db_full_path *pathp,
 	struct directory *dp, mat_t stck, mat_t arc,
 	struct mater_info *materp));
-/* XXX db_shader_mat, should be called rt_shader_mat */
-int db_region_mat(
-	mat_t		m,		/* result */
-	struct db_i	*dbip,
-	const char	*name,
-	struct resource *resp);
-int db_shader_mat(
-	mat_t			model_to_shader,	/* result */
-	const struct rt_i	*rtip,
-	const struct region	*rp,
-	point_t			p_min,	/* input/output: shader/region min point */
-	point_t			p_max,	/* input/output: shader/region max point */
-	struct resource		*resp);
 
 /* dir.c */
-extern struct rt_i *rt_dirbuild( const char *filename, char *buf, int len );
-int rt_db_get_internal(
-	struct rt_db_internal	*ip,
-	const struct directory	*dp,
-	const struct db_i	*dbip,
-	const mat_t		mat,
-	struct resource		*resp);
-int rt_db_put_internal(
-	struct directory	*dp,
-	struct db_i		*dbip,
-	struct rt_db_internal	*ip,
-	struct resource		*resp);
-extern int rt_fwrite_internal( FILE *fp, const char *name, const struct rt_db_internal *ip, double conv2mm );
-extern void rt_db_free_internal( struct rt_db_internal *ip, struct resource *resp );
-int rt_db_lookup_internal (
-	struct db_i *dbip,
-	const char *obj_name,
-	struct directory **dpp,
-	struct rt_db_internal *ip,
-	int noisy,
-	struct resource *resp);
-extern void rt_optim_tree(register union tree *tp,
-			  struct resource *resp);
-void db_get_directory(register struct resource *resp);
+BU_EXTERN(int rt_db_get_internal, (struct rt_db_internal *ip,
+	CONST struct directory *dp,
+	CONST struct db_i *dbip, CONST mat_t mat));
+BU_EXTERN(int rt_db_put_internal, (struct directory *dp, struct db_i *dbip,
+	struct rt_db_internal *ip));
+
+/* db_comb.c */
 
 /* db_walk.c */
 BU_EXTERN(void db_functree, (struct db_i *dbip, struct directory *dp,
 	void (*comb_func)(struct db_i *, struct directory *, genptr_t),
 	void (*leaf_func)(struct db_i *, struct directory *, genptr_t),
-	struct resource *resp,
 	genptr_t client_data));
-
-/* g_arb.c */
-int rt_arb_get_cgtype();		/* needs rt_arb_internal for arg list */
-int rt_arb_std_type( const struct rt_db_internal *ip, const struct bn_tol *tol );
-void rt_arb_centroid();			/* needs rt_arb_internal for arg list */
-int rt_arb_calc_points();		/* needs wdb.h for arg list */
-int rt_arb_3face_intersect(
-	point_t			point,
-	const plane_t		planes[6],
-	int			type,		/* 4..8 */
-	int			loc);
 
 /* g_epa.c */
 BU_EXTERN(void rt_ell, (fastf_t *ov, CONST fastf_t *V, CONST fastf_t *A,
 			CONST fastf_t *B, int sides) );
-
-/* g_pipe.c */
-void rt_vls_pipept(
-	struct bu_vls *vp,
-	int seg_no,
-	const struct rt_db_internal *ip,
-	double mm2local);
-void rt_pipept_print();		/* needs wdb_pipept for arg */
-int rt_pipe_ck( const struct bu_list *headp );
 
 /* g_rpc.c */
 BU_EXTERN(int rt_mk_parabola, (struct rt_pt_node *pts, fastf_t r, fastf_t b, fastf_t dtol, fastf_t ntol));
@@ -2930,7 +2429,6 @@ BU_EXTERN(struct rt_pt_node *rt_ptalloc, () );
 
 /* memalloc.c -- non PARALLEL routines */
 BU_EXTERN(unsigned long rt_memalloc, (struct mem_map **pp, unsigned size) );
-BU_EXTERN(struct mem_map * rt_memalloc_nosplit, (struct mem_map **pp, unsigned size) );
 BU_EXTERN(unsigned long rt_memget, (struct mem_map **pp, unsigned int size,
 	unsigned int place) );
 BU_EXTERN(void rt_memfree, (struct mem_map **pp, unsigned size, unsigned long addr) );
@@ -2945,12 +2443,6 @@ BU_EXTERN(struct bu_list *rt_vlblock_find, (struct bn_vlblock *vbp,
 
 /* g_ars.c */
 BU_EXTERN(void rt_hitsort, (struct hit h[], int nh));
-
-/* g_pg.c */
-int rt_pg_to_bot( struct rt_db_internal *ip, const struct bn_tol *tol, struct resource *resp );
-
-/* g_hf.c */
-int rt_hf_to_dsp(struct rt_db_internal *db_intern, struct resource *resp);
 
 /* pr.c */
 BU_EXTERN(void rt_pr_soltab, (CONST struct soltab *stp));
@@ -2983,62 +2475,24 @@ BU_EXTERN(void rt_regionfix, (struct rt_i *rtip));
 /* table.c */
 BU_EXTERN(int rt_id_solid, (struct bu_external *ep));
 BU_EXTERN(CONST struct rt_functab *rt_get_functab_by_label, (CONST char *label));
-int rt_generic_xform(
-	struct rt_db_internal	*op,
-	const mat_t		mat,
-	struct rt_db_internal	*ip,
-	int			free,
-	struct db_i		*dbip,
-	struct resource		*resp);
 
 
 /* prep.c */
 BU_EXTERN(void rt_plot_all_bboxes, (FILE *fp, struct rt_i *rtip));
-void
-rt_plot_all_solids(
-	FILE		*fp,
-	struct rt_i	*rtip,
-	struct resource	*resp);
-void rt_init_resource(
-	struct resource *resp,
-	int		cpu_num,
-	struct rt_i	*rtip);
+BU_EXTERN(void rt_plot_all_solids, (FILE *fp, struct rt_i *rtip));
+BU_EXTERN(void rt_init_resource, (struct resource *resp, int cpu_num));
 BU_EXTERN(void rt_clean_resource, (struct rt_i *rtip, struct resource *resp));
 
 /* shoot.c */
 BU_EXTERN(void rt_add_res_stats, (struct rt_i *rtip, struct resource *resp) );
 					/* Tally stats into struct rt_i */
-extern void rt_res_pieces_clean(struct resource *resp,
-			   struct rt_i *rtip);
-extern void rt_vstub(struct soltab	       *stp[],
-		     struct xray		*rp[],
-		     struct  seg            segp[],
-		     int		  	    n,
-		     struct application	*ap);
-
-
-/* tree.c */
-extern int rt_bound_tree( const union tree	*tp,
-			  vect_t		tree_min,
-			  vect_t		tree_max);
-int rt_tree_elim_nops(union tree *, struct resource *resp);
-
 
 /* vlist.c */
-/* XXX Has some stuff mixed in here that should go in LIBBN */
-struct bn_vlblock *
-bn_vlblock_init(
-	struct bu_list	*free_vlist_hd,		/* where to get/put free vlists */
-	int		max_ent);
 BU_EXTERN(struct bn_vlblock *	rt_vlblock_init, () );
 BU_EXTERN(void			rt_vlblock_free, (struct bn_vlblock *vbp) );
 BU_EXTERN(struct bu_list *	rt_vlblock_find, (struct bn_vlblock *vbp,
 				int r, int g, int b) );
-int rt_ck_vlist( const struct bu_list *vhead );
-void rt_vlist_copy( struct bu_list *dest, const struct bu_list *src );
-void bn_vlist_cleanup( struct bu_list *hd );
 BU_EXTERN(void			rt_vlist_cleanup, () );
-void bn_vlist_rpp( struct bu_list *hd, const point_t minn, CONST point_t maxx );
 BU_EXTERN(void			rt_vlist_export, (struct bu_vls *vls,
 				struct bu_list *hp,
 				CONST char *name));
@@ -3049,32 +2503,17 @@ BU_EXTERN(void			rt_plot_vlblock, (FILE *fp,
 				CONST struct bn_vlblock	*vbp) );
 BU_EXTERN(void			rt_vlist_to_uplot, (FILE *fp,
 				CONST struct bu_list *vhead));
-BU_EXTERN(int			rt_process_uplot_value,
-				(struct bu_list **vhead, struct bn_vlblock *vbp,
-				FILE *fp, int c, double char_size) );
 BU_EXTERN(int			rt_uplot_to_vlist, (struct bn_vlblock *vbp,
 				FILE *fp, double char_size) );
 BU_EXTERN(void			rt_label_vlist_verts, (struct bn_vlblock *vbp,
 				struct bu_list *src, mat_t mat,
 				double sz, double mm2local) );
+BU_EXTERN(int			rt_process_uplot_value,
+				(struct bu_list **vhead, struct bn_vlblock *vbp,
+				FILE *fp, int c, double char_size) );
 
 #ifdef SEEN_RTGEOM_H
 /* g_sketch.c */
-extern void rt_sketch_ifree( struct rt_db_internal	*ip );
-extern int curve_to_vlist(struct bu_list		*vhead,
-			  const struct rt_tess_tol	*ttol,
-			  point_t			V,
-			  vect_t			u_vec,
-			  vect_t			v_vec,
-			  struct rt_sketch_internal *sketch_ip,
-			  struct curve			*crv);
-
-extern int rt_check_curve( struct curve *crv,
-			   struct rt_sketch_internal *skt,
-			   int noisey);
-
-extern void rt_copy_curve(struct curve *crv_out, const struct curve *crv_in);
-
 BU_EXTERN(int				rt_check_curve,
 					(struct curve *crv,
 					struct rt_sketch_internal *skt,
@@ -3114,7 +2553,6 @@ BU_EXTERN(struct edgeuse	*nmg_me, (struct vertex *v1, struct vertex *v2, struct 
 BU_EXTERN(struct edgeuse	*nmg_meonvu, (struct vertexuse *vu) );
 BU_EXTERN(struct loopuse	*nmg_ml, (struct shell *s) );
 /*	KILL routines */
-extern int nmg_keg( struct edgeuse	*eu);
 BU_EXTERN(int			nmg_kvu, (struct vertexuse *vu) );
 BU_EXTERN(int			nmg_kfu, (struct faceuse *fu1) );
 BU_EXTERN(int			nmg_klu, (struct loopuse *lu1) );
@@ -3452,20 +2890,6 @@ BU_EXTERN(void			nmg_pl_lu_around_eu, (CONST struct edgeuse *eu));
 BU_EXTERN(void			nmg_pr_fus_in_fg, (CONST long *fg_magic));
 
 /* From nmg_misc.c */
-extern int rt_dist_pt3_line3(fastf_t		*dist,
-			     point_t		pca,
-			     const point_t	a,
-			     const point_t	p,
-			     const vect_t	dir,
-			     const struct bn_tol *tol);
-
-extern int rt_dist_line3_line3(fastf_t dist[2],
-		    CONST point_t p1,
-		    CONST point_t p2,
-		    CONST vect_t d1,
-		    CONST vect_t d2,
-			       CONST struct bn_tol *tol);
-
 BU_EXTERN(int			nmg_snurb_calc_lu_uv_orient, (CONST struct loopuse *lu));
 BU_EXTERN(void			nmg_snurb_fu_eval, (CONST struct faceuse *fu,
 				CONST fastf_t u,
@@ -3616,6 +3040,7 @@ BU_EXTERN(int			nmg_break_edges, (long *magic_p,
 				CONST struct bn_tol *tol));
 BU_EXTERN(int			nmg_lu_is_convex, (struct loopuse *lu,
 				CONST struct bn_tol *tol));
+
 #ifdef SEEN_RTGEOM_H
 BU_EXTERN(int			nmg_to_arb, (CONST struct model *m,
 				struct rt_arb_internal *arb_int));
@@ -3625,7 +3050,6 @@ BU_EXTERN(int			nmg_to_tgc, (CONST struct model *m,
 BU_EXTERN(int			nmg_to_poly, (CONST struct model *m,
 				struct rt_pg_internal *poly_int,
 				CONST struct bn_tol *tol));
-struct rt_bot_internal		*nmg_bot( struct shell *s, const struct bn_tol *tol );
 #endif
 
 BU_EXTERN(int			nmg_simplify_shell_edges, (struct shell *s,
@@ -3635,30 +3059,7 @@ BU_EXTERN(int			nmg_edge_collapse, (struct model *m,
 				CONST fastf_t tol_coll,
 				CONST fastf_t min_angle));
 
-/* g_bot.c */
-int rt_bot_edge_in_list( const int v1, const int v2, const int edge_list[], const int edge_count );
-#ifdef SEEN_RTGEOM_H
-int rt_bot_find_v_nearest_pt2(
-	const struct rt_bot_internal *bot,
-	const point_t	pt2,
-	const mat_t	mat);
-int rt_bot_find_e_nearest_pt2(
-	int *vert1,
-	int *vert2,
-	const struct rt_bot_internal *bot,
-	const point_t	pt2,
-	const mat_t	mat);
-int rt_bot_find_e_nearest_pt2();	/* needs rt_bot_internal for arg list */
-int rt_bot_vertex_fuse( struct rt_bot_internal *bot );
-int rt_bot_face_fuse( struct rt_bot_internal *bot );
-int rt_bot_condense( struct rt_bot_internal *bot );
-#endif
-int rt_bot_same_orientation( const int *a, const int *b );
-
 /* From nmg_tri.c */
-extern void nmg_triangulate_shell(struct shell *s, const struct bn_tol  *tol);
-
-
 BU_EXTERN(void			nmg_triangulate_model, (struct model *m, CONST struct bn_tol   *tol) );
 BU_EXTERN(void			nmg_triangulate_fu, (struct faceuse *fu, CONST struct bn_tol   *tol) );
 
@@ -3673,64 +3074,8 @@ BU_EXTERN(char 			*nmg_shell_manifolds, (struct shell *sp, char *tbl) );
 BU_EXTERN(char	 		*nmg_manifolds, (struct model *m) );
 
 /* g_nmg.c */
-extern int nmg_ray_segs(struct ray_data	*rd);
-
-/* g_torus.c */
-extern int rt_num_circular_segments(double maxerr, double radius);
-
-/* tcl.c */
-int rt_tcl_parse_ray( Tcl_Interp *interp, struct xray *rp, CONST char *CONST*argv );
-void rt_tcl_pr_cutter( Tcl_Interp *interp, CONST union cutter *cutp );
-int rt_tcl_cutter( ClientData clientData, Tcl_Interp *interp, int argc, const char *const*argv );
-void rt_tcl_pr_hit( Tcl_Interp *interp, struct hit *hitp, const struct seg *segp, const struct xray	*rayp, int flipflag );
-void rt_tcl_setup(Tcl_Interp *interp);
-int Rt_Init(Tcl_Interp *interp);
-void db_full_path_appendresult( Tcl_Interp *interp, const struct db_full_path *pp );
-extern int tcl_obj_to_int_array(Tcl_Interp *interp,
-				Tcl_Obj *list,
-				int **array,
-				int *array_len);
-
-
-extern int tcl_obj_to_fastf_array(Tcl_Interp *interp,
-				  Tcl_Obj *list,
-				  fastf_t **array,
-				  int *array_len);
-
-extern int tcl_list_to_int_array(Tcl_Interp *interp,
-				 char *char_list,
-				 int **array,
-				 int *array_len);
-
-extern int tcl_list_to_fastf_array(Tcl_Interp *interp,
-				   char *char_list,
-				   fastf_t **array,
-				   int *array_len);
-
-
-/* g_rhc.c */
-extern int rt_mk_hyperbola(struct rt_pt_node *pts,
-			   fastf_t r,
-			   fastf_t b,
-			   fastf_t c,
-			   fastf_t dtol,
-			   fastf_t ntol);
-
-
 
 /* nmg_class.c */
-extern int nmg_classify_pt_loop(const point_t pt,
-				const struct loopuse *lu,
-				const struct bn_tol *tol);
-
-extern int nmg_classify_s_vs_s( struct shell *s,
-				struct shell *s2,
-				const struct bn_tol *tol);
-
-extern int nmg_classify_lu_lu(const struct loopuse *lu1,
-			      const struct loopuse *lu2,
-			      const struct bn_tol *tol);
-
 BU_EXTERN(int			nmg_class_pt_f, (CONST point_t pt,
 				CONST struct faceuse *fu,
 				CONST struct bn_tol *tol) );
@@ -3740,13 +3085,6 @@ BU_EXTERN(int			nmg_class_pt_s, (CONST point_t pt,
 				CONST struct bn_tol *tol) );
 
 /* From nmg_pt_fu.c */
-extern int nmg_eu_is_part_of_crack( const struct edgeuse *eu);
-
-extern int nmg_class_pt_lu_except(point_t		pt,
-				  const struct loopuse	*lu,
-				  const struct edge		*e_p,
-				  const struct bn_tol	*tol);
-
 BU_EXTERN(int			nmg_class_pt_fu_except, (CONST point_t pt,
 				CONST struct faceuse *fu,
 				CONST struct loopuse *ignore_lu,
@@ -3757,11 +3095,6 @@ BU_EXTERN(int			nmg_class_pt_fu_except, (CONST point_t pt,
 				CONST struct bn_tol *tol) );
 
 /* From nmg_plot.c */
-void
-extern nmg_pl_shell(FILE		*fp,
-		    const struct shell	*s,
-		    int			fancy);
-
 BU_EXTERN(void			nmg_vu_to_vlist, (struct bu_list *vhead,
 				CONST struct vertexuse	*vu));
 BU_EXTERN(void			nmg_eu_to_vlist, (struct bu_list *vhead,
@@ -3891,25 +3224,7 @@ BU_EXTERN(void			nmg_cnurb_to_vlist, (struct bu_list *vhead,
 				CONST struct edgeuse *eu,int n_interior,
 				int cmd) );
 
-/* nurb_util.c */
-extern void
-rt_nurb_clean_cnurb(struct edge_g_cnurb * crv);
-
-/* nurb_knot.c */
-extern int rt_nurb_knot_index(const struct knot_vector *kv,
-			     fastf_t k_value,
-			     int	order);
-
-/* nurb_trim.c */
-extern int nmg_uv_in_lu(const fastf_t u, const fastf_t v, 
-			const struct loopuse *lu);
-
-
 /* from nmg_mesh.c */
-extern int nmg_mesh_two_faces(struct faceuse *fu1,
-			      struct faceuse *fu2,
-			      const struct bn_tol	*tol);
-
 BU_EXTERN(void			nmg_radial_join_eu, (struct edgeuse *eu1,
 				struct edgeuse *eu2, CONST struct bn_tol *tol));
 BU_EXTERN(void			nmg_mesh_faces, (struct faceuse *fu1,
@@ -3933,13 +3248,14 @@ BU_EXTERN(int			nmg_two_region_vertex_fuse, (struct nmgregion *r1,
 				struct nmgregion *r2, CONST struct bn_tol *tol));
 BU_EXTERN(union tree		*nmg_booltree_leaf_tess, (struct db_tree_state *tsp,
 				struct db_full_path *pathp,
-				struct rt_db_internal *ip, genptr_t client_data));
+				struct bu_external *ep, int id, genptr_t client_data));
 BU_EXTERN(union tree		*nmg_booltree_leaf_tnurb, (struct db_tree_state *tsp,
 				struct db_full_path *pathp,
-				struct rt_db_internal *ip, genptr_t client_data));
+				struct bu_external *ep, int id, genptr_t client_data));
 BU_EXTERN(union tree		*nmg_booltree_evaluate, (union tree *tp,
-				CONST struct bn_tol *tol, struct resource *resp));
-int nmg_boolean( union tree *tp, struct model *m, const struct bn_tol *tol, struct resource *resp );
+				CONST struct bn_tol *tol));
+BU_EXTERN(void			nmg_region_v_unique, (struct nmgregion *r1,
+				CONST struct bn_tol *tol));
 
 /* from nmg_class.c */
 BU_EXTERN(void			nmg_class_shells, (struct shell *sA,
@@ -4041,15 +3357,6 @@ BU_EXTERN(void			nmg_evaluate_boolean,
 
 
 /* From nmg_rt_isect.c */
-extern void nmg_rt_print_hitlist( struct hitmiss *hl );
-
-extern void nmg_rt_print_hitmiss( struct hitmiss *a_hit);
-
-extern int nmg_class_ray_vs_shell(struct xray *rp,
-				  const struct shell *s,
-				  const int in_or_out_only,
-				  const struct bn_tol *tol);
-
 BU_EXTERN(void nmg_isect_ray_model, (struct ray_data *rd) );
 
 /* From nmg_rt_segs.c */
@@ -4548,48 +3855,13 @@ BU_EXTERN(void			nmg_visit,
 				CONST struct nmg_visit_handlers	*htab,
 				genptr_t			*state));
 
-/* db5_types.c */
-BU_EXTERN(int			db5_type_tag_from_major,
-				(char				**tag,
-				CONST unsigned char		major));
-
-BU_EXTERN(int			db5_type_descrip_from_major,
-				(char				**descrip,
-				CONST unsigned char		major));
-
-BU_EXTERN(int			db5_type_tag_from_codes,
-				(char				**tag,
-				CONST unsigned char		major,
-				CONST unsigned char		minor));
-
-BU_EXTERN(int			db5_type_descrip_from_codes,
-				(char				**descrip,
-				CONST unsigned char		major,
-				CONST unsigned char		minor));
-
-BU_EXTERN(int			db5_type_codes_from_tag,
-				(unsigned char			*major,
-				unsigned char			*minor,
-				CONST char			*tag));
-
-BU_EXTERN(int			db5_type_codes_from_descrip,
-				(unsigned char			*major,
-				unsigned char			*minor,
-				CONST char			*descrip));
-
-BU_EXTERN(size_t		db5_type_sizeof_h_binu,
-				(CONST unsigned char		minor));
-
-BU_EXTERN(size_t		db5_type_sizeof_n_binu,
-				(CONST unsigned char		minor));
-
 #endif
 
 /*
  *  Constants provided and used by the RT library.
  */
 extern CONST struct db_tree_state	rt_initial_tree_state;
-extern const char   *rt_vlist_cmd_descriptions[];
+extern CONST char   *rt_vlist_cmd_descriptions[];
 
 /* vers.c (created by librt/Cakefile) */
 extern CONST char   rt_version[];

@@ -151,10 +151,10 @@ Cad_AppInit(interp)
 	Tcl_StaticPackage(interp, "Fb", Fb_Init, (Tcl_PackageInitProc *) NULL);
 
 	/* Initialize libbu */
-	Bu_Init(interp);
+	bu_tcl_setup(interp);
 
 	/* Initialize libbn */
-	Bn_Init(interp);
+	bn_tcl_setup(interp);
 
 	/* Initialize librt */
 	if (Rt_Init(interp) == TCL_ERROR) {

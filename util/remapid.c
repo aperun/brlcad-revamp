@@ -26,7 +26,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -97,7 +97,7 @@ extern BU_FILE			bu_iob[1];
  *	This software is Copyright (C) 1997 by the United States Army
  *	in all countries except the USA.  All rights reserved.
  */
-static const char RCSrtstring[] = "@(#)$Header$ (BRL)";
+static char RCSrtstring[] = "@(#)$Header$ (BRL)";
 
 #include "conf.h"
 
@@ -863,7 +863,7 @@ char	*db_name;
 	bu_log("Cannot open database file '%s'\n", db_name);
 	exit (1);
     }
-    db_dirbuild(dbip);
+    db_scan(dbip, (int (*)()) db_diradd, 1, NULL);
 
     for (i = 0; i < RT_DBNHASH; ++i)
 	for (dp = dbip -> dbi_Head[i]; dp != DIR_NULL; dp = dp -> d_forw)
@@ -872,7 +872,7 @@ char	*db_name;
 		continue;
 	    ip = (struct rt_db_internal *)
 		bu_malloc(sizeof(struct rt_db_internal), "rt_db_internal");
-	    if (rt_db_get_internal(ip, dp, dbip, (fastf_t *) NULL, &rt_uniresource) < 0)
+	    if (rt_db_get_internal(ip, dp, dbip, (fastf_t *) NULL) < 0)
 	    {
 		bu_log("remapid: rt_db_get_internal(%s) failed.  ",
 		    dp -> d_namep);
@@ -913,7 +913,7 @@ int	depth;
 	    comb = (struct rt_comb_internal *) rp -> rr_ip -> idb_ptr;
 	    RT_CK_COMB(comb);
 	    comb -> region_id = region_id;
-	    if (rt_db_put_internal(rp -> rr_dp, dbip, rp -> rr_ip, &rt_uniresource) < 0)
+	    if (rt_db_put_internal(rp -> rr_dp, dbip, rp -> rr_ip) < 0)
 	    {
 		bu_log("remapid: rt_db_put_internal(%s) failed.  ",
 		    rp -> rr_dp -> d_namep);
@@ -1001,7 +1001,6 @@ void print_usage ()
 /*
  *                                M A I N ( )
  */
-int
 main (argc, argv)
 
 int	argc;
@@ -1048,8 +1047,6 @@ char	*argv[];
 	    exit (1);
     }
 
-	rt_init_resource( &rt_uniresource, 0, NULL );
-
     /*
      *	Open database and specification file, as necessary
      */
@@ -1082,5 +1079,4 @@ char	*argv[];
 	else
 	    bu_rb_walk1(assignment, write_assignment, INORDER);
     }
-    return 0;
 }

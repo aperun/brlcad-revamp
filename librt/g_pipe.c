@@ -16,17 +16,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSpipe[] = "@(#)$Header$ (BRL)";
+static char RCSpipe[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <ctype.h>
-#include <unistd.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include <math.h>
 #include "tcl.h"
 #include "machine.h"
@@ -39,6 +34,8 @@ static const char RCSpipe[] = "@(#)$Header$ (BRL)";
 #include "wdb.h"
 #include "rtgeom.h"
 #include "./debug.h"
+
+BU_EXTERN( char *next_tok, (char *str ) );
 
 struct id_pipe
 {
@@ -371,10 +368,8 @@ struct rt_i		*rtip;
 			VMOVE( curr_pt, pp2->pp_coord );
 			goto next_pt;
 		}
-
 		VJOIN1( bend_start, pp2->pp_coord, dist_to_bend, n1 );
 		VJOIN1( bend_end, pp2->pp_coord, dist_to_bend, n2 );
-
 		VUNITIZE( norm );
 
 		/* linear section */
@@ -427,11 +422,10 @@ register CONST struct soltab *stp;
 		(struct bu_list *)stp->st_specific; */
 }
 
-/*
- *			R T _ P I P E P T _ P R I N T
- */
 void
-rt_pipept_print( const struct wdb_pipept *pipe, double mm2local )
+rt_pipept_print( pipe, mm2local )
+struct wdb_pipept *pipe;
+double mm2local;
 {
 	point_t p1;
 
@@ -447,15 +441,12 @@ rt_pipept_print( const struct wdb_pipept *pipe, double mm2local )
 		bu_log( "\tod=%g\n", pipe->pp_od*mm2local );
 }
 
-/*
- *			R T _ V L S _ P I P E P T
- */
 void
-rt_vls_pipept(
-	struct bu_vls *vp,
-	int seg_no,
-	const struct rt_db_internal *ip,
-	double mm2local)
+vls_pipept( vp, seg_no, ip, mm2local )
+struct bu_vls *vp;
+int seg_no;
+CONST struct rt_db_internal *ip;
+double mm2local;
 {
 	struct rt_pipe_internal *pint;
 	struct wdb_pipept *pipe;
@@ -1126,11 +1117,8 @@ register struct xray	*rp;
 	first = BU_LIST_FIRST( hit_list, &h->l );
 	if( VDOT( first->hitp->hit_normal, rp->r_dir ) > 0.0 )
 	{
-
-		bu_log( "ERROR: first hit on %s (surfno = %d) is an exit at (%g %g %g)\n",
-			stp->st_dp->d_namep, first->hitp->hit_surfno, V3ARGS( first->hitp->hit_point ) );
-		bu_log( "\tray start = (%.12e %.12e %.12e), ray dir = (%.12e %.12e %.12e)\n",
-			V3ARGS( rp->r_pt ), V3ARGS( rp->r_dir ) );
+		bu_log( "ERROR: first hit on %s is an exit at (%g %g %g)\n",
+			stp->st_dp->d_namep, V3ARGS( first->hitp->hit_point ) );
 
 		while( BU_LIST_WHILE( hitp, hit_list, &h->l ) )
 		{
@@ -1336,9 +1324,7 @@ struct seg		*seghead;
 	if( total_hits%2 )
 	{
 		i = 0;
-		bu_log( "rt_pipe_shot: bad number of hits on solid %s (%d)\n", stp->st_dp->d_namep, total_hits );
-		bu_log( "Ignoring this solid for this ray\n" );
-		bu_log( "\tray start = (%e %e %e), ray dir = (%e %e %e)\n", V3ARGS( rp->r_pt ), V3ARGS( rp->r_dir ) );
+		bu_log( "rt_pipe_shot: bad number of hits (%d)\n" , total_hits );
 		for( BU_LIST_FOR( hitp, hit_list, &hit_head.l ) )
 		{
 			point_t hit_pt;
@@ -1347,16 +1333,7 @@ struct seg		*seghead;
 			VJOIN1( hit_pt, rp->r_pt, hitp->hitp->hit_dist,  rp->r_dir );
 			bu_log( "\t( %g %g %g )\n" , V3ARGS( hit_pt ) );
 		}
-
-		/* free the list of hits */
-		while( BU_LIST_WHILE( hitp, hit_list, &hit_head.l ) )
-		{
-			BU_LIST_DEQUEUE( &hitp->l );
-			bu_free( (char *)hitp->hitp, "rt_pipe_shot: hitp->hitp" );
-			bu_free( (char *)hitp, "rt_pipe_shot: hitp" );
-		}
-
-		return( 0 );
+		rt_bomb( "rt_pipe_shot\n" );
 	}
 
 	hitp = BU_LIST_FIRST( hit_list, &hit_head.l );
@@ -1949,14 +1926,10 @@ struct bn_tol *tol;
 	if( end_or > tol->dist )
 		new_outer_loop = (struct vertex **)bu_calloc( arc_segs, sizeof( struct vertex *),
 				"tesselate_pipe_linear: new_outer_loop" );
-	else
-		new_outer_loop = (struct vertex **)NULL;
 
 	if( end_ir > tol->dist )
 		new_inner_loop = (struct vertex **)bu_calloc( arc_segs, sizeof( struct vertex *),
 				"tesselate_pipe_linear: new_inner_loop" );
-	else
-		new_inner_loop = (struct vertex **)NULL;
 
 	VSUB2( n, end_pt, start_pt );
 	seg_len = MAGNITUDE( n );
@@ -3449,7 +3422,7 @@ CONST struct db_i		*dbip;
 		return(-1);
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_PIPE;
 	ip->idb_meth = &rt_functab[ID_PIPE];
 	ip->idb_ptr = bu_malloc( sizeof(struct rt_pipe_internal), "rt_pipe_internal");
@@ -3522,7 +3495,7 @@ CONST struct db_i		*dbip;
 		(count-1) * sizeof(struct exported_pipept);
 	ngran = (nbytes + sizeof(union record) - 1) / sizeof(union record);
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 	ep->ext_nbytes = ngran * sizeof(union record);
 	ep->ext_buf = (genptr_t)bu_calloc( 1, ep->ext_nbytes, "pipe external");
 	rec = (union record *)ep->ext_buf;
@@ -3545,129 +3518,6 @@ CONST struct db_i		*dbip;
 		htond( epp->epp_bendradius, (unsigned char *)&tmp.pp_bendradius, 1 );
 	}
 
-	return(0);
-}
-
-/*
- *			R T _ P I P E _ I M P O R T 5
- */
-int
-rt_pipe_import5( ip, ep, mat, dbip )
-struct rt_db_internal		*ip;
-CONST struct bu_external	*ep;
-register CONST mat_t		mat;
-CONST struct db_i		*dbip;
-{
-	register struct wdb_pipept	*ptp;
-	struct rt_pipe_internal		*pipe;
-	fastf_t				*vec;
-	int				total_count;
-	int				double_count;
-	int				byte_count;
-	unsigned long			pipe_count;
-	int				i;
-
-	BU_CK_EXTERNAL( ep );
-
-	pipe_count = bu_glong((unsigned char *)ep->ext_buf);
-	double_count = pipe_count * 6;
-	byte_count = double_count * SIZEOF_NETWORK_DOUBLE;
-	total_count = 4 + byte_count;
-	BU_ASSERT_LONG( ep->ext_nbytes, ==, total_count);
-
-	RT_CK_DB_INTERNAL( ip );
-	ip->idb_type = ID_PIPE;
-	ip->idb_meth = &rt_functab[ID_PIPE];
-	ip->idb_ptr = bu_malloc( sizeof(struct rt_pipe_internal), "rt_pipe_internal");
-
-	pipe = (struct rt_pipe_internal *)ip->idb_ptr;
-	pipe->pipe_magic = RT_PIPE_INTERNAL_MAGIC;
-	pipe->pipe_count = pipe_count;
-
-	vec = (fastf_t *)bu_malloc(byte_count, "rt_pipe_import5: vec");
-	/* Convert from database (network) to internal (host) format */
-	ntohd((unsigned char *)vec, (unsigned char *)ep->ext_buf + 4, double_count);
-
-	/*
-	 *  Walk the array of segments in reverse order,
-	 *  allocating a linked list of segments in internal format,
-	 *  using exactly the same structures as libwdb.
-	 */
-	BU_LIST_INIT( &pipe->pipe_segs_head );
-	for (i = 0; i < double_count; i += 6) {
-		/* Apply modeling transformations */
-		BU_GETSTRUCT( ptp, wdb_pipept );
-		ptp->l.magic = WDB_PIPESEG_MAGIC;
-		MAT4X3PNT( ptp->pp_coord, mat, &vec[i] );
-		ptp->pp_id =		vec[i+3] / mat[15];
-		ptp->pp_od =		vec[i+4] / mat[15];
-		ptp->pp_bendradius =	vec[i+5] / mat[15];
-		BU_LIST_APPEND( &pipe->pipe_segs_head, &ptp->l );
-	}
-
-	bu_free((genptr_t)vec, "rt_pipe_import5: vec");
-	return(0);			/* OK */
-}
-
-/*
- *			R T _ P I P E _ E X P O R T 5
- */
-int
-rt_pipe_export5( ep, ip, local2mm, dbip )
-struct bu_external		*ep;
-CONST struct rt_db_internal	*ip;
-double				local2mm;
-CONST struct db_i		*dbip;
-{
-	struct rt_pipe_internal	*pip;
-	struct bu_list		*headp;
-	register struct wdb_pipept	*ppt;
-	fastf_t				*vec;
-	int				total_count;
-	int				double_count;
-	int				byte_count;
-	unsigned long			pipe_count;
-	int				i = 0;
-
-	RT_CK_DB_INTERNAL(ip);
-	if( ip->idb_type != ID_PIPE )  return(-1);
-	pip = (struct rt_pipe_internal *)ip->idb_ptr;
-	RT_PIPE_CK_MAGIC(pip);
-
-	headp = &pip->pipe_segs_head;
-
-	/* Count number of points */
-	pipe_count = 0;
-	for( BU_LIST_FOR( ppt, wdb_pipept, headp ) )
-		pipe_count++;
-
-	if( pipe_count <= 1 )
-		return(-4);			/* Not enough for 1 pipe! */
-
-	double_count = pipe_count * 6;
-	byte_count = double_count * SIZEOF_NETWORK_DOUBLE;
-	total_count = 4 + byte_count;
-	vec = (fastf_t *)bu_malloc(byte_count, "rt_pipe_export5: vec");
-
-	BU_CK_EXTERNAL(ep);
-	ep->ext_nbytes = total_count;
-	ep->ext_buf = (genptr_t)bu_malloc(ep->ext_nbytes, "pipe external");
-
-	(void)bu_plong((unsigned char *)ep->ext_buf, pipe_count);
-
-	/* Convert the pipe segments to external form */
-	for( BU_LIST_FOR( ppt, wdb_pipept, headp ), i += 6  )  {
-		/* Convert from user units to mm */
-		VSCALE( &vec[i], ppt->pp_coord, local2mm );
-		vec[i+3] = ppt->pp_id * local2mm;
-		vec[i+4] = ppt->pp_od * local2mm;
-		vec[i+5] = ppt->pp_bendradius * local2mm;
-	}
-
-	/* Convert from internal (host) to database (network) format */
-	htond((unsigned char *)ep->ext_buf + 4, (unsigned char *)vec, double_count);
-
-	bu_free((genptr_t)vec, "rt_pipe_export5: vec");
 	return(0);
 }
 
@@ -3759,7 +3609,8 @@ struct rt_db_internal	*ip;
  *		LINEAR sections are collinear.
  */
 int
-rt_pipe_ck( const struct bu_list *headp )
+rt_pipe_ck( headp )
+struct wdb_pipept *headp;
 {
 	int error_count=0;
 	struct wdb_pipept *cur,*prev,*next;
@@ -3767,7 +3618,7 @@ rt_pipe_ck( const struct bu_list *headp )
 	fastf_t new_bend_dist;
 	fastf_t v2_len=0.0;
 
-	prev = BU_LIST_FIRST( wdb_pipept, headp );
+	prev = BU_LIST_FIRST( wdb_pipept, &headp->l );
 	if( prev->pp_bendradius < prev->pp_od * 0.5 )
 	{
 		bu_log( "Bend radius (%gmm) is less than outer radius at ( %g %g %g )\n",
@@ -3776,7 +3627,7 @@ rt_pipe_ck( const struct bu_list *headp )
 	}
 	cur = BU_LIST_NEXT( wdb_pipept, &prev->l );
 	next = BU_LIST_NEXT( wdb_pipept, &cur->l );
-	while( BU_LIST_NOT_HEAD( &next->l, headp ) )
+	while( BU_LIST_NOT_HEAD( &next->l, &headp->l ) )
 	{
 		vect_t v1, v2, norm;
 		fastf_t v1_len;
@@ -3959,12 +3810,11 @@ out:
 }
 
 int
-rt_pipe_tcladjust( interp, intern, argc, argv, resp)
+rt_pipe_tcladjust( interp, intern, argc, argv )
 Tcl_Interp		*interp;
 struct rt_db_internal	*intern;
 int			argc;
 char			**argv;
-struct resource		*resp;
 {
 	struct rt_pipe_internal		*pipe;
 	struct wdb_pipept		*ptp;
@@ -4043,14 +3893,14 @@ struct resource		*resp;
 					return( TCL_ERROR );
 				}
 				ptp->pp_coord[0] = atof( v_str );
-				v_str = bu_next_token( v_str );
+				v_str = next_tok( v_str );
 				if( *v_str == '\0' ) {
 					Tcl_SetResult( interp, "incomplete vertex specification", TCL_STATIC );
 					Tcl_DecrRefCount( list );
 					return( TCL_ERROR );
 				}
 				ptp->pp_coord[1] = atof( v_str );
-				v_str = bu_next_token( v_str );
+				v_str = next_tok( v_str );
 				if( *v_str == '\0' ) {
 					Tcl_SetResult( interp, "incomplete vertex specification", TCL_STATIC );
 					Tcl_DecrRefCount( list );

@@ -53,17 +53,17 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 #include "conf.h"
-
-#include <stdio.h>
 #ifdef USE_STRING_H
 #include <string.h>
 #else
 #include <strings.h>
 #endif
+
 #include <signal.h>
+#include <stdio.h>
 #include <math.h>
 
 #include "machine.h"
@@ -78,10 +78,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "./ged.h"
 #include "./mged_solid.h"
 #include "./mged_dm.h"
-#include "./cmd.h"
 #include "../librt/debug.h"	/* XXX */
-
-extern struct db_tree_state	mged_initial_tree_state;	/* dodraw.c */
 
 extern void color_soltab();
 extern void set_absolute_tran(); /* defined in set.c */
@@ -171,13 +168,15 @@ double		mged_abs_tol;
 double		mged_rel_tol = 0.01;		/* 1%, by default */
 double		mged_nrm_tol;			/* normal ang tol, radians */
 
+BU_EXTERN(int	edit_com, (int argc, char **argv, int kind, int catch_sigint));
+
 void
-eraseobjpath(
-     Tcl_Interp	*interp,
-     int	argc,
-     char	**argv,
-     int	noisy,
-     int	all)
+eraseobjpath(interp, argc, argv, noisy, all)
+     Tcl_Interp	*interp;
+     int	argc;
+     char	**argv;
+     int	noisy;	
+     int	all;
 {
 	register struct directory *dp;
 	register int i;
@@ -260,15 +259,17 @@ eraseobjpath(
 /* Delete an object or several objects from the display */
 /* Format: d object1 object2 .... objectn */
 int
-f_erase(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int     argc,
-	char    **argv)
+f_erase(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int     argc;
+char    **argv;
 {
+	register int i;
+
 	CHECK_DBI_NULL;
 
-	if (argc < 2) {
+	if (argc < 2 || MAXARGS < argc) {
 		struct bu_vls vls;
 
 		bu_vls_init(&vls);
@@ -284,16 +285,18 @@ f_erase(
 	return TCL_OK;
 }
 
-int
-f_erase_all(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int     argc,
-	char    **argv)
+f_erase_all(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int     argc;
+char    **argv;
 {
+  register struct directory *dp;
+  register int i;
+
   CHECK_DBI_NULL;
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -418,7 +421,7 @@ char	**argv;
   av[0] = "Z";
   av[1] = (char *)NULL;
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -437,13 +440,13 @@ char	**argv;
 /* Edit something (add to visible display) */
 /* Format: e object	*/
 int
-f_edit(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_edit(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -464,7 +467,7 @@ Tcl_Interp *interp;
 int	argc;
 char	**argv;
 {
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -496,7 +499,7 @@ Tcl_Interp *interp;
 int	argc;
 char	**argv;
 {
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -567,12 +570,14 @@ size_reset()
  * B, e, and E commands use this area as common
  */
 int
-edit_com(
-     int	argc,
-     char	**argv,
-     int	kind,
-     int	catch_sigint)
+edit_com(argc, argv, kind, catch_sigint)
+     int	argc;
+     char	**argv;
+     int	kind;
+     int	catch_sigint;
 {
+	register struct directory *dp;
+	register int	i;
 	register struct dm_list *dmlp;
 	register struct dm_list *save_dmlp;
 	register struct cmd_list *save_cmd_list;
@@ -961,7 +966,7 @@ int	verbose;
 	if(dbip == DBI_NULL)
 	  return;
 
-	if( (id = rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource )) < 0 )  {
+	if( (id = rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL )) < 0 )  {
 		Tcl_AppendResult(interp, "rt_db_get_internal(", dp->d_namep,
 			") failure\n", (char *)NULL );
 		return;
@@ -970,14 +975,11 @@ int	verbose;
 	bu_vls_printf( outstrp, "%s:  ", dp->d_namep );
 
 	if( rt_functab[id].ft_describe( outstrp, &intern,
-	    verbose, base2local, &rt_uniresource ) < 0 )
+	    verbose, base2local ) < 0 )
 	  Tcl_AppendResult(interp, dp->d_namep, ": describe error\n", (char *)NULL);
-	rt_db_free_internal( &intern, &rt_uniresource );
+	rt_functab[id].ft_ifree( &intern );
 }
 
-/*
- *			C M D _ L I S T _ G U T S
- */
 static void
 cmd_list_guts(clientData, interp, argc, argv, recurse)
 ClientData clientData;
@@ -989,6 +991,7 @@ int recurse;
   register struct directory *dp;
   register int arg;
   struct bu_vls str;
+  int id;
   char *listeval="listeval";
   struct rt_db_internal intern;
 
@@ -1006,10 +1009,10 @@ int recurse;
       struct db_tree_state ts;
       struct db_full_path path;
 
+      bzero( (char *)&ts, sizeof( ts ) );
       db_full_path_init( &path );
-      ts = mged_initial_tree_state;	/* struct copy */
+
       ts.ts_dbip = dbip;
-      ts.ts_resp = &rt_uniresource;
       bn_mat_idn(ts.ts_mat);
 
       if (db_follow_path_for_state(&ts, &path, argv[arg], 1))
@@ -1017,7 +1020,7 @@ int recurse;
 
       dp = DB_FULL_PATH_CUR_DIR( &path );
 
-      if (rt_db_get_internal(&intern, dp, dbip, ts.ts_mat, &rt_uniresource) < 0) {
+      if ((id = rt_db_get_internal(&intern, dp, dbip, ts.ts_mat)) < 0) {
 	Tcl_AppendResult(interp, "rt_db_get_internal(", dp->d_namep,
 			 ") failure\n", (char *)NULL );
 	continue;
@@ -1027,9 +1030,10 @@ int recurse;
 
       bu_vls_printf( &str, "%s:  ", argv[arg] );
 
-      if (intern.idb_meth->ft_describe(&str, &intern, 99, base2local, &rt_uniresource) < 0)
-	Tcl_AppendResult(interp, dp->d_namep, ": ft_describe error\n", (char *)NULL);
-    	rt_db_free_internal( &intern, &rt_uniresource );
+      if (rt_functab[id].ft_describe(&str, &intern, 99, base2local) < 0)
+	Tcl_AppendResult(interp, dp->d_namep, ": describe error\n", (char *)NULL);
+
+      rt_functab[id].ft_ifree( &intern );
     } else {
       if ((dp = db_lookup(dbip, argv[arg], LOOKUP_NOISY)) == DIR_NULL)
 	continue;
@@ -1045,7 +1049,7 @@ int recurse;
 /*
  *			C M D _ L I S T
  *
- *  List object information, verbose, in GIFT-compatible format.
+ *  List object information, verbose
  *  Format: l object
  */
 int
@@ -1060,7 +1064,7 @@ char	**argv;
 
   CHECK_DBI_NULL;
 
-  if(argc < 2){
+  if(MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -1086,30 +1090,28 @@ char	**argv;
 
   /* 
    * Here we have no usable arguments,
-   * so we better be in an edit state.
+   * so we better be in and edit state.
    */
   if (argc == 1 ||
-      (argc == 2 && recurse)) {
+      argc == 2 && recurse) {
     int ac = 1;
     char *av[2];
 
     if (illump != SOLID_NULL) {
+      register int i, last;
       struct bu_vls vls;
 
       bu_vls_init(&vls);
 
       if (state == ST_S_EDIT)
-    	db_path_to_vls( &vls, &illump->s_fullpath );
-      else if (state == ST_O_EDIT)  {
-      	int i;
-      	for( i=0; i < ipathpos; i++ )  {
-      		bu_vls_printf(&vls, "/%s",
-			DB_FULL_PATH_GET(&illump->s_fullpath,i)->d_namep );
-      	}
-      } else
+	last = illump->s_last;
+      else if (state == ST_O_EDIT)
+	  last = ipathpos;
+      else
 	return TCL_ERROR;
 
-    	db_path_to_vls( &vls, &illump->s_fullpath );
+      for (i = 0; i <= last; ++i)
+	bu_vls_printf(&vls, "/%s", illump->s_path[i]->d_namep);
 
       av[0] = bu_vls_addr(&vls);
       av[1] = (char *)NULL;
@@ -1152,7 +1154,7 @@ char	**argv;
 
   CHECK_DBI_NULL;
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -1214,11 +1216,11 @@ mged_freemem()
 /* ZAP the display -- everything dropped */
 /* Format: Z	*/
 int
-f_zap(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_zap(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	register struct solid *sp;
 	register struct solid *nsp;
@@ -1250,7 +1252,7 @@ f_zap(
 
 	sp = BU_LIST_NEXT(solid, &HeadSolid.l);
 	while(BU_LIST_NOT_HEAD(sp, &HeadSolid.l)){
-		dp = FIRST_SOLID(sp);
+		dp = sp->s_path[0];
 		RT_CK_DIR(dp);
 		if( dp->d_addr == RT_DIR_PHONY_ADDR )  {
 			if( db_dirdelete( dbip, dp ) < 0 )  {
@@ -1418,7 +1420,6 @@ char	**argv;
   return TCL_ERROR;
 }
 
-int
 f_view(clientData, interp, argc, argv)
 ClientData clientData;
 Tcl_Interp *interp;
@@ -1758,7 +1759,6 @@ char	**argv;
   return TCL_ERROR;
 }
 
-int
 f_refresh(clientData, interp, argc, argv)
 ClientData clientData;
 Tcl_Interp *interp;
@@ -1862,29 +1862,39 @@ char	**argv;
  */
 void
 eraseobjall(dpp)
-     register struct directory **dpp;	/* this is a partial path spec. XXX should be db_full_path? */
+     register struct directory **dpp;
 {
 	register struct directory **tmp_dpp;
 	register struct solid *sp;
 	register struct solid *nsp;
-	struct db_full_path	subpath;
+	register int i;
 
 	if (dbip == DBI_NULL)
 		return;
 
 	update_views = 1;
 
-	db_full_path_init(&subpath);
-	for (tmp_dpp = dpp; *tmp_dpp != DIR_NULL; ++tmp_dpp)  {
+	for (tmp_dpp = dpp; *tmp_dpp != DIR_NULL; ++tmp_dpp)
 		RT_CK_DIR(*tmp_dpp);
-		db_add_node_to_full_path(&subpath, *tmp_dpp);
-	}
 
 	sp = BU_LIST_NEXT(solid, &HeadSolid.l);
 	while (BU_LIST_NOT_HEAD(sp, &HeadSolid.l)) {
 		nsp = BU_LIST_PNEXT(solid, sp);
+		for (i=0; i <= sp->s_last; i++) {
+			/* look for first path element */
+			if (sp->s_path[i] != *dpp)
+				continue;
 
-		if( db_full_path_subset( &sp->s_fullpath, &subpath ) )  {
+			/* look for rest of path */
+			for (++i, tmp_dpp = dpp+1;
+			     i <= sp->s_last && *tmp_dpp != DIR_NULL;
+			     ++i, ++tmp_dpp)
+				if (sp->s_path[i] != *tmp_dpp)
+					goto end;
+
+			if (*tmp_dpp != DIR_NULL)
+				goto end;
+
 #ifdef DO_DISPLAY_LISTS
 			freeDListsAll(sp->s_dlist, 1);
 #endif
@@ -1894,7 +1904,10 @@ eraseobjall(dpp)
 
 			BU_LIST_DEQUEUE(&sp->l);
 			FREE_SOLID(sp, &FreeSolid.l);
+
+			break;
 		}
+	end:
 		sp = nsp;
 	}
 
@@ -1903,8 +1916,6 @@ eraseobjall(dpp)
 			Tcl_AppendResult(interp, "eraseobjall: db_dirdelete failed\n", (char *)NULL);
 		}
 	}
-
-	db_free_full_path(&subpath);
 }
 
 
@@ -1917,12 +1928,12 @@ eraseobjall(dpp)
  */
 void
 eraseobj(dpp)
-     register struct directory **dpp;	/* this is a partial path spec. XXX should be db_full_path? */
+     register struct directory **dpp;
 {
 	register struct directory **tmp_dpp;
 	register struct solid *sp;
 	register struct solid *nsp;
-	struct db_full_path	subpath;
+	register int i;
 
 	if (dbip == DBI_NULL)
 		return;
@@ -1932,28 +1943,32 @@ eraseobj(dpp)
 
 	update_views = 1;
 
-	db_full_path_init(&subpath);
-	for (tmp_dpp = dpp; *tmp_dpp != DIR_NULL; ++tmp_dpp)  {
+	for (tmp_dpp = dpp; *tmp_dpp != DIR_NULL; ++tmp_dpp)
 		RT_CK_DIR(*tmp_dpp);
-		db_add_node_to_full_path(&subpath, *tmp_dpp);
-	}
 
 	sp = BU_LIST_FIRST(solid, &HeadSolid.l);
 	while (BU_LIST_NOT_HEAD(sp, &HeadSolid.l)) {
 		nsp = BU_LIST_PNEXT(solid, sp);
+		for (i = 0, tmp_dpp = dpp;
+		     i <= sp->s_last && *tmp_dpp != DIR_NULL;
+		     ++i, ++tmp_dpp)
+			if (sp->s_path[i] != *tmp_dpp)
+				goto end;
 
-		if( db_full_path_subset( &sp->s_fullpath, &subpath ) )  {
+
+		if (*tmp_dpp != DIR_NULL)
+			goto end;
 
 #ifdef DO_DISPLAY_LISTS
-			freeDListsAll(sp->s_dlist, 1);
+		freeDListsAll(sp->s_dlist, 1);
 #endif
 
-			if (state != ST_VIEW && illump == sp)
-				button( BE_REJECT );
+		if (state != ST_VIEW && illump == sp)
+			button( BE_REJECT );
 
-			BU_LIST_DEQUEUE(&sp->l);
-			FREE_SOLID(sp, &FreeSolid.l);
-		}
+		BU_LIST_DEQUEUE(&sp->l);
+		FREE_SOLID(sp, &FreeSolid.l);
+	end:
 		sp = nsp;
 	}
 
@@ -1962,8 +1977,6 @@ eraseobj(dpp)
 			Tcl_AppendResult(interp, "eraseobj: db_dirdelete failed\n", (char *)NULL);
 		}
 	}
-
-	db_free_full_path(&subpath);
 }
 
 
@@ -1980,6 +1993,7 @@ struct solid *startp;
 int		lvl;			/* debug level */
 {
   register struct solid	*sp;
+  register int		i;
   register struct bn_vlist	*vp;
   int			nvlist;
   int			npts;
@@ -2000,13 +2014,14 @@ int		lvl;			/* debug level */
   FOR_ALL_SOLIDS(sp, &startp->l){
     if (lvl <= -2) {
       /* print only leaves */
-      bu_vls_printf(&vls, "%s ", LAST_SOLID(sp)->d_namep );
+      bu_vls_printf(&vls, "%s ", sp->s_path[sp->s_last]->d_namep);
       continue;
     }
 
     if( lvl != -1 )
 	bu_vls_printf(&vls, "%s", sp->s_flag == UP ? "VIEW " : "-no- ");
-    db_path_to_vls(&vls, &sp->s_fullpath);
+    for( i=0; i <= sp->s_last; i++ )
+      bu_vls_printf(&vls, "/%s", sp->s_path[i]->d_namep);
     if(( lvl != -1 ) && ( sp->s_iflag == UP ))
       bu_vls_printf(&vls, " ILLUM");
 
@@ -2104,7 +2119,7 @@ char	**argv;
 	  illum_only = 1;
 	  --argc;
 	  ++argv;
-	}
+	} 
 #else
 	if (argc < 2 || 5 < argc) {
 		struct bu_vls vls;
@@ -2150,6 +2165,7 @@ char	**argv;
 	argv += (bu_optind - 1);
 #endif
 
+
 	if(argc != 2){
 	  struct bu_vls vls;
 
@@ -2188,14 +2204,13 @@ char	**argv;
 	FOR_ALL_SOLIDS(sp, &HeadSolid.l){
 	  int	a_new_match;
 
-/* XXX Could this make use of db_full_path_subset()? */
 	  if (nmatch == 0 || nmatch != ri) {
-		  i = sp -> s_fullpath.fp_len-1;
-		  if (DB_FULL_PATH_GET(&sp->s_fullpath,i) == dp) {
+		  i = sp -> s_last;
+		  if (sp -> s_path[i] == dp) {
 			  a_new_match = 1;
 			  j = nm_pieces - 1;
 			  for (; a_new_match && (i >= 0) && (j >= 0); --i, --j) {
-				  sname = DB_FULL_PATH_GET(&sp->s_fullpath,i)->d_namep;
+				  sname = sp -> s_path[i] -> d_namep;
 				  if ((*sname != *(path_piece[j]))
 				      || strcmp(sname, path_piece[j]))
 					  a_new_match = 0;
@@ -2275,11 +2290,11 @@ bail_out:
 
 /* Simulate pressing "Solid Edit" and doing an ILLuminate command */
 int
-f_sed(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_sed(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
   CHECK_DBI_NULL;
   CHECK_READ_ONLY;
@@ -2518,7 +2533,7 @@ char	**argv;
 
   CHECK_DBI_NULL;
 
-  if(argc < 1){
+  if(argc < 1 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -3076,9 +3091,6 @@ char	**argv;
 	  arp = edit_absolute_view_rotate;
 	  larp = last_edit_absolute_view_rotate;
 	  break;
-	default:
-		bu_log("unknown mv_coords\n");
-		arp = larp = NULL;
 	}
 
 	if(arp[X] < -180.0)
@@ -3180,9 +3192,6 @@ char	**argv;
 	  arp = edit_absolute_view_rotate;
 	  larp = last_edit_absolute_view_rotate;
 	  break;
-	default:
-		bu_log("unknown mv_transform\n");
-		arp = larp = NULL;
 	}
 
 	if(arp[Y] < -180.0)
@@ -3284,9 +3293,6 @@ char	**argv;
 	  arp = edit_absolute_view_rotate;
 	  larp = last_edit_absolute_view_rotate;
 	  break;
-	default:
-		bu_log("unknown mv_coords\n");
-		arp = larp = NULL;
 	}
 
 	if(arp[Z] < -180.0)
@@ -3668,12 +3674,12 @@ int edit_flag;
 }
 
 int
-knob_rot(
-	vect_t rvec,
-	char origin,
-	int model_flag,
-	int view_flag,
-	int edit_flag)
+knob_rot(rvec, origin, model_flag, view_flag, edit_flag)
+vect_t rvec;
+char origin;
+int model_flag;
+int view_flag;
+int edit_flag;
 {
   if(EDIT_ROTATE && ((mged_variables->mv_transform == 'e' &&
 		      !view_flag && !model_flag) || edit_flag))
@@ -4861,8 +4867,8 @@ struct _view_state *vsp2;
   BU_LIST_INIT(&vsp1->vs_headView.l);
 
   if(vsp2 != (struct _view_state *)NULL){
-    struct view_ring *vrp1_current_view = NULL;
-    struct view_ring *vrp1_last_view = NULL;
+    struct view_ring *vrp1_current_view;
+    struct view_ring *vrp1_last_view;
 
     for(BU_LIST_FOR(vrp2, view_ring, &vsp2->vs_headView.l)){
       BU_GETSTRUCT(vrp1, view_ring);
@@ -4894,7 +4900,8 @@ struct _view_state *vsp2;
 }
 
 void
-view_ring_destroy(struct dm_list *dlp)
+view_ring_destroy(dlp)
+struct dm_list *dlp;
 {
   struct view_ring *vrp;
 
@@ -5293,9 +5300,9 @@ mat_t newrot;
 }
 
 int
-mged_erot_xyz(
-	char origin,
-	vect_t rvec)
+mged_erot_xyz(origin, rvec)
+char origin;
+vect_t rvec;
 {
   mat_t newrot;
 
@@ -5404,10 +5411,10 @@ mat_t newrot;
 }
 
 int
-mged_vrot_xyz(
-	char origin,
-	char coords,
-	vect_t rvec)
+mged_vrot_xyz(origin, coords, rvec)
+char origin;
+char coords;
+vect_t rvec;
 {
   mat_t newrot;
   mat_t temp1, temp2;
@@ -5476,7 +5483,6 @@ char	**argv;
   return mged_vrot_xyz(mged_variables->mv_rotate_about, 'v', rvec);
 }
 
-int
 mged_rot(origin, newrot)
 char origin;
 mat_t newrot;
@@ -5603,28 +5609,27 @@ char    **argv;
 }
 
 int
-mged_etran(const point_t pt)
+mged_etran(pt)
+point_t pt;
 {
-  point_t p2;
   int save_edflag;
   point_t delta;
   point_t vcenter;
   point_t work;
   mat_t xlatemat;
 
-  /* compute delta */
   switch(mged_variables->mv_coords){
   case 'm':
     VSCALE(delta, pt, local2base);
     break;
   case 'o':
-    VSCALE(p2, pt, local2base);
-    MAT4X3PNT(delta, acc_rot_sol, p2);
+    VSCALE(pt, pt, local2base);
+    MAT4X3PNT(delta, acc_rot_sol, pt);
     break;
   case 'v':
   default:
-    VSCALE(p2, pt, local2base/view_state->vs_Viewscale);
-    MAT4X3PNT(work, view_state->vs_view2model, p2);
+    VSCALE(pt, pt, local2base/view_state->vs_Viewscale);
+    MAT4X3PNT(work, view_state->vs_view2model, pt);
     MAT_DELTAS_GET_NEG(vcenter, view_state->vs_toViewcenter);
     VSUB2(delta, work, vcenter);
 
@@ -5653,7 +5658,8 @@ mged_etran(const point_t pt)
 }
 
 int
-mged_otran(const vect_t tvec)
+mged_otran(tvec)
+vect_t tvec;
 {
   vect_t work;
 
@@ -5666,7 +5672,8 @@ mged_otran(const vect_t tvec)
 }
 
 int
-mged_mtran(const vect_t tvec)
+mged_mtran(tvec)
+vect_t tvec;
 {
   point_t delta;
   point_t vc, nvc;
@@ -5684,15 +5691,15 @@ mged_mtran(const vect_t tvec)
 }
 
 int
-mged_vtran(const vect_t tvec)
+mged_vtran(tvec)
+vect_t tvec;
 {
-  vect_t  tt;
   point_t delta;
   point_t work;
   point_t vc, nvc;
 
-  VSCALE(tt, tvec, local2base/view_state->vs_Viewscale);
-  MAT4X3PNT(work, view_state->vs_view2model, tt);
+  VSCALE(tvec, tvec, local2base/view_state->vs_Viewscale);
+  MAT4X3PNT(work, view_state->vs_view2model, tvec);
   MAT_DELTAS_GET_NEG(vc, view_state->vs_toViewcenter);
   VSUB2(delta, work, vc);
   VSUB2(nvc, vc, delta);
@@ -5707,7 +5714,8 @@ mged_vtran(const vect_t tvec)
 }
 
 int
-mged_tran(const vect_t tvec)
+mged_tran(tvec)
+vect_t tvec;
 {
   if((state == ST_S_EDIT || state == ST_O_EDIT) &&
       mged_variables->mv_transform == 'e')

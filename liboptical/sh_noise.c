@@ -25,15 +25,12 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include <math.h>
 #include "machine.h"
 #include "bu.h"
@@ -42,11 +39,8 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
-extern int rr_render(struct application	*ap,
-		     struct partition	*pp,
-		     struct shadework   *swp);
 #define noise_MAGIC 0x1847
 #define CK_noise_SP(_p) BU_CKMAG(_p, noise_MAGIC, "noise_specific")
 
@@ -274,7 +268,7 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 found:
 	noise_sp->shader_number = i;
 
-	db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name, &rt_uniresource);
+	db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name);
 
 	bn_mat_idn(tmp);
 	if (noise_sp->size != 1.0) {

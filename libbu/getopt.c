@@ -13,7 +13,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char libbu_getopt_RCSid[] = "@(#)$Header$ (BRL)";
+static char libbu_getopt_RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"

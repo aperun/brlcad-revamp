@@ -16,7 +16,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -173,7 +173,7 @@ struct db_tree_state *tsp;
 FILE *fp_out;
 {
 	struct shell *s;
-	struct facets *faces = NULL;
+	struct facets *faces;
 	int i,j;
 
 	NMG_CK_REGION( r );
@@ -266,7 +266,7 @@ FILE *fp_out;
 			}
 			else if( no_of_loops == no_of_holes + 1 )
 			{
-				struct loopuse *outer_lu = NULL;
+				struct loopuse *outer_lu;
 
 				/* only one outer loop, so find it */
 				for( i=0 ; i<no_of_loops ; i++ )
@@ -460,8 +460,6 @@ char	*argv[];
 
 	BU_LIST_INIT( &rt_g.rtg_vlfree );	/* for vlist macros */
 
-	rt_init_resource( &rt_uniresource, 0, NULL );
-
 	/* Get command line arguments. */
 	while ((c = getopt(argc, argv, "a:n:r:s:vx:P:X:")) != EOF) {
 		switch (c) {
@@ -512,7 +510,7 @@ char	*argv[];
 		perror(argv[0]);
 		exit(1);
 	}
-	db_dirbuild( dbip );
+	db_scan(dbip, (int (*)())db_diradd, 1, NULL);
 	optind++;
 
 	/* Walk indicated tree(s).  Each region will be output separately */
@@ -549,7 +547,7 @@ char	*argv[];
 		regions_written, percent );
 
 	/* Release dynamic storage */
-	rt_vlist_cleanup();
+	bn_vlist_cleanup();
 	db_close(dbip);
 
 #if MEMORY_LEAK_CHECKING
@@ -627,9 +625,9 @@ genptr_t		client_data;
 		nmg_isect2d_final_cleanup();
 
 		/* Release the tree memory & input regions */
-		db_free_tree(curtree, &rt_uniresource);		/* Does an nmg_kr() */
+		db_free_tree(curtree);		/* Does an nmg_kr() */
 
-		rt_vlist_cleanup();
+		bn_vlist_cleanup();
 
 		/* Get rid of (m)any other intermediate structures */
 		if( (*tsp->ts_m)->magic == NMG_MODEL_MAGIC )
@@ -657,7 +655,7 @@ genptr_t		client_data;
 	(void)alarm( alarm_secs );
 
 	(void)nmg_model_fuse(*tsp->ts_m, tsp->ts_tol);
-	ret_tree = nmg_booltree_evaluate(curtree, tsp->ts_tol, &rt_uniresource);	/* librt/nmg_bool.c */
+	ret_tree = nmg_booltree_evaluate(curtree, tsp->ts_tol);	/* librt/nmg_bool.c */
 
 	if( ret_tree )
 		r = ret_tree->tr_d.td_r;
@@ -712,7 +710,7 @@ genptr_t		client_data;
 		/* Now, make a new, clean model structure for next pass. */
 		*tsp->ts_m = nmg_mm();
 
-		rt_vlist_cleanup();
+		bn_vlist_cleanup();
 	}
 
 	/*
@@ -721,7 +719,7 @@ genptr_t		client_data;
 	 *  A return of TREE_NULL from this routine signals an error,
 	 *  so we need to cons up an OP_NOP node to return.
 	 */
-	db_free_tree(curtree, &rt_uniresource);		/* Does an nmg_kr() */
+	db_free_tree(curtree);		/* Does an nmg_kr() */
 
 #if MEMORY_LEAK_CHECKING
 	bu_prmem("After Success:");

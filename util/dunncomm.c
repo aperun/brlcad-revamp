@@ -17,7 +17,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -224,7 +224,7 @@ unsigned	n;
  *	and 0 for bad status.
  *
  */
-int
+
 goodstatus()
 {
 	struct timeval waittime, *timeout;
@@ -288,7 +288,6 @@ hangten()
  *	number of seconds specified by the argument.
  *
  */
-int
 ready(nsecs)
 int nsecs;
 {

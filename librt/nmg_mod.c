@@ -17,12 +17,11 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 #include <stdio.h>
-#include <string.h>
 #include "machine.h"
 #include "vmath.h"
 #include "nmg.h"
@@ -902,7 +901,7 @@ CONST struct bn_tol	*tol;
 	/*
 	 * Final case:  shell of a single vertexuse
 	 */
-	if( (vu = s2->vu_p) )  {
+	if( vu = s2->vu_p )  {
 		NMG_CK_VERTEXUSE( vu );
 		NMG_CK_VERTEX( vu->v_p );
 		nmg_mv_vu_between_shells( s1, s2, vu );
@@ -1051,7 +1050,7 @@ struct vertex	**verts[];
 int		n;
 {
 	struct faceuse *fu;
-	struct edgeuse *eu, *eur, *euold = NULL;
+	struct edgeuse *eu, *eur, *euold;
 	struct loopuse	*lu;
 	struct vertexuse	*vu;
 	int i;
@@ -1138,7 +1137,7 @@ int		n;
 	}
 
 	if( n > 1 )  {
-		if ((eur = nmg_findeu(*verts[0], *verts[1], s, euold, 1)))  {
+		if (eur = nmg_findeu(*verts[0], *verts[1], s, euold, 1))  {
 			nmg_je(eur, euold);
 		} else  {
 		    if (rt_g.NMG_debug & DEBUG_CMFACE)
@@ -3153,7 +3152,7 @@ struct loopuse *lu;
 {
 	struct edgeuse *eu;
 	struct edgeuse *jaunt_eu1;
-	struct edgeuse *jaunt_eu2 = NULL;
+	struct edgeuse *jaunt_eu2;
 	struct edgeuse *jaunt_eu3;
 
 	NMG_CK_LOOPUSE( lu );
@@ -4052,7 +4051,7 @@ int		share_geom;
 	struct edgeuse	*eu1,
 			*eu2,
 			*oldeumate;
-	struct shell *s = NULL;
+	struct shell *s;
 	struct loopuse	*lu;
 
 	NMG_CK_EDGEUSE(oldeu);
@@ -4426,7 +4425,6 @@ int		share_geom;
 
 	rt_bomb("nmg_esplit() unable to find eu starting at new v\n");
 	/* NOTREACHED */
-	return (struct edgeuse *)NULL;
 }
 
 /*

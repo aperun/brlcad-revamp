@@ -4,9 +4,6 @@
  * $Revision$
  *
  * $Log$
- * Revision 11.4  1998/06/17  03:11:32  mike
- * getwind() didn't zero the malloc()'ed structure.
- *
  * Revision 11.3  1997/01/03 17:42:17  jra
  * Mods for Irix 6.2
  *
@@ -43,7 +40,7 @@
  *
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$";
+static char RCSid[] = "@(#)$Header$";
 #endif
 
 /*

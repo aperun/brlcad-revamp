@@ -17,7 +17,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -259,15 +259,15 @@ void
 dozoom(which_eye)
 int	which_eye;
 {
-	register struct solid	*sp;
-	FAST fastf_t		ratio;
-	fastf_t			inv_viewsize;
-	mat_t			new;
-	matp_t			mat = new;
-	int 			linestyle = -1;  /* not dashed */
-	short 			r = -1;
-	short 			g = -1;
-	short 			b = -1;
+	register struct solid *sp;
+	FAST fastf_t ratio;
+	fastf_t		inv_viewsize;
+	mat_t		new;
+	matp_t		mat;
+	int linestyle = -1;  /* not dashed */
+	short r = -1;
+	short g = -1;
+	short b = -1;
 
 	/*
 	 * The vectorThreshold stuff in libdm may turn the
@@ -365,80 +365,80 @@ bn_mat_print("perspective_mat", perspective_mat);
 	DM_LOADMATRIX( dmp, mat, which_eye );
 
 	FOR_ALL_SOLIDS(sp, &HeadSolid.l)  {
-		sp->s_flag = DOWN;		/* Not drawn yet */
-		/* If part of object edit, will be drawn below */
-		if( sp->s_iflag == UP )
-			continue;
+	  sp->s_flag = DOWN;		/* Not drawn yet */
+	  /* If part of object edit, will be drawn below */
+	  if( sp->s_iflag == UP )
+	    continue;
 
-		/*
-		 * The vectorThreshold stuff in libdm may turn the
-		 * Tcl-crank causing curr_dm_list to change.
-		 */
-		if (curr_dm_list != save_dm_list)
+	  /*
+	   * The vectorThreshold stuff in libdm may turn the
+	   * Tcl-crank causing curr_dm_list to change.
+	   */
+	  if (curr_dm_list != save_dm_list)
 		  curr_dm_list = save_dm_list;
 
-		if (dmp->dm_boundFlag) {
-			ratio = sp->s_size * inv_viewsize;
+	  if (dmp->dm_boundFlag) {
+	    ratio = sp->s_size * inv_viewsize;
 
-			/*
-			 * Check for this object being bigger than 
-			 * dmp->dm_bound * the window size, or smaller than a speck.
-			 */
-			if (ratio >= dmp->dm_bound || ratio < 0.001)
-				continue;
-		}
+	    /*
+	     * Check for this object being bigger than 
+	     * dmp->dm_bound * the window size, or smaller than a speck.
+	     */
+	    if (ratio >= dmp->dm_bound || ratio < 0.001)
+	      continue;
+	  }
 
-		if(linestyle != sp->s_soldash){
-			linestyle = sp->s_soldash;
-			DM_SET_LINE_ATTR(dmp, mged_variables->mv_linewidth, linestyle);
-		}
+	  if(linestyle != sp->s_soldash){
+	    linestyle = sp->s_soldash;
+	    DM_SET_LINE_ATTR(dmp, mged_variables->mv_linewidth, linestyle);
+	  }
 
-		if(sp->s_cflag){
-			if(!DM_SAME_COLOR(r,g,b,
-					  (short)geometry_default_color[0],
-					  (short)geometry_default_color[1],
-					  (short)geometry_default_color[2])){
-				DM_SET_FGCOLOR(dmp,
-					       (short)geometry_default_color[0],
-					       (short)geometry_default_color[1],
-					       (short)geometry_default_color[2], 0);
-				DM_COPY_COLOR(r,g,b,
-					      (short)geometry_default_color[0],
-					      (short)geometry_default_color[1],
-					      (short)geometry_default_color[2]);
-			}
-		} else {
-			if(!DM_SAME_COLOR(r,g,b,
-					  (short)sp->s_color[0],
-					  (short)sp->s_color[1],
-					  (short)sp->s_color[2])){
-				DM_SET_FGCOLOR(dmp,
-					       (short)sp->s_color[0],
-					       (short)sp->s_color[1],
-					       (short)sp->s_color[2], 0);
-				DM_COPY_COLOR(r,g,b,
-					      (short)sp->s_color[0],
-					      (short)sp->s_color[1],
-					      (short)sp->s_color[2]);
-			}
-		}
+	  if(sp->s_cflag){
+	    if(!DM_SAME_COLOR(r,g,b,
+			      (short)geometry_default_color[0],
+			      (short)geometry_default_color[1],
+			      (short)geometry_default_color[2])){
+	      DM_SET_FGCOLOR(dmp,
+			     (short)geometry_default_color[0],
+			     (short)geometry_default_color[1],
+			     (short)geometry_default_color[2], 0);
+	      DM_COPY_COLOR(r,g,b,
+			    (short)geometry_default_color[0],
+			    (short)geometry_default_color[1],
+			    (short)geometry_default_color[2]);
+	    }
+	  } else {
+	    if(!DM_SAME_COLOR(r,g,b,
+			      (short)sp->s_color[0],
+			      (short)sp->s_color[1],
+			      (short)sp->s_color[2])){
+	      DM_SET_FGCOLOR(dmp,
+			     (short)sp->s_color[0],
+			     (short)sp->s_color[1],
+			     (short)sp->s_color[2], 0);
+	      DM_COPY_COLOR(r,g,b,
+			    (short)sp->s_color[0],
+			    (short)sp->s_color[1],
+			    (short)sp->s_color[2]);
+	    }
+	  }
 
 #ifdef DO_DISPLAY_LISTS
-		if (displaylist && mged_variables->mv_dlist) {
-			DM_DRAWDLIST(dmp, sp->s_dlist);
-			sp->s_flag = UP;
-			ndrawn++;
-		} else {
-			if (DM_DRAW_VLIST(dmp, (struct rt_vlist *)&sp->s_vlist) == TCL_OK) {
-				sp->s_flag = UP;
-				ndrawn++;
-			}
-		}
+	  if(displaylist && mged_variables->mv_dlist){
+	    DM_DRAWDLIST(dmp, sp->s_dlist);
+	    sp->s_flag = UP;
+	    ndrawn++;
+	  }else{
+	    if(DM_DRAW_VLIST(dmp, (struct rt_vlist *)&sp->s_vlist) == TCL_OK){
+	      sp->s_flag = UP;
+	      ndrawn++;
+	    }
+	  }
 #else
-		if (DM_DRAW_VLIST(dmp, (struct rt_vlist *)&sp->s_vlist) == TCL_OK) {
-			sp->s_flag = UP;
-			ndrawn++;
-		}
+	  if(DM_DRAW_VLIST(dmp, (struct rt_vlist *)&sp->s_vlist) == TCL_OK) {
+	    sp->s_flag = UP;
+	    ndrawn++;
+	  }
 #endif
 	}
 
@@ -479,49 +479,50 @@ bn_mat_print("perspective_mat", perspective_mat);
 		       color_scheme->cs_geo_hl[2], 1);
 
 	FOR_ALL_SOLIDS(sp, &HeadSolid.l)  {
-		/* Ignore all objects not being edited */
-		if (sp->s_iflag != UP)
-			continue;
+	  /* Ignore all objects not being edited */
+	  if( sp->s_iflag != UP )
+	    continue;
 
-		/*
-		 * The vectorThreshold stuff in libdm may turn the
-		 * Tcl-crank causing curr_dm_list to change.
-		 */
-		if (curr_dm_list != save_dm_list)
+	  /*
+	   * The vectorThreshold stuff in libdm may turn the
+	   * Tcl-crank causing curr_dm_list to change.
+	   */
+	  if (curr_dm_list != save_dm_list)
 		  curr_dm_list = save_dm_list;
 
-		if (dmp->dm_boundFlag) {
-			ratio = sp->s_size * inv_viewsize;
-			/*
-			 * Check for this object being bigger than 
-			 * dmp->dm_bound * the window size, or smaller than a speck.
-			 */
-			if (ratio >= dmp->dm_bound || ratio < 0.001)
-				continue;
-		}
+	  if (dmp->dm_boundFlag) {
+	    ratio = sp->s_size * inv_viewsize;
 
-		if (linestyle != sp->s_soldash) {
-			linestyle = sp->s_soldash;
-			DM_SET_LINE_ATTR(dmp, mged_variables->mv_linewidth, linestyle);
-		}
+	    /*
+	     * Check for this object being bigger than 
+	     * dmp->dm_bound * the window size, or smaller than a speck.
+	     */
+	    if( ratio >= dmp->dm_bound || ratio < 0.001 )
+	      continue;
+	  }
+
+	  if(linestyle != sp->s_soldash){
+	    linestyle = sp->s_soldash;
+	    DM_SET_LINE_ATTR(dmp, mged_variables->mv_linewidth, linestyle);
+	  }
 
 #ifdef DO_DISPLAY_LISTS
-		if (displaylist && mged_variables->mv_dlist) {
-			DM_DRAWDLIST(dmp, sp->s_dlist);
-			sp->s_flag = UP;
-			ndrawn++;
-		} else {
-			/* draw in immediate mode */
-			if (DM_DRAW_VLIST(dmp, (struct rt_vlist *)&sp->s_vlist) == TCL_OK) {
-				sp->s_flag = UP;
-				ndrawn++;
-			}
-		}
+	  if(displaylist && mged_variables->mv_dlist){
+	    DM_DRAWDLIST(dmp, sp->s_dlist);
+	    sp->s_flag = UP;
+	    ndrawn++;
+	  }else{
+	    /* draw in immediate mode */
+	    if(DM_DRAW_VLIST(dmp, (struct rt_vlist *)&sp->s_vlist) == TCL_OK){
+	      sp->s_flag = UP;
+	      ndrawn++;
+	    }
+	  }
 #else
-		if (DM_DRAW_VLIST(dmp, (struct rt_vlist *)&sp->s_vlist) == TCL_OK) {
-			sp->s_flag = UP;
-			ndrawn++;
-		}
+	  if( DM_DRAW_VLIST(dmp, (struct rt_vlist *)&sp->s_vlist) == TCL_OK){
+	    sp->s_flag = UP;
+	    ndrawn++;
+	  }
 #endif
 	}
 
@@ -538,7 +539,8 @@ bn_mat_print("perspective_mat", perspective_mat);
  * Create Display List
  */
 void
-createDList(struct solid *sp)
+createDList(sp)
+struct solid *sp;
 {
   DM_BEGINDLIST(dmp, sp->s_dlist);
   DM_DRAW_VLIST(dmp, (struct rt_vlist *)&sp->s_vlist);
@@ -549,7 +551,8 @@ createDList(struct solid *sp)
  * Create Display Lists
  */
 void
-createDLists(struct solid *hsp)
+createDLists(hsp)
+struct solid *hsp;
 {
   register struct solid *sp;
 
@@ -567,7 +570,8 @@ createDLists(struct solid *hsp)
  *			display manager that has already created the display list)
  */
 void
-createDListALL(struct solid *sp)
+createDListALL(sp)
+struct solid *sp;
 {
   struct dm_list *dlp;
   struct dm_list *save_dlp;
@@ -598,7 +602,8 @@ createDListALL(struct solid *sp)
  * for a description.
  */
 void
-createDListsAll(struct solid *hsp)
+createDListsAll(hsp)
+struct solid *hsp;
 {
   struct solid *sp;
 
@@ -612,7 +617,9 @@ createDListsAll(struct solid *hsp)
  * that support display lists and have them activated.
  */
 void
-freeDListsAll(unsigned int dlist, int range)
+freeDListsAll(dlist, range)
+unsigned int dlist;
+int range;
 {
   struct dm_list *dlp;
 

@@ -25,21 +25,15 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
-#include <stdio.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <math.h>
 #include <signal.h>
+#include <stdio.h>
 #include <sys/time.h>		/* For struct timeval */
-#include <sys/stat.h>		/* for chmod() */
 
 #include "tcl.h"
 
@@ -169,30 +163,29 @@ vect_t eye_model;
 	(void)fprintf(fp, "eye_pt %.15e %.15e %.15e;\n",
 		eye_model[X], eye_model[Y], eye_model[Z] );
 
+#define DIR_USED	0x80	/* XXX move to raytrace.h */
 	(void)fprintf(fp, "start 0; clean;\n");
 	FOR_ALL_SOLIDS(sp, &HeadSolid.l) {
-		for (i=0;i<sp->s_fullpath.fp_len;i++) {
-			DB_FULL_PATH_GET(&sp->s_fullpath,i)->d_flags &= ~DIR_USED;
+		for (i=0;i<=sp->s_last;i++) {
+			sp->s_path[i]->d_flags &= ~DIR_USED;
 		}
 	}
 	FOR_ALL_SOLIDS(sp, &HeadSolid.l) {
-		for (i=0; i<sp->s_fullpath.fp_len; i++ ) {
-			struct directory *dp;
-			dp = DB_FULL_PATH_GET(&sp->s_fullpath,i);
-			if (!(dp->d_flags & DIR_USED)) {
+		for (i=0; i<=sp->s_last; i++ ) {
+			if (!(sp->s_path[i]->d_flags & DIR_USED)) {
 				register struct animate *anp;
-				for (anp = dp->d_animate; anp;
+				for (anp = sp->s_path[i]->d_animate; anp;
 				    anp=anp->an_forw) {
 					db_write_anim(fp, anp);
 				}
-				dp->d_flags |= DIR_USED;
+				sp->s_path[i]->d_flags |= DIR_USED;
 			}
 		}
 	}
 
 	FOR_ALL_SOLIDS(sp, &HeadSolid.l) {
-		for (i=0;i<sp->s_fullpath.fp_len;i++) {
-			DB_FULL_PATH_GET(&sp->s_fullpath,i)->d_flags &= ~DIR_USED;
+		for (i=0;i<=sp->s_last;i++) {
+			sp->s_path[i]->d_flags &= ~DIR_USED;
 		}
 	}
 #undef DIR_USED
@@ -235,7 +228,9 @@ mat_t	mat;
  *  Build a command line vector of the tops of all objects in view.
  */
 int
-build_tops(char **start, char **end)
+build_tops(start, end)
+char **start;
+register char **end;
 {
 	register char **vp = start;
 	register struct solid *sp;
@@ -248,22 +243,21 @@ build_tops(char **start, char **end)
 		sp->s_wflag = DOWN;
 	FOR_ALL_SOLIDS(sp, &HeadSolid.l)  {
 		register struct solid *forw;
-		struct directory *dp = FIRST_SOLID(sp);
 
 		if( sp->s_wflag == UP )
 			continue;
-		if( dp->d_addr == RT_DIR_PHONY_ADDR )
+		if( sp->s_path[0]->d_addr == RT_DIR_PHONY_ADDR )
 			continue;	/* Ignore overlays, predictor, etc */
 		if( vp < end )
-			*vp++ = dp->d_namep;
+			*vp++ = sp->s_path[0]->d_namep;
 		else  {
 		  Tcl_AppendResult(interp, "mged: ran out of comand vector space at ",
-				   dp->d_namep, "\n", (char *)NULL);
+				   sp->s_path[0]->d_namep, "\n", (char *)NULL);
 		  break;
 		}
 		sp->s_wflag = UP;
 		for(BU_LIST_PFOR(forw, sp, solid, &HeadSolid.l)){
-			if( FIRST_SOLID(forw) == dp )
+			if( forw->s_path[0] == sp->s_path[0] )
 				forw->s_wflag = UP;
 		}
 	}
@@ -423,7 +417,6 @@ vect_t eye_model;
 /*
  *			R U N _ R T
  */
-int
 run_rt()
 {
 	register struct solid *sp;
@@ -822,7 +815,7 @@ char	**argv;
 
 	CHECK_DBI_NULL;
 
-	if(argc < 2){
+	if(argc < 2 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -855,15 +848,14 @@ char	**argv;
 		sp->s_wflag = DOWN;
 	FOR_ALL_SOLIDS(sp, &HeadSolid.l)  {
 		register struct solid *forw;	/* XXX */
-		struct directory *dp = FIRST_SOLID(sp);
 
 		if( sp->s_wflag == UP )
 			continue;
-		if (dp->d_addr == RT_DIR_PHONY_ADDR) continue;
-		(void)fprintf(fp, "'%s' ", dp->d_namep);
+		if (sp->s_path[0]->d_addr == RT_DIR_PHONY_ADDR) continue;
+		(void)fprintf(fp, "'%s' ", sp->s_path[0]->d_namep);
 		sp->s_wflag = UP;
 		for(BU_LIST_PFOR(forw, sp, solid, &HeadSolid.l)){
-			if( FIRST_SOLID(forw) == dp )
+			if( forw->s_path[0] == sp->s_path[0] )
 				forw->s_wflag = UP;
 		}
 	}
@@ -917,7 +909,7 @@ char	**argv;
 
 	CHECK_DBI_NULL;
 
-	if(argc < 2 || 3 < argc){
+	if(argc < 2 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -944,7 +936,7 @@ char	**argv;
 			break;
 		}
 		FOR_ALL_SOLIDS(sp, &HeadSolid.l)  {
-			if( LAST_SOLID(sp) != dp )  continue;
+			if( sp->s_path[sp->s_last] != dp )  continue;
 			if( BU_LIST_IS_EMPTY( &(sp->s_vlist) ) )  continue;
 			vp = BU_LIST_LAST( bn_vlist, &(sp->s_vlist) );
 			VMOVE( sav_start, vp->pt[vp->nused-1] );
@@ -1083,7 +1075,7 @@ char	**argv;
 	vect_t	eye_model;
 	vect_t temp;
 
-	if(argc < 2 || 3 < argc){
+	if(argc < 2 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -1126,32 +1118,32 @@ extern int	cm_set();
 extern int	cm_orientation();
 
 static struct command_tab cmdtab[] = {
-	{"start", "frame number", "start a new frame",
-		cm_start,	2, 2},
-	{"viewsize", "size in mm", "set view size",
-		cm_vsize,	2, 2},
-	{"eye_pt", "xyz of eye", "set eye point",
-		cm_eyept,	4, 4},
-	{"lookat_pt", "x y z [yflip]", "set eye look direction, in X-Y plane",
-		cm_lookat_pt,	4, 5},
-	{"orientation", "quaturnion", "set view direction from quaturnion",
-		cm_orientation,	5, 5},
-	{"viewrot", "4x4 matrix", "set view direction from matrix",
-		cm_vrot,	17,17},
-	{"end", 	"", "end of frame setup, begin raytrace",
-		cm_end,		1, 1},
-	{"multiview", "", "produce stock set of views",
-		cm_multiview,	1, 1},
-	{"anim", 	"path type args", "specify articulation animation",
-		cm_anim,	4, 999},
-	{"tree", 	"treetop(s)", "specify alternate list of tree tops",
-		cm_tree,	1, 999},
-	{"clean", "", "clean articulation from previous frame",
-		cm_clean,	1, 1},
-	{"set", 	"", "show or set parameters",
-		cm_set,		1, 999},
-	{(char *)0, (char *)0, (char *)0,
-		0,		0, 0}	/* END */
+	"start", "frame number", "start a new frame",
+		cm_start,	2, 2,
+	"viewsize", "size in mm", "set view size",
+		cm_vsize,	2, 2,
+	"eye_pt", "xyz of eye", "set eye point",
+		cm_eyept,	4, 4,
+	"lookat_pt", "x y z [yflip]", "set eye look direction, in X-Y plane",
+		cm_lookat_pt,	4, 5,
+	"orientation", "quaturnion", "set view direction from quaturnion",
+		cm_orientation,	5, 5,
+	"viewrot", "4x4 matrix", "set view direction from matrix",
+		cm_vrot,	17,17,
+	"end", 	"", "end of frame setup, begin raytrace",
+		cm_end,		1, 1,
+	"multiview", "", "produce stock set of views",
+		cm_multiview,	1, 1,
+	"anim", 	"path type args", "specify articulation animation",
+		cm_anim,	4, 999,
+	"tree", 	"treetop(s)", "specify alternate list of tree tops",
+		cm_tree,	1, 999,
+	"clean", "", "clean articulation from previous frame",
+		cm_clean,	1, 1,
+	"set", 	"", "show or set parameters",
+		cm_set,		1, 999,
+	(char *)0, (char *)0, (char *)0,
+		0,		0, 0	/* END */
 };
 
 /*
@@ -1225,7 +1217,7 @@ char	**argv;
 
 	CHECK_DBI_NULL;
 
-	if(argc < 2){
+	if(argc < 2 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -1316,7 +1308,7 @@ char	**argv;
 		/* Hack to prevent running framedone scripts prematurely */
 		if( cmd[0] == '!' )  {
 			if( rtif_currentframe < rtif_desiredframe ||
-			    (rtif_finalframe && rtif_currentframe > rtif_finalframe) )  {
+			    rtif_finalframe && rtif_currentframe > rtif_finalframe )  {
 				bu_free( (genptr_t)cmd, "preview ! cmd" );
 			    	continue;
 			}
@@ -1709,7 +1701,7 @@ char    **argv;
 
   CHECK_DBI_NULL;
 
-  if(argc < 3){
+  if(argc < 3 || MAXARGS < argc){
     bu_vls_init(&vls);
     bu_vls_printf(&vls, "help %s", argv[0]);
     Tcl_Eval(interp, bu_vls_addr(&vls));
@@ -1772,7 +1764,6 @@ char    **argv;
   return status;
 }
 
-int
 cm_start(argc, argv)
 char	**argv;
 int	argc;
@@ -1784,7 +1775,6 @@ int	argc;
 	return(0);
 }
 
-int
 cm_vsize(argc, argv)
 char	**argv;
 int	argc;
@@ -1795,7 +1785,6 @@ int	argc;
 	return(0);
 }
 
-int
 cm_eyept(argc, argv)
 char	**argv;
 int	argc;
@@ -1809,7 +1798,6 @@ int	argc;
 	return(0);
 }
 
-int
 cm_lookat_pt(argc, argv)
 int	argc;
 char	**argv;
@@ -1847,7 +1835,6 @@ char	**argv;
 	return(0);
 }
 
-int
 cm_vrot(argc, argv)
 char	**argv;
 int	argc;
@@ -1862,7 +1849,6 @@ int	argc;
 	return(0);
 }
 
-int
 cm_orientation( argc, argv )
 int	argc;
 char	**argv;
@@ -1954,7 +1940,6 @@ int	argc;
 	return(0);
 }
 
-int
 cm_multiview(argc, argv)
 char	**argv;
 int	argc;
@@ -1976,7 +1961,7 @@ char	**argv;
   if(dbip == DBI_NULL)
     return 0;
 
-  if( db_parse_anim( dbip, argc, (const char **)argv ) < 0 )  {
+  if( db_parse_anim( dbip, argc, argv ) < 0 )  {
     Tcl_AppendResult(interp, "cm_anim:  ", argv[1], " ", argv[2], " failed\n", (char *)NULL);
     return(-1);		/* BAD */
   }
@@ -2017,7 +2002,6 @@ int	argc;
  *
  *  Clear current view.
  */
-int
 cm_clean(argc, argv)
 char	**argv;
 int	argc;
@@ -2034,7 +2018,6 @@ int	argc;
 	return 0;
 }
 
-int
 cm_set(argc, argv)
 char	**argv;
 int	argc;
@@ -2230,19 +2213,18 @@ char 		**argv;
 	  sp->s_wflag = DOWN;
 	FOR_ALL_SOLIDS(sp, &HeadSolid.l)  {
 	  register struct solid *forw;	/* XXX */
-	  struct directory *dp = FIRST_SOLID(sp);
 
 	  if( sp->s_wflag == UP )
 	    continue;
-	  if (dp->d_addr == RT_DIR_PHONY_ADDR){
+	  if (sp->s_path[0]->d_addr == RT_DIR_PHONY_ADDR){
 	    if (skip_phony) continue;
 	  } else {
 	    if (skip_real) continue;
 	  }
-	  Tcl_AppendResult(interp, dp->d_namep, " ", (char *)NULL);
+	  Tcl_AppendResult(interp, sp->s_path[0]->d_namep, " ", (char *)NULL);
 	  sp->s_wflag = UP;
 	  FOR_REST_OF_SOLIDS(forw, sp, &HeadSolid.l){
-	    if( FIRST_SOLID(forw) == dp )
+	    if( forw->s_path[0] == sp->s_path[0] )
 	      forw->s_wflag = UP;
 	  }
 	}

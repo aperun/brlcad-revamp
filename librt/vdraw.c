@@ -80,11 +80,6 @@ Acknowledgements:
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <math.h>
 #include <signal.h>
 #include "tcl.h"
@@ -93,13 +88,14 @@ Acknowledgements:
 #endif
 
 #include "machine.h"
-#include "externs.h"
 #include "cmd.h"
 #include "vmath.h"
 #include "mater.h"
 #include "nmg.h"
 #include "raytrace.h"
+#include "externs.h"
 
+#include "../librt/debug.h"	/* XXX */
 
 #ifndef M_SQRT2
 #define M_SQRT2		1.41421356237309504880
@@ -124,15 +120,15 @@ static int vdraw_open_tcl();
 static int vdraw_vlist_tcl();
 
 struct bu_cmdtab vdraw_cmds[] = {
-	{"write",		vdraw_write_tcl},
-	{"insert",		vdraw_insert_tcl},
-	{"delete",		vdraw_delete_tcl},
-	{"read",		vdraw_read_tcl},
-	{"send",		vdraw_send_tcl},
-	{"params",		vdraw_params_tcl},
-	{"open",		vdraw_open_tcl},
-	{"vlist",		vdraw_vlist_tcl},
-	{(char *)0,		(int (*)())0 }
+	"write",		vdraw_write_tcl,
+	"insert",		vdraw_insert_tcl,
+	"delete",		vdraw_delete_tcl,
+	"read",			vdraw_read_tcl,
+	"send",			vdraw_send_tcl,
+	"params",		vdraw_params_tcl,
+	"open",			vdraw_open_tcl,
+	"vlist",		vdraw_vlist_tcl,
+	(char *)0,		(int (*)())0
 };
 
 /*

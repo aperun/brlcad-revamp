@@ -18,19 +18,17 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include <stdio.h>
 #include <string.h>
 #include "machine.h"
-#include "bu.h"
 #include "vmath.h"
-#include "bn.h"
 #include "nmg.h"
 #include "raytrace.h"
 #include "rtgeom.h"
-#include "wdb.h"
+#include "rtlist.h"
 
 static struct bn_tol tol;
 
@@ -136,8 +134,7 @@ FILE *fgeom;
 
 
 int off2nmg(fpin, fpout)
-FILE *fpin;
-struct rt_wdb *fpout;
+FILE *fpin, *fpout;
 {
 	char title[64], geom_fname[64];
 	char rname[67], sname[67];
@@ -196,8 +193,7 @@ int main(argc, argv)
 int argc;
 char **argv;
 {
-	FILE *fpin;
-	struct rt_wdb *fpout;
+	FILE *fpin, *fpout;
 
 	tol.magic = RT_TOL_MAGIC;	/* Copied from proc-db/nmgmodel.c */
 	tol.dist = 0.01;
@@ -206,26 +202,34 @@ char **argv;
 	tol.para = 0.999;
 
 	/* Get filenames and open the files. */
-	if (argc != 3)  {
-		fprintf(stderr, "Usage: off-g file.off file.g\n");
-		return 2;
-	}
-	if ((fpin = fopen(argv[1], "rt")) == NULL) {
-		fprintf(stderr, "%s: cannot open %s for reading\n",
-			argv[0], argv[1]);
-		return (1);
-	}
-	if ((fpout = wdb_fopen(argv[2])) == NULL) {
-		fprintf(stderr, "%s: cannot create %s\n",
-			argv[0], argv[2]);
-		return (1);
+	if (argc < 2) {
+		fpin = stdin;
+		fpout = stdout;
+	} else if (argc < 3) {
+		if ((fpin = fopen(argv[1], "rt")) == NULL) {
+			fprintf(stderr, "%s: cannot open %s for reading\n",
+				argv[0], argv[1]);
+			return (1);
+		}
+		fpout = stdout;
+	} else if (argc < 4) {
+		if ((fpin = fopen(argv[1], "rt")) == NULL) {
+			fprintf(stderr, "%s: cannot open %s for reading\n",
+				argv[0], argv[1]);
+			return (1);
+		}
+		if ((fpout = fopen(argv[2], "a")) == NULL) {
+			fprintf(stderr, "%s: cannot open %s for appending\n",
+				argv[0], argv[2]);
+			return (1);
+		}
 	}
 
 				
 	off2nmg(fpin, fpout);
 
 	fclose(fpin);
-	wdb_close(fpout);
+	fclose(fpout);
 
 	return (0);
 }

@@ -21,7 +21,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -150,7 +150,7 @@ char	*argv[];
 	}
 
 	/* scan all the records in the database and build a directory */
-	db_dirbuild( dbip );
+	db_scan(dbip, (int (*)())db_diradd, 1, NULL);
 
 	/* open output file */
 	if( out_file == NULL )

@@ -17,7 +17,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char RCSstorage[] = "@(#)$Header$ (ARL)";
+static char RCSstorage[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"

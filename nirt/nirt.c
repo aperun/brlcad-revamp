@@ -17,7 +17,7 @@
  *
  */
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -93,7 +93,7 @@ int		nirt_debug = 0;			/* Control of diagnostics */
 /* Parallel structures needed for operation w/ and w/o air */
 struct rt_i		*rti_tab[2];
 struct rt_i		*rtip;
-struct resource		res_tab;
+struct resource		res_tab[2];
 
 struct application	ap;
 
@@ -211,7 +211,6 @@ struct bu_list	*sl;
 	show_scripts(sl, "after running them");
 }
 
-int
 main (argc, argv)
 int argc;
 char **argv;
@@ -412,7 +411,8 @@ char **argv;
     do_rt_gettrees (rtip, argv + optind, argc - optind);
  
     /* Initialize the table of resource structures */
-    rt_init_resource( &res_tab, 0, rtip );
+    res_tab[use_of_air].re_magic =
+	(res_tab[1 - use_of_air].re_magic = RESOURCE_MAGIC);
 
     /* initialization of the application structure */
     ap.a_hit = if_hit;        /* branch to if_hit routine            */
@@ -420,7 +420,7 @@ char **argv;
     ap.a_overlap = if_overlap;/* branch to if_overlap routine        */
     ap.a_logoverlap = rt_silent_logoverlap;
     ap.a_onehit = 0;          /* continue through shotline after hit */
-    ap.a_resource = &res_tab;
+    ap.a_resource = &res_tab[use_of_air];
     ap.a_purpose = "NIRT ray";
     ap.a_rt_i = rtip;         /* rt_i pointer                        */
     ap.a_zero1 = 0;           /* sanity check, sayth raytrace.h      */
@@ -479,7 +479,6 @@ char **argv;
     }
     else
 	interact(READING_FILE, stdin);
-    return 0;
 }
  
 char	usage[] = "\

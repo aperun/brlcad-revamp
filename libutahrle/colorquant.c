@@ -28,13 +28,6 @@
  * $Id$
  *
  * $Log$
- * Revision 11.2  2000/09/01 19:15:42  mike
- *
- * Lint
- *
- * Revision 11.1  1995/01/04 10:04:57  mike
- * Release_4.4
- *
  * Revision 10.3  94/12/30  00:37:27  mike
  * DEC Alpha
  * 
@@ -98,12 +91,6 @@
 
 #include <stdio.h>
 #include <math.h>
-
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 
 #include "machine.h"
 #include "externs.h"
@@ -344,7 +331,7 @@ Box *box;
 /*
  * Interatively cut the boxes.
  */
-static int
+static
 CutBoxes(boxes, colors) 
 Box	*boxes;
 int	colors;
@@ -371,7 +358,7 @@ int	colors;
  * Return the number of the box in 'boxes' with the greatest variance.
  * Restrict the search to those boxes with indices between 0 and n-1.
  */
-static int
+static
 GreatestVariance(boxes, n)
 Box *boxes;
 int n;
@@ -424,7 +411,7 @@ register Box *box;
 /*
  * Cut the given box.  Returns TRUE if the box could be cut, FALSE otherwise.
  */
-static int
+static
 CutBox(box, newbox)
 Box *box, *newbox;
 {
@@ -477,7 +464,7 @@ Box *box, *newbox;
  * indcated by 'color'.  Store the boxes which result from the cut
  * in newbox1 and newbox2.
  */
-static int
+static
 FindCutpoint(box, color, newbox1, newbox2)
 Box *box, *newbox1, *newbox2;
 int color;

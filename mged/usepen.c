@@ -19,7 +19,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -86,17 +86,17 @@ static void	illuminate();
  *  is by completing the sequence, or pressing BE_REJECT.
  */
 int
-f_mouse(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_mouse(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	vect_t	mousevec;		/* float pt -1..+1 mouse pos vect */
 	int	isave;
-	int	up;
-	int	xpos;
-	int	ypos;
+	int	up = atoi(argv[1]);
+	int	xpos = atoi(argv[2]);
+	int	ypos = atoi(argv[3]);
 
 	if(argc < 4 || 4 < argc){
 	  struct bu_vls vls;
@@ -107,10 +107,6 @@ f_mouse(
 	  bu_vls_free(&vls);
 	  return TCL_ERROR;
 	}
-
-	up = atoi(argv[1]);
-	xpos = atoi(argv[2]);
-	ypos = atoi(argv[3]);
 
 	/* Build floating point mouse vector, -1 to +1 */
 	mousevec[X] =  xpos * INV_GED;
@@ -194,8 +190,8 @@ f_mouse(
 	   * Convert DT position to path element select
 	   */
 	  isave = ipathpos;
-	  ipathpos = illump->s_fullpath.fp_len-1 - (
-	       (ypos+(int)GED_MAX) * (illump->s_fullpath.fp_len) / (int)GED_RANGE);
+	  ipathpos = illump->s_last - (
+				       (ypos+(int)GED_MAX) * (illump->s_last+1) / (int)GED_RANGE);
 	  if( ipathpos != isave )
 	    view_state->vs_flag = 1;
 	  return TCL_OK;
@@ -311,11 +307,11 @@ illuminate( y )  {
  *   advance illump or ipathpos
  */
 int
-f_aip(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int argc,
-	char **argv)
+f_aip(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int argc;
+char *argv[];
 {
   register struct solid *sp;
 
@@ -338,12 +334,12 @@ f_aip(
   if(state == ST_O_PATH){
     if(argc == 1 || *argv[1] == 'f'){
       ++ipathpos;
-      if(ipathpos >= illump->s_fullpath.fp_len)
+      if(ipathpos > illump->s_last)
 	ipathpos = 0;
     }else if(*argv[1] == 'b'){
       --ipathpos;
       if(ipathpos < 0)
-	ipathpos = illump->s_fullpath.fp_len-1;
+	ipathpos = illump->s_last;
     }else{
       Tcl_AppendResult(interp, "aip: bad parameter - ", argv[1], "\n", (char *)NULL);
       return TCL_ERROR;
@@ -384,7 +380,9 @@ f_aip(
  * There is important information in dx,dy,dz,s .
  */
 void
-buildHrot( matp_t mat, double alpha, double beta, double ggamma )
+buildHrot( mat, alpha, beta, ggamma )
+register matp_t mat;
+double alpha, beta, ggamma;
 {
 	static fastf_t calpha, cbeta, cgamma;
 	static fastf_t salpha, sbeta, sgamma;
@@ -443,7 +441,8 @@ buildHrot( matp_t mat, double alpha, double beta, double ggamma )
  *  the view center.
  */
 void
-wrt_view( mat_t out, const mat_t change, const mat_t in )
+wrt_view( out, change, in )
+register matp_t out, change, in;
 {
 	static mat_t t1, t2;
 
@@ -464,7 +463,10 @@ wrt_view( mat_t out, const mat_t change, const mat_t in )
  *  "point".
  */
 void
-wrt_point( mat_t out, const mat_t change, const mat_t in, const point_t point )
+wrt_point( out, change, in, point )
+register matp_t out;
+register CONST matp_t change, in;
+register CONST vect_t point;
 {
 	mat_t	t;
 
@@ -484,7 +486,9 @@ wrt_point( mat_t out, const mat_t change, const mat_t in, const point_t point )
  *  given "point" and "direc".
  */
 void
-wrt_point_direc( mat_t out, const mat_t change, const mat_t in, const point_t point, const vect_t direc )
+wrt_point_direc( out, change, in, point, direc )
+register matp_t out, change, in;
+register vect_t point, direc;
 {
 	static mat_t	t1;
 	static mat_t	pt_to_origin, origin_to_pt;
@@ -529,14 +533,14 @@ wrt_point_direc( mat_t out, const mat_t change, const mat_t in, const point_t po
  *	matpick a/b	Pick arc between a and b.
  *	matpick #	Similar to internal interface.
  *			0 = top level object is a solid.
- *			n = edit arc from path [n-1] to [n]
+ *			n = edit arc from s_path[n-1] to [n]
  */
 int
-f_matpick(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
+f_matpick(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	register struct solid	*sp;
 	char			*cp;
@@ -574,7 +578,7 @@ f_matpick(
 	if( not_state( ST_O_PATH, "Object Edit matrix pick" ) )
 	  return TCL_ERROR;
 
-	if( (cp = strchr( argv[1], '/' )) != NULL )  {
+	if( cp = strchr( argv[1], '/' ) )  {
 		struct directory	*d0, *d1;
 		if( (d1 = db_lookup( dbip, cp+1, LOOKUP_NOISY )) == DIR_NULL )
 		  return TCL_ERROR;
@@ -582,9 +586,9 @@ f_matpick(
 		if( (d0 = db_lookup( dbip, argv[1], LOOKUP_NOISY )) == DIR_NULL )
 		  return TCL_ERROR;
 		/* Find arc on illump path which runs from d0 to d1 */
-		for( j=1; j < illump->s_fullpath.fp_len; j++ )  {
-			if( DB_FULL_PATH_GET(&illump->s_fullpath,j-1) != d0 )  continue;
-			if( DB_FULL_PATH_GET(&illump->s_fullpath,j-0) != d1 )  continue;
+		for( j=1; j <= illump->s_last; j++ )  {
+			if( illump->s_path[j-1] != d0 )  continue;
+			if( illump->s_path[j-0] != d1 )  continue;
 			ipathpos = j;
 			goto got;
 		}
@@ -595,15 +599,13 @@ f_matpick(
 	} else {
 		ipathpos = atoi(argv[1]);
 		if( ipathpos < 0 )  ipathpos = 0;
-		else if( ipathpos >= illump->s_fullpath.fp_len )
-			ipathpos = illump->s_fullpath.fp_len-1;
+		else if( ipathpos > illump->s_last )  ipathpos = illump->s_last;
 	}
 got:
 	/* Include all solids with same tree top */
 	FOR_ALL_SOLIDS(sp, &HeadSolid.l)  {
 		for( j = 0; j <= ipathpos; j++ )  {
-			if( DB_FULL_PATH_GET(&sp->s_fullpath,j) !=
-			    DB_FULL_PATH_GET(&illump->s_fullpath,j) )
+			if( sp->s_path[j] != illump->s_path[j] )
 				break;
 		}
 		/* Only accept if top of tree is identical */

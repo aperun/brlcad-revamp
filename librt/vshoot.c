@@ -17,7 +17,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSshoot[] = "@(#)$Header$ (BRL)";
+static char RCSshoot[] = "@(#)$Header$ (BRL)";
 #endif
 
 char CopyRight_Notice[] = "@(#) Copyright (C) 1985 by the United States Army";
@@ -176,7 +176,7 @@ register struct application *ap;
 	}
 
 	/* For each type of solid to be shot at, assemble the vectors */
-	for( id = 1; id <= ID_MAX_SOLID; id++ )  {
+	for( id = 1; id <= ID_MAXIMUM; id++ )  {
 		register int	nsol;
 
 		if( (nsol = rtip->rti_nsol_by_type[id]) <= 0 )  continue;

@@ -126,7 +126,7 @@ configbody Command::cmd_prefix {
 	    lappend cmdlist [namespace tail $cmd]
 	}
     } else {
-	set cmdlist [eval $itk_option(-cmd_prefix) getUserCmds]
+	set cmdlist [$itk_option(-cmd_prefix) getUserCmds]
     }
 
 }

@@ -23,14 +23,11 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include <math.h>
 #include "machine.h"
 #include "externs.h"
@@ -1597,7 +1594,7 @@ CONST struct bn_tol	*tol;
 		}
 		return 0;	/* Already shared */
 	}
-#ifdef TOPOLOGY_CHECK
+#if 0
 	/*
 	 *  First, a topology check.
 	 *  If the two faces share one entire loop (of at least 3 verts)
@@ -1661,9 +1658,7 @@ CONST struct bn_tol	*tol;
 		return 0;
 	}
 
-#ifdef TOPPLOGY_CHECK
 must_fuse:
-#endif
 	/* All points are on the plane, it's OK to fuse */
 	if( flip2 == 0 )  {
 		if (rt_g.NMG_debug & DEBUG_MESH)  {
@@ -1788,8 +1783,7 @@ CONST struct bn_tol *tol;
 	BN_CK_TOL( tol );
 
 	magic_type = bu_identify_magic( *magic_p );
-	if ( !strcmp( magic_type, "NULL" ) || 
-	     !strcmp( magic_type, "Unknown_Magic" )  )
+	if( !strcmp( magic_type, "NULL" ), !strcmp( magic_type, "Unknown_Magic" ) )
 	{
 		bu_log( "Bad magic pointer passed to nmg_break_all_es_on_v (%s)\n", magic_type );
 		rt_bomb( "Bad magic pointer passed to nmg_break_all_es_on_v()\n" );
@@ -2659,7 +2653,7 @@ CONST struct bn_tol	*tol;
 	CONST struct loopuse	*lu;
 	CONST struct edgeuse	*eu;
 	register int		uses;
-	int			outie = -1;
+	int			outie;
 
 	BU_CK_LIST_HEAD(hd);
 	NMG_CK_EDGE(e1);

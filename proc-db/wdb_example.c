@@ -14,12 +14,12 @@
 #include <stdio.h>
 #include <math.h>
 #include "machine.h"
+#include "db.h"
 #include "bu.h"
 #include "vmath.h"
 #include "bn.h"
-#include "raytrace.h"
-#include "rtgeom.h"
 #include "wdb.h"
+/* #include "raytrace.h" */
 
 char *progname ="(noname)";
 
@@ -29,20 +29,20 @@ void usage()
 	exit(-1);
 }
 
-int
 main(int ac, char *av[])
 {
-	struct rt_wdb *db_fp;
+	FILE *db_fp;
 	point_t p1, p2;
+	fastf_t radius;
 	int is_region;
 	unsigned char rgb[3];
-	struct wmember wm_hd; /* defined in wdb.h */
+	struct wmember wm_hd, *wm; /* defined in wdb.h */
 
 	progname = *av;
 
 	if (ac < 2) usage();
 
-	if ((db_fp = wdb_fopen(av[1])) == NULL) {
+	if ((db_fp = fopen(av[1], "w")) == (FILE *)NULL) {
 		perror(av[1]);
 		exit(-1);
 	}
@@ -79,7 +79,7 @@ main(int ac, char *av[])
 	 * in the combination.  The return from mk_addmember is a pointer
 	 * to the wmember structure 
 	 */
-	(void)mk_addmember( "box.s", &wm_hd.l, WMOP_UNION );
+	wm = mk_addmember( "box.s", &wm_hd, WMOP_UNION );
 
 	/* If we wanted a transformation matrix for this arc, we would
 	 * add the following code:
@@ -98,7 +98,7 @@ main(int ac, char *av[])
 	 * can be a problem.
 	 */
 
-	(void)mk_addmember( "ball.s", &wm_hd.l, WMOP_UNION );
+	wm = mk_addmember( "ball.s", &wm_hd, WMOP_UNION );
 
 	/* Create the combination
 	 * In this case we are going to make it a region (hence the
@@ -119,6 +119,5 @@ main(int ac, char *av[])
 		 rgb,		/* item color */
 		 0);		/* inherit (override) flag */
 
-	wdb_close(db_fp);
-	return 0;
+	fclose(db_fp);
 }

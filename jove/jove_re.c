@@ -4,9 +4,6 @@
  * $Revision$
  *
  * $Log$
- * Revision 11.3  1997/01/03  17:42:48  jra
- * Mods for Irix 6.2
- *
  * Revision 11.2  1995/06/21  03:44:28  gwyn
  * Eliminated trailing blanks.
  * Changed memcpy calls back to bcopy.
@@ -56,7 +53,7 @@
  *
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$";
+static char RCSid[] = "@(#)$Header$";
 #endif
 
 /*

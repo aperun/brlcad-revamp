@@ -15,16 +15,13 @@
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include <math.h>
 #include "machine.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
 #if !defined(M_PI)
 #define M_PI            3.14159265358979323846
@@ -33,7 +30,6 @@
 #define SMOOTHSTEP(x)  ((x)*(x)*(3 - 2*(x)))
 
 #if RT_MULTISPECTRAL
-#include "spectrum.h"
 extern CONST struct bn_table	*spectrum;	/* from rttherm/viewtherm.c */
 #endif
 
@@ -228,7 +224,7 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	/* Optional:  get the matrix which maps model space into
 	 *  "region" or "shader" space
 	 */
-	db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name, &rt_uniresource);
+	db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name);
 
 	/* add the noise-space scaling */
 	bn_mat_idn(tmp);
@@ -299,9 +295,6 @@ char	*dp;
 		(struct camo_specific *)dp;
 	point_t pt;
 	double val;
-#if RT_MULTISPECTRAL
-	float fcolor[3];
-#endif
 
 	RT_AP_CHECK(ap);
 	RT_CHECK_PT(pp);
@@ -323,14 +316,11 @@ char	*dp;
 #if RT_MULTISPECTRAL
 	BN_CK_TABDATA(swp->msw_color);
 	if (val < camo_sp->t1) {
-		VMOVE(fcolor, camo_sp->c1 );
-		rt_spect_reflectance_rgb( swp->msw_color, fcolor);
+		rt_spect_reflectance_rgb( swp->msw_color, camo_sp->c1 );
 	} else if (val < camo_sp->t2 ) {
-		VMOVE(fcolor, camo_sp->c2 );
-		rt_spect_reflectance_rgb( swp->msw_color, fcolor);
+		rt_spect_reflectance_rgb( swp->msw_color, camo_sp->c2 );
 	} else {
-		VMOVE(fcolor, camo_sp->c3 );
-		rt_spect_reflectance_rgb( swp->msw_color, fcolor);
+		rt_spect_reflectance_rgb( swp->msw_color, camo_sp->c3 );
 	}
 #else
 	if (val < camo_sp->t1) {
@@ -379,7 +369,7 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	/* Optional:  get the matrix which maps model space into
 	 *  "region" or "shader" space
 	 */
-	db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name, &rt_uniresource);
+	db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name);
 
 	/* add the noise-space scaling */
 	bn_mat_idn(tmp);
@@ -431,9 +421,6 @@ char	*dp;
 		(struct camo_specific *)dp;
 	point_t pt;
 	double val, inv_val;
-#ifdef RT_MULTISPECTRAL
-	float fcolor[3];
-#endif
 
 	RT_AP_CHECK(ap);
 	RT_CHECK_PT(pp);
@@ -467,10 +454,7 @@ char	*dp;
 
 		BN_CK_TABDATA(swp->msw_color);
 		BN_GET_TABDATA( tcolor, spectrum );
-
-		VMOVE(fcolor, camo_sp->c2 );
-
-		rt_spect_reflectance_rgb( tcolor, fcolor );
+		rt_spect_reflectance_rgb( tcolor, camo_sp->c2 );
 		bn_tabdata_blend2( swp->msw_color, val, swp->msw_color,
 			inv_val, tcolor );
 		bn_tabdata_free( tcolor );

@@ -31,7 +31,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "tk.h"
 #include <X11/Xutil.h>
 
-#define USE_DIALS_AND_BUTTONS 1
+#define USE_DIALS_AND_BUTTONS 0
 
 #ifdef HAVE_XOSDEFS_H
 #include <X11/Xfuncproto.h>
@@ -178,6 +178,7 @@ get_color(Display *dpy, Colormap cmap, XColor *color)
 #undef CSCK
 
 }
+
 
 /*
  *			X _ O P E N

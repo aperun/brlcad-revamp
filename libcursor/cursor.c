@@ -7,7 +7,7 @@
 			(301)278-6647 or AV-298-6647
 */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 /*
 	Originally extracted from SCCS archive:
@@ -27,12 +27,10 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <strings.h>
 #endif
 
-#ifdef HAVE_TERMCAP_H
-# include <termcap.h>
-#endif
-
+#ifndef CRAY
 #include <sys/ioctl.h>
 #define _winsize winsize	/* For compat with _ioctl.h. */
+#endif
 
 #define TBUFSIZ		1024
 #define MAX_TERM_LEN	80
@@ -111,7 +109,6 @@ int		ClrStandout(), ClrEOL(), ClrText(),
 	appropriate diagnostic.
 	Use 'fp' as output stream.
  */
-int
 InitTermCap( fp )
 FILE	*fp;
 	{	char	*term; /* Name of terminal from environment ($TERM).*/
@@ -367,7 +364,6 @@ SetStandout()
 	}
 
 /*	P u t C h r ( )							*/
-int
 PutChr( c )
 char	c;
 	{

@@ -29,21 +29,15 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include "machine.h"
 #include "vmath.h"
 #include "raytrace.h"
-#include "bu.h"
 #include "./debug.h"
 
 /* Boolean values.  Not easy to change, but defined symbolicly */
@@ -51,15 +45,7 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #define TRUE	1
 
 RT_EXTERN(void rt_grow_boolstack, (struct resource *resp) );
-int rt_tree_max_raynum(register CONST union tree *,
-		       register CONST struct partition *);
-int rt_bool_partition_eligible(register CONST struct bu_ptbl *,
-			       register CONST struct bu_bitv *,
-			       register CONST struct partition *);
-int rt_booleval(register union tree*,
-		struct partition *,
-		struct region **,
-		struct resource *);
+
 /*
  *			R T _ W E A V E 0 S E G
  *
@@ -191,7 +177,6 @@ struct application	*ap;
 	register struct partition *pp;
 	struct resource		*res = ap->a_resource;
 	struct rt_i		*rtip = ap->a_rt_i;
-
 	FAST fastf_t		diff, diff_se;
 	FAST fastf_t		tol_dist;
 
@@ -614,54 +599,8 @@ done_weave:	; /* Sorry about the goto's, but they give clarity */
 		if(rt_g.debug&DEBUG_PARTITION)
 			rt_pr_partitions( rtip, PartHdp, "After weave" );
 	}
-	if(rt_g.debug&DEBUG_PARTITION)
-		bu_log( "--------------------Leaving Booleweave\n" );
 }
 
-
-/*
- *			_ R T _ D E F O V E R L A P
- *
- *  The guts of the default overlap callback.
- *  Returns -
- *	 0	to eliminate partition with overlap entirely
- *	 1	to retain partition in output list, claimed by reg1
- *	 2	to retain partition in output list, claimed by reg2
- */
-HIDDEN int
-_rt_defoverlap( ap, pp, reg1, reg2, pheadp, verbose )
-register struct application	*ap;
-register struct partition	*pp;
-struct region			*reg1;
-struct region			*reg2;
-struct partition		*pheadp;
-register int			verbose;
-{
-	RT_CK_AP(ap);
-	RT_CK_PT(pp);
-	RT_CK_REGION(reg1);
-	RT_CK_REGION(reg2);
-
-	/*
-	 *  Apply heuristics as to which region should claim partition.
-	 */
-	if( reg1->reg_aircode != 0 )  {
-		/* reg1 was air, replace with reg2 */
-		return 2;
-	}
-	if( pp->pt_back != pheadp ) {
-		/* Repeat a prev region, if that is a choice */
-		if( pp->pt_back->pt_regionp == reg1 )
-			return 1;
-		if( pp->pt_back->pt_regionp == reg2 )
-			return 2;
-	}
-
-	/* To provide some consistency from ray to ray, use lowest bit # */
-	if( reg1->reg_bit < reg2->reg_bit )
-		return 1;
-	return 2;
-}
 /*
  *			R T _ D E F O V E R L A P
  *
@@ -708,6 +647,50 @@ struct partition		*pheadp;
 
 {
     return (_rt_defoverlap(ap, pp, reg1, reg2, pheadp, 0));
+}
+
+/*
+ *			_ R T _ D E F O V E R L A P
+ *
+ *  The guts of the default overlap callback.
+ *  Returns -
+ *	 0	to eliminate partition with overlap entirely
+ *	 1	to retain partition in output list, claimed by reg1
+ *	 2	to retain partition in output list, claimed by reg2
+ */
+HIDDEN int
+_rt_defoverlap( ap, pp, reg1, reg2, pheadp, verbose )
+register struct application	*ap;
+register struct partition	*pp;
+struct region			*reg1;
+struct region			*reg2;
+struct partition		*pheadp;
+register int			verbose;
+{
+	RT_CK_AP(ap);
+	RT_CK_PT(pp);
+	RT_CK_REGION(reg1);
+	RT_CK_REGION(reg2);
+
+	/*
+	 *  Apply heuristics as to which region should claim partition.
+	 */
+	if( reg1->reg_aircode != 0 )  {
+		/* reg1 was air, replace with reg2 */
+		return 2;
+	}
+	if( pp->pt_back != pheadp ) {
+		/* Repeat a prev region, if that is a choice */
+		if( pp->pt_back->pt_regionp == reg1 )
+			return 1;
+		if( pp->pt_back->pt_regionp == reg2 )
+			return 2;
+	}
+
+	/* To provide some consistency from ray to ray, use lowest bit # */
+	if( reg1->reg_bit < reg2->reg_bit )
+		return 1;
+	return 2;
 }
 
 /*
@@ -767,8 +750,7 @@ struct region **fr2;
 CONST struct partition *pp;
 {
 	struct bu_ptbl	sl1, sl2;
-	CONST struct seg *s1 = (CONST struct seg *)NULL;
-	CONST struct seg *s2 = (CONST struct seg *)NULL;
+	CONST struct seg *s1, *s2;
 	fastf_t s1_in_dist;
 	fastf_t s2_in_dist;
 	fastf_t depth;
@@ -1048,8 +1030,6 @@ struct partition	*InputHdp;
 		if( regp == REGION_NULL ) continue;	/* empty slot in table */
 		RT_CK_REGION(regp);
 
-		code = -1;				/* For debug out in policy */
-
 		/*
 		 * Two or more regions claim this partition
 		 */
@@ -1118,7 +1098,7 @@ bu_log("Potential overlay along ray bundle: r1=%d, r2=%d, resolved to %s\n", r1,
 		} else if( code == 1 ) {
 code1:
 			/* Keep partition, claiming region = lastregion */
-			if(rt_g.debug&DEBUG_PARTITION)  bu_log("rt_default_multioverlap:  overlap policy=1, code=%d, p retained in region=%s\n",
+			if(rt_g.debug&DEBUG_PARTITION)  bu_log("rt_default_multioverlap:  overlap code=%d, p retained in region=%s\n",
 				code, lastregion->reg_name );
 			BU_PTBL_CLEAR_I(regiontable, i);
 		} else {
@@ -1126,7 +1106,7 @@ code2:
 			/* Keep partition, claiming region = regp */
 			bu_ptbl_zero(regiontable, (long *)lastregion);
 			lastregion = regp;
-			if(rt_g.debug&DEBUG_PARTITION)  bu_log("rt_default_multioverlap:  overlap policy!=(0,1) code=%d, p retained in region=%s\n",
+			if(rt_g.debug&DEBUG_PARTITION)  bu_log("rt_default_multioverlap:  overlap code=%d, p retained in region=%s\n",
 				code, lastregion->reg_name );
 		}
 	}
@@ -1222,48 +1202,6 @@ CONST struct partition	*InputHdp;
 	rt_pr_partitions( ap->a_rt_i, pheadp, "Entire ray containing overlap");
 #endif
 
-}
-
-/*
- *			R T _ O V E R L A P _ T A B L E S _ E Q U A L
- *
- *  Overlap tables are NULL terminated arrays of region pointers.
- *  The order of entries may be different between the two.
- *
- *  Returns -
- *	1	The tables match
- *	0	The tables do not match
- */
-int
-rt_overlap_tables_equal( struct region *const*a, struct region *const*b )
-{
-	int alen=0, blen=0;
-	register struct region *const*app;
-	register struct region *const*bpp;
-
-	if( a == NULL && b == NULL )
-		return 1;
-
-	if( a == NULL || b == NULL )
-		return 0;
-
-	/* First step, compare lengths */
-	for( app = a; *app != NULL; app++ )  alen++;
-	for( bpp = b; *bpp != NULL; bpp++ )  blen++;
-	if( alen != blen )  return 0;
-
-	/* Second step, compare contents */
-	for( app = a; *app != NULL; app++ )  {
-		register const struct region *t = *app;
-		for( bpp = b; *bpp != NULL; bpp++ )  {
-			if( *bpp == t )  goto b_ok;
-		}
-		/* 't' not found in b table, no match */
-		return 0;
-b_ok:		;
-	}
-	/* Everything matches */
-	return 1;
 }
 
 /*
@@ -1697,9 +1635,7 @@ bu_log("rt_boolfinal:  invoking a_multioverlap() pp=x%x\n", pp);
 				lastpp->pt_outhit->hit_dist,
 				ap->a_rt_i->rti_tol.dist ) &&
 			    ( ap->a_rt_i->rti_save_overlaps == 0 ||
-				rt_overlap_tables_equal(
-					lastpp->pt_overlap_reg,
-					newpp->pt_overlap_reg ) )
+			      lastpp->pt_overlap_reg == newpp->pt_overlap_reg )
 			)  {
 				/* same region, merge by extending last final partition */
 				if(rt_g.debug&DEBUG_PARTITION)bu_log("rt_boolfinal 'exact match', extending last partition, discarding x%x\n", newpp);
@@ -2063,7 +1999,8 @@ register struct resource	*resp;
  *  Return the length of a partition linked list.
  */
 int
-rt_partition_len( const struct partition *partheadp )
+rt_partition_len( partheadp )
+register struct partition	*partheadp;
 {
 	register struct partition	*pp;
 	register long	count = 0;

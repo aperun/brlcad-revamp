@@ -24,7 +24,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -46,9 +46,9 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "vmath.h"
 #include "bn.h"
 #include "nmg.h"
-#include "rtgeom.h"
 #include "raytrace.h"
 #include "nurb.h"
+#include "rtgeom.h"
 #include "wdb.h"
 
 #include "./ged.h"
@@ -80,8 +80,8 @@ static void	init_sedit_vars(), init_oedit_vars(), init_oedit_guts();
 void pscale();
 void update_edit_absolute_tran();
 void set_e_axes_pos();
-point_t e_axes_pos;
-point_t curr_e_axes_pos;
+vect_t e_axes_pos;
+vect_t curr_e_axes_pos;
 short int fixv;		/* used in ECMD_ARB_ROTATE_FACE,f_eqn(): fixed vertex */
 
 MGED_EXTERN( struct wdb_pipept *find_pipept_nearest_pt, (CONST struct bu_list *pipe_hd, CONST point_t pt ) );
@@ -92,6 +92,7 @@ MGED_EXTERN( struct wdb_pipept *add_pipept, (struct rt_pipe_internal *pipe, stru
 /* data for solid editing */
 int			sedraw;	/* apply solid editing changes */
 
+struct bu_external	es_ext;
 struct rt_db_internal	es_int;
 struct rt_db_internal	es_int_orig;
 
@@ -1381,7 +1382,7 @@ int arg;
 				return;
 			}
 
-			if( !lu || *lu->up.magic_p != NMG_SHELL_MAGIC )
+			if( !lu | *lu->up.magic_p != NMG_SHELL_MAGIC )
 			{
 				/* This should never happen */
 				bu_bomb( "Cannot find wire loop!!\n" );
@@ -2302,7 +2303,7 @@ int both;    /* if(!both) then set only curr_e_axes_pos, otherwise
  *  Solid editing is completed only via sedit_accept() / sedit_reject().
  */
 void
-init_sedit(void)
+init_sedit()
 {
 	register int		type;
 	int			id;
@@ -2319,17 +2320,23 @@ init_sedit(void)
 	  return;
 	}
 
-	/* Read solid description into es_int */
-	if( rt_db_get_internal( &es_int, LAST_SOLID(illump),
-	  dbip, NULL, &rt_uniresource ) < 0 )  {
-	  Tcl_AppendResult(interp, "init_sedit(",
-	  		LAST_SOLID(illump)->d_namep,
+	/* Read solid description.  Save copy of original data */
+	BU_INIT_EXTERNAL(&es_ext);
+	if( db_get_external( &es_ext, illump->s_path[illump->s_last], dbip ) < 0 ){
+	  TCL_READ_ERR;
+	  return;
+	}
+
+	RT_INIT_DB_INTERNAL(&es_int);
+	id = rt_id_solid( &es_ext );
+	if( rt_functab[id].ft_import( &es_int, &es_ext, bn_mat_identity, dbip ) < 0 )  {
+	  Tcl_AppendResult(interp, "init_sedit(", illump->s_path[illump->s_last]->d_namep,
 			   "):  solid import failure\n", (char *)NULL);
-	  rt_db_free_internal( &es_int, &rt_uniresource );
+	  if( es_int.idb_ptr )  rt_functab[id].ft_ifree( &es_int );
+	  db_free_external( &es_ext );
 	  return;				/* FAIL */
 	}
 	RT_CK_DB_INTERNAL( &es_int );
-	id = es_int.idb_type;
 
 	es_menu = 0;
 	if( id == ID_ARB8 )
@@ -2346,7 +2353,8 @@ init_sedit(void)
 		{
 		  Tcl_AppendResult(interp,"Cannot calculate plane equations for ARB8\n",
 				   (char *)NULL);
-		  rt_db_free_internal( &es_int, &rt_uniresource );
+		  db_free_external( &es_ext );
+		  rt_functab[id].ft_ifree( &es_int );
 		  return;
 		}
 	}
@@ -2364,7 +2372,7 @@ init_sedit(void)
 	}
 
 	/* Save aggregate path matrix */
-	pathHmat( illump, es_mat, illump->s_fullpath.fp_len-2 );
+	pathHmat( illump, es_mat, illump->s_last-1 );
 
 	/* get the inverse matrix */
 	bn_mat_inv( es_invmat, es_mat );
@@ -2436,15 +2444,14 @@ init_sedit_vars()
  *  making a change to es_int or es_mat.
  */
 void
-replot_editing_solid(void)
+replot_editing_solid()
 {
   mat_t mat;
   register struct solid *sp;
-  struct directory *illdp = LAST_SOLID(illump);
 
   FOR_ALL_SOLIDS(sp, &HeadSolid.l) {
-    if(LAST_SOLID(sp) == illdp )  {
-      pathHmat( sp, mat, sp->s_fullpath.fp_len-2 );
+    if(sp->s_path[sp->s_last]->d_addr == illump->s_path[illump->s_last]->d_addr){
+      pathHmat( sp, mat, sp->s_last-1 );
       (void)replot_modified_solid( sp, &es_int, mat );
     }
   }
@@ -2455,14 +2462,14 @@ replot_editing_solid(void)
  *
  */
 void
-transform_editing_solid(
-	struct rt_db_internal	*os,		/* output solid */
-	const mat_t		mat,
-	struct rt_db_internal	*is,		/* input solid */
-	int			free)
+transform_editing_solid(os, mat, is, free)
+struct rt_db_internal	*os;		/* output solid */
+CONST mat_t		mat;
+struct rt_db_internal	*is;		/* input solid */
+int			free;
 {
 	RT_CK_DB_INTERNAL( is );
-	if( rt_functab[is->idb_type].ft_xform( os, mat, is, free, dbip, &rt_uniresource ) < 0 )
+	if( rt_functab[is->idb_type].ft_xform( os, mat, is, free, dbip ) < 0 )
 		bu_bomb("transform_editing_solid");
 }
 
@@ -2552,7 +2559,7 @@ get_rotation_vertex()
 {
   int i, j;
   int type, loc, valid;
-  int fixv = -1;
+  int fixv;
   struct bu_vls str;
   struct bu_vls cmd;
 
@@ -2735,8 +2742,7 @@ sedit()
 
 			RT_DSP_CK_MAGIC( dsp );
 
-			/* Pop-up the Tk file browser */
-			fname = get_file_name( bu_vls_addr(&dsp->dsp_file) );
+			fname = get_file_name( dsp->dsp_file );
 			if ( ! fname) break;
 
 			if( stat( fname, &stat_buf ) ) {
@@ -2757,7 +2763,7 @@ sedit()
 				mged_print_result( TCL_ERROR );
 				return;
 			}
-			bu_vls_strcpy( &dsp->dsp_file, fname );
+			strcpy( dsp->dsp_file, fname );
 
 			break;
 		}
@@ -3318,7 +3324,7 @@ sedit()
 		{
 			struct rt_extrude_internal *extr =
 				(struct rt_extrude_internal *)es_int.idb_ptr;
-			char *sketch_name;
+			char *sketch_name, *curve_name;
 			int ret_tcl;
 			struct directory *dp;
 			struct rt_db_internal tmp_ip;
@@ -3352,7 +3358,7 @@ sedit()
 				tmp_ip.idb_type = ID_SKETCH;
 				tmp_ip.idb_ptr = (genptr_t)extr->skt;
 				tmp_ip.idb_meth = &rt_functab[ID_SKETCH];
-				rt_db_free_internal( &tmp_ip, &rt_uniresource );
+				rt_sketch_ifree( &tmp_ip );
 			}
 
 			if( (dp=db_lookup( dbip, sketch_name, 0 )) == DIR_NULL )
@@ -3365,7 +3371,7 @@ sedit()
 			{
 				/* import the new sketch */
 
-			        if( rt_db_get_internal( &tmp_ip, dp, dbip, bn_mat_identity, &rt_uniresource ) != ID_SKETCH )
+			        if( rt_db_get_internal( &tmp_ip, dp, dbip, bn_mat_identity ) != ID_SKETCH )
 			        {
 			                bu_log( "rt_extrude_import: ERROR: Cannot import sketch (%.16s) for extrusion\n",
 			                        sketch_name );
@@ -5605,7 +5611,8 @@ sedit()
  *  to actually do the work.
  */
 void
-sedit_mouse( const vect_t mousevec )
+sedit_mouse( mousevec )
+CONST vect_t	mousevec;
 {
   vect_t pos_view;	 	/* Unrotated view space pos */
   vect_t pos_model;		/* Rotated screen space pos */
@@ -5798,7 +5805,7 @@ sedit_mouse( const vect_t mousevec )
 	pos_view[X] = mousevec[X];
 	pos_view[Y] = mousevec[Y];
 
-  	tmp_vert = rt_bot_find_v_nearest_pt2( bot, pos_view, view_state->vs_model2view );
+  	tmp_vert = bot_find_v_nearest_pt2( bot, pos_view, view_state->vs_model2view );
   	if( tmp_vert < 0 )
   	{
   		Tcl_AppendResult(interp, "ECMD_BOT_PICKV: unable to find a vertex!!!\n", (char *)NULL );
@@ -5826,7 +5833,7 @@ sedit_mouse( const vect_t mousevec )
 	pos_view[X] = mousevec[X];
 	pos_view[Y] = mousevec[Y];
 
-    	if( rt_bot_find_e_nearest_pt2( &vert1, &vert2, bot, pos_view, view_state->vs_model2view ) )
+    	if( bot_find_e_nearest_pt2( &vert1, &vert2, bot, pos_view, view_state->vs_model2view ) )
   	{
   		Tcl_AppendResult(interp, "ECMD_BOT_PICKE: unable to find an edge!!!\n", (char *)NULL );
   		mged_print_result( TCL_ERROR );
@@ -6220,7 +6227,7 @@ vect_t tvec;
 }
 
 void
-sedit_abs_scale(void)
+sedit_abs_scale()
 {
   fastf_t old_acc_sc_sol;
 
@@ -6249,7 +6256,8 @@ sedit_abs_scale(void)
  *  Object Edit
  */
 void
-objedit_mouse( const vect_t mousevec )
+objedit_mouse( mousevec )
+CONST vect_t	mousevec;
 {
   fastf_t			scale;
   vect_t	pos_view;	 	/* Unrotated view space pos */
@@ -6387,7 +6395,7 @@ point_t tvec;
 
 
 void
-oedit_abs_scale(void)
+oedit_abs_scale()
 {
   fastf_t scale;
   vect_t temp;
@@ -6457,7 +6465,10 @@ oedit_abs_scale(void)
  *			V L S _ S O L I D
  */
 void
-vls_solid( struct bu_vls *vp, const struct rt_db_internal *ip, const mat_t mat )
+vls_solid( vp, ip, mat )
+register struct bu_vls		*vp;
+CONST struct rt_db_internal	*ip;
+CONST mat_t			mat;
 {
 	struct rt_db_internal	intern;
 	int			id;
@@ -6474,13 +6485,13 @@ vls_solid( struct bu_vls *vp, const struct rt_db_internal *ip, const mat_t mat )
 	if( id != ID_ARS && id != ID_POLY && id != ID_BOT )
 	{
 		if( rt_functab[id].ft_describe( vp, &intern, 1 /*verbose*/,
-		    base2local, &rt_uniresource ) < 0 )
+		    base2local ) < 0 )
 		  Tcl_AppendResult(interp, "vls_solid: describe error\n", (char *)NULL);
 	}
 	else
 	{
 		if( rt_functab[id].ft_describe( vp, &intern, 0 /* not verbose */,
-		    base2local, &rt_uniresource ) < 0 )
+		    base2local ) < 0 )
 		  Tcl_AppendResult(interp, "vls_solid: describe error\n", (char *)NULL);
 	}
 
@@ -6501,10 +6512,10 @@ vls_solid( struct bu_vls *vp, const struct rt_db_internal *ip, const mat_t mat )
 		}
 
 		if( ps == es_pipept )
-			rt_vls_pipept( vp, seg_no, &intern, base2local );
+			vls_pipept( vp, seg_no, &intern, base2local );
 	}
 
-	rt_db_free_internal( &intern, &rt_uniresource );
+	rt_functab[id].ft_ifree( &intern );
 }
 
 /*
@@ -7317,17 +7328,23 @@ init_oedit_guts()
 	}
 
 	/* Not an evaluated region - just a regular path ending in a solid */
-	if( rt_db_get_internal( &es_int, LAST_SOLID(illump),
-	    dbip, NULL, &rt_uniresource ) < 0 )  {
-		Tcl_AppendResult(interp, "init_oedit(",
-	    			LAST_SOLID(illump)->d_namep,
-				 "):  solid import failure\n", (char *)NULL);
-		rt_db_free_internal( &es_int, &rt_uniresource );
+	if (db_get_external(&es_ext, illump->s_path[illump->s_last], dbip) < 0) {
+		Tcl_AppendResult(interp, "init_oedit(", illump->s_path[illump->s_last]->d_namep,
+				 "): db_get_external failure\n", (char *)NULL);
 		button(BE_REJECT);
+		return;
+	}
+
+	id = rt_id_solid(&es_ext);
+	if (rt_functab[id].ft_import(&es_int, &es_ext, bn_mat_identity, dbip) < 0) {
+		Tcl_AppendResult(interp, "init_oedit(", illump->s_path[illump->s_last]->d_namep,
+				 "):  solid import failure\n", (char *)NULL);
+		if (es_int.idb_ptr)
+			rt_functab[id].ft_ifree( &es_int );
+		db_free_external(&es_ext);
 		return;				/* FAIL */
 	}
 	RT_CK_DB_INTERNAL(&es_int);
-	id = es_int.idb_type;
 
 	if (id == ID_ARB8) {
 		struct rt_arb_internal *arb;
@@ -7339,7 +7356,7 @@ init_oedit_guts()
 	}
 
 	/* Save aggregate path matrix */
-	pathHmat(illump, es_mat, illump->s_fullpath.fp_len-2);
+	pathHmat(illump, es_mat, illump->s_last-1);
 
 	/* get the inverse matrix */
 	bn_mat_inv(es_invmat, es_mat);
@@ -7383,7 +7400,7 @@ init_oedit_vars()
  *
  */
 void
-init_oedit(void)
+init_oedit()
 {
 	struct bu_vls		vls;
 
@@ -7415,12 +7432,11 @@ oedit_apply()
 
 	switch (ipathpos) {
 	case 0:
-		moveHobj(DB_FULL_PATH_GET(&illump->s_fullpath,ipathpos),
-			modelchanges);
+		moveHobj(illump->s_path[ipathpos], modelchanges);
 		break;
 	case 1:
-		moveHinstance(DB_FULL_PATH_GET(&illump->s_fullpath,ipathpos-1),
-			      DB_FULL_PATH_GET(&illump->s_fullpath,ipathpos),
+		moveHinstance(illump->s_path[ipathpos-1],
+			      illump->s_path[ipathpos],
 			      modelchanges);
 		break;
 	default:
@@ -7436,8 +7452,8 @@ oedit_apply()
 		bn_mat_mul(tempm, modelchanges, topm);
 		bn_mat_mul(deltam, inv_topm, tempm);
 
-		moveHinstance(DB_FULL_PATH_GET(&illump->s_fullpath,ipathpos-1),
-			      DB_FULL_PATH_GET(&illump->s_fullpath,ipathpos),
+		moveHinstance(illump->s_path[ipathpos-1],
+			      illump->s_path[ipathpos],
 			      deltam);
 		break;
 	}
@@ -7460,7 +7476,7 @@ oedit_apply()
 }
 
 void
-oedit_accept(void)
+oedit_accept()
 {
 	register struct solid *sp;
 
@@ -7486,9 +7502,12 @@ oedit_accept(void)
 }
 
 void
-oedit_reject(void)
+oedit_reject()
 {
-	rt_db_free_internal(&es_int, &rt_uniresource);
+	if (es_int.idb_ptr)
+		rt_functab[es_int.idb_type].ft_ifree(&es_int);
+	es_int.idb_ptr = (genptr_t)NULL;
+	db_free_external(&es_ext);
 }
 
 /* 			F _ E Q N ( )
@@ -7560,6 +7579,7 @@ char	*argv[];
 }
 
 /* Hooks from buttons.c */
+void sedit_reject();
 
 /*
  * Copied from sedit_accept - modified to optionally leave
@@ -7586,7 +7606,7 @@ sedit_apply(accept_flag)
 	}
 
 	/* write editing changes out to disc */
-	dp = LAST_SOLID(illump);
+	dp = illump->s_path[illump->s_last];
 
 	/* make sure that any BOT solid is minimally legal */
 	if (es_int.idb_type == ID_BOT) {
@@ -7615,13 +7635,24 @@ sedit_apply(accept_flag)
 	}
 
 	/* Scale change on export is 1.0 -- no change */
-	if( rt_db_put_internal( dp, dbip, &es_int, &rt_uniresource ) < 0 )  {
+	if (rt_functab[es_int.idb_type].ft_export( &es_ext, &es_int, 1.0, dbip) < 0)  {
 		Tcl_AppendResult(interp, "sedit_apply(", dp->d_namep,
 				 "):  solid export failure\n", (char *)NULL);
 		if (accept_flag) {
-			rt_db_free_internal(&es_int, &rt_uniresource);
+			if (es_int.idb_ptr)
+				rt_functab[es_int.idb_type].ft_ifree(&es_int);
+			db_free_external(&es_ext);
 		}
 		return TCL_ERROR;				/* FAIL */
+	}
+
+    	if (es_int.idb_ptr && accept_flag)
+		rt_functab[es_int.idb_type].ft_ifree(&es_int);
+
+	if (db_put_external(&es_ext, dp, dbip) < 0) {
+		if (accept_flag)
+			db_free_external(&es_ext);
+		TCL_WRITE_ERR_return;
 	}
 
 	if (accept_flag) {
@@ -7630,15 +7661,20 @@ sedit_apply(accept_flag)
 		es_edflag = -1;
 		es_edclass = EDIT_CLASS_NULL;
 
-		rt_db_free_internal(&es_int, &rt_uniresource);
+		if (es_int.idb_ptr)
+			rt_functab[es_int.idb_type].ft_ifree(&es_int);
+		es_int.idb_ptr = (genptr_t)NULL;
+		db_free_external(&es_ext);
 	}
 
 	return TCL_OK;
 }
 
 void
-sedit_accept(void)
+sedit_accept()
 {
+	struct directory	*dp;
+
 	if (dbip == DBI_NULL)
 		return;
 
@@ -7659,7 +7695,7 @@ sedit_accept(void)
 }
 
 void
-sedit_reject(void)
+sedit_reject()
 {
 	if( not_state( ST_S_EDIT, "Solid edit reject" ) )  return;
 
@@ -7688,7 +7724,7 @@ sedit_reject(void)
 	  register struct solid *sp;
 
 	  FOR_ALL_SOLIDS(sp, &HeadSolid.l) {
-	    if(LAST_SOLID(sp) == LAST_SOLID(illump))
+	    if(sp->s_path[sp->s_last]->d_addr == illump->s_path[illump->s_last]->d_addr)
 	      (void)replot_original_solid( sp );
 	  }
 	}
@@ -7698,7 +7734,9 @@ sedit_reject(void)
 	es_edflag = -1;
 	es_edclass = EDIT_CLASS_NULL;
 
-	rt_db_free_internal( &es_int, &rt_uniresource );
+    	if( es_int.idb_ptr )  rt_functab[es_int.idb_type].ft_ifree( &es_int );
+	es_int.idb_ptr = (genptr_t)NULL;
+	db_free_external( &es_ext );
 }
 
 int
@@ -7933,13 +7971,13 @@ double	xangle, yangle, zangle;
  *  XXX This really should use import/export interface!!!  Or be part of it.
  */
 void
-label_edited_solid(
-	int *num_lines,
-	point_t *lines,
-	struct rt_point_labels	pl[],
-	int			max_pl,
-	const mat_t		xform,
-	struct rt_db_internal	*ip)
+label_edited_solid( num_lines, lines, pl, max_pl, xform, ip )
+int *num_lines;
+point_t *lines;
+struct rt_point_labels	pl[];
+int			max_pl;
+CONST mat_t		xform;
+struct rt_db_internal	*ip;
 {
 	register int	i;
 	point_t		work;
@@ -8451,11 +8489,11 @@ label_edited_solid(
  *	 0	OK
  */
 int
-rt_arb_calc_planes(
-	plane_t			planes[6],
-	struct rt_arb_internal	*arb,
-	int			type,
-	const struct bn_tol	*tol)
+rt_arb_calc_planes( planes, arb, type, tol )
+plane_t			planes[6];
+struct rt_arb_internal	*arb;
+int			type;
+CONST struct bn_tol	*tol;
 {
 	register int i, p1, p2, p3;
 
@@ -8487,7 +8525,8 @@ rt_arb_calc_planes(
 
 /* -------------------------------- */
 void
-sedit_vpick( point_t v_pos )
+sedit_vpick( v_pos )
+point_t	v_pos;
 {
 	point_t	m_pos;
 	int	surfno, u, v;
@@ -8675,13 +8714,13 @@ CONST point_t			ref_pt;
  *	transformed into 2 space projection plane coordinates.
  */
 int
-nurb_closest2d(
-	int				*surface,
-	int				*uval,
-	int				*vval,
-	const struct rt_nurb_internal	*spl,
-	const point_t			ref_pt,
-	const mat_t			mat)
+nurb_closest2d(surface, uval, vval, spl, ref_pt, mat )
+int				*surface;
+int				*uval;
+int				*vval;
+CONST struct rt_nurb_internal	*spl;
+CONST point_t			ref_pt;
+CONST mat_t			mat;
 {
 	struct face_g_snurb	*srf;
 	point_t		ref_2d;
@@ -8966,6 +9005,7 @@ Tcl_Interp *interp;
 int argc;
 char **argv;
 {
+  int i;
   int status;
   struct rt_db_internal ces_int;
   Tcl_Obj *pto;
@@ -8995,7 +9035,7 @@ char **argv;
 
     pnto = Tcl_NewObj();
     /* insert solid name, type and parameters */
-    Tcl_AppendStringsToObj(pnto, LAST_SOLID(illump)->d_namep, " ",
+    Tcl_AppendStringsToObj(pnto, illump->s_path[illump->s_last]->d_namep, " ",
 			   Tcl_GetStringFromObj(pto, (int *)0), (char *)0);
 
     Tcl_SetObjResult(interp, pnto);
@@ -9019,12 +9059,8 @@ char **argv;
 
   pnto = Tcl_NewObj();
   /* insert full pathname */
-  {
-  	struct bu_vls str;
-  	bu_vls_init(&str);
-  	db_path_to_vls(&str, &illump->s_fullpath);
-        Tcl_AppendStringsToObj(pnto, bu_vls_addr(&str), NULL );
-  	bu_vls_free(&str);
+  for(i=0; i <= illump->s_last; i++){
+    Tcl_AppendStringsToObj(pnto, "/", illump->s_path[i]->d_namep, (char *)0);
   }
 
   /* insert solid type and parameters */
@@ -9032,7 +9068,8 @@ char **argv;
 
   Tcl_SetObjResult(interp, pnto);
 
-  rt_db_free_internal( &ces_int, &rt_uniresource );
+  if( ces_int.idb_ptr )
+    rt_functab[ces_int.idb_type].ft_ifree( &ces_int );
 
   return status;
 }
@@ -9118,9 +9155,6 @@ char **argv;
   return TCL_OK;
 }
 
-/*
- *			F _ S E D I T _ R E S E T
- */
 int
 f_sedit_reset(clientData, interp, argc, argv)
 ClientData clientData;
@@ -9128,6 +9162,7 @@ Tcl_Interp *interp;
 int argc;
 char **argv;
 {
+  int id;
   struct bu_vls vls;
 
   if(state != ST_S_EDIT)
@@ -9142,14 +9177,17 @@ char **argv;
   }
 
   /* free old copy */
-  rt_db_free_internal( &es_int, &rt_uniresource );
+  if(es_int.idb_ptr)
+    rt_functab[es_int.idb_type].ft_ifree(&es_int);
 
   /* read in a fresh copy */
-  if( rt_db_get_internal( &es_int, LAST_SOLID(illump),
-   dbip, NULL, &rt_uniresource ) < 0 )  {
-    Tcl_AppendResult(interp, "sedit_reset(",
-   			LAST_SOLID(illump)->d_namep,
+  RT_INIT_DB_INTERNAL(&es_int);
+  id = rt_id_solid( &es_ext );
+  if( rt_functab[id].ft_import( &es_int, &es_ext, bn_mat_identity, dbip ) < 0 )  {
+    Tcl_AppendResult(interp, "init_sedit(", illump->s_path[illump->s_last]->d_namep,
 		     "):  solid import failure\n", (char *)NULL);
+    if( es_int.idb_ptr )  rt_functab[id].ft_ifree( &es_int );
+    db_free_external( &es_ext );
     return TCL_ERROR;				/* FAIL */
   }
   RT_CK_DB_INTERNAL( &es_int );
@@ -9274,7 +9312,7 @@ f_oedit_apply(clientData, interp, argc, argv)
 
 	/* Save aggregate path matrix */
 	bn_mat_idn(es_mat);
-	pathHmat(illump, es_mat, illump->s_fullpath.fp_len-2);
+	pathHmat(illump, es_mat, illump->s_last-1);
 
 	/* get the inverse matrix */
 	bn_mat_inv(es_invmat, es_mat);

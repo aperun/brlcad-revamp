@@ -121,7 +121,11 @@ rt_log("rt_shootray:  defaulting a_resource to &rt_uniresource\n");
 		VPRINT("Dir", ap->a_ray.r_dir);
 	}
 
+	/* Since this count provides the RTFM, it must be semaphored */
+	RES_ACQUIRE( &rt_g.res_stats );
 	ap->a_rt_i->rti_nrays++;
+	RES_RELEASE( &rt_g.res_stats );
+
 	if( ap->a_rt_i->needprep )
 		rt_prep(ap->a_rt_i);
 

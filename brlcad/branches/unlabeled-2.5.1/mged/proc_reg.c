@@ -23,12 +23,12 @@
 static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
-#include	<math.h>
+#include <math.h>
 #include "./machine.h"	/* special copy */
-#include "../h/vmath.h"
-#include "../h/db.h"
-#include "ged.h"
-#include "dm.h"
+#include "vmath.h"
+#include "db.h"
+#include "./ged.h"
+#include "./dm.h"
 
 static void	center(), cpoint(), dwreg(), ellin(), move(), points(),
 		regin(), solin(), solpl(), tgcin(), tplane(),
@@ -1334,39 +1334,4 @@ solpl(lmemb,umemb)
 
 		mlc[id]=lc-1;
 	}
-}
-
-
-
-/* TYPE_ARB()	returns specific ARB type of record rec.  The record rec
- *		is also rearranged to "standard" form.
- */
-type_arb( rec )
-union record *rec;
-{
-	int i;
-	static int uvec[8], svec[11];
-
-	if( rec->s.s_type != GENARB8 )
-		return( 0 );
-
-	input = *rec;		/* copy */
-
-	/* convert input record to points */
-	points();
-
-	if( (i = cgarbs(uvec, svec)) == 0 )
-		return(0);
-
-	if( redoarb(uvec, svec, i) == 0 )
-		return( 0 );
-
-	/* convert to vectors in the rec record */
-	VMOVE(&rec->s.s_values[0], &input.s.s_values[0]);
-	for(i=3; i<=21; i+=3) {
-		VSUB2(&rec->s.s_values[i], &input.s.s_values[i], &input.s.s_values[0]);
-	}
-
-	return( input.s.s_cgtype );
-
 }

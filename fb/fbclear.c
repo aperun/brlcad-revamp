@@ -25,7 +25,7 @@ static char RCSid[] = "@(#)$Header$ (BRL)";
 #include "fb.h"
 
 FBIO	*fbp;
-int	fbsize = 0;		/* Use FB's "default" size */
+int	fbsize = 512;
 
 #define u_char	unsigned char
 

@@ -3,7 +3,6 @@
  *  
  *  This header file contains the esolid structure definition,
  *  which holds all the information necessary for solid editing.
- *  Storage is actually allocated in edsol.c
  *  
  *  Author -
  *	Kieth A Applin
@@ -22,13 +21,13 @@
  */
 
 /* data for solid editing */
-extern union record es_rec;		/* current solid record */
-extern union record es_orig;		/* original solid record */
+union record es_rec;		/* current solid record */
+union record es_orig;		/* original solid record */
 #define es_name	es_rec.s.s_name
 #define es_type	es_rec.s.s_cgtype	/* COMGEOM solid type */
 #define es_gentype es_rec.s.s_type	/* GED general solid type */
 
-extern int     es_edflag;		/* type of editing for this solid */
+int     es_edflag;		/* type of editing for this solid */
 #define IDLE	0
 #define STRANS	1
 #define SSCALE	2
@@ -45,11 +44,11 @@ extern int     es_edflag;		/* type of editing for this solid */
 #define ROTFACE 13
 #define CHGMENU 14
 #define SETUP_ROTFACE 15
-extern float	es_scale;		/* scale factor */
-extern float 	es_para[3];		/* keyboard input parameter changes */
-extern float	es_peqn[7][4];		/* ARBs defining plane equations */
-extern float	es_m[3];		/* edge(line) slope */
-extern int	es_menu;		/* item selected from menu */
+float	es_scale;		/* scale factor */
+float 	es_para[3];		/* keyboard input parameter changes */
+float	es_peqn[7][4];		/* ARBs defining plane equations */
+float	es_m[3];		/* edge(line) slope */
+int	es_menu;		/* item selected from menu */
 #define MENUH		1
 #define MENUR1		2
 #define MENUR2		3
@@ -69,11 +68,11 @@ extern int	es_menu;		/* item selected from menu */
 #define EDGEMENU	17
 #define MOVEMENU	18
 #define ROTMENU		19
-extern mat_t	es_mat;			/* accumulated matrix of path */ 
-extern mat_t 	es_invmat;		/* inverse of es_mat   KAA */
-extern int	es_nlines;		/* # lines in printed display */
+mat_t	es_mat;			/* accumulated matrix of path */ 
+mat_t 	es_invmat;		/* inverse of es_mat   KAA */
+int	es_nlines;		/* # lines in printed display */
 #define ES_LINELEN	128		/* len of display text lines */
-extern char	es_display[ES_LINELEN*10];/* buffer for lines of display */
+char	es_display[ES_LINELEN*10];/* buffer for lines of display */
 
 extern int arb_faces[5][24];	/* from edarb.c */
 extern int arb_planes[5][24];	/* from edarb.c */

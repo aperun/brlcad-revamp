@@ -1,11 +1,10 @@
 /*
- *			P I X B A C K G N D . C
+ *			F B B A C K G N D . C
  *
  * Function -
  *	Backgound Maker
  *
  *  Given Hue and Saturation for background, make top light and bottom dark.
- *  Generates a pix(5) stream on stdout.
  *
  *  Author -
  *	Michael John Muuss
@@ -24,6 +23,7 @@ static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include <stdio.h>	
+#include "fb.h"
 
 #ifdef SYSV
 #define bzero(p,cnt)	memset(p,'\0',cnt);
@@ -34,44 +34,41 @@ extern char	*optarg;
 extern int	optind;
 extern double	atof();
 
-double col[3] = {128,128,128};		/* r,g,b */
-double hsv[3];				/* h,s,v */
+int curchan = 0;	/* 0=r, 1=g, 2=b */
 
-int	file_width = 512;
-int	file_height = 512;
+double col[6] = {128,128,128};		/* r,g,b h,s,v */
+
+int	screen_width = 512;
+int	screen_height = 512;
+
+RGBpixel pix;
 
 double	deltav;
 int	title_height = 80;
 int	h_start = 240;
 int	h_end = 50;
 
+FBIO *fbp;
+
+#define FILL(r,g,b)	{ register RGBpixel *pp; \
+	pix[RED]=r; pix[GRN]=g; pix[BLU]=b; \
+	for( pp = (RGBpixel *)&buf[screen_width-1][RED]; pp >= buf; pp-- ) \
+		COPYRGB(*pp, pix); }
+
 char usage[] = "\
-Usage:  pixbackgnd [-h] [-s squaresize] [-w width] [-n height]\n\
-	[-t title_height]\n\
-	hue saturation\n\
-or	r g b\n";
+Usage:  fbbackgnd [-h] [-t title_height] hue saturation\n";
 
 get_args( argc, argv )
 register char **argv;
 {
 	register int c;
 
-	while ( (c = getopt( argc, argv, "hs:w:n:t:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "ht:" )) != EOF )  {
 		switch( c )  {
 		case 'h':
 			/* high-res */
-			file_height = file_width = 1024;
+			screen_height = screen_width = 1024;
 			title_height = 90;
-			break;
-		case 's':
-			/* square file size */
-			file_height = file_width = atoi(optarg);
-			break;
-		case 'w':
-			file_width = atoi(optarg);
-			break;
-		case 'n':
-			file_height = atoi(optarg);
 			break;
 		case 't':
 			/* Title area size */
@@ -82,24 +79,8 @@ register char **argv;
 			return(0);
 		}
 	}
-	/* when optind >= argc, we have run out of args */
-	if( optind+1 >= argc )
-		return(0);		/* only 0 or 1 args */
-	if( optind+2 == argc )  {
-		/* Paramaters are H S */
-		hsv[0] = atof(argv[optind++]);
-		hsv[1] = atof(argv[optind]);
-		hsv[2] = h_start;
-
-		hsvrgb( hsv, col );
-	} else {
-		/* parameters are R G B */
-		col[0] = atof(argv[optind++]);
-		col[1] = atof(argv[optind++]);
-		col[2] = atof(argv[optind++]);
-
-		rgbhsv( col, hsv );
-	}
+	if( argc < optind+1 )
+		return(0);		/* missing args */
 	return(1);			/* OK */
 }
 
@@ -108,68 +89,50 @@ char **argv;
 {
 	register int i;
 	register int line;
-	register unsigned char *horiz_buf;
-	unsigned char *vert_buf;
-	register unsigned char *vp;
+	register RGBpixel *buf;
 
-	if ( !get_args( argc, argv ) || isatty(fileno(stdout)) )  {
+	if ( !get_args( argc, argv ) )  {
 		(void)fputs(usage, stderr);
 		exit( 1 );
 	}
 
-	horiz_buf = (unsigned char *)malloc( file_width * 3 );
-	vert_buf = (unsigned char *)malloc( file_height * 3 );
+	if( (fbp = fb_open( NULL, screen_width, screen_height )) == FBIO_NULL )  {
+		fprintf(stderr, "fbbackgnd:  fb_open failed\n");
+		exit(1);
+	}
 
-	/*
-	 *  First stage -- prepare the vert_buf with one pixel
-	 *  for each scanline, since each scanline has uniform color.
-	 *  For ease of thinking about it, this is done top-to-bottom.
-	 */
+	/* Adjust to what we got */
+	screen_height = fb_getheight(fbp);
+	screen_width = fb_getwidth(fbp);
+	buf = (RGBpixel *)malloc( screen_width * sizeof(RGBpixel) );
+
+	col[3] = atof(argv[optind++]);
+	col[4] = atof(argv[optind]);
+	col[5] = h_start;
+	hsvrgb( &col[3], col );
+
 	line = 0;
-	vp = vert_buf;
 	if( title_height > 0 )  {
-		/* Make top area with initial HSV */
-		for( ; line<title_height; line++ )  {
-			*vp++ = col[0];
-			*vp++ = col[1];
-			*vp++ = col[2];
-		}
+		/* Write out top area with initial HSV */
+		FILL( col[RED], col[GRN], col[BLU] );
+		for( ; line<title_height; line++ )
+			fb_write( fbp, 0, screen_height-1-line, buf, screen_width );
 
-		/* A white stripe, 4 lines high */
-		for( i=0; i<4; i++,line++ )  {
-			*vp++ = 250;
-			*vp++ = 250;
-			*vp++ = 250;
-		}
+		/* A white stripe, 4 lines wide */
+		FILL( 250, 250, 250 );
+		for( i=0; i<4; i++,line++ )
+			fb_write( fbp, 0, screen_height-1-line, buf, screen_width );
 	}
 
 	/* Do rest with V dropping from start to end values */
-	deltav = (hsv[2]-h_end) / (double)(file_height-line);
+	col[5] = h_start;
+	deltav = (h_start-h_end) / (double)(screen_height-line);
 
-	for( ; line<file_height; line++ )  {
-		hsv[2] -= deltav;
-		hsvrgb( hsv, col );
-		*vp++ = col[0];
-		*vp++ = col[1];
-		*vp++ = col[2];
-	}
-
-	/*
-	 *  Second stage -- flood each value across the horiz_buf
-	 *  and write the scanline out.  Here we proceed bottom-to-top
-	 *  for pix(5) format.
-	 */
-	for( line = file_height-1; line >= 0; line-- )  {
-		register unsigned char *op;
-
-		vp = &vert_buf[line*3];
-		op = &horiz_buf[(file_width*3)-1];
-		while( op > horiz_buf )  {
-			*op-- = vp[2];
-			*op-- = vp[1];
-			*op-- = *vp;
-		}
-		write( 1, horiz_buf, file_width*3 );
+	for( ; line<screen_height; line++ )  {
+		col[5] -= deltav;
+		hsvrgb( &col[3], col );
+		FILL( col[RED], col[GRN], col[BLU] );
+		fb_write( fbp, 0, screen_height-1-line, buf, screen_width );
 	}
 	exit(0);
 }
@@ -186,9 +149,9 @@ register double *hsv;
 	static double h;
         double dif;
 
-        r = rgb[0];
-        g = rgb[1];
-        b = rgb[2];
+        r = rgb[RED];
+        g = rgb[GRN];
+        b = rgb[BLU];
         v = ((r > g) ? r : g);
         v = ((v > b) ? v : b);
         x = ((r < g) ? r : g);
@@ -288,7 +251,7 @@ register double *rgb;
         else
             r = g = b = hsv[2];
 
-        rgb[0] = r;
-        rgb[1] = g;
-        rgb[2] = b;
+        rgb[RED] = r;
+        rgb[GRN] = g;
+        rgb[BLU] = b;
 }

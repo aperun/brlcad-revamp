@@ -39,7 +39,7 @@ char	*yprefix = NULL;
 char	null_str = '\0';
 
 char usage[] = "\
-Usage: fbpoint [-h] [-x[prefix]] [-y[prefix]] [initx inity]\n";
+Usage: fbpoint [-h] [-x[prefix]] [-y[prefix]]\n";
 
 static char *help = "\
 Char:   Command:                                                \r\n\
@@ -51,23 +51,21 @@ H ^B	Left (many)\r\n\
 J ^N	Down (many)\r\n\
 K ^P	Up (many)\r\n\
 L ^F	Right (many)\r\n\
-q Q cr	QUIT\r\n\
+q Q	QUIT\r\n\
 ";
 
 SimpleInput()	/* ==== get keyboard input.	*/
 {
-	register char ch;
-	static char c;
+	char ch;
 
-	if( read( 0, &c, 1) <= 0 ) {
+	if( read( 0, &ch, 1) <= 0 ) {
 		Run = 0;
 		return;
 	}
-	ch = c & ~0x80;		/* strip off parity bit */
 	switch( ch ) {
 	default:
 		fprintf( stderr,
-		"Unknown command(%c:0%o). Type '?' for help!           \r\n",
+		"Unknown command(%c:%o). Type '?' for help!           \r\n",
 			ch, ch );
 		break;
 
@@ -77,7 +75,6 @@ SimpleInput()	/* ==== get keyboard input.	*/
 
 	case 'q':
 	case 'Q':
-	case '\r':
 		Run = 0;
 		return;
 #define ctl(x)	('x'&037)
@@ -125,7 +122,6 @@ char **argv;
 
 	setbuf( stderr, malloc( BUFSIZ ) );
 	width = height = 0;
-	curX = curY = -1;
 
 	while( argc > 1 ) {
 		if( strcmp( argv[1], "-h" ) == 0 ) {
@@ -140,20 +136,6 @@ char **argv;
 			yprefix = &argv[1][2];
 		} else
 			break;
-		argc--;
-		argv++;
-	}
-	/*
-	 * Check for optional starting coordinate.
-	 * Test for bad flags while we're at it.
-	 */
-	if( argc > 1 && argv[1][0] != '-' ) {
-		curX = atoi( argv[1] );
-		argc--;
-		argv++;
-	}
-	if( argc > 1 && argv[1][0] != '-' ) {
-		curY = atoi( argv[1] );
 		argc--;
 		argv++;
 	}
@@ -173,11 +155,8 @@ char **argv;
 
 	JumpSpeed = fb_getwidth(fbp)/16;
 	if( JumpSpeed < 2 )  JumpSpeed = 2;
-	/* check for default starting positions */
-	if( curX < 0 )
-		curX = fb_getwidth(fbp)/2;
-	if( curY < 0 )
-		curY = fb_getheight(fbp)/2;
+	curX = fb_getwidth(fbp)/2;
+	curY = fb_getheight(fbp)/2;
 	oldX = oldY = -1;
 
 	/* Set RAW mode */

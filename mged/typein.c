@@ -472,7 +472,7 @@ int numpts;
 		}
 		args += argcnt;
 	}
-	vals = numpts*3;
+	vals = 24;
 	return(0);	/* success */
 }
 

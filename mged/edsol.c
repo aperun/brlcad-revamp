@@ -59,23 +59,6 @@ static void 	arb6_rot_face(), arb5_rot_face(), arb4_rot_face(), arb_control();
 void pscale();
 static short int fixv;		/* used in ROTFACE,f_eqn(): fixed vertex */
 
-/* data for solid editing */
-union record es_rec;		/* current solid record */
-union record es_orig;		/* original solid record */
-int     es_edflag;		/* type of editing for this solid */
-float	es_scale;		/* scale factor */
-float 	es_para[3];		/* keyboard input parameter changes */
-float	es_peqn[7][4];		/* ARBs defining plane equations */
-float	es_m[3];		/* edge(line) slope */
-int	es_menu;		/* item selected from menu */
-mat_t	es_mat;			/* accumulated matrix of path */ 
-mat_t 	es_invmat;		/* inverse of es_mat   KAA */
-int	es_nlines;		/* # lines in printed display */
-char	es_display[ES_LINELEN*10];/* buffer for lines of display */
-
-extern int arb_faces[5][24];	/* from edarb.c */
-extern int arb_planes[5][24];	/* from edarb.c */
-
 struct menu_item  edge8_menu[] = {
 	{ "ARB8 EDGES", (void (*)())NULL, 0 },
 	{ "move edge 12", arb8_edge, 0 },
@@ -221,7 +204,7 @@ struct menu_item mv7_menu[] = {
 struct menu_item mv6_menu[] = {
 	{ "ARB6 FACES", (void (*)())NULL, 0 },
 	{ "move face 1234", arb6_mv_face, 1 },
-	{ "move face 2365", arb6_mv_face, 2 },
+	{ "move face 236" , arb6_mv_face, 2 },
 	{ "move face 1564", arb6_mv_face, 3 },
 	{ "move face 125" , arb6_mv_face, 4 },
 	{ "move face 346" , arb6_mv_face, 5 },
@@ -279,7 +262,7 @@ struct menu_item rot7_menu[] = {
 struct menu_item rot6_menu[] = {
 	{ "ARB6 FACES", (void (*)())NULL, 0 },
 	{ "rotate face 1234", arb6_rot_face, 1 },
-	{ "rotate face 2365", arb6_rot_face, 2 },
+	{ "rotate face 236" , arb6_rot_face, 2 },
 	{ "rotate face 1564", arb6_rot_face, 3 },
 	{ "rotate face 125" , arb6_rot_face, 4 },
 	{ "rotate face 346" , arb6_rot_face, 5 },
@@ -337,7 +320,7 @@ struct menu_item *which_menu[] = {
 short int arb_vertices[5][24] = {
 	{ 1,2,3,0, 1,2,4,0, 2,3,4,0, 1,3,4,0, 0,0,0,0, 0,0,0,0 },	/* arb4 */
 	{ 1,2,3,4, 1,2,5,0, 2,3,5,0, 3,4,5,0, 1,4,5,0, 0,0,0,0 },	/* arb5 */
-	{ 1,2,3,4, 2,3,6,5, 1,5,6,4, 1,2,5,0, 3,4,6,0, 0,0,0,0 },	/* arb6 */
+	{ 1,2,3,4, 2,3,6,0, 1,5,6,4, 1,2,5,0, 3,4,6,0, 0,0,0,0 },	/* arb6 */
 	{ 1,2,3,4, 5,6,7,0, 1,4,5,0, 2,3,7,6, 1,2,6,5, 4,3,7,5 },	/* arb7 */
 	{ 1,2,3,4, 5,6,7,8, 1,5,8,4, 2,3,7,6, 1,2,6,5, 4,3,7,8 }	/* arb8 */
 };

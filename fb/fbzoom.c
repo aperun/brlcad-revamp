@@ -102,11 +102,11 @@ RETURN	Exit\r\n";
 
 doKeyPad()
 	{ 
-	register int ch;
+	register ch;	
 
 	if( (ch = getchar()) == EOF )
-		return	0;		/* done */
-	ch &= ~0x80;			/* strip off parity bit */
+			return	0;		/* done */
+
 	switch( ch )
 		{
 	default :
@@ -131,7 +131,6 @@ doKeyPad()
 	case 'r' :	
 	case 'R' :				/* Reset */
 		(void)fb_zoom( fbp, 1, 1 );
-		zoom = 1;
 		xPan = fb_getwidth(fbp)/2;
 		yPan = fb_getheight(fbp)/2;
 		break;

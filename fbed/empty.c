@@ -1,7 +1,7 @@
 /*
-	SCCS id:	@(#) empty.c	2.3
-	Modified: 	1/5/87 at 16:52:54
-	Retrieved: 	1/5/87 at 16:58:01
+	SCCS id:	@(#) empty.c	2.1
+	Modified: 	12/9/86 at 15:55:14
+	Retrieved: 	12/26/86 at 21:54:00
 	SCCS archive:	/vld/moss/src/fbed/s.empty.c
 
 	Author:		Gary S. Moss
@@ -12,19 +12,15 @@
 */
 #if ! defined( lint )
 static
-char	sccsTag[] = "@(#) empty.c 2.3, modified 1/5/87 at 16:52:54, archive /vld/moss/src/fbed/s.empty.c";
+char	sccsTag[] = "@(#) empty.c 2.1, modified 12/9/86 at 15:55:14, archive /vld/moss/src/fbed/s.empty.c";
 #endif
-#if defined( BSD ) || defined( cray )
+
+#ifdef BSD
 #include <sys/types.h>
 #include <sys/time.h>
 #endif
 
-#if defined( sgi )
-#include <bsd/sys/types.h>
-#include <bsd/sys/time.h>
-#include "fb.h"
-#endif
-
+#ifdef SYSV
 #ifdef VLDSYSV
 /* BRL SysV under 4.2 */
 #define select	_select
@@ -34,20 +30,13 @@ struct timeval
 	long	tv_usec;	/* and microseconds */
 	};
 #else
+/* Regular SysV */
+#ifdef sgi
+#include <bsd/sys/types.h>
+#include <bsd/sys/time.h>
 #endif
-
-#ifndef FD_ZERO
-/* 4.2 does not define these */
-#ifdef cray
-#define	FD_SET(n, p)	(*p |= (n) == 0 ? 1 : (1 << (n)))
-#define FD_ZERO(p)	*p = 0
-typedef	long	fd_set;
-#else
-#define	FD_SET(n, p)	((p)->fds_bits[0] |= (n) == 0 ? 1 : (1 << (n)))
-#define FD_ZERO(p)	(p)->fds_bits[0] = 0
-/** typedef	struct fd_set { fd_mask	fds_bits[1]; } fd_set; **/
 #endif
-#endif FD_ZERO
+#endif SYSV
 
 /*	e m p t y ( )
 	Examine file descriptor for input with no time delay.
@@ -57,19 +46,17 @@ typedef	long	fd_set;
 int
 empty( fd )
 int	fd;
-	{
 #ifdef sgi
-		extern FBIO	*fbp;
-	if( fbp != FBIO_NULL && strncmp( fbp->if_name, "/dev/sgi", 8 ) == 0 )
-		return	sgi_Empty();
-	else
-#endif
-		{	static struct timeval	timeout = { 0L, 600L };
-			fd_set		readfds;
-			register int	nfound;
-		FD_ZERO( &readfds );
-		FD_SET( fd, &readfds );
-		nfound = select( fd+1, &readfds, (fd_set *)0, (fd_set *)0, &timeout );
-		return	nfound == -1 ? 1 : (nfound == 0);
-		}
+	{
+	winattach();
+	return	! qtest();
 	}
+#else	
+	{	static struct timeval	timeout = { 0L, 600L };
+		auto long	readfds = 1 << fd;
+		register int	nfound;
+	readfds = 1<<fd;
+	nfound = select( fd+1, &readfds, (fd_set *)0, (fd_set *)0, &timeout );
+	return	nfound == -1 ? 1 : (nfound == 0);
+	}
+#endif

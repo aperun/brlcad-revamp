@@ -40,15 +40,15 @@ double	rweight = 0.0;
 double	gweight = 0.0;
 double	bweight = 0.0;
 
-static char usage[] = "\
-Usage: pix-bw [-ntsc -crt -R[#] -G[#] -B[#]] [in.pix] > out.bw\n";
+static char *Usage = "usage: pix-bw [-ntsc -crt -R[#] -G[#] -B[#]] < file.pix > file.bw\n";
+/* someday: [file.pix [file.bw]] */
 
 main( argc, argv )
 int argc; char **argv;
 {
 	int	in, out, num;
 	int	multiple_colors, num_color_planes;
-	int	clip_high, clip_low;
+	int	clipped_high, clipped_low;
 	double	value;
 	FILE	*finp, *foutp;
 
@@ -83,25 +83,21 @@ int argc; char **argv;
 				break;
 			default:
 				fprintf( stderr, "pix-bw: bad flag \"%s\"\n", argv[1] );
-				fputs( usage, stderr );
+				fputs( Usage, stderr );
 				exit( 1 );
 		}
 		argc--;
 		argv++;
 	}
 
-	if( argc > 1 ) {
-		if( (finp = fopen(argv[1], "r")) == NULL ) {
-			fprintf( stderr, "pix-bw: can't open \"%s\"\n", argv[1] );
-			exit( 2 );
-		}
-	} else
-		finp = stdin;
-
+	/*
+	 * Eventually we may accept file names
+	 */
+	finp = stdin;
 	foutp = stdout;
 
-	if( isatty(fileno(finp)) || isatty(fileno(foutp)) ) {
-		fputs( usage, stderr );
+	if( isatty(fileno(finp)) ) {
+		fputs( Usage, stderr );
 		exit( 2 );
 	}
 
@@ -119,7 +115,7 @@ int argc; char **argv;
 	if( blue != 0 && bweight == 0.0 )
 		bweight = 1.0 / (double)num_color_planes;
 
-	clip_high = clip_low = 0;
+	clipped_high = clipped_low = 0;
 	while( (num = fread( ibuf, sizeof( char ), 3*1024, finp )) > 0 ) {
 		/*
 		 * The loops are repeated for efficiency...
@@ -129,10 +125,10 @@ int argc; char **argv;
 				value = rweight*ibuf[in] + gweight*ibuf[in+1] + bweight*ibuf[in+2];
 				if( value > 255.0 ) {
 					obuf[out] = 255;
-					clip_high++;
+					clipped_high++;
 				} else if( value < 0.0 ) {
 					obuf[out] = 0;
-					clip_low++;
+					clipped_low++;
 				} else
 					obuf[out] = value;
 			}
@@ -153,8 +149,8 @@ int argc; char **argv;
 		fwrite( obuf, sizeof( char ), num/3, foutp );
 	}
 
-	if( clip_high != 0 || clip_low != 0 ) {
+	if( clipped_high != 0 || clipped_low != 0 ) {
 		fprintf( stderr, "pix-bw: clipped %d high, %d, low\n",
-			clip_high, clip_low );
+			clipped_high, clipped_low );
 	}
 }

@@ -1,8 +1,8 @@
 /*
- *			N U R B  _ C I N T E R P . C
+ *			N U R B  _  I N T E R P . C
  *
- * nurb_interp.c - Interpolatopn routines for fitting NURB curves to
- *				existing data.
+ * nurb_interp.c - Interpolatopn routines for fitting NURB curves and
+ * and surfaces to existing data.
  *			
  *
  * Author:  Paul R. Stay
@@ -87,7 +87,7 @@ int dim;
  */
 void
 rt_nurb_cinterp( crv, order, data, n)
-struct cnurb	* crv;
+struct edge_g_cnurb	* crv;
 int		order;
 CONST fastf_t	* data;
 int		n;
@@ -114,19 +114,19 @@ int		n;
 	/* First set up Curve data structs */
 	/* For now we will assume that all paramerizations are uniform */
 
-	rt_nurb_kvknot( &crv->knot, order, 0.0, 1.0, (n - order));
+	rt_nurb_kvknot( &crv->k, order, 0.0, 1.0, (n - order), (struct resource *)NULL);
 	
 	/* Calculate Nodes at which the data points will be
 	 * evaluated in the curve
 	 */
 
-	rt_nurb_nodes( nodes, &crv->knot, order);
+	rt_nurb_nodes( nodes, &crv->k, order);
 
 	/* use the node values to create the interpolation matrix
     	 * which is a diagonal matrix
 	 */
 	
-	rt_nurb_interp_mat( interp_mat, &crv->knot, nodes, order, n);
+	rt_nurb_interp_mat( interp_mat, &crv->k, nodes, order, n);
 
 	/* Solve the system of equations to get the control points
 	 * Because rt_nurb_solve needs to modify the data as it works,
@@ -161,7 +161,7 @@ int		n;
  */
 void
 rt_nurb_sinterp( srf, order, data, ymax, xmax)
-struct snurb	*srf;
+struct face_g_snurb	*srf;
 int		order;
 CONST fastf_t	*data;		/* data[x,y] */
 int		ymax;		/* nrow = max Y */
@@ -169,7 +169,7 @@ int		xmax;		/* ncol = max X */
 {
 	int	x;
 	int	y;
-	struct cnurb	*crv;	/* array of cnurbs */
+	struct edge_g_cnurb	*crv;	/* array of cnurbs */
 	fastf_t		*tmp;
 	fastf_t		*cpt;	/* surface control point pointer */
 
@@ -181,8 +181,13 @@ int		xmax;		/* ncol = max X */
 	srf->l.magic = RT_SNURB_MAGIC;
 	srf->pt_type = RT_NURB_MAKE_PT_TYPE(3,RT_NURB_PT_XYZ,RT_NURB_PT_NONRAT);
 
-	rt_nurb_kvknot(&srf->u_knots, order, 0.0, 1.0, xmax - order);
-	rt_nurb_kvknot(&srf->v_knots, order, 0.0, 1.0, ymax - order);
+	/* the U knot vector replates to the points in a row
+	 * therefore you want to determin how many cols there are
+	 * similar for the V knot vector
+	 */
+
+	rt_nurb_kvknot(&srf->u, order, 0.0, 1.0, ymax - order, (struct resource *)NULL);
+	rt_nurb_kvknot(&srf->v, order, 0.0, 1.0, xmax - order, (struct resource *)NULL);
 
 	srf->ctl_points = (fastf_t *) rt_malloc(
 		sizeof(fastf_t) * xmax * ymax * 3,
@@ -192,7 +197,7 @@ int		xmax;		/* ncol = max X */
 /* _col is X, _row is Y */
 #define VAL(_col,_row)	data[((_row)*xmax+(_col))*3]
 
-	crv = (struct cnurb *)rt_calloc( sizeof(struct cnurb), ymax,
+	crv = (struct edge_g_cnurb *)rt_calloc( sizeof(struct edge_g_cnurb), ymax,
 		"rt_nurb_sinterp() crv[]");
 
 	/* Interpolate the data across the rows, fitting a curve to each. */
@@ -205,7 +210,7 @@ int		xmax;		/* ncol = max X */
 	tmp = (fastf_t *)rt_malloc( sizeof(fastf_t)*3 * ymax,
 		"rt_nurb_sinterp() tmp[]");
 	for( x = 0; x < xmax; x++)  {
-		struct cnurb	ncrv;
+		struct edge_g_cnurb	ncrv;
 
 		/* copy the curve ctl points into col major format */
 		for( y = 0; y < ymax; y++)  {

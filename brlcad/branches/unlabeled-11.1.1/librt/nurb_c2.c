@@ -30,11 +30,11 @@
 void
 rt_nurb_curvature(cvp, srf, u, v)
 struct curvature *cvp;
-CONST struct snurb * srf;
+CONST struct face_g_snurb * srf;
 fastf_t	u;
 fastf_t v;
 {
-	struct snurb * us, *vs, * uus, * vvs, *uvs;
+	struct face_g_snurb * us, *vs, * uus, * vvs, *uvs;
 	fastf_t ue[4], ve[4], uue[4], vve[4], uve[4], se[4];
         fastf_t         E, F, G;                /* First Fundamental Form */
         fastf_t         L, M, N;                /* Second Fundamental form */
@@ -58,11 +58,11 @@ fastf_t v;
 	rt_nurb_s_eval(vvs, u,v, uve);
 	rt_nurb_s_eval(uvs, u,v, uve);
 
-	rt_nurb_free_snurb( us);
-	rt_nurb_free_snurb( vs);
-	rt_nurb_free_snurb( uus);
-	rt_nurb_free_snurb( vvs);
-	rt_nurb_free_snurb( uvs);
+	rt_nurb_free_snurb( us, (struct resource *)NULL);
+	rt_nurb_free_snurb( vs, (struct resource *)NULL);
+	rt_nurb_free_snurb( uus, (struct resource *)NULL);
+	rt_nurb_free_snurb( vvs, (struct resource *)NULL);
+	rt_nurb_free_snurb( uvs, (struct resource *)NULL);
 
 	if( RT_NURB_IS_PT_RATIONAL( srf->pt_type ))
 	{
@@ -131,7 +131,7 @@ fastf_t v;
 
 	if( fabs( E*G - F*F) < 0.0001 )		/* XXX */
 	{
-		rt_log("rt_nurb_curvature: first fundamental form is singular E = %g F= %g G = %g\n",
+		bu_log("rt_nurb_curvature: first fundamental form is singular E = %g F= %g G = %g\n",
 			E,F,G);
 		vec_ortho(cvp->crv_pdir, norm);	/* sanity */
 		return;

@@ -523,7 +523,7 @@ else
 fi
 
 
-# RCS: @(#) $Id: configure,v 1.1.6.1 2003-12-03 16:24:52 erikg Exp $
+# RCS: @(#) $Id: configure,v 1.1.6.2 2004-02-12 18:50:43 erikg Exp $
 
 # Recover information that Tcl computed with its configure script.
 

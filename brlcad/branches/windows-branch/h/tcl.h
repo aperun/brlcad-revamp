@@ -43,26 +43,27 @@ extern "C" {
  * win/configure.in	(as above)
  * win/tcl.m4		(not patchlevel)
  * win/makefile.vc	(not patchlevel) 2 LOC
- * win/pkgIndex.tcl	(not patchlevel, for tclregNN.dll)
+ * library/reg/pkgIndex.tcl	(not patchlevel, for tclregNN.dll)
+ * library/dde/pkgIndex.tcl	(not patchlevel, for tclddeNN.dll)
  * README		(sections 0 and 2)
  * mac/README		(2 LOC, not patchlevel)
  * win/README.binary	(sections 0-4)
  * win/README		(not patchlevel) (sections 0 and 2)
  * unix/README		(not patchlevel) (part (h))
  * unix/tcl.spec	(2 LOC Major/Minor, 1 LOC patch)
- * tests/basic.test	(not patchlevel) (version checks)
+ * tests/basic.test	(1 LOC M/M)
  * tools/tcl.hpj.in	(not patchlevel, for windows installer)
  * tools/tcl.wse.in	(for windows installer)
  * tools/tclSplash.bmp	(not patchlevel)
  */
 
 #define TCL_MAJOR_VERSION   8
-#define TCL_MINOR_VERSION   3
-#define TCL_RELEASE_LEVEL   TCL_FINAL_RELEASE
-#define TCL_RELEASE_SERIAL  2
+#define TCL_MINOR_VERSION   4
+#define TCL_RELEASE_LEVEL   TCL_ALPHA_RELEASE
+#define TCL_RELEASE_SERIAL  3
 
-#define TCL_VERSION	    "8.3"
-#define TCL_PATCH_LEVEL	    "8.3.2"
+#define TCL_VERSION	    "8.4"
+#define TCL_PATCH_LEVEL	    "8.4a3"
 
 /*
  * The following definitions set up the proper options for Windows
@@ -70,7 +71,8 @@ extern "C" {
  */
 
 #ifndef __WIN32__
-#   if defined(_WIN32) || defined(WIN32)
+#   if defined(_WIN32) || defined(WIN32) || \
+       defined(__CYGWIN__) || defined(__MINGW32__)
 #	define __WIN32__
 #   endif
 #endif
@@ -267,19 +269,18 @@ extern "C" {
  */
 
 #undef _ANSI_ARGS_
-#undef const
+#undef CONST
 #ifndef INLINE
 #   define INLINE
 #endif
 
-  /* const is deprecated */
 #if ((defined(__STDC__) || defined(SABER)) && !defined(NO_PROTOTYPE)) || defined(__cplusplus) || defined(USE_PROTOTYPE)
 #   define _USING_PROTOTYPES_ 1
 #   define _ANSI_ARGS_(x)	x
-#   define const const
+#   define CONST const
 #else
 #   define _ANSI_ARGS_(x)	()
-#   define const
+#   define CONST
 #endif
 
 /*
@@ -337,6 +338,15 @@ typedef long LONG;
 #define _CLIENTDATA
 #endif
 
+/*
+ * This flag controls whether binary compatability is maintained with
+ * extensions built against a previous version of Tcl. This is true
+ * by default.
+ */
+#ifndef TCL_PRESERVE_BINARY_COMPATABILITY
+#define TCL_PRESERVE_BINARY_COMPATABILITY 1
+#endif
+    
 /*
  * Data structures defined opaquely in this module. The definitions below
  * just provide dummy types. A few fields are made visible in Tcl_Interp
@@ -526,6 +536,15 @@ typedef struct stat *Tcl_Stat_;
 #define TCL_RESULT_SIZE 200
 
 /*
+ * Flags to control what substitutions are performed by Tcl_SubstObj():
+ */
+
+#define TCL_SUBST_COMMANDS	001
+#define TCL_SUBST_VARIABLES	002
+#define TCL_SUBST_BACKSLASHES	004
+#define TCL_SUBST_ALL		007
+
+/*
  * Argument descriptors for math function callbacks in expressions:
  */
 
@@ -563,7 +582,7 @@ typedef void (Tcl_CmdTraceProc) _ANSI_ARGS_((ClientData clientData,
 typedef void (Tcl_DupInternalRepProc) _ANSI_ARGS_((struct Tcl_Obj *srcPtr, 
         struct Tcl_Obj *dupPtr));
 typedef int (Tcl_EncodingConvertProc)_ANSI_ARGS_((ClientData clientData,
-	const char *src, int srcLen, int flags, Tcl_EncodingState *statePtr,
+	CONST char *src, int srcLen, int flags, Tcl_EncodingState *statePtr,
 	char *dst, int dstLen, int *srcReadPtr, int *dstWrotePtr,
 	int *dstCharsPtr));
 typedef void (Tcl_EncodingFreeProc)_ANSI_ARGS_((ClientData clientData));
@@ -586,9 +605,9 @@ typedef int (Tcl_MathProc) _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, Tcl_Value *args, Tcl_Value *resultPtr));
 typedef void (Tcl_NamespaceDeleteProc) _ANSI_ARGS_((ClientData clientData));
 typedef int (Tcl_ObjCmdProc) _ANSI_ARGS_((ClientData clientData,
-	Tcl_Interp *interp, int objc, struct Tcl_Obj *const objv[]));
+	Tcl_Interp *interp, int objc, struct Tcl_Obj *CONST objv[]));
 typedef int (Tcl_PackageInitProc) _ANSI_ARGS_((Tcl_Interp *interp));
-typedef void (Tcl_PanicProc) _ANSI_ARGS_(TCL_VARARGS(char *, format));
+typedef void (Tcl_PanicProc) _ANSI_ARGS_(TCL_VARARGS(CONST char *, format));
 typedef void (Tcl_TcpAcceptProc) _ANSI_ARGS_((ClientData callbackData,
         Tcl_Channel chan, char *address, int port));
 typedef void (Tcl_TimerProc) _ANSI_ARGS_((ClientData clientData));
@@ -597,9 +616,13 @@ typedef int (Tcl_SetFromAnyProc) _ANSI_ARGS_((Tcl_Interp *interp,
 typedef void (Tcl_UpdateStringProc) _ANSI_ARGS_((struct Tcl_Obj *objPtr));
 typedef char *(Tcl_VarTraceProc) _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, char *part1, char *part2, int flags));
+typedef void (Tcl_CommandTraceProc) _ANSI_ARGS_((ClientData clientData,
+	Tcl_Interp *interp, CONST char *oldName, CONST char *newName,
+	int flags));
 typedef void (Tcl_CreateFileHandlerProc) _ANSI_ARGS_((int fd, int mask,
 	Tcl_FileProc *proc, ClientData clientData));
 typedef void (Tcl_DeleteFileHandlerProc) _ANSI_ARGS_((int fd));
+typedef void (Tcl_MainLoopProc) _ANSI_ARGS_((void));
 
 /*
  * The following structure represents a type of object, which is a
@@ -920,6 +943,17 @@ typedef struct Tcl_DString {
 #define TCL_INTERP_DESTROYED	 0x100
 #define TCL_LEAVE_ERR_MSG	 0x200
 #define TCL_TRACE_ARRAY		 0x800
+#ifndef TCL_REMOVE_OBSOLETE_TRACES
+/* Required to support old variable/vdelete/vinfo traces */
+#define TCL_TRACE_OLD_STYLE	 0x1000
+#endif
+
+/*
+ * Flag values passed to command-related procedures.
+ */
+
+#define TCL_TRACE_RENAME 0x2000
+#define TCL_TRACE_DELETE 0x4000
 
 /*
  * The TCL_PARSE_PART1 flag is deprecated and has no effect. 
@@ -944,13 +978,30 @@ typedef struct Tcl_DString {
 #define TCL_LINK_READ_ONLY	0x80
 
 /*
- * Forward declaration of Tcl_HashTable.  Needed by some C++ compilers
- * to prevent errors when the forward reference to Tcl_HashTable is
- * encountered in the Tcl_HashEntry structure.
+ * Forward declarations of Tcl_HashTable and related types.
  */
 
-#ifdef __cplusplus
-struct Tcl_HashTable;
+typedef struct Tcl_HashKeyType Tcl_HashKeyType;
+typedef struct Tcl_HashTable Tcl_HashTable;
+typedef struct Tcl_HashEntry Tcl_HashEntry;
+    
+typedef unsigned int (Tcl_HashKeyProc) _ANSI_ARGS_((Tcl_HashTable *tablePtr,
+	VOID *keyPtr));
+typedef int (Tcl_CompareHashKeysProc) _ANSI_ARGS_((VOID *keyPtr,
+	Tcl_HashEntry *hPtr));
+typedef Tcl_HashEntry *(Tcl_AllocHashEntryProc) _ANSI_ARGS_((
+	Tcl_HashTable *tablePtr, VOID *keyPtr));
+typedef void (Tcl_FreeHashEntryProc) _ANSI_ARGS_((Tcl_HashEntry *hPtr));
+
+/*
+ * This flag controls whether the hash table stores the hash of a key, or
+ * recalculates it. There should be no reason for turning this flag off
+ * as it is completely binary and source compatible unless you directly
+ * access the bucketPtr member of the Tcl_HashTableEntry structure. This
+ * member has been removed and the space used to store the hash value.
+ */
+#ifndef TCL_HASH_KEY_STORE_HASH
+#define TCL_HASH_KEY_STORE_HASH 1
 #endif
 
 /*
@@ -959,18 +1010,30 @@ struct Tcl_HashTable;
  * defined below.
  */
 
-typedef struct Tcl_HashEntry {
-    struct Tcl_HashEntry *nextPtr;	/* Pointer to next entry in this
+struct Tcl_HashEntry {
+    Tcl_HashEntry *nextPtr;		/* Pointer to next entry in this
 					 * hash bucket, or NULL for end of
 					 * chain. */
-    struct Tcl_HashTable *tablePtr;	/* Pointer to table containing entry. */
-    struct Tcl_HashEntry **bucketPtr;	/* Pointer to bucket that points to
+    Tcl_HashTable *tablePtr;		/* Pointer to table containing entry. */
+#if TCL_HASH_KEY_STORE_HASH
+#   if TCL_PRESERVE_BINARY_COMPATABILITY
+    VOID *hash;				/* Hash value, stored as pointer to
+					 * ensure that the offsets of the
+					 * fields in this structure are not
+					 * changed. */
+#   else
+    unsigned int hash;			/* Hash value. */
+#   endif
+#else
+    Tcl_HashEntry **bucketPtr;		/* Pointer to bucket that points to
 					 * first entry in this entry's chain:
 					 * used for deleting the entry. */
+#endif
     ClientData clientData;		/* Application stores something here
 					 * with Tcl_SetHashValue. */
     union {				/* Key has one of these forms: */
 	char *oneWordValue;		/* One-word value for key. */
+        Tcl_Obj *objPtr;		/* Tcl_Obj * key value. */
 	int words[1];			/* Multiple integer words for key.
 					 * The actual size will be as large
 					 * as necessary for this table's
@@ -979,8 +1042,64 @@ typedef struct Tcl_HashEntry {
 					 * will be as large as needed to hold
 					 * the key. */
     } key;				/* MUST BE LAST FIELD IN RECORD!! */
-} Tcl_HashEntry;
+};
 
+/*
+ * Flags used in Tcl_HashKeyType.
+ *
+ * TCL_HASH_KEY_RANDOMIZE_HASH:
+ *				There are some things, pointers for example
+ *				which don't hash well because they do not use
+ *				the lower bits. If this flag is set then the
+ *				hash table will attempt to rectify this by
+ *				randomising the bits and then using the upper
+ *				N bits as the index into the table.
+ */
+#define TCL_HASH_KEY_RANDOMIZE_HASH 0x1
+    
+/*
+ * Structure definition for the methods associated with a hash table
+ * key type.
+ */
+#define TCL_HASH_KEY_TYPE_VERSION 1
+struct Tcl_HashKeyType {
+    int version;		/* Version of the table. If this structure is
+				 * extended in future then the version can be
+				 * used to distinguish between different
+				 * structures. 
+				 */
+
+    int flags;			/* Flags, see above for details. */
+    
+    /* Calculates a hash value for the key. If this is NULL then the pointer
+     * itself is used as a hash value.
+     */
+    Tcl_HashKeyProc *hashKeyProc;
+
+    /* Compares two keys and returns zero if they do not match, and non-zero
+     * if they do. If this is NULL then the pointers are compared.
+     */
+    Tcl_CompareHashKeysProc *compareKeysProc;
+
+    /* Called to allocate memory for a new entry, i.e. if the key is a
+     * string then this could allocate a single block which contains enough
+     * space for both the entry and the string. Only the key field of the
+     * allocated Tcl_HashEntry structure needs to be filled in. If something
+     * else needs to be done to the key, i.e. incrementing a reference count
+     * then that should be done by this function. If this is NULL then Tcl_Alloc
+     * is used to allocate enough space for a Tcl_HashEntry and the key pointer
+     * is assigned to key.oneWordValue.
+     */
+    Tcl_AllocHashEntryProc *allocEntryProc;
+
+    /* Called to free memory associated with an entry. If something else needs
+     * to be done to the key, i.e. decrementing a reference count then that
+     * should be done by this function. If this is NULL then Tcl_Free is used
+     * to free the Tcl_HashEntry.
+     */
+    Tcl_FreeHashEntryProc *freeEntryProc;
+};
+    
 /*
  * Structure definition for a hash table.  Must be in tcl.h so clients
  * can allocate space for these structures, but clients should never
@@ -988,7 +1107,7 @@ typedef struct Tcl_HashEntry {
  */
 
 #define TCL_SMALL_HASH_TABLE 4
-typedef struct Tcl_HashTable {
+struct Tcl_HashTable {
     Tcl_HashEntry **buckets;		/* Pointer to bucket array.  Each
 					 * element points to first entry in
 					 * bucket's hash chain, or NULL. */
@@ -1007,16 +1126,20 @@ typedef struct Tcl_HashTable {
     int mask;				/* Mask value used in hashing
 					 * function. */
     int keyType;			/* Type of keys used in this table. 
-					 * It's either TCL_STRING_KEYS,
-					 * TCL_ONE_WORD_KEYS, or an integer
-					 * giving the number of ints that
-                                         * is the size of the key.
+					 * It's either TCL_CUSTOM_KEYS,
+					 * TCL_STRING_KEYS, TCL_ONE_WORD_KEYS,
+					 * or an integer giving the number of
+					 * ints that is the size of the key.
 					 */
-    Tcl_HashEntry *(*findProc) _ANSI_ARGS_((struct Tcl_HashTable *tablePtr,
-	    const char *key));
-    Tcl_HashEntry *(*createProc) _ANSI_ARGS_((struct Tcl_HashTable *tablePtr,
-	    const char *key, int *newPtr));
-} Tcl_HashTable;
+#if TCL_PRESERVE_BINARY_COMPATABILITY
+    Tcl_HashEntry *(*findProc) _ANSI_ARGS_((Tcl_HashTable *tablePtr,
+	    CONST char *key));
+    Tcl_HashEntry *(*createProc) _ANSI_ARGS_((Tcl_HashTable *tablePtr,
+	    CONST char *key, int *newPtr));
+#endif
+    Tcl_HashKeyType *typePtr;		/* Type of the keys used in the
+					 * Tcl_HashTable. */
+};
 
 /*
  * Structure definition for information used to keep track of searches
@@ -1033,10 +1156,36 @@ typedef struct Tcl_HashSearch {
 
 /*
  * Acceptable key types for hash tables:
+ *
+ * TCL_STRING_KEYS:		The keys are strings, they are copied into
+ *				the entry.
+ * TCL_ONE_WORD_KEYS:		The keys are pointers, the pointer is stored
+ *				in the entry.
+ * TCL_CUSTOM_TYPE_KEYS:	The keys are arbitrary types which are copied
+ *				into the entry.
+ * TCL_CUSTOM_PTR_KEYS:		The keys are pointers to arbitrary types, the
+ *				pointer is stored in the entry.
+ *
+ * While maintaining binary compatability the above have to be distinct
+ * values as they are used to differentiate between old versions of the
+ * hash table which don't have a typePtr and new ones which do. Once binary
+ * compatability is discarded in favour of making more wide spread changes
+ * TCL_STRING_KEYS can be the same as TCL_CUSTOM_TYPE_KEYS, and
+ * TCL_ONE_WORD_KEYS can be the same as TCL_CUSTOM_PTR_KEYS because they
+ * simply determine how the key is accessed from the entry and not the
+ * behaviour.
  */
 
 #define TCL_STRING_KEYS		0
 #define TCL_ONE_WORD_KEYS	1
+
+#if TCL_PRESERVE_BINARY_COMPATABILITY
+#   define TCL_CUSTOM_TYPE_KEYS		-2
+#   define TCL_CUSTOM_PTR_KEYS		-1
+#else
+#   define TCL_CUSTOM_TYPE_KEYS		TCL_STRING_KEYS
+#   define TCL_CUSTOM_PTR_KEYS		TCL_ONE_WORD_KEYS
+#endif
 
 /*
  * Macros for clients to use to access fields of hash entries:
@@ -1044,19 +1193,38 @@ typedef struct Tcl_HashSearch {
 
 #define Tcl_GetHashValue(h) ((h)->clientData)
 #define Tcl_SetHashValue(h, value) ((h)->clientData = (ClientData) (value))
-#define Tcl_GetHashKey(tablePtr, h) \
-    ((char *) (((tablePtr)->keyType == TCL_ONE_WORD_KEYS) ? (h)->key.oneWordValue \
-						: (h)->key.string))
+#if TCL_PRESERVE_BINARY_COMPATABILITY
+#   define Tcl_GetHashKey(tablePtr, h) \
+	((char *) (((tablePtr)->keyType == TCL_ONE_WORD_KEYS || \
+		    (tablePtr)->keyType == TCL_CUSTOM_PTR_KEYS) \
+		   ? (h)->key.oneWordValue \
+		   : (h)->key.string))
+#else
+#   define Tcl_GetHashKey(tablePtr, h) \
+	((char *) (((tablePtr)->keyType == TCL_ONE_WORD_KEYS) \
+		   ? (h)->key.oneWordValue \
+		   : (h)->key.string))
+#endif
 
 /*
  * Macros to use for clients to use to invoke find and create procedures
  * for hash tables:
  */
 
-#define Tcl_FindHashEntry(tablePtr, key) \
+#if TCL_PRESERVE_BINARY_COMPATABILITY
+#   define Tcl_FindHashEntry(tablePtr, key) \
 	(*((tablePtr)->findProc))(tablePtr, key)
-#define Tcl_CreateHashEntry(tablePtr, key, newPtr) \
+#   define Tcl_CreateHashEntry(tablePtr, key, newPtr) \
 	(*((tablePtr)->createProc))(tablePtr, key, newPtr)
+#endif
+
+#if !TCL_PRESERVE_BINARY_COMPATABILITY
+/*
+ * Macro to use new extended version of Tcl_InitHashTable.
+ */
+#define Tcl_InitHashTable(tablePtr, keyType) \
+	Tcl_InitHashTableEx(tablePtr, keyType, NULL)
+#endif
 
 /*
  * Flag values to pass to Tcl_DoOneEvent to disable searches
@@ -1142,7 +1310,7 @@ typedef int (Tcl_WaitForEventProc) _ANSI_ARGS_((Tcl_Time *timePtr));
  */
 
 #define TCL_CLOSE_READ		(1<<1)
-#define TCL_CLOSE_WRITE		(1<<2)
+#define TCL_CLOSE_WRITE	(1<<2)
 
 /*
  * Value to use as the closeProc for a channel that supports the
@@ -1201,7 +1369,8 @@ typedef int	(Tcl_DriverHandlerProc) _ANSI_ARGS_((
 #   define ckalloc(x) Tcl_DbCkalloc(x, __FILE__, __LINE__)
 #   define ckfree(x)  Tcl_DbCkfree(x, __FILE__, __LINE__)
 #   define ckrealloc(x,y) Tcl_DbCkrealloc((x), (y),__FILE__, __LINE__)
-
+#   define attemptckalloc(x) Tcl_AttemptDbCkalloc(x, __FILE__, __LINE__)
+#   define attemptckrealloc(x,y) Tcl_AttemptDbCkrealloc((x), (y), __FILE__, __LINE__)
 #else /* !TCL_MEM_DEBUG */
 
 /*
@@ -1214,6 +1383,8 @@ typedef int	(Tcl_DriverHandlerProc) _ANSI_ARGS_((
 #   define ckalloc(x) Tcl_Alloc(x)
 #   define ckfree(x) Tcl_Free(x)
 #   define ckrealloc(x,y) Tcl_Realloc(x,y)
+#   define attemptckalloc(x) Tcl_AttemptAlloc(x)
+#   define attemptckrealloc(x,y) Tcl_AttemptRealloc(x,y)
 #   define Tcl_InitMemory(x)
 #   define Tcl_DumpActiveMemory(x)
 #   define Tcl_ValidateAllMemory(x,y)
@@ -1244,8 +1415,8 @@ typedef enum Tcl_EolTranslation {
 
 typedef struct Tcl_ChannelType {
     char *typeName;			/* The name of the channel type in Tcl
-					 * commands. This storage is owned by
-					 * channel type. */
+                                         * commands. This storage is owned by
+                                         * channel type. */
     Tcl_ChannelTypeVersion version;	/* Version of the channel type. */
     Tcl_DriverCloseProc *closeProc;	/* Procedure to call to close the
 					 * channel, or TCL_CLOSE2PROC if the
@@ -1289,8 +1460,8 @@ typedef struct Tcl_ChannelType {
  * as arguments to the blockModeProc procedure in the above structure.
  */
 
-#define TCL_MODE_BLOCKING	0	/* Put channel into blocking mode. */
-#define TCL_MODE_NONBLOCKING	1	/* Put channel into nonblocking
+#define TCL_MODE_BLOCKING 0		/* Put channel into blocking mode. */
+#define TCL_MODE_NONBLOCKING 1		/* Put channel into nonblocking
 					 * mode. */
 
 /*
@@ -1302,6 +1473,304 @@ typedef enum Tcl_PathType {
     TCL_PATH_RELATIVE,
     TCL_PATH_VOLUME_RELATIVE
 } Tcl_PathType;
+
+/* 
+ * The following structure is used to pass glob type data amongst
+ * the various glob routines and Tcl_FSMatchInDirectory.
+ */
+typedef struct Tcl_GlobTypeData {
+    /* Corresponds to bcdpfls as in 'find -t' */
+    int type;
+    /* Corresponds to file permissions */
+    int perm;
+    /* Acceptable mac type */
+    Tcl_Obj* macType;
+    /* Acceptable mac creator */
+    Tcl_Obj* macCreator;
+} Tcl_GlobTypeData;
+
+/*
+ * type and permission definitions for glob command
+ */
+#define TCL_GLOB_TYPE_BLOCK		(1<<0)
+#define TCL_GLOB_TYPE_CHAR		(1<<1)
+#define TCL_GLOB_TYPE_DIR		(1<<2)
+#define TCL_GLOB_TYPE_PIPE		(1<<3)
+#define TCL_GLOB_TYPE_FILE		(1<<4)
+#define TCL_GLOB_TYPE_LINK		(1<<5)
+#define TCL_GLOB_TYPE_SOCK		(1<<6)
+
+#define TCL_GLOB_PERM_RONLY		(1<<0)
+#define TCL_GLOB_PERM_HIDDEN		(1<<1)
+#define TCL_GLOB_PERM_R			(1<<2)
+#define TCL_GLOB_PERM_W			(1<<3)
+#define TCL_GLOB_PERM_X			(1<<4)
+
+/*
+ * Typedefs for the various filesystem operations:
+ */
+
+typedef int (Tcl_FSStatProc) _ANSI_ARGS_((Tcl_Obj *pathPtr, struct stat *buf));
+typedef int (Tcl_FSAccessProc) _ANSI_ARGS_((Tcl_Obj *pathPtr, int mode));
+typedef Tcl_Channel (Tcl_FSOpenFileChannelProc) 
+	_ANSI_ARGS_((Tcl_Interp *interp, Tcl_Obj *pathPtr, 
+	char *modeString, int permissions));
+typedef int (Tcl_FSMatchInDirectoryProc) _ANSI_ARGS_((Tcl_Interp* interp, 
+	Tcl_Obj *result, Tcl_Obj *pathPtr, char *pattern, 
+	Tcl_GlobTypeData * types));
+typedef Tcl_Obj* (Tcl_FSGetCwdProc) _ANSI_ARGS_((Tcl_Interp *interp));
+typedef int (Tcl_FSChdirProc) _ANSI_ARGS_((Tcl_Obj *pathPtr));
+typedef int (Tcl_FSLstatProc) _ANSI_ARGS_((Tcl_Obj *pathPtr, 
+					   struct stat *buf));
+typedef int (Tcl_FSCreateDirectoryProc) _ANSI_ARGS_((Tcl_Obj *pathPtr));
+typedef int (Tcl_FSDeleteFileProc) _ANSI_ARGS_((Tcl_Obj *pathPtr));
+typedef int (Tcl_FSCopyDirectoryProc) _ANSI_ARGS_((Tcl_Obj *srcPathPtr,
+	   Tcl_Obj *destPathPtr, Tcl_Obj **errorPtr));
+typedef int (Tcl_FSCopyFileProc) _ANSI_ARGS_((Tcl_Obj *srcPathPtr,
+			    Tcl_Obj *destPathPtr));
+typedef int (Tcl_FSRemoveDirectoryProc) _ANSI_ARGS_((Tcl_Obj *pathPtr,
+			    int recursive, Tcl_Obj **errorPtr));
+typedef int (Tcl_FSRenameFileProc) _ANSI_ARGS_((Tcl_Obj *srcPathPtr,
+			    Tcl_Obj *destPathPtr));
+typedef void (Tcl_FSUnloadFileProc) _ANSI_ARGS_((ClientData clientData));
+typedef int (Tcl_FSListVolumesProc) _ANSI_ARGS_((Tcl_Interp *interp));
+/* We have to declare the utime structure here. */
+struct utimbuf;
+typedef int (Tcl_FSUtimeProc) _ANSI_ARGS_((Tcl_Obj *pathPtr, 
+					   struct utimbuf *tval));
+typedef int (Tcl_FSNormalizePathProc) _ANSI_ARGS_((Tcl_Interp *interp, 
+			 Tcl_Obj *pathPtr, int nextCheckpoint));
+typedef int (Tcl_FSFileAttrsGetProc) _ANSI_ARGS_((Tcl_Interp *interp,
+			    int index, Tcl_Obj *pathPtr,
+			    Tcl_Obj **objPtrRef));
+typedef char** (Tcl_FSFileAttrStringsProc) _ANSI_ARGS_((Tcl_Obj *pathPtr, 
+			    Tcl_Obj** objPtrRef));
+typedef int (Tcl_FSFileAttrsSetProc) _ANSI_ARGS_((Tcl_Interp *interp,
+			    int index, Tcl_Obj *pathPtr,
+			    Tcl_Obj *objPtr));
+typedef Tcl_Obj* (Tcl_FSReadlinkProc) _ANSI_ARGS_((Tcl_Obj *pathPtr));
+typedef int (Tcl_FSLoadFileProc) _ANSI_ARGS_((Tcl_Interp * interp, 
+			    Tcl_Obj *pathPtr, char * sym1, char * sym2, 
+			    Tcl_PackageInitProc ** proc1Ptr, 
+			    Tcl_PackageInitProc ** proc2Ptr, 
+			    ClientData * clientDataPtr));
+typedef int (Tcl_FSPathInFilesystemProc) _ANSI_ARGS_((Tcl_Obj *pathPtr, 
+			    ClientData *clientDataPtr));
+typedef Tcl_Obj* (Tcl_FSFilesystemPathTypeProc) 
+			    _ANSI_ARGS_((Tcl_Obj *pathPtr));
+typedef Tcl_Obj* (Tcl_FSFilesystemSeparatorProc) 
+			    _ANSI_ARGS_((Tcl_Obj *pathPtr));
+typedef void (Tcl_FSFreeInternalRepProc) _ANSI_ARGS_((ClientData clientData));
+typedef ClientData (Tcl_FSDupInternalRepProc) 
+			    _ANSI_ARGS_((ClientData clientData));
+typedef Tcl_Obj* (Tcl_FSInternalToNormalizedProc) 
+			    _ANSI_ARGS_((ClientData clientData));
+typedef ClientData (Tcl_FSCreateInternalRepProc) _ANSI_ARGS_((Tcl_Obj *pathPtr));
+
+typedef struct Tcl_FSVersion_ *Tcl_FSVersion;
+
+/*
+ *----------------------------------------------------------------
+ * Data structures related to hooking into the filesystem
+ *----------------------------------------------------------------
+ */
+
+/*
+ * Filesystem version tag.  This was introduced in 8.4.
+ */
+
+#define TCL_FILESYSTEM_VERSION_1	((Tcl_FSVersion) 0x1)
+
+/*
+ * struct Tcl_Filesystem:
+ *
+ * One such structure exists for each type (kind) of filesystem.
+ * It collects together in one place all the functions that are
+ * part of the specific filesystem.  Tcl always accesses the
+ * filesystem through one of these structures.
+ * 
+ * Not all entries need be non-NULL; any which are NULL are simply
+ * ignored.  However, a complete filesystem should provide all of
+ * these functions.  The explanations in the structure show
+ * the importance of each function.
+ */
+
+typedef struct Tcl_Filesystem {
+    CONST char *typeName;   /* The name of the filesystem. */
+    int structureLength;    /* Length of this structure, so future
+			     * binary compatibility can be assured. */
+    Tcl_FSVersion version;  
+			    /* Version of the filesystem type. */
+    Tcl_FSPathInFilesystemProc *pathInFilesystemProc;
+			    /* Function to check whether a path is in 
+			     * this filesystem.  This is the most
+			     * important filesystem procedure. */
+    Tcl_FSDupInternalRepProc *dupInternalRepProc;
+			    /* Function to duplicate internal fs rep.  May
+			     * be NULL (but then fs is less efficient). */ 
+    Tcl_FSFreeInternalRepProc *freeInternalRepProc;
+			    /* Function to free internal fs rep.  Must
+			     * be implemented, if internal representations
+			     * need freeing, otherwise it can be NULL. */ 
+    Tcl_FSInternalToNormalizedProc *internalToNormalizedProc;
+			    /* Function to convert internal representation
+			     * to a normalized path.  Only required if
+			     * the fs creates pure path objects with no
+			     * string/path representation. */
+    Tcl_FSCreateInternalRepProc *createInternalRepProc;
+			    /* Function to create a filesystem-specific
+			     * internal representation.  May be NULL
+			     * if paths have no internal representation, 
+			     * or if the Tcl_FSPathInFilesystemProc
+			     * for this filesystem always immediately 
+			     * creates an internal representation for 
+			     * paths it accepts. */
+    Tcl_FSNormalizePathProc *normalizePathProc;       
+			    /* Function to normalize a path.  Should
+			     * be implemented for all filesystems
+			     * which can have multiple string 
+			     * representations for the same path 
+			     * object. */
+    Tcl_FSFilesystemPathTypeProc *filesystemPathTypeProc;
+			    /* Function to determine the type of a 
+			     * path in this filesystem.  May be NULL. */
+    Tcl_FSFilesystemSeparatorProc *filesystemSeparatorProc;
+			    /* Function to return the separator 
+			     * character(s) for this filesystem.  Must
+			     * be implemented. */
+    Tcl_FSStatProc *statProc; 
+			    /* 
+			     * Function to process a 'Tcl_FSStat()'
+			     * call.  Must be implemented for any
+			     * reasonable filesystem.
+			     */
+    Tcl_FSAccessProc *accessProc;	    
+			    /* 
+			     * Function to process a 'Tcl_FSAccess()'
+			     * call.  Must be implemented for any
+			     * reasonable filesystem.
+			     */
+    Tcl_FSOpenFileChannelProc *openFileChannelProc; 
+			    /* 
+			     * Function to process a
+			     * 'Tcl_FSOpenFileChannel()' call.  Must be
+			     * implemented for any reasonable
+			     * filesystem.
+			     */
+    Tcl_FSMatchInDirectoryProc *matchInDirectoryProc;  
+			    /* Function to process a 
+			     * 'Tcl_FSMatchInDirectory()'.  If not
+			     * implemented, then glob and recursive
+			     * copy functionality will be lacking in
+			     * the filesystem. */
+    Tcl_FSUtimeProc *utimeProc;       
+			    /* Function to process a 
+			     * 'Tcl_FSUtime()' call.  Required to
+			     * allow setting (not reading) of times 
+			     * with 'file mtime', 'file atime' and
+			     * the open-r/open-w/fcopy implementation
+			     * of 'file copy'. */
+    Tcl_FSReadlinkProc *readlinkProc; 
+			    /* Function to process a 
+			     * 'Tcl_FSReadlink()' call.  Should be
+			     * implemented only if the filesystem supports
+			     * links. */
+    Tcl_FSListVolumesProc *listVolumesProc;	    
+			    /* Function to list any filesystem volumes 
+			     * added by this filesystem.  Should be
+			     * implemented only if the filesystem adds
+			     * volumes at the head of the filesystem. */
+    Tcl_FSFileAttrStringsProc *fileAttrStringsProc;
+			    /* Function to list all attributes strings 
+			     * which are valid for this filesystem.  
+			     * If not implemented the filesystem will
+			     * not support the 'file attributes' command.
+			     * This allows arbitrary additional information
+			     * to be attached to files in the filesystem. */
+    Tcl_FSFileAttrsGetProc *fileAttrsGetProc;
+			    /* Function to process a 
+			     * 'Tcl_FSFileAttrsGet()' call, used by
+			     * 'file attributes'. */
+    Tcl_FSFileAttrsSetProc *fileAttrsSetProc;
+			    /* Function to process a 
+			     * 'Tcl_FSFileAttrsSet()' call, used by
+			     * 'file attributes'.  */
+    Tcl_FSCreateDirectoryProc *createDirectoryProc;	    
+			    /* Function to process a 
+			     * 'Tcl_FSCreateDirectory()' call. Should
+			     * be implemented unless the FS is
+			     * read-only. */
+    Tcl_FSRemoveDirectoryProc *removeDirectoryProc;	    
+			    /* Function to process a 
+			     * 'Tcl_FSRemoveDirectory()' call. Should
+			     * be implemented unless the FS is
+			     * read-only. */
+    Tcl_FSDeleteFileProc *deleteFileProc;	    
+			    /* Function to process a 
+			     * 'Tcl_FSDeleteFile()' call.  Should
+			     * be implemented unless the FS is
+			     * read-only. */
+    Tcl_FSLstatProc *lstatProc;	    
+			    /* Function to process a 
+			     * 'Tcl_FSLstat()' call.  If not implemented,
+			     * Tcl will attempt to use the 'statProc'
+			     * defined above instead. */
+    Tcl_FSCopyFileProc *copyFileProc; 
+			    /* Function to process a 
+			     * 'Tcl_FSCopyFile()' call.  If not
+			     * implemented Tcl will fall back
+			     * on open-r, open-w and fcopy as
+			     * a copying mechanism. */
+    Tcl_FSRenameFileProc *renameFileProc;	    
+			    /* Function to process a 
+			     * 'Tcl_FSRenameFile()' call.  If not
+			     * implemented, Tcl will fall back on
+			     * a copy and delete mechanism. */
+    Tcl_FSCopyDirectoryProc *copyDirectoryProc;	    
+			    /* Function to process a 
+			     * 'Tcl_FSCopyDirectory()' call.  If
+			     * not implemented, Tcl will fall back
+			     * on a recursive create-dir, file copy
+			     * mechanism. */
+    Tcl_FSLoadFileProc *loadFileProc; 
+			    /* Function to process a 
+			     * 'Tcl_FSLoadFile()' call.  If not
+			     * implemented, Tcl will fall back on
+			     * a copy to native-temp followed by a 
+			     * Tcl_FSLoadFile on that temporary copy. */
+    Tcl_FSUnloadFileProc *unloadFileProc;	    
+			    /* Function to unload a previously 
+			     * successfully loaded file.  If load was
+			     * implemented, then this should also be
+			     * implemented, if there is any cleanup
+			     * action required. */
+    Tcl_FSGetCwdProc *getCwdProc;     
+			    /* 
+			     * Function to process a 'Tcl_FSGetCwd()'
+			     * call.  Most filesystems need not
+			     * implement this.  It will usually only be
+			     * called once, if 'getcwd' is called
+			     * before 'chdir'.  May be NULL.
+			     */
+    Tcl_FSChdirProc *chdirProc;	    
+			    /* 
+			     * Function to process a 'Tcl_FSChdir()'
+			     * call.  If filesystems do not implement
+			     * this, it will be emulated by a series of
+			     * directory access checks.  Otherwise,
+			     * virtual filesystems which do implement
+			     * it need only respond with a positive
+			     * return result if the dirName is a valid
+			     * directory in their filesystem.  They
+			     * need not remember the result, since that
+			     * will be automatically remembered for use
+			     * by GetCwd.  Real filesystems should
+			     * carry out the correct action (i.e. call
+			     * the correct system 'chdir' api).  If not
+			     * implemented, then 'cd' and 'pwd' will
+			     * fail inside the filesystem.
+			     */
+} Tcl_Filesystem;
 
 /*
  * The following structure represents the Notifier functions that
@@ -1321,7 +1790,7 @@ typedef struct Tcl_NotifierProcs {
  */
 
 typedef struct Tcl_EncodingType {
-    const char *encodingName;	/* The name of the encoding, e.g.  "euc-jp".
+    CONST char *encodingName;	/* The name of the encoding, e.g.  "euc-jp".
 				 * This name is the unique key for this
 				 * encoding type. */
     Tcl_EncodingConvertProc *toUtfProc;
@@ -1611,7 +2080,8 @@ typedef struct Tcl_Parse {
 #define TCL_UTF_MAX		3
 
 /*
- * This represents a Unicode character.  
+ * This represents a Unicode character.  Any changes to this should
+ * also be reflected in regcustom.h.
  */
 
 typedef unsigned short Tcl_UniChar;
@@ -1657,8 +2127,8 @@ typedef unsigned short Tcl_UniChar;
  * linked into an application.
  */
 
-EXTERN char *		Tcl_InitStubs _ANSI_ARGS_((Tcl_Interp *interp,
-			    char *version, int exact));
+EXTERN CONST char *	Tcl_InitStubs _ANSI_ARGS_((Tcl_Interp *interp,
+			    CONST char *version, int exact));
 
 #ifndef USE_TCL_STUBS
 
@@ -1678,6 +2148,13 @@ EXTERN char *		Tcl_InitStubs _ANSI_ARGS_((Tcl_Interp *interp,
  */
 
 #include "tclDecls.h"
+
+/*
+ * Include platform specific public function declarations that are
+ * accessible via the stubs table.
+ */
+
+#include "tclPlatDecls.h"
 
 /*
  * Public functions that are not accessible via the stubs table.

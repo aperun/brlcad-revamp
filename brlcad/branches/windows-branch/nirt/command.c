@@ -139,8 +139,11 @@ char	*buffer;
 	else
 	{
 	    if ((*shell == '\0') && (shell = getenv("SHELL")) == 0)
-		shell = DFLT_SHELL;
-	    (void) system(shell);
+#ifndef WIN32
+		shell = DFLT_SHELL
+#else
+		shell = "cmd.exe";
+#endif	    (void) system(shell);
 	}
 }
 

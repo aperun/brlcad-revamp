@@ -157,6 +157,7 @@ struct taskcontrol {
  *  change to a new absolute "nice" value.
  *  (The system routine makes a relative change).
  */
+#ifndef WIN32
 void
 bu_nice_set(newnice)
 int	newnice;
@@ -185,6 +186,15 @@ int	newnice;
 #endif
 	if( bu_debug ) bu_log("bu_nice_set() Priority changed from %d to %d\n", opri, npri);
 }
+#else
+void bu_nice_set(newnice)
+int	newnice;
+{
+	if( bu_debug ) bu_log("bu_nice_set() Priority NOT changed\n");
+	return;
+}
+#endif
+
 
 /*
  *			B U _ C P U L I M I T _ G E T
@@ -377,9 +387,21 @@ bu_avail_cpus()
 #	define	RT_AVAIL_CPUS
 #endif
 
+#ifdef WIN32
+	{
+		SYSTEM_INFO sysinfo;
+
+		GetSystemInfo(&sysinfo);
+
+		ret = (int)sysinfo.dwNumberOfProcessors;
+#	define	RT_AVAIL_CPUS
+	}
+
+#endif
 #ifndef RT_AVAIL_CPUS
 	ret = DEFAULT_PSW;
 #endif
+
 	return( ret );
 }
 
@@ -400,6 +422,8 @@ bu_get_load_average()
 	FILE	*fp;
 	double	load = -1.0;
 
+#ifndef WIN32
+
 	fp = popen("PATH=/bin:/usr/bin:/usr/ucb:/usr/bsd; export PATH; uptime|sed -e 's/.*average: //' -e 's/,.*//' ", "r");
 	if( !fp )
 		return -1.0;
@@ -408,6 +432,7 @@ bu_get_load_average()
 	fclose(fp);
 
 	while( wait(NULL) != -1 )  ;	/* NIL */
+#endif
 	return load;
 }
 
@@ -422,8 +447,10 @@ bu_get_load_average()
  *
  *  Returns the number of processors presently available for "public" use.
  */
+#ifndef WIN32
 #define PUBLIC_CPUS1	"/var/tmp/public_cpus"
 #define PUBLIC_CPUS2	"/usr/tmp/public_cpus"
+#endif
 int
 bu_get_public_cpus()
 {
@@ -433,6 +460,7 @@ bu_get_public_cpus()
 
 	avail_cpus = bu_avail_cpus();
 
+#ifndef WIN32
 	if( (fp = fopen(PUBLIC_CPUS1, "r")) != NULL ||
 	    (fp = fopen(PUBLIC_CPUS2, "r")) != NULL
 	)  {
@@ -453,6 +481,7 @@ bu_get_public_cpus()
 		(void)chmod(PUBLIC_CPUS1, 0666);
 		(void)chmod(PUBLIC_CPUS2, 0666);
 	}
+#endif
 	return avail_cpus;
 }
 

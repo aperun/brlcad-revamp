@@ -36,9 +36,9 @@ bind Menu <ButtonRelease> {
 # button -		Button that was released.
 #
 proc cad_MenuInvoke { w button } {
-    global tkPriv
+    variable ::tk::Priv
 
-    if {$tkPriv(window) == ""} {
+    if {$Priv(window) == ""} {
 	# Mouse was pressed over a menu without a menu button, then
 	# dragged off the menu (possibly with a cascade posted) and
 	# released.  Unpost everything and quit.
@@ -46,23 +46,23 @@ proc cad_MenuInvoke { w button } {
 	$w postcascade none
 	$w activate none
 	event generate $w <<MenuSelect>>
-	tkMenuUnpost $w
+	::tk::MenuUnpost $w
 	return
     }
     if {[$w type active] == "cascade"} {
 	$w postcascade active
 	set menu [$w entrycget active -menu]
-	tkMenuFirstEntry $menu
+	::tk::MenuFirstEntry $menu
     } elseif {[$w type active] == "tearoff"} {
-	tkMenuUnpost $w
-	tkTearOffMenu $w
+	::tk::MenuUnpost $w
+	::tk::TearOffMenu $w
     } elseif {[$w cget -type] == "menubar"} {
 	$w postcascade none
 	$w activate none
 	event generate $w <<MenuSelect>>
-	tkMenuUnpost $w
+	::tk::MenuUnpost $w
     } else {
-	tkMenuUnpost $w
+	::tk::MenuUnpost $w
 
 	if {$button == 3} {
 	    hoc_menu_callback $w
@@ -93,7 +93,7 @@ proc cad_MenuFirstEntry { menu } {
 	if {([catch {set state [$menu entrycget $i -state]}] == 0)
 	&& ($state != "disabled") && ([$menu type $i] != "tearoff")} {
 	    $menu activate $i
-	    tkGenerateMenuSelect $menu
+	    ::tk::GenerateMenuSelect $menu
 	    if {[$menu type $i] == "cascade"} {
 		set cascade [$menu entrycget $i -menu]
 		if {[string compare $cascade ""] != 0} {
@@ -132,7 +132,7 @@ proc tkTraverseWithinMenu { w char } {
 		    cad_MenuFirstEntry $m2
 		}
 	    }    else {
-                tkMenuUnpost $w
+                ::tk::MenuUnpost $w
                 uplevel #0 [list $w invoke $i]
 	    }
             return
@@ -142,7 +142,7 @@ proc tkTraverseWithinMenu { w char } {
 }
 
 proc tkMenuNextMenu {menu direction} {
-    global tkPriv
+    variable ::tk::Priv
 
     # First handle traversals into and out of cascaded menus.
 
@@ -175,7 +175,7 @@ proc tkMenuNextMenu {menu direction} {
 	if {[winfo class $m2] == "Menu"} {
 	    if {[$m2 cget -type] != "menubar"} {
 		$menu activate none
-		tkGenerateMenuSelect $menu
+		::tk::GenerateMenuSelect $menu
 		tk_menuSetFocus $m2
 		
 		# This code unposts any posted submenu in the parent.
@@ -200,7 +200,7 @@ proc tkMenuNextMenu {menu direction} {
 	}
     }
 
-    set w $tkPriv(postedMb)
+    set w $Priv(postedMb)
     if {$w == ""} {
 	return
     }
@@ -226,12 +226,12 @@ proc tkMenuNextMenu {menu direction} {
 	}
 	incr i $count
     }
-    tkMbPost $mb
-    tkMenuFirstEntry [$mb cget -menu]
+    ::tk::MbPost $mb
+    ::tk::MenuFirstEntry [$mb cget -menu]
 }
 
 proc tkMenuNextEntry {menu count} {
-    global tkPriv
+    variable ::tk::Priv
 
     if {[$menu index last] == "none"} {
 	return
@@ -270,29 +270,29 @@ proc tkMenuNextEntry {menu count} {
 	incr quitAfter -1
     }
     $menu activate $i
-    tkGenerateMenuSelect $menu
+    ::tk::GenerateMenuSelect $menu
     if {[$menu type $i] == "cascade"} {
 	set cascade [$menu entrycget $i -menu]
 	if {[string compare $cascade ""] != 0} {
 	    $menu postcascade $i
-#	    tkMenuFirstEntry $cascade
+#	    ::tk::MenuFirstEntry $cascade
 	}
     }
 }
 
 proc tkMenuEscape menu {
-    global tkPriv
+    global Priv
 
     set parent [winfo parent $menu]
     if {([winfo class $parent] != "Menu")} {
 	tkMenuUnpost $menu
     } elseif {([$parent cget -type] == "menubar")} {
-	tkMenuUnpost $menu
-	tkRestoreOldGrab
+	::tk::MenuUnpost $menu
+	::tk::RestoreOldGrab
     } else {
 	set grand_parent [winfo parent $parent]
 	if {[winfo class $grand_parent] != "Menu"} {
-	    tkMenuUnpost $menu
+	    ::tk::MenuUnpost $menu
 	} else {
 	    tkMenuNextMenu $menu left
 	}

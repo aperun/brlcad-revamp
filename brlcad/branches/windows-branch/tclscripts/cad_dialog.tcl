@@ -31,8 +31,8 @@
 #
 #==============================================================================
 
-if {![info exists tkPriv(wait_cmd)]} {
-    set tkPriv(wait_cmd) tkwait
+if {![info exists ::tk::Priv(wait_cmd)]} {
+    set ::tk::Priv(wait_cmd) tkwait
 }
 
 # cad_dialog --
@@ -42,7 +42,7 @@ if {![info exists tkPriv(wait_cmd)]} {
 #
 proc cad_dialog { w screen title text bitmap default args } {
     global button$w
-    global tkPriv
+    variable ::tk::Priv
 
     if [winfo exists $w] {
 	catch {destroy $w}
@@ -110,7 +110,7 @@ proc cad_dialog { w screen title text bitmap default args } {
 
     place_near_mouse $w
 
-    $tkPriv(wait_cmd) variable button$w
+    $Priv(wait_cmd) variable button$w
     catch { destroy $w }
     return [set button$w]
 }
@@ -124,7 +124,7 @@ proc cad_dialog { w screen title text bitmap default args } {
 proc cad_input_dialog { w screen title text entryvar defaultentry default entry_hoc_data args } {
     global hoc_data
     global button$w entry$w
-    global tkPriv
+    variable ::tk::Priv
     upvar $entryvar entrylocal
 
     set entry$w $defaultentry
@@ -179,7 +179,7 @@ actions as indicated by the button label."}}
 
     place_near_mouse $w
 
-    $tkPriv(wait_cmd) variable button$w
+    $Priv(wait_cmd) variable button$w
     set entrylocal [set entry$w]
     catch { destroy $w }
     return [set button$w]
@@ -198,7 +198,7 @@ actions as indicated by the button label."}}
 #	help_strings is a list of help strings for the corresponding labels in choice_labels
 proc cad_radio { my_widget_name screen radio_result title text_message default choice_labels help_strings } {
 	global $radio_result
-        global tkPriv
+        variable ::tk::Priv
 	# The screen parameter can be the pathname of some
 	# widget where the screen value can be obtained.
 	# Otherwise, it is assumed to be a genuine X DISPLAY
@@ -246,6 +246,6 @@ proc cad_radio { my_widget_name screen radio_result title text_message default c
 	grid $w.dismiss -row [ expr $counter + 1] -column 1
 	update
 
-	$tkPriv(wait_cmd) variable done
+	$Priv(wait_cmd) variable done
 	catch " destroy $w "
 }

@@ -59,7 +59,9 @@ in all countries except the USA.  All rights reserved.";
 #include <ctype.h>
 #include <signal.h>
 #include <time.h>
+#ifndef WIN32
 #include <sys/errno.h>
+#endif
 
 #ifdef DM_X
 #  include "tk.h"
@@ -82,9 +84,23 @@ in all countries except the USA.  All rights reserved.";
 #include "./mged_dm.h"
 #include "./cmd.h"
 
+#ifdef WIN32
+#include <fcntl.h>
+#include <errno.h>
+#define R_OK 2
+#define W_OK 4
+#endif
+
+#ifndef WIN32
 #ifndef	LOGFILE
 #define LOGFILE	"/vld/lib/gedlog"	/* usage log */
 #endif
+#else
+#ifndef	LOGFILE
+#define LOGFILE	"C:\\gedlog"	/* usage log */
+#endif
+#endif
+
 
 extern void view_ring_init(); /* defined in chgview.c */
 
@@ -149,7 +165,11 @@ double frametime;		/* time needed to draw last frame */
 
 int             cmd_stuff_str();
 void		(*cur_sigint)();	/* Current SIGINT status */
+#ifndef WIN32
 void		sig2(), sig3();
+#else
+void		sig2(int sig), sig3(int sig);
+#endif
 void		reset_input_strings();
 void		new_mats();
 void		usejoy();
@@ -197,8 +217,13 @@ int mged_bomb_hook();
 void mged_view_obj_callback();
 
 #ifdef USE_PROTOTYPES
+#ifndef WIN32
 Tcl_FileProc stdin_input;
 Tcl_FileProc std_out_or_err;
+#else
+void stdin_input(ClientData clientData,int mask);
+void std_out_or_err(ClientData clientData,int mask);
+#endif
 #else
 void stdin_input();
 void std_out_or_err();
@@ -217,6 +242,15 @@ char **argv;
 	int	c;
 	int	read_only_flag=0;
 
+#ifdef WIN32
+	Tcl_Channel chan;
+#endif
+
+
+#ifdef WIN32
+	_fmode = _O_BINARY;
+#endif
+
 	while ((c = bu_getopt(argc, argv, "d:hicnrx:X:")) != EOF)
 	{
 		switch( c )
@@ -229,7 +263,11 @@ char **argv;
 				break;
 			case 'n':		/* "not new" == "classic" */
 			case 'c':
+#ifndef WIN32
 				classic_mged = 1;
+#else
+				MessageBox(NULL,"-c OPTION NOT AVAILABLE","NOT SUPPORTED",MB_OK);
+#endif
 				break;
 			case 'x':
 				sscanf( bu_optarg, "%x", (unsigned int *)&rt_g.debug );
@@ -270,7 +308,9 @@ char **argv;
 	  }
 	}
 
+#ifndef WIN32
 	(void)signal( SIGPIPE, SIG_IGN );
+#endif
 
 	/*
 	 *  Sample and hold current SIGINT setting, so any commands that
@@ -458,6 +498,22 @@ char **argv;
 	    get_attached();
 #endif
 	  } else {
+#ifdef WIN32
+		  if(1) {
+	      struct bu_vls vls;
+	      int status;
+
+	      bu_vls_init(&vls);
+	      bu_vls_strcpy(&vls, "gui");
+	      status = Tcl_Eval(interp, bu_vls_addr(&vls));
+	      bu_vls_free(&vls);
+
+	      if (status != TCL_OK) {
+		bu_log("%s", interp->result);
+		exit(1);
+	      }
+	    }
+#else
 
 	    if ((fork()) == 0){
 	      struct bu_vls vls;
@@ -493,7 +549,9 @@ char **argv;
 	      /* close stdin */
 	      (void)close(0);
 #endif
-	    }else{
+	    }
+#endif
+		else{
 	      exit(0);
 	    }
 
@@ -525,8 +583,14 @@ char **argv;
 	}
 
 	if(classic_mged || !interactive){
+#ifndef WIN32
 	  Tcl_CreateFileHandler(STDIN_FILENO, TCL_READABLE,
 				stdin_input, (ClientData)STDIN_FILENO);
+#else
+	chan = Tcl_MakeFileChannel(GetStdHandle(STD_INPUT_HANDLE),TCL_READABLE);
+	Tcl_CreateChannelHandler(chan,TCL_READABLE,
+			      stdin_input, (ClientData)GetStdHandle(STD_INPUT_HANDLE));
+#endif
 	  (void)signal( SIGINT, SIG_IGN );
 
 	  bu_vls_strcpy(&mged_prompt, MGED_PROMPT);
@@ -544,11 +608,20 @@ char **argv;
 	  Tcl_Eval(interp, bu_vls_addr(&vls));
 	  bu_vls_free(&vls);
 
+#ifndef WIN32
 	  /* to catch output from routines that do not use bu_log */
 	  Tcl_CreateFileHandler(pipe_out[0], TCL_READABLE,
 				std_out_or_err, (ClientData)pipe_out[0]);
 	  Tcl_CreateFileHandler(pipe_err[0], TCL_READABLE,
 				std_out_or_err, (ClientData)pipe_err[0]);
+#else
+	chan = Tcl_MakeFileChannel(GetStdHandle(STD_OUTPUT_HANDLE),TCL_READABLE);
+	Tcl_CreateChannelHandler(chan,TCL_READABLE,
+			      std_out_or_err, (ClientData)GetStdHandle(STD_OUTPUT_HANDLE));
+	chan = Tcl_MakeFileChannel(GetStdHandle(STD_ERROR_HANDLE),TCL_READABLE);
+	Tcl_CreateChannelHandler(chan,TCL_READABLE,
+			      std_out_or_err, (ClientData)GetStdHandle(STD_ERROR_HANDLE));
+#endif
 	}
 
 	mged_init_flag = 0;	/* all done with initialization */
@@ -609,9 +682,17 @@ int mask;
     int count;
     char ch;
     struct bu_vls temp;
+#ifndef WIN32
     long fd;
+#else
+	HANDLE fd;
+#endif
 
+#ifndef WIN32
     fd = (long)clientData;
+#else	
+	fd = (HANDLE)clientData;      
+#endif
 
     /* When not in cbreak mode, just process an entire line of input, and
        don't do any command-line manipulation. */
@@ -683,8 +764,12 @@ int mask;
     {
       char buf[4096];
       int index;
+#ifdef WIN32
+	ReadFile(fd,buf,4096,&count,NULL);
+#else
+      count = read((int)fd, (void *)buf, 4096)
+#endif
 
-      count = read((int)fd, (void *)buf, 4096);
 #else
     /* Grab single character from stdin */
     count = read((int)fd, (void *)&ch, 1);
@@ -1192,17 +1277,30 @@ std_out_or_err(clientData, mask)
 ClientData clientData;
 int mask;
 {
+#ifndef WIN32
   int fd = (int)((long)clientData & 0xFFFF);	/* fd's will be small */
+#else
+  HANDLE fd = clientData;
+#endif  
   int count;
   struct bu_vls vls;
   char line[MAXLINE];
   Tcl_Obj *save_result;
 
   /* Get data from stdout or stderr */
+
+#ifndef WIN32
 #if 1
   if((count = read((int)fd, line, MAXLINE)) == 0)
 #else
   if((count = read((int)fd, line, 5120)) == 0)
+#endif
+#else
+#if 1
+  if((!ReadFile(fd, line, MAXLINE,&count,0)))
+#else
+  if((!ReadFile(fd, line, 5120,&count,0)))
+#endif
 #endif
     return;
 
@@ -1731,6 +1829,7 @@ char *arg;
 	timep[24] = '\0';	/* Chop off \n */
 
 	bu_vls_init(&line);
+#ifndef WIN32
 	bu_vls_printf(&line, "%s [%s] time=%ld uid=%d (%s) %s\n",
 		      event,
 		      dmp->dm_name,
@@ -1739,11 +1838,33 @@ char *arg;
 		      timep,
 		      arg
 	);
+#else
+	{
+		char uname[256]; 
+		DWORD dwNumBytes = 256; 
+		GetUserName(uname, &dwNumBytes);
+		bu_vls_printf(&line, "%s [%s] time=%ld uid=%d (%s) %s\n",
+		      event,
+		      dmp->dm_name,
+		      (long)now,
+		      uname,
+		      timep,
+		      arg);
+	}
+#endif
 
+#ifndef WIN32
 	if( (logfd = open( LOGFILE, O_WRONLY|O_APPEND )) >= 0 )  {
 		(void)write( logfd, bu_vls_addr(&line), (unsigned)bu_vls_strlen(&line) );
 		(void)close( logfd );
 	}
+#else
+	if( (logfd = open( LOGFILE, _O_WRONLY|_O_APPEND )) >= 0 )  {
+		(void)write( logfd, bu_vls_addr(&line), (unsigned)bu_vls_strlen(&line) );
+		(void)close( logfd );
+	}
+#endif
+
 
 	bu_vls_free(&line);
 }
@@ -1808,6 +1929,7 @@ quit()
 /*
  *  			S I G 2
  */
+#ifndef WIN32
 void
 sig2()
 {
@@ -1822,6 +1944,22 @@ sig3()
   (void)signal( SIGINT, SIG_IGN );
   longjmp( jmp_env, 1 );
 }
+#else
+void
+sig2(int sig)
+{
+  reset_input_strings();
+
+  (void)signal( SIGINT, SIG_IGN );
+}
+
+void
+sig3(int sig)
+{
+  (void)signal( SIGINT, SIG_IGN );
+  longjmp( jmp_env, 1 );
+}
+#endif
 
 void
 reset_input_strings()
@@ -2047,10 +2185,17 @@ f_opendb(
 		/*
 	         * Check to see if we can access the database
 	         */
+#ifndef WIN32
 		if (access(argv[1], R_OK|W_OK) != 0 && errno != ENOENT) {
 			perror(argv[1]);
 			return TCL_ERROR;
 		}
+#else
+		if ((access(argv[1], R_OK) != 0 || access(argv[1], W_OK) != 0)  && errno != ENOENT) {
+			perror(argv[1]);
+			return TCL_ERROR;
+		}
+#endif
 
 	    	/* File does not exist */
 		if (interactive) {

@@ -45,7 +45,9 @@
  *  $Header$
  */
 
+#ifndef WIN32
 #include <sys/time.h>
+#endif
 #include <time.h>
 #include "tcl.h"
 #include "wdb.h"
@@ -202,7 +204,11 @@ extern void		eraseobj(), eraseobjall(), mged_finish(), slewview(),
 extern void		sedit_menu();
 extern void		attach(), get_attached();
 extern void		(*cur_sigint)();	/* Current SIGINT status */
+#ifndef WIN32
 extern void		sig2(), sig3();
+#else
+extern void		sig2(int sig), sig3(int sig);
+#endif
 
 extern void		aexists();
 extern int		clip(), getname(), use_pen(), dir_print();

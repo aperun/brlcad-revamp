@@ -1168,8 +1168,20 @@ struct vd_curve {
  */
 struct run_rt {
 	struct bu_list		l;
+#ifdef WIN32
+	HANDLE			fd;
+	HANDLE			hProcess;
+	DWORD			pid;
+
+#ifdef TCL_OK
+	Tcl_Channel		chan;
+#else
+	genptr_t chan;
+#endif
+#else
 	int			fd;
 	int			pid;
+#endif	
 	int			aborted;
 };
 

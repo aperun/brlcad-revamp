@@ -73,11 +73,13 @@ extern int ogl_refresh();
 #endif
 
 #ifdef IF_X
+#ifndef WIN32
 extern void X24_configureWindow();
 extern int X24_refresh();
 extern int X24_open_existing();
 extern int X24_close_existing();
 extern FBIO X24_interface;
+#endif
 #endif
 
 int fb_tcl_open_existing();
@@ -118,7 +120,9 @@ fb_tcl_open_existing(clientData, interp, argc, argv)
 {
 #ifdef IF_X
 	register FBIO *ifp;
+#ifndef WIN32
 	char *X_name = "/dev/X";
+#endif
 #ifdef IF_OGL
 	char *ogl_name = "/dev/ogl";
 #endif
@@ -135,6 +139,7 @@ fb_tcl_open_existing(clientData, interp, argc, argv)
 		return TCL_ERROR;
 	}
 
+#ifndef WIN32
 	if(strcmp(argv[1], X_name) == 0){
 		*ifp = X24_interface; /* struct copy */
 
@@ -152,8 +157,15 @@ fb_tcl_open_existing(clientData, interp, argc, argv)
 					 (char *)NULL);
 			return TCL_ERROR;
 		}
+#endif
 #ifdef IF_OGL
-	}else if(strcmp(argv[1], ogl_name) == 0){
+#ifndef WIN32
+	}
+#endif
+#ifndef WIN32
+	else 
+#endif
+		if(strcmp(argv[1], ogl_name) == 0){
 		*ifp = ogl_interface; /* struct copy */
 
 		ifp->if_name = malloc((unsigned)strlen(ogl_name) + 1);
@@ -178,7 +190,9 @@ fb_tcl_open_existing(clientData, interp, argc, argv)
 
 		bu_vls_init(&vls);
 		bu_vls_printf(&vls, "fb_open_existing: supports only the following device types\n");
+#ifndef WIN32
 		bu_vls_printf(&vls, "%s", X_name);
+#endif
 #ifdef IF_OGL
 		bu_vls_printf(&vls, ", %s", ogl_name);
 #endif
@@ -210,7 +224,9 @@ fb_tcl_close_existing(clientData, interp, argc, argv)
 #ifdef IF_OGL
 	char *ogl_name = "/dev/ogl";
 #endif
+#ifndef WIN32
 	char *X_name = "/dev/X";
+#endif
 	struct bu_vls vls;
 	int status;
 
@@ -226,7 +242,7 @@ fb_tcl_close_existing(clientData, interp, argc, argv)
 
 	FB_TCL_CK_FBIO(ifp);
 	_fb_pgflush(ifp);
-
+#ifndef WIN32
 	if(strcmp(ifp->if_name, X_name) == 0){
 		if((status = X24_close_existing(ifp)) <= -1){
 			bu_vls_init(&vls);
@@ -237,8 +253,15 @@ fb_tcl_close_existing(clientData, interp, argc, argv)
 
 			return TCL_ERROR;
 		}
+#endif
 #ifdef IF_OGL
-	}else if(strcmp(ifp->if_name, ogl_name) == 0){
+#ifndef WIN32
+	}
+#endif
+#ifndef WIN32
+	else
+#endif
+		if(strcmp(ifp->if_name, ogl_name) == 0){
 		if((status = ogl_close_existing(ifp)) <= -1){
 			bu_vls_init(&vls);
 			bu_vls_printf(&vls, "fb_close_existing: can not close device \"%s\", ret=%d.\n",
@@ -274,15 +297,22 @@ fb_configureWindow(ifp, width, height)
      int width, height;
 {
 #ifdef IF_X
+#ifndef WIN32
 	const char *X_name = "/dev/X";
+#endif
 #ifdef IF_OGL
 	const char *ogl_name = "/dev/ogl";
 #endif
 
+#ifndef WIN32
 	if (!strncmp(ifp->if_name, X_name, strlen(X_name)))
 		X24_configureWindow(ifp, width, height);
+#endif
 #ifdef IF_OGL
-	else if (!strncmp(ifp->if_name, ogl_name, strlen(ogl_name)))
+#ifndef WIN32	
+	else 
+#endif
+		if (!strncmp(ifp->if_name, ogl_name, strlen(ogl_name)))
 		ogl_configureWindow(ifp, width, height);
 #endif
 #endif /* IF_X */
@@ -295,17 +325,23 @@ fb_refresh(ifp, x, y, w, h)
      int w, h;
 {
 #ifdef IF_X
+#ifndef WIN32
 	char *X_name = "/dev/X";
+#endif
 #ifdef IF_OGL
 	char *ogl_name = "/dev/ogl";
 #endif
 	int status;
-
+#ifndef WIN32
 	if(!strcmp(ifp->if_name, X_name)){
 		status = X24_refresh(ifp, x, y, w, h);
 	}
+#endif
 #ifdef IF_OGL
-	else if(!strcmp(ifp->if_name, ogl_name)){
+#ifndef WIN32	
+	else 
+#endif		
+		if(!strcmp(ifp->if_name, ogl_name)){
 		status = ogl_refresh(ifp, x, y, w, h);
 	}
 #endif

@@ -439,7 +439,7 @@ proc glint_setup { id } {
 # This is the top level entry point
 proc overlap_tool { id } {
     global over_cont comb_control localunit local2base
-    global tkPriv tk_version
+    variable ::tk::Priv tk_version
 
     if { [info exists tk_version] == 0 } {
 	puts "Cannot run the overlap tool without Tk loaded"
@@ -688,5 +688,5 @@ proc overlap_tool { id } {
 	set over_cont($id,pid) ""
 	set over_cont($id,length) 0
 	set over_cont($id,overlap_count) 0
-	set over_cont($id,dialog_window) $tkPriv(cad_dialog)
+	set over_cont($id,dialog_window) $Priv(cad_dialog)
 }

@@ -84,7 +84,11 @@ const char *rhs;
 #ifdef BRLCAD_ROOT
 	lhs = BRLCAD_ROOT;
 #else
+#ifndef WIN32
 	lhs = "/usr/brlcad";		/* Changed by newbindir.sh */
+#else
+	lhs = "C:\\code\\brlcad6.0";  /* change as needed*/
+#endif
 #endif
 	if( bu_file_exists(lhs) )
 		goto ok;
@@ -109,7 +113,14 @@ sh/bash users:\n\
 	bu_bomb("bu_brlcad_path()");
 
 ok:
+#ifndef WIN32
 	sprintf(result, "%s/%s", lhs, rhs );
+#else
+	if(strcmp(rhs,"")==0)
+		sprintf(result, "%s", lhs );
+	else
+		sprintf(result, "%s\\%s", lhs, rhs );
+#endif
 	if( bu_file_exists(result) )
 		return result;			/* OK */
 

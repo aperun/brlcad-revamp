@@ -1,3 +1,9 @@
+#if defined(vax) || (defined(sgi) && !defined(mips))
+#define SQRT_MAX_FASTF		1.0e18	/* This squared just avoids overflow */
+#else
+#define SQRT_MAX_FASTF		1.0e36	/* This squared just avoids overflow */
+#endif
+
 /*
  *  			P O L Y L I B . C
  *
@@ -311,11 +317,15 @@ register complex	root[];
 #endif
 
 	c1 = eqn->cf[1];
+	if( Abs(c1) > SQRT_MAX_FASTF )  return(0);	/* FAIL */
 	c1_3rd = c1 * THIRD;
 	a = eqn->cf[2] - c1*c1_3rd;
+	if( Abs(a) > SQRT_MAX_FASTF )  return(0);	/* FAIL */
 	b = (2.0*c1*c1*c1 - 9.0*c1*eqn->cf[2] + 27.0*eqn->cf[3])*INV_TWENTYSEVEN;
+	if( Abs(b) > SQRT_MAX_FASTF )  return(0);	/* FAIL */
 
-	delta = b*b*0.25 + a*a*a*INV_TWENTYSEVEN;
+	if( (delta = a*a) > SQRT_MAX_FASTF ) return(0);	/* FAIL */
+	delta = b*b*0.25 + delta*a*INV_TWENTYSEVEN;
 
 	if ( delta > 0.0 ){
 		LOCAL fastf_t		r_delta, A, B;
@@ -343,7 +353,7 @@ register complex	root[];
 		LOCAL fastf_t		phi, fact;
 		LOCAL fastf_t		cs_phi, sn_phi_s3;
 
-		if( a > 0.0 )  {
+		if( a >= 0.0 )  {
 			rt_log("cubic: sqrt(%f)\n", fact);
 			fact = 0.0;
 			phi = 0.0;

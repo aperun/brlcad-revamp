@@ -1,0 +1,118 @@
+.TH MGED 1 BRL/CAD
+.SH NAME
+mged \- multi-display interactive combinatorial solid geometry editor
+.SH SYNOPSIS
+.B mged
+database.g
+.SH DESCRIPTION
+.I mged\^
+interactively edits the specified database file
+.I database.g
+on any one of a number of display devices, including
+any UNIX-plot device,
+a Vector General 3300,
+a Megatek 7250,
+a Tektronix 4014 or compatable display,
+a Tektronix 4109 or compatable display,
+a Raster Technologies One/80,
+an Evans and Sutherland Picture System 300,
+or a Silicon Graphics IRIS 2400 or 3030 workstation.
+.P
+For detailed documentation,
+obtain a copy of
+the guide ``Computer Graphics for Target Descriptions''
+or
+BRL Technical Report ARBRL-TR-02480, ``GED:  An Interactive
+Solid Modeling System for Vulnerability Assessments''.
+.P
+SIGINT aborts the current command.
+.P
+"q" or EOF exits the program.
+.SH HINTS
+.I mged\^
+database names conventionally end with
+.BR .g .
+.P
+.SH EXAMPLE
+.RS
+$ \|\fImged \|tank.g\fP
+.RE
+.SH "STARTUP"
+.I mged\^
+may be run in one of three modes.
+(a) single-shot command.  One command is given on the command line,
+after the database name.
+(b) multiple commands from a file.
+The input is not from a terminal, but instead from a file or
+shell-script ``here document''.
+No display manager is attached to.
+(c)  interactive mode.
+The ".mgedrc" file is processed, then the user is prompted for which
+display manager they wish to attach to, with a question like:
+.br
+  attach (nu|tek|tek4109|ps|plot|sgi|X)[nu]?
+.P
+The ".mgedrc" file is searched for in three places.
+The first one found is used, and any others are ignored.
+(a) If the environment variable MGED_RCFILE is set, it is used
+as a path name for the file to be used.
+(b) If the environment variable HOME is set, then HOME/.mgedrc
+is used.
+(c) If the file ".mgedrc" exists in the current directory, it is used.
+.SH MODES
+The "set" command can be used to select various operating modes for
+.I mged\^.
+This is most useful in conjunction with the ".mgedrc" file, to
+establish per-user preferences.
+.br
+  set autosize=0
+.br
+will defeat the automatic resizing of the view when the screen is empty.
+.sp
+  set sgi_win_size=1024
+.br
+  set sgi_win_origin=200,0
+can be used (\fIbefore\fR attaching to the SGI display manager) to
+establish a preference for the size and location of the window to be opened.
+.SH "X11 NOTES"
+When using
+.I mged\^
+with the X11 display manager (or the SGI display manager on IRIX 4.0),
+be certain that the shell variable DISPLAY is set to indicate the host
+that you wish to have your window opened on.
+Failure to set the DISPLAY variable, or setting it improperly,
+can cause bemusing error messages from the X window system.
+.SH "SEE ALSO"
+.I
+Computer Graphics for Target Descriptions
+.br
+rt(1), libged(3), librt(3).
+.SH DIAGNOSTICS
+Error messages are intended to be self-explanatory.
+.SH AUTHORS
+Keith Applin
+.br
+Doug Gwyn
+.br
+Chuck Kennedy
+.br
+Gary Kuehl
+.br
+Gary Moss
+.br
+Mike Muuss
+.br
+Chuck Stanley
+.br
+Bob Suckling
+.br
+Earl Weaver
+.SH SOURCE
+SECAD/VLD Computing Consortium, Bldg 394
+.br
+The U. S. Army Ballistic Research Laboratory
+.br
+Aberdeen Proving Ground, Maryland  21005
+.SH "BUG REPORTS"
+Reports of bugs or problems should be submitted via electronic
+mail to <CAD@BRL.MIL>.

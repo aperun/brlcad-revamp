@@ -1,0 +1,145 @@
+/*
+  *			fb/Cakefile
+ */
+
+#define SRCDIR	fb
+#define PRODUCTS	\
+	bw-fb cat-fb cell-fb cmap-fb \
+	fb-bw fb-cmap fb-fb fb-orle fb-pix fb-rle \
+	fbanim fbcbars fbclear fbcmap fbcmrot fbcolor \
+	fbfade fbframe fbfree fbgamma fbgrid fbhelp \
+	fblabel fbline fbpoint fbscanplot fbstretch fbzoom \
+	gif-fb gif2fb orle-fb pix-fb pixflip-fb \
+	pl-fb polar-fb pp-fb rle-fb spm-fb
+
+#define	SRCSUFF	.c
+#define MANSECTION	1
+
+#include "../Cakefile.defs"
+#include "../Cakefile.prog"
+
+/* Explicit composition of each product */
+
+fbanim:		fbanim.o LIBFB
+	CC LDFLAGS -o fbanim fbanim.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+pl-fb:		pl-fb.o LIBFB
+	CC LDFLAGS -o pl-fb pl-fb.o LIB_PRE''LIBFB LIBFB_LIBES LIB_PRE''LIBPLOT LIBES
+
+fbcbars:	fbcbars.o LIBFB
+	CC LDFLAGS -o fbcbars fbcbars.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+pix-fb:		pix-fb.o LIBFB
+	CC LDFLAGS -o pix-fb pix-fb.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+fb-pix:		fb-pix.o cmap-crunch.o LIBFB
+	CC LDFLAGS -o fb-pix fb-pix.o cmap-crunch.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+fb-fb:		fb-fb.o LIBFB
+	CC LDFLAGS -o fb-fb fb-fb.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+pixflip-fb:	pixflip-fb.o LIBFB
+	CC LDFLAGS -o pixflip-fb pixflip-fb.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+pp-fb:		pp-fb.o LIBFB LIBTERMIO
+	CC LDFLAGS -o pp-fb pp-fb.o LIB_PRE''LIBFB LIBFB_LIBES LIBTERMIO LIBES
+
+fbclear:	fbclear.o LIBFB
+	CC LDFLAGS -o fbclear fbclear.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+fbfree:	fbfree.o LIBFB
+	CC LDFLAGS -o fbfree fbfree.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+fbhelp:	fbhelp.o LIBFB
+	CC LDFLAGS -o fbhelp fbhelp.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+fbgrid:		fbgrid.o LIBFB
+	CC LDFLAGS -o fbgrid fbgrid.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+/* Old RLE Programs (Utah format Edition 2) */
+
+orle-fb:	orle-fb.o LIBFB LIBORLE
+	CC LDFLAGS -o orle-fb orle-fb.o LIB_PRE''LIBFB LIBFB_LIBES LIBORLE LIBES
+
+fb-orle:	fb-orle.o cmap-crunch.o LIBFB LIBORLE
+	CC LDFLAGS -o fb-orle fb-orle.o cmap-crunch.o LIB_PRE''LIBFB LIBFB_LIBES LIB_PRE''LIBORLE LIBES
+
+/* New RLE Programs (Utah format Edition 3) -- matches Utah Raster Toolkit */
+
+/*** oldtonewrle.c ? */
+
+rle-fb:		rle-fb.o LIBFB LIBRLE
+	CC LDFLAGS -o rle-fb rle-fb.o LIB_PRE''LIBFB LIBFB_LIBES LIB_PRE''LIBRLE LIBES
+
+fb-rle:		fb-rle.o cmap-crunch.o LIBFB LIBRLE
+	CC LDFLAGS -o fb-rle fb-rle.o cmap-crunch.o LIB_PRE''LIBFB LIBFB_LIBES LIB_PRE''LIBRLE LIBES
+
+fbcmap:		fbcmap.o LIBFB
+	CC LDFLAGS -o fbcmap fbcmap.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+fb-cmap:	fb-cmap.o LIBFB
+	CC LDFLAGS -o fb-cmap fb-cmap.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+cmap-fb:	cmap-fb.o LIBFB
+	CC LDFLAGS -o cmap-fb cmap-fb.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+fbgamma:	fbgamma.o LIBFB
+	CC LDFLAGS -o fbgamma fbgamma.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+fbscanplot:	fbscanplot.o LIBFB
+	CC LDFLAGS -o fbscanplot fbscanplot.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+fbzoom:		fbzoom.o LIBFB LIBTERMIO
+	CC LDFLAGS -o fbzoom fbzoom.o LIB_PRE''LIBFB LIBFB_LIBES LIBTERMIO LIBES 
+
+fbpoint:	fbpoint.o LIBFB LIBTERMIO
+	CC LDFLAGS -o fbpoint fbpoint.o LIB_PRE''LIBFB LIBFB_LIBES LIBTERMIO LIBES 
+
+fblabel:	fblabel.o LIBFB LIBFONT
+	CC LDFLAGS -o fblabel fblabel.o LIB_PRE''LIBFONT LIB_PRE''LIBFB LIBFB_LIBES LIBES 
+
+fbline:		fbline.o LIBFB
+	CC LDFLAGS -o fbline fbline.o LIB_PRE''LIBFB LIBFB_LIBES LIBES 
+
+fbcolor:	fbcolor.o LIBFB LIBTERMIO
+	CC LDFLAGS -o fbcolor fbcolor.o LIB_PRE''LIBFB LIBFB_LIBES LIBTERMIO LIBES 
+
+fbcmrot:	fbcmrot.o LIBFB
+	CC LDFLAGS -o fbcmrot fbcmrot.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+fbframe:	fbframe.o LIBFB
+	CC LDFLAGS -o fbframe fbframe.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+bw-fb:		bw-fb.o LIBFB
+	CC LDFLAGS -o bw-fb bw-fb.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+fb-bw:		fb-bw.o LIBFB
+	CC LDFLAGS -o fb-bw fb-bw.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+cat-fb:		cat-fb.o LIBFONT LIBFB
+	CC LDFLAGS -o cat-fb cat-fb.o LIB_PRE''LIBFONT LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+/* "gif2fb" is an alternative implementation of "gif-fb"; use either or both */
+
+gif2fb:		gif2fb.o LIBFB
+	CC LDFLAGS -o gif2fb gif2fb.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+fbfade:		fbfade.o LIBFB
+	CC LDFLAGS -o fbfade fbfade.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+fbstretch:	fbstretch.o LIBFB
+	CC LDFLAGS -o fbstretch fbstretch.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+gif-fb:		gif-fb.o LIBFB
+	CC LDFLAGS -o gif-fb gif-fb.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+spm-fb:		spm-fb.o LIBRT LIBFB
+	CC LDFLAGS -o spm-fb spm-fb.o LIB_PRE''LIBRT LIB_PRE''LIBFB LIBFB_LIBES LIBRT_LIBES LIBES
+
+polar-fb:		polar-fb.o LIBFB
+	CC LDFLAGS -o polar-fb polar-fb.o LIB_PRE''LIBFB LIBFB_LIBES LIBES
+
+cell-fb:		cell-fb.o LIBFB
+	CC LDFLAGS -o cell-fb cell-fb.o LIB_PRE''LIBFB LIBFB_LIBES LIB_PRE''LIBRT LIBRT_LIBES LIBES
+
+#include "../Cakefile.rules"

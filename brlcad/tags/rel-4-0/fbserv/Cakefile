@@ -1,0 +1,24 @@
+/*
+ *			fbserv/Cakefile
+ *
+ *  $Header: /usr/Backup/upgrade/brlcad/brlcad/fbserv/Cakefile,v 10.1 1991-10-12 06:37:41 mike Exp $
+ */
+
+#define CONFIGDEFS	RFBD_CONFIG
+
+#define SRCDIR	fbserv
+#define PRODUCTS	fbserv
+#define	SRCSUFF	.c
+#define MANSECTION	1
+
+#define FILES	fbserv
+
+#include "../Cakefile.defs"
+#include "../Cakefile.prog"
+
+/* Explicit composition of each product */
+
+fbserv:	OBJ LIBFB
+	CC LDFLAGS -o fbserv OBJ LIB_PRE''LIBFB LIBFB_LIBES RFBD_LIBES LIBES
+
+#include "../Cakefile.rules"

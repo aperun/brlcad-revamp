@@ -1,0 +1,23 @@
+/*
+ *	$Header: /usr/Backup/upgrade/brlcad/brlcad/halftone/Cakefile,v 10.1 1991-10-12 06:53:23 mike Exp $
+ *
+ *			halftone/Cakefile
+ */
+
+#define SRCDIR	halftone
+#define PRODUCTS	halftone
+#define	SRCSUFF	.c
+#define MANSECTION	1
+
+#define FILES	main sharpen tone_classic tone_floyd tone_folly \
+		tone_simple tonescale
+
+#include "../Cakefile.defs"
+#include "../Cakefile.prog"
+
+/* Explicit composition of each product */
+
+halftone:	OBJ 
+	CC LDFLAGS -o halftone OBJ  LIB_PRE''LIBRT LIB_PRE''LIBFB LIBFB_LIBES LIBRT_LIBES LIBMALLOC LIBES
+
+#include "../Cakefile.rules"

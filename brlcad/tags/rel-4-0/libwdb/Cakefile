@@ -1,0 +1,15 @@
+/*
+ *			libwdb/Cakefile
+ *
+ *  $Header: /usr/Backup/upgrade/brlcad/brlcad/libwdb/Cakefile,v 10.1 1991-10-12 06:36:53 mike Exp $
+ */
+#define PRODUCTS	libwdb.ARCH_SUF
+#define SRCDIR	libwdb
+#define FILES	wdb reg spl ars arbn units pipe export nmg poly id
+#define	SRCSUFF	.c
+#define MANSECTION	3
+
+#include "../Cakefile.defs"
+
+#include "../Cakefile.lib"
+#include "../Cakefile.rules"

@@ -1,0 +1,40 @@
+/*
+ *			mged/Cakefile
+ */
+#define	CONFIGDEFS	MGED_CONFIG
+
+#define SRCDIR	mged
+#define PRODUCTS	mged cad_boundp cad_parea
+#define	SRCSUFF	.c
+#define MANSECTION	1
+
+#define FILES	ged dodraw dozoom titles scroll \
+			usepen dir columns mover tedit \
+			cmd chgview chgmodel chgtree \
+			rtif anal typein \
+			buttons clip menu adc edsol edarb \
+			proc_reg hideline polyif \
+			mater plot overlay inside \
+			concat utility1 utility2 track arbs \
+			facedef arb ell half tgc torus set \
+			attach dm-tek dm-plot dm-ps \
+			dm-tek4109 MGED_OBJS
+
+#include "../Cakefile.defs"
+#include "../Cakefile.prog"
+
+#define COMPLETE_LIBES	\
+	LIBWDB LIBRT LIBRT_LIBES MGED_LIBES LIBMALLOC LIBES
+
+mged:	OBJ LIBRT
+	sh ../newvers.sh version "Graphics Editor (MGED)"
+	CC CFLAGS -c vers.c
+	CC -o mged LDFLAGS OBJ COMPLETE_LIBES vers.o
+
+cad_boundp: cad_boundp.o
+	CC -o cad_boundp cad_boundp.o LIBMALLOC LIBES
+
+cad_parea: cad_parea.o
+	CC -o cad_parea cad_parea.o LIBMALLOC LIBES
+
+#include "../Cakefile.rules"

@@ -185,7 +185,11 @@ combbld()	/* Build Combination record */
 	cp = nxt_spc( cp );
 	record.c.c_length = (short)atoi( cp );
 	cp = nxt_spc( cp );
-	record.c.c_num = (short)atoi( cp );
+#if 0
+	record.c.c_num = (short)atoi( cp );		/* DEPRECATED */
+#else
+	record.c.c_num = 0;
+#endif
 	cp = nxt_spc( cp );
 	record.c.c_material = (short)atoi( cp );
 	cp = nxt_spc( cp );
@@ -253,7 +257,11 @@ membbld()	/* Build Member record */
 		cp = nxt_spc( cp );
 	}
 
-	record.M.m_num = (short)atoi( cp );
+#if 0
+	record.M.m_num = (short)atoi( cp );	/* DEPRECATED */
+#else
+	record.M.m_num = 0;
+#endif
 
 	/* Write out the record */
 	(void)fwrite( (char *)&record, sizeof record, 1, stdout );

@@ -16,24 +16,15 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <fcntl.h>
 #include "machine.h"
 #include "externs.h"			/* For getopt */
-
-#include "bu.h"
-#include "vmath.h"
-#include "bn.h"
 #include "fb.h"
 
 static char	*file_name;
@@ -58,7 +49,6 @@ void print_usage ()
 	   "                   [-c] [-f format] [-# depth]");
 }
 
-int
 get_args(argc, argv)
 
 int		argc;
@@ -153,15 +143,13 @@ register char	*argv[];
     return(1);		/* OK */
 }
 
-int
 main (argc, argv)
 
 int	argc;
 char	*argv[];
 
 {
-    unsigned char *buffer;
-    unsigned char *bp;
+    char	*buffer, *bp;
     double	*value;
     int		bufsiz;		/* buffer size (in bytes) */
     int		l_per_b;	/* buffer size (in output lines) */
@@ -198,7 +186,7 @@ char	*argv[];
     l_per_b = ((1 << 16) / (d_per_l * 8));
     bufsiz = l_per_b * (d_per_l * 8);
 
-    buffer = (unsigned char *) bu_malloc(bufsiz, "char buffer");
+    buffer = (char *) bu_malloc(bufsiz, "char buffer");
     value = (double *) bu_malloc(d_per_l * 8, "doubles");
     col = row = 0;
     while ((num = read(infd, buffer, bufsiz)) > 0)
@@ -209,7 +197,7 @@ char	*argv[];
 	{
 	    if (make_cells)
 		printf("%d %d", col, row);
-	    ntohd((unsigned char *)value, bp, d_per_l);
+	    ntohd(value, bp, d_per_l);
 	    bp += d_per_l * 8;
 	    for (i = 0; i < d_per_l; ++i)
 		printf(format, value[i]);
@@ -226,5 +214,4 @@ char	*argv[];
 	perror("double-asc");
 	exit (1);
     }
-    return 0;
 }

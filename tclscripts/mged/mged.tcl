@@ -179,7 +179,7 @@ proc do_New { id } {
 	    "Enter new database filename:" ia_filename "${mged_gui(databaseDir)}/" \
 	    0 {{ summary "Enter a new database name. Note - a database
 must not exist by this name."}}\
-	    OK Cancel]
+	    OK CANCEL]
 
     if {$ia_filename != "" && $ret == 0} {
 	# save the directory
@@ -295,7 +295,7 @@ proc do_Concat { id } {
 		0 {{ summary "
 This is where to enter a prefix. The prefix,
 if entered, is prepended to each object of
-the database being inserted."} { see_also dbconcat } } OK Cancel]
+the database being inserted."} { see_also dbconcat } } OK CANCEL]
 
         if {$prefix == ""} {
 	    set prefix /

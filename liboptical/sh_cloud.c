@@ -17,7 +17,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCScloud[] = "@(#)$Header$ (BRL)";
+static char RCScloud[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -29,7 +29,7 @@ static const char RCScloud[] = "@(#)$Header$ (BRL)";
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
 struct cloud_specific {
 	fastf_t	cl_thresh;

@@ -19,7 +19,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -50,7 +50,6 @@ Usage: fb-bw [-h -i]\n\
 	[-X scr_xoff] [-Y scr_yoff]\n\
 	[-s squaresize] [-w width] [-n height] [file.bw]\n";
 
-int
 get_args( argc, argv )
 register char **argv;
 {
@@ -108,7 +107,6 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main( argc, argv )
 int argc; char **argv;
 {

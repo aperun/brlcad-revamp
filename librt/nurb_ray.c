@@ -32,7 +32,7 @@ void rt_nurb_pbound();
 
 struct face_g_snurb *
 rt_nurb_project_srf( srf, plane1, plane2, res)
-const struct face_g_snurb *srf;
+CONST struct face_g_snurb *srf;
 plane_t plane1, plane2;
 struct resource *res;
 {
@@ -123,7 +123,7 @@ struct internal_convex_hull {
 
 void
 rt_nurb_clip_srf( srf, dir, min, max)
-const struct face_g_snurb *srf;
+CONST struct face_g_snurb *srf;
 int	dir;
 fastf_t *min, *max;
 {
@@ -292,7 +292,7 @@ fastf_t *min, *max;
  */
 struct face_g_snurb *
 rt_nurb_region_from_srf( srf, dir, param1, param2, res)
-const struct face_g_snurb *srf;
+CONST struct face_g_snurb *srf;
 int	dir;
 fastf_t param1, param2;
 struct resource *res;
@@ -335,7 +335,7 @@ struct resource *res;
  */
 struct rt_nurb_uv_hit *
 rt_nurb_intersect( srf, plane1, plane2, uv_tol, res )
-const struct face_g_snurb * srf;
+CONST struct face_g_snurb * srf;
 plane_t plane1;
 plane_t plane2;
 double	uv_tol;
@@ -364,7 +364,7 @@ struct resource *res;
 	psrf->dir = 1;
 	BU_LIST_APPEND( &plist, &psrf->l );
 
-	if( RT_G_DEBUG & DEBUG_SPLINE )
+	if( rt_g.debug & DEBUG_SPLINE )
 		rt_nurb_s_print("srf", psrf);
 	
 	/* This list starts out with only a single snurb,
@@ -387,7 +387,7 @@ top:
 			sub++;
 			dir = (dir == 0)?1:0;	/* change direction */
 			
-			if( RT_G_DEBUG & DEBUG_SPLINE )
+			if( rt_g.debug & DEBUG_SPLINE )
 				rt_nurb_s_print("psrf", psrf);
 
 			rt_nurb_pbound( psrf, vmin, vmax);
@@ -396,7 +396,7 @@ top:
 			if( !(vmin[0] <= 0.0 && vmin[1] <= 0.0 &&
 				vmax[0] >= 0.0 && vmax[1] >= 0.0 ))
 			{
-				if( RT_G_DEBUG & DEBUG_SPLINE )
+				if( rt_g.debug & DEBUG_SPLINE )
 					bu_log( "this srf doesn't include the origin\n" );
 				flat = 1;
 				rt_nurb_free_snurb( psrf, res );
@@ -408,7 +408,7 @@ top:
 			if( (smax - smin) > .8)  {
 				/* Split surf, requeue both sub-surfs at head */
 				/* New surfs will have same dir as arg, here */
-				if( RT_G_DEBUG & DEBUG_SPLINE )
+				if( rt_g.debug & DEBUG_SPLINE )
 					bu_log( "splitting this surface\n" );
 				rt_nurb_s_split( &plist, psrf, dir, res );
 				rt_nurb_free_snurb( psrf, res );
@@ -416,7 +416,7 @@ top:
 			}
 			if( smin > 1.0 || smax < 0.0 )
 			{
-				if( RT_G_DEBUG & DEBUG_SPLINE )
+				if( rt_g.debug & DEBUG_SPLINE )
 					bu_log( "eliminating this surface (smin=%g, smax=%g)\n", smin, smax );
 				flat = 1;
 				rt_nurb_free_snurb( psrf, res );
@@ -447,7 +447,7 @@ top:
 			psrf->dir = dir;
 			rt_nurb_free_snurb(osrf, res);
 
-			if( RT_G_DEBUG & DEBUG_SPLINE )
+			if( rt_g.debug & DEBUG_SPLINE )
 			{
 				bu_log( "After call to rt_nurb_region_from_srf() (smin=%g, smax=%g)\n", smin, smax );
 				rt_nurb_s_print("psrf", psrf);
@@ -463,7 +463,7 @@ top:
                         {
 				struct rt_nurb_uv_hit * hit;
 
-				if( RT_G_DEBUG & DEBUG_SPLINE )
+				if( rt_g.debug & DEBUG_SPLINE )
 				{
 					fastf_t p1[4], p2[4];
 					int coords;

@@ -16,7 +16,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSrt[] = "@(#)$Header$ (BRL)";
+static char RCSrt[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -37,7 +37,7 @@ static const char RCSrt[] = "@(#)$Header$ (BRL)";
 #include "fb.h"
 #include "./ext.h"
 
-#include "rtprivate.h"
+#include "./rdebug.h"
 #include "../librt/debug.h"
 
 extern int	rdebug;			/* RT program debugging (not library) */
@@ -52,14 +52,9 @@ int		rpt_dist = 0;		/* report distance to each pixel */
 /***** end of sharing with viewing model *****/
 
 /***** variables shared with worker() ******/
-int		query_x;
-int		query_y;
-int		Query_one_pixel;
-int		query_rdebug;
-int		query_debug;
 int		stereo = 0;		/* stereo viewing */
 int		hypersample=0;		/* number of extra rays to fire */
-unsigned int	jitter=0;		/* ray jitter control variable */
+int		jitter=0;		/* jitter ray starting positions */
 fastf_t		rt_perspective=0;	/* presp (degrees X) 0 => ortho */
 fastf_t		aspect = 1;		/* view aspect ratio X/Y */
 vect_t		dx_model;		/* view delta-X as model-space vect */
@@ -130,16 +125,16 @@ extern struct command_tab	rt_cmdtab[];
 /*
  *			G E T _ A R G S
  */
-int get_args( int argc, register char **argv )
+get_args( argc, argv )
+register char **argv;
 {
 	register int c;
 	register int i;
 
 	bu_optind = 1;		/* restart */
 
-
 #define GETOPT_STR	\
-	".:,:@:a:b:c:d:e:f:g:ij:l:n:o:p:q:rs:v:w:x:A:BC:D:E:F:G:H:IJ:K:MN:O:P:Q:RST:U:V:X:!:"
+	".:,:@:a:b:c:d:e:f:g:ij:l:n:o:p:q:rs:v:w:x:A:BC:D:E:F:G:H:IJ:K:MN:O:P:RST:U:V:X:!:"
 
 	while( (c=bu_getopt( argc, argv, GETOPT_STR )) != EOF )  {
 		switch( c )  {
@@ -267,7 +262,7 @@ int get_args( int argc, register char **argv )
 			finalframe = atoi( bu_optarg );
 			break;
 		case 'N':
-			sscanf( bu_optarg, "%x", (unsigned int *)&rt_g.NMG_debug);
+			sscanf( bu_optarg, "%x", &rt_g.NMG_debug);
 			bu_log("NMG_debug=0x%x\n", rt_g.NMG_debug);
 			break;
 		case 'M':
@@ -277,13 +272,13 @@ int get_args( int argc, register char **argv )
 			AmbientIntensity = atof( bu_optarg );
 			break;
 		case 'x':
-			sscanf( bu_optarg, "%x", (unsigned int *)&rt_g.debug );
+			sscanf( bu_optarg, "%x", &rt_g.debug );
 			break;
 		case 'X':
-			sscanf( bu_optarg, "%x", (unsigned int *)&rdebug );
+			sscanf( bu_optarg, "%x", &rdebug );
 			break;
 		case '!':
-			sscanf( bu_optarg, "%x", (unsigned int *)&bu_debug );
+			sscanf( bu_optarg, "%x", &bu_debug );
 			break;
 
 		case 's':
@@ -349,7 +344,7 @@ int get_args( int argc, register char **argv )
 			}
 			break;
 		case 'v': /* Set level of "non-debug" debugging output */
-			sscanf( bu_optarg, "%x", (unsigned int *)&rt_verbosity );
+			sscanf( bu_optarg, "%x", &rt_verbosity );
 			bu_printb( "Verbosity:", rt_verbosity,
 				VERBOSE_FORMAT);
 			bu_log("\n");
@@ -366,10 +361,6 @@ int get_args( int argc, register char **argv )
 					MAX_PSW, MAX_PSW);
 				npsw = MAX_PSW;
 			}
-			break;
-		case 'Q':
-			Query_one_pixel = ! Query_one_pixel;
-			sscanf(bu_optarg, "%d,%d\n", &query_x, &query_y);
 			break;
 		case 'B':
 			/*  Remove all intentional random effects
@@ -442,13 +433,13 @@ int get_args( int argc, register char **argv )
 	}
 
 	/* Compat */
-	if( RT_G_DEBUG || rdebug || rt_g.NMG_debug )
+	if( rt_g.debug || rdebug || rt_g.NMG_debug )
 		bu_debug |= BU_DEBUG_COREDUMP;
 
-	if( RT_G_DEBUG & DEBUG_MEM_FULL )  bu_debug |= BU_DEBUG_MEM_CHECK;
-	if( RT_G_DEBUG & DEBUG_MEM )  bu_debug |= BU_DEBUG_MEM_LOG;
-	if( RT_G_DEBUG & DEBUG_PARALLEL )  bu_debug |= BU_DEBUG_PARALLEL;
-	if( RT_G_DEBUG & DEBUG_MATH )  bu_debug |= BU_DEBUG_MATH;
+	if( rt_g.debug & DEBUG_MEM_FULL )  bu_debug |= BU_DEBUG_MEM_CHECK;
+	if( rt_g.debug & DEBUG_MEM )  bu_debug |= BU_DEBUG_MEM_LOG;
+	if( rt_g.debug & DEBUG_PARALLEL )  bu_debug |= BU_DEBUG_PARALLEL;
+	if( rt_g.debug & DEBUG_MATH )  bu_debug |= BU_DEBUG_MATH;
 
 	if( rdebug & RDEBUG_RTMEM_END )  bu_debug |= BU_DEBUG_MEM_CHECK;
 

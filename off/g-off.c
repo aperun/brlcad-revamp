@@ -17,7 +17,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include <stdio.h>
@@ -25,12 +25,11 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <string.h>
 #include "machine.h"
 #include "externs.h"
-#include "bu.h"
 #include "vmath.h"
 #include "nmg.h"
 #include "rtgeom.h"
 #include "raytrace.h"
-#include "plot3.h"
+#include "../librt/debug.h"
 
 RT_EXTERN(union tree *do_region_end, (struct db_tree_state *tsp, struct db_full_path *pathp, union tree *curtree, genptr_t client_data));
 
@@ -100,8 +99,6 @@ char	*argv[];
 	tol.perp = 1e-6;
 	tol.para = 1 - tol.perp;
 
-	rt_init_resource( &rt_uniresource, 0, NULL );
-
 	the_model = nmg_mm();
 	RT_LIST_INIT( &rt_g.rtg_vlfree );	/* for vlist macros */
 
@@ -156,7 +153,7 @@ char	*argv[];
 		perror(argv[0]);
 		exit(1);
 	}
-	db_dirbuild(dbip);
+	db_scan(dbip, (int (*)())db_diradd, 1, NULL);
 
 	/* Create .fig file name and open it. */
 	fig_file = rt_malloc(sizeof(prefix) + sizeof(argv[0] + 4), "st");
@@ -184,7 +181,7 @@ char	*argv[];
 	rt_vls_init(&base_seg);		/* .fig figure file's main segment. */
 
 	/* Walk indicated tree(s).  Each region will be output separately */
-	(void)db_walk_tree(dbip, argc-1, (const char **)(argv+1),
+	(void)db_walk_tree(dbip, argc-1, (CONST char **)(argv+1),
 		1,			/* ncpu */
 		&jack_tree_state,
 		0,			/* take all regions */
@@ -230,7 +227,7 @@ genptr_t		client_data;
 
 	RT_LIST_INIT(&vhead);
 
-	if (RT_G_DEBUG&DEBUG_TREEWALK || verbose) {
+	if (rt_g.debug&DEBUG_TREEWALK || verbose) {
 		char	*sofar = db_path_to_string(pathp);
 		rt_log("\ndo_region_end(%d %d%%) %s\n",
 			regions_tried,
@@ -255,7 +252,7 @@ genptr_t		client_data;
 			rt_g.NMG_debug = NMG_debug;	/* restore mode */
 
 			/* Release the tree memory & input regions */
-			db_free_tree(curtree, &rt_uniresource);		/* Does an nmg_kr() */
+			db_free_tree(curtree);		/* Does an nmg_kr() */
 
 			/* Get rid of (m)any other intermediate structures */
 			if( (*tsp->ts_m)->magic != -1L )
@@ -267,7 +264,7 @@ genptr_t		client_data;
 		}
 	}
 	(void)nmg_model_fuse(*tsp->ts_m, tsp->ts_tol);
-	ret_tree = nmg_booltree_evaluate(curtree, tsp->ts_tol, &rt_uniresource);	/* librt/nmg_bool.c */
+	ret_tree = nmg_booltree_evaluate(curtree, tsp->ts_tol);	/* librt/nmg_bool.c */
 	RT_UNSETJUMP;		/* Relinquish the protection */
 	if( ret_tree )
 		r = ret_tree->tr_d.td_r;
@@ -368,7 +365,7 @@ genptr_t		client_data;
 	 *  A return of TREE_NULL from this routine signals an error,
 	 *  so we need to cons up an OP_NOP node to return.
 	 */
-	db_free_tree(curtree, &rt_uniresource);		/* Does an nmg_kr() */
+	db_free_tree(curtree);		/* Does an nmg_kr() */
 
 out:
 	GETUNION(curtree, tree);

@@ -12,12 +12,6 @@
  */
 #include "conf.h"
 
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include <stdio.h>
 #include <math.h>
 
@@ -30,7 +24,7 @@ short	obuf[512];
 static char usage[] = "\
 Usage: d-i [-n || scale] < doubles > shorts\n";
 
-int main( argc, argv )
+main( argc, argv )
 int	argc;
 char	**argv;
 {
@@ -75,5 +69,4 @@ char	**argv;
 	if( clip_low != 0 || clip_high != 0 )
 		fprintf( stderr, "Warning: Clipped %d high, %d low\n",
 			clip_high, clip_low );
-	return 0;
 }

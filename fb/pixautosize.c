@@ -18,7 +18,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -27,9 +27,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "machine.h"
 #include "externs.h"
-#include "bu.h"
-#include "vmath.h"
-#include "bn.h"
 #include "fb.h"
 
 static int	bytes_per_sample = 3;
@@ -43,7 +40,6 @@ static char usage[] = "\
 Usage:	pixautosize [-b bytes_per_sample] [-f file_name]\n\
 or	pixautosize [-b bytes_per_sample] [-l file_length]\n";
 
-int
 get_args( argc, argv )
 register char **argv;
 {
@@ -71,7 +67,6 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main(argc, argv)
 int argc;
 char **argv;

@@ -47,7 +47,7 @@ typedef FILE	*FILPTR;
  *	infile			File to split.  If none, uses stdin.
  */
 
-int
+void
 main(argc, argv)
 int  argc;
 char *argv[];
@@ -161,5 +161,4 @@ char *argv[];
 	for ( i = -aflag; i<files-aflag; i++ )
 	    fwrite( inprow[i], 1, rasts, outfil[i+aflag] );
     }
-    return 0;
 }

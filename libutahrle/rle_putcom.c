@@ -53,18 +53,17 @@
  */
 static char *
 match( n, v )
-const char *n;
-const char *v;
+CONST char *n;
+CONST char *v;
 {
     for ( ; *n != '\0' && *n != '=' && *n == *v; n++, v++ )
 	;
     if (*n == '\0' || *n == '=')
-    {
 	if ( *v == '\0' )
 	    return((char *) v);
 	else if ( *v == '=' )
 	    return( (char *) ++v);
-    }
+
     return NULL;
 }
 
@@ -83,18 +82,18 @@ const char *v;
  * Algorithm:
  * 	Find match if any, else add at end (realloc to make bigger).
  */
-const char *
+CONST char *
 rle_putcom( value, the_hdr )
-const char * value;
+CONST char * value;
 rle_hdr * the_hdr;
 {
-    register const char ** cp, ** old_comments;
-    const char * v;
+    register CONST char ** cp, ** old_comments;
+    CONST char * v;
     int i;
 
     if ( the_hdr->comments == NULL )
     {
-	the_hdr->comments = (const char **)malloc( 2 * sizeof(char *) );
+	the_hdr->comments = (CONST char **)malloc( 2 * sizeof(char *) );
 	the_hdr->comments[0] = value;
 	the_hdr->comments[1] = NULL;
     }
@@ -116,7 +115,7 @@ rle_hdr * the_hdr;
 	 * could copy the pointers, too.
 	 */
 	old_comments = the_hdr->comments;
-	the_hdr->comments = (const char **)malloc(i * sizeof(char *) );
+	the_hdr->comments = (CONST char **)malloc(i * sizeof(char *) );
 	the_hdr->comments[--i] = NULL;
 	the_hdr->comments[--i] = value;
 	for ( i--; i >= 0; i-- )
@@ -141,13 +140,13 @@ rle_hdr * the_hdr;
  * Algorithm:
  *	[None]
  */
-const char *
+CONST char *
 rle_delcom( name, the_hdr )
-const char * name;
+CONST char * name;
 rle_hdr *the_hdr ;
 {
-    register const char ** cp;
-    const char * v = NULL;
+    register CONST char ** cp;
+    CONST char * v = NULL;
 
     if ( the_hdr->comments == NULL )
 	return NULL;

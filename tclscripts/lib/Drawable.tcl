@@ -63,8 +63,8 @@ body Drawable::constructor {db} {
 }
 
 body Drawable::destructor {} {
-    rename $dg ""
-    catch {delete object $help}
+    $dg close
+    delete object $help
 }
 
 body Drawable::observer {args} {

@@ -262,7 +262,12 @@ proc mouse_solid_edit_select { x y } {
 	return
     }
 
-    _mged_sed -i 1 $spath
+    set sol_type [lindex [db get $spath] 0]
+    if {$sol_type == "sketch"} {
+	Sketch_editor .#auto $spath
+    } else {
+	_mged_sed -i 1 $spath
+    }
 
     mged_apply_all [winset] "set mouse_behavior d"
     foreach id $mged_players {

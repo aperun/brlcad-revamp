@@ -15,18 +15,13 @@
  *
  */
 #ifndef lint
-static const char RCSid[] = "$Id$";
+static char RCSid[] = "$Id$";
 #endif
 #undef DEBUG 
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 
 #include "machine.h"
 #include "externs.h"
@@ -53,8 +48,6 @@ struct  frame {
 
 struct bu_list head = {MAGIC, &head, &head};
 struct frame globals;
-
-extern int yylex();
 
 extern int optind;
 extern char *optarg;
@@ -268,7 +261,6 @@ void merge()
 /* 
  *			M A I N
  */
-int
 main(argc, argv)
 int argc;
 char **argv;

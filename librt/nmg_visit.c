@@ -24,7 +24,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -36,7 +36,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "nmg.h"
 #include "raytrace.h"
 
-const struct nmg_visit_handlers	nmg_visit_handlers_null;
+CONST struct nmg_visit_handlers	nmg_visit_handlers_null;
 
 /*
  *			N M G _ V I S I T _ V E R T E X
@@ -44,7 +44,7 @@ const struct nmg_visit_handlers	nmg_visit_handlers_null;
 void
 nmg_visit_vertex( v, htab, state )
 struct vertex			*v;
-const struct nmg_visit_handlers	*htab;
+CONST struct nmg_visit_handlers	*htab;
 genptr_t			*state;		/* Handler's private state */
 {
 	NMG_CK_VERTEX(v);
@@ -61,7 +61,7 @@ genptr_t			*state;		/* Handler's private state */
 void
 nmg_visit_vertexuse( vu, htab, state )
 struct vertexuse		*vu;
-const struct nmg_visit_handlers	*htab;
+CONST struct nmg_visit_handlers	*htab;
 genptr_t			*state;		/* Handler's private state */
 {
 	NMG_CK_VERTEXUSE(vu);
@@ -82,7 +82,7 @@ genptr_t			*state;		/* Handler's private state */
 void
 nmg_visit_edge( e, htab, state )
 struct edge			*e;
-const struct nmg_visit_handlers	*htab;
+CONST struct nmg_visit_handlers	*htab;
 genptr_t			*state;		/* Handler's private state */
 {
 	NMG_CK_EDGE( e );
@@ -96,7 +96,7 @@ genptr_t			*state;		/* Handler's private state */
 void
 nmg_visit_edgeuse( eu, htab, state )
 struct edgeuse			*eu;
-const struct nmg_visit_handlers	*htab;
+CONST struct nmg_visit_handlers	*htab;
 genptr_t			*state;		/* Handler's private state */
 {
 	NMG_CK_EDGEUSE(eu);
@@ -118,7 +118,7 @@ genptr_t			*state;		/* Handler's private state */
 void
 nmg_visit_loop( l, htab, state )
 struct loop			*l;
-const struct nmg_visit_handlers	*htab;
+CONST struct nmg_visit_handlers	*htab;
 genptr_t			*state;		/* Handler's private state */
 {
 	NMG_CK_LOOP(l);
@@ -135,7 +135,7 @@ genptr_t			*state;		/* Handler's private state */
 void
 nmg_visit_loopuse( lu, htab, state )
 struct loopuse			*lu;
-const struct nmg_visit_handlers	*htab;
+CONST struct nmg_visit_handlers	*htab;
 genptr_t			*state;		/* Handler's private state */
 {
 	NMG_CK_LOOPUSE( lu );
@@ -163,7 +163,7 @@ genptr_t			*state;		/* Handler's private state */
 void
 nmg_visit_face( f, htab, state )
 struct face			*f;
-const struct nmg_visit_handlers	*htab;
+CONST struct nmg_visit_handlers	*htab;
 genptr_t			*state;		/* Handler's private state */
 {
 
@@ -179,7 +179,7 @@ genptr_t			*state;		/* Handler's private state */
 void
 nmg_visit_faceuse( fu, htab, state )
 struct faceuse			*fu;
-const struct nmg_visit_handlers	*htab;
+CONST struct nmg_visit_handlers	*htab;
 genptr_t			*state;		/* Handler's private state */
 {
 	struct loopuse	*lu;
@@ -203,7 +203,7 @@ genptr_t			*state;		/* Handler's private state */
 void
 nmg_visit_shell( s, htab, state )
 struct shell			*s;
-const struct nmg_visit_handlers	*htab;
+CONST struct nmg_visit_handlers	*htab;
 genptr_t			*state;		/* Handler's private state */
 {
 	struct faceuse	*fu;
@@ -236,7 +236,7 @@ genptr_t			*state;		/* Handler's private state */
 void
 nmg_visit_region( r, htab, state )
 struct nmgregion		*r;
-const struct nmg_visit_handlers	*htab;
+CONST struct nmg_visit_handlers	*htab;
 genptr_t			*state;		/* Handler's private state */
 {
 	struct shell		*s;
@@ -259,7 +259,7 @@ genptr_t			*state;		/* Handler's private state */
 void
 nmg_visit_model( model, htab, state )
 struct model			*model;
-const struct nmg_visit_handlers	*htab;
+CONST struct nmg_visit_handlers	*htab;
 genptr_t			*state;		/* Handler's private state */
 {
 	struct nmgregion *r;
@@ -280,8 +280,8 @@ genptr_t			*state;		/* Handler's private state */
  */
 void
 nmg_visit( magicp, htab, state )
-const long			*magicp;
-const struct nmg_visit_handlers	*htab;
+CONST long			*magicp;
+CONST struct nmg_visit_handlers	*htab;
 genptr_t			*state;		/* Handler's private state */
 {
 	switch( *magicp )  {

@@ -25,7 +25,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -74,7 +74,7 @@ int	orientation;
 void 
 nmg_pr_orient(orientation, h)
 int		orientation;
-const char	*h;
+CONST char	*h;
 {
 	switch (orientation) {
 	case OT_SAME : bu_log("%s%8s orientation\n", h, "SAME"); break;
@@ -91,9 +91,9 @@ const char	*h;
  */
 void 
 nmg_pr_m(m)
-const struct model *m;
+CONST struct model *m;
 {
-	const struct nmgregion *r;
+	CONST struct nmgregion *r;
 
 	bu_log("MODEL %8x\n", m);
 	if (!m || m->magic != NMG_MODEL_MAGIC) {
@@ -130,7 +130,7 @@ static char nmg_pr_padstr[128];
  */
 void 
 nmg_pr_r(r, h)
-const struct nmgregion *r;
+CONST struct nmgregion *r;
 char *h;
 {
 	struct shell *s;
@@ -160,7 +160,7 @@ char *h;
  */
 void 
 nmg_pr_sa(sa, h)
-const struct shell_a *sa;
+CONST struct shell_a *sa;
 char *h;
 {
 	MKPAD(h);
@@ -184,7 +184,7 @@ char *h;
  */
 void 
 nmg_pr_lg(lg, h)
-const struct loop_g *lg;
+CONST struct loop_g *lg;
 char *h;
 {
 	MKPAD(h);
@@ -204,10 +204,10 @@ char *h;
  */
 void 
 nmg_pr_fg(magic, h)
-const long *magic;
+CONST long *magic;
 char *h;
 {
-	const struct face_g_snurb *fgs;
+	CONST struct face_g_snurb *fgs;
 	int ncoords;
 	int i,j,k,l;
 
@@ -259,12 +259,12 @@ char *h;
  */
 void 
 nmg_pr_s(s, h)
-const struct shell *s;
+CONST struct shell *s;
 char *h;
 {
-	const struct faceuse	*fu;
-	const struct loopuse	*lu;
-	const struct edgeuse	*eu;
+	CONST struct faceuse	*fu;
+	CONST struct loopuse	*lu;
+	CONST struct edgeuse	*eu;
 
 	MKPAD(h);
 	
@@ -303,12 +303,12 @@ char *h;
  */
 void 
 nmg_pr_s_briefly(s, h)
-const struct shell *s;
+CONST struct shell *s;
 char *h;
 {
-	const struct faceuse	*fu;
-	const struct loopuse	*lu;
-	const struct edgeuse	*eu;
+	CONST struct faceuse	*fu;
+	CONST struct loopuse	*lu;
+	CONST struct edgeuse	*eu;
 
 	MKPAD(h);
 	
@@ -340,7 +340,7 @@ char *h;
  */
 void 
 nmg_pr_f(f, h)
-const struct face *f;
+CONST struct face *f;
 char *h;
 {
 	MKPAD(h);
@@ -368,10 +368,10 @@ char *h;
  */
 void 
 nmg_pr_fu(fu, h)
-const struct faceuse *fu;
+CONST struct faceuse *fu;
 char *h;
 {
-	const struct loopuse *lu;
+	CONST struct loopuse *lu;
 
 	MKPAD(h);
 	NMG_CK_FACEUSE(fu);
@@ -404,10 +404,10 @@ char *h;
  */
 void 
 nmg_pr_fu_briefly(fu, h)
-const struct faceuse *fu;
+CONST struct faceuse *fu;
 char *h;
 {
-	const struct loopuse *lu;
+	CONST struct loopuse *lu;
 	struct face *f;
 
 	MKPAD(h);
@@ -434,7 +434,7 @@ char *h;
  */
 void 
 nmg_pr_l(l, h)
-const struct loop *l;
+CONST struct loop *l;
 char *h;
 {
 	MKPAD(h);
@@ -458,11 +458,11 @@ char *h;
  */
 void 
 nmg_pr_lu(lu, h)
-const struct loopuse *lu;
+CONST struct loopuse *lu;
 char *h;
 {
-	const struct edgeuse	*eu;
-	const struct vertexuse *vu;
+	CONST struct edgeuse	*eu;
+	CONST struct vertexuse *vu;
 	long		magic1;
 	
 	MKPAD(h);
@@ -514,11 +514,11 @@ char *h;
  */
 void 
 nmg_pr_lu_briefly(lu, h)
-const struct loopuse *lu;
+CONST struct loopuse *lu;
 char *h;
 {
-	const struct edgeuse	*eu;
-	const struct vertexuse *vu;
+	CONST struct edgeuse	*eu;
+	CONST struct vertexuse *vu;
 	long		magic1;
 
 	MKPAD(h);
@@ -552,7 +552,7 @@ char *h;
  */
 void
 nmg_pr_eg(eg_magic_p, h)
-const long *eg_magic_p;
+CONST long *eg_magic_p;
 char *h;
 {
 	MKPAD(h);
@@ -607,7 +607,7 @@ char *h;
  */
 void 
 nmg_pr_e(e, h)
-const struct edge *e;
+CONST struct edge *e;
 char *h;
 {
 	MKPAD(h);
@@ -628,7 +628,7 @@ char *h;
  */
 void 
 nmg_pr_eu(eu, h)
-const struct edgeuse *eu;
+CONST struct edgeuse *eu;
 char *h;
 {
 	MKPAD(h);
@@ -666,7 +666,7 @@ char *h;
  */
 void 
 nmg_pr_eu_briefly(eu, h)
-const struct edgeuse *eu;
+CONST struct edgeuse *eu;
 char *h;
 {
 	MKPAD(h);
@@ -683,7 +683,7 @@ char *h;
  */
 void 
 nmg_pr_eu_endpoints(eu, h)
-const struct edgeuse *eu;
+CONST struct edgeuse *eu;
 char *h;
 {
 	struct vertex_g	*vg1, *vg2;
@@ -708,7 +708,7 @@ char *h;
  */
 void 
 nmg_pr_vg(vg, h)
-const struct vertex_g *vg;
+CONST struct vertex_g *vg;
 char *h;
 {
 	MKPAD(h);
@@ -729,7 +729,7 @@ char *h;
  */
 void 
 nmg_pr_v(v, h)
-const struct vertex *v;
+CONST struct vertex *v;
 char *h;
 {
 	MKPAD(h);
@@ -758,7 +758,7 @@ char *h;
  */
 void 
 nmg_pr_vu(vu, h)
-const struct vertexuse *vu;
+CONST struct vertexuse *vu;
 char *h;
 {
 	MKPAD(h);
@@ -800,16 +800,16 @@ char *h;
  */
 void 
 nmg_pr_vu_briefly(vu, h)
-const struct vertexuse *vu;
+CONST struct vertexuse *vu;
 char *h;
 {
-	const struct vertex_g	*vg;
+	CONST struct vertex_g	*vg;
 
 	MKPAD(h);
 	NMG_CK_VERTEXUSE(vu);
 	NMG_CK_VERTEX(vu->v_p);
 
-	if( (vg = vu->v_p->vg_p) )  {
+	if( vg = vu->v_p->vg_p )  {
 		NMG_CK_VERTEX_G(vg);
 		bu_log("%sVERTEXUSE %8x, v=x%x, %f %f %f\n", h, vu, vu->v_p,
 			V3ARGS(vg->coord) );
@@ -825,7 +825,7 @@ char *h;
  */
 void
 nmg_pr_vua(magic_p, h)
-const long	*magic_p;
+CONST long	*magic_p;
 char *h;
 {
 	MKPAD(h);
@@ -856,11 +856,11 @@ char *h;
  */
 void 
 nmg_euprint(str, eu)
-const char		*str;
-const struct edgeuse	*eu;
+CONST char		*str;
+CONST struct edgeuse	*eu;
 {
-	const fastf_t	*eup;
-	const fastf_t	*matep;
+	CONST fastf_t	*eup;
+	CONST fastf_t	*matep;
 	
 	NMG_CK_EDGEUSE(eu);
 	NMG_CK_VERTEXUSE(eu->vu_p);
@@ -885,8 +885,8 @@ const struct edgeuse	*eu;
  */
 void
 nmg_pr_ptbl( title, tbl, verbose )
-const char		*title;
-const struct bu_ptbl	*tbl;
+CONST char		*title;
+CONST struct bu_ptbl	*tbl;
 int			verbose;
 {
 	register long	**lp;
@@ -930,19 +930,19 @@ int			verbose;
  */
 void
 nmg_pr_ptbl_vert_list( str, tbl, mag )
-const char		*str;
-const struct bu_ptbl	*tbl;
-const fastf_t		*mag;
+CONST char		*str;
+CONST struct bu_ptbl	*tbl;
+CONST fastf_t		*mag;
 {
 	int			i;
-	const struct vertexuse	**vup;
-	const struct vertexuse	*vu;
-	const struct vertex	*v;
-	const struct vertex_g	*vg;
+	CONST struct vertexuse	**vup;
+	CONST struct vertexuse	*vu;
+	CONST struct vertex	*v;
+	CONST struct vertex_g	*vg;
 
     	bu_log("nmg_pr_ptbl_vert_list(%s):\n", str);
 
-	vup = (const struct vertexuse **)tbl->buffer;
+	vup = (CONST struct vertexuse **)tbl->buffer;
 	for (i=0 ; i < tbl->end ; ++i) {
 		vu = vup[i];
 		if( vu->l.magic != NMG_VERTEXUSE_MAGIC )
@@ -981,16 +981,16 @@ const fastf_t		*mag;
  */
 void
 nmg_pr_one_eu_vecs( eu, xvec, yvec, zvec, tol )
-const struct edgeuse	*eu;
-const vect_t		xvec;
-const vect_t		yvec;
-const vect_t		zvec;
-const struct bn_tol	*tol;
+CONST struct edgeuse	*eu;
+CONST vect_t		xvec;
+CONST vect_t		yvec;
+CONST vect_t		zvec;
+CONST struct bn_tol	*tol;
 {
-	const struct loopuse	*lu;
-	const struct faceuse	*fu;
-	const struct face	*f;
-	const struct shell	*s;
+	CONST struct loopuse	*lu;
+	CONST struct faceuse	*fu;
+	CONST struct face	*f;
+	CONST struct shell	*s;
 	char			*lu_orient;
 	char			*fu_orient;
 
@@ -1044,13 +1044,13 @@ const struct bn_tol	*tol;
  */
 void
 nmg_pr_fu_around_eu_vecs( eu, xvec, yvec, zvec, tol )
-const struct edgeuse	*eu;
-const vect_t		xvec;
-const vect_t		yvec;
-const vect_t		zvec;
-const struct bn_tol	*tol;
+CONST struct edgeuse	*eu;
+CONST vect_t		xvec;
+CONST vect_t		yvec;
+CONST vect_t		zvec;
+CONST struct bn_tol	*tol;
 {
-	const struct edgeuse	*eu1;
+	CONST struct edgeuse	*eu1;
 
 	NMG_CK_EDGEUSE(eu);
 	BN_CK_TOL(tol);
@@ -1085,8 +1085,8 @@ const struct bn_tol	*tol;
  */
 void
 nmg_pr_fu_around_eu( eu, tol )
-const struct edgeuse *eu;
-const struct bn_tol	*tol;
+CONST struct edgeuse *eu;
+CONST struct bn_tol	*tol;
 {
 	vect_t			xvec, yvec, zvec;
 
@@ -1117,11 +1117,11 @@ const struct bn_tol	*tol;
  */
 void
 nmg_pl_lu_around_eu(eu)
-const struct edgeuse	*eu;
+CONST struct edgeuse	*eu;
 {
 	FILE			*fp;
-	const struct edgeuse	*eu1;
-	const struct loopuse	*lu1;
+	CONST struct edgeuse	*eu1;
+	CONST struct loopuse	*lu1;
 	long			*b;
 	static int		num;
 	char			buf[128];
@@ -1170,7 +1170,7 @@ const struct edgeuse	*eu;
  */
 void
 nmg_pr_fus_in_fg(fg_magic)
-const long	*fg_magic;
+CONST long	*fg_magic;
 {
 	struct face	*f;
 

@@ -45,9 +45,6 @@
 
 #include "machine.h"
 #include "externs.h"			/* For malloc and getopt */
-#include "bu.h"
-#include "vmath.h"
-#include "bn.h"
 #include "fb.h"
 
 /* Adapted from an assignment for
@@ -233,7 +230,7 @@ double a, b, p;
 	    frac_x = new_x - (double)fin_x;
 	    frac_y = new_y - (double)fin_y;
 
-#define ICLAMP(d, a, b) (d < a ? (int)a : d > b ? (int)b : (int)d)
+#define CLAMP(d, a, b) (d < a ? (int)a : d > b ? (int)b : (int)d)
 
 	    /* Bilinear interpolation.
 	       It's the somewhat more expensive than it needs to be.
@@ -243,19 +240,19 @@ double a, b, p;
 			(1-frac_y)*frac_x*(double)src[findex+3+RED] +
 			frac_y*frac_x*(double)src[findex+width3+3+RED] +
 			frac_y*(1-frac_x)*(double)src[findex+width3+RED]);
-	    dest[RED] = ICLAMP(newcolor, 0, 255);
+	    dest[RED] = CLAMP(newcolor, 0, 255);
 	    
 	    newcolor = ((1-frac_x)*(1-frac_y)*(double)src[findex+GRN] +
 			     (1-frac_y)*frac_x*(double)src[findex+3+GRN] +
 			     frac_y*frac_x*(double)src[findex+width3+3+GRN] +
 			     frac_y*(1-frac_x)*(double)src[findex+width3+GRN]);
-	    dest[GRN] = ICLAMP(newcolor, 0, 255);
+	    dest[GRN] = CLAMP(newcolor, 0, 255);
 	    
 	    newcolor = ((1-frac_x)*(1-frac_y)*(double)src[findex+BLU] +
 			     (1-frac_y)*frac_x*(double)src[findex+3+BLU] +
 			     frac_y*frac_x*(double)src[findex+width3+3+BLU] +
 			     frac_y*(1-frac_x)*(double)src[findex+width3+BLU]);
-	    dest[BLU] = ICLAMP(newcolor, 0, 255);
+	    dest[BLU] = CLAMP(newcolor, 0, 255);
 	}
     }
 }

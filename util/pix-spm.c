@@ -9,7 +9,6 @@
 #include "conf.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "machine.h"
 #include "fb.h"
@@ -17,7 +16,6 @@
 
 static	char *Usage = "usage: pix-spm file.pix size > file.spm\n";
 
-int
 main( argc, argv )
 int argc; char **argv;
 {
@@ -33,6 +31,4 @@ int argc; char **argv;
 	mp = spm_init( size, sizeof(RGBpixel) );
 	spm_px_load( mp, argv[1], size, size );
 	spm_save( mp, "-" );
-
-	return 0;
 }

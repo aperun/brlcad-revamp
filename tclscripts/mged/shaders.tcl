@@ -1508,6 +1508,9 @@ proc set_texture_values { shader_str id } {
 	}
 }
 
+
+
+
 set light_data {
 	e	fraction	f	1.0	"fraction of total light contributed"		"0..1" 		0 0 \
 	e	angle		a	180	"angle of light cone"				"0..180" 	1 0 \
@@ -1726,6 +1729,15 @@ proc do_light_icon { id } {
 
 
 ######################################################################
+
+
+
+
+
+
+
+
+
 
 
 proc do_bump_apply { shade_var id } {

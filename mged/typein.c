@@ -44,7 +44,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -68,7 +68,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "wdb.h"
 #include "./ged.h"
 #include "./mged_dm.h"
-#include "./cmd.h"
 
 void	aexists();
 
@@ -82,23 +81,11 @@ char *p_half[] = {
 	"Enter the distance from the origin: "
 };
 
-char *p_dsp_v4[] = {
+char *p_dsp[] = {
 	"Enter name of displacement-map file: ",
 	"Enter width of displacement-map (number of values): ",
 	"Enter length of displacement-map (number of values): ",
 	"Normal Interpolation? 0=no 1=yes: ",
-	"Cell size: ",
-	"Unit elevation: "
-};
-
-
-char *p_dsp_v5[] = {
-	"Take data from file or database binary object [f|o]:",
-	"Enter name of file/object: ",
-	"Enter width of displacement-map (number of values): ",
-	"Enter length of displacement-map (number of values): ",
-	"Normal Interpolation? 0=no 1=yes: ",
-	"Cut direction [ad|lR|Lr] ",
 	"Cell size: ",
 	"Unit elevation: "
 };
@@ -365,12 +352,6 @@ char *p_rpp[] = {
 	"Enter ZMAX: "
 };
 
-char *p_orpp[] = {
-	"Enter XMAX, YMAX, ZMAX: ",
-	"Enter YMAX, ZMAX: ",
-	"Enter ZMAX: "
-};
-
 char *p_rpc[] = {
 	"Enter X, Y, Z of vertex: ",
 	"Enter Y: ",
@@ -450,11 +431,6 @@ char *p_eto[] = {
 	"Enter magnitude of elliptical semi-minor axis, d: "
 };
 
-char *p_binunif[] = {
-	"Enter minor type (f,d,c,s,i,L,C,S,I, or L): ",
-	"Enter name of file containing the data: "
-};
-
 /*	F _ I N ( ) :  	decides which solid reader to call
  *			Used for manual entry of solids.
  */
@@ -466,7 +442,7 @@ int argc;
 char **argv;
 {
 	register struct directory *dp;
-	char			*name;
+	char			name[NAMESIZE+2];
 	struct rt_db_internal	internal;
 	char			*new_cmd[3], **menu;
 	int			c;
@@ -475,15 +451,14 @@ char **argv;
 	int			nvals, (*fn_in)();
 	int			arb_in(), box_in(), ehy_in(), ell_in(),
 				epa_in(), eto_in(), half_in(), rec_in(),
-				rcc_in(), rhc_in(), rpc_in(), rpp_in(), orpp_in(),
-				sph_in(), tec_in(), tgc_in(), tor_in(), ars_in(),
+				rcc_in(), rhc_in(), rpc_in(), rpp_in(),
+				sph_in(), tec_in(), tgc_in(), tor_in(),
 				trc_in(), ebm_in(), vol_in(), hf_in(), bot_in(),
-				dsp_in_v4(),dsp_in_v5(), submodel_in(), part_in(), pipe_in(),
-				binunif_in();
+				dsp_in(), submodel_in(), part_in(), pipe_in();
 
 	CHECK_DBI_NULL;
 
-	if(argc < 1){
+	if(argc < 1 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -531,16 +506,16 @@ char **argv;
 	  aexists( argv[1] );
 	  return TCL_ERROR;
 	}
-	if( dbip->dbi_version <= 4 && (int)strlen(argv[1]) >= NAMESIZE )  {
+	if( (int)strlen(argv[1]) >= NAMESIZE )  {
 	  struct bu_vls tmp_vls;
 
 	  bu_vls_init(&tmp_vls);
-	  bu_vls_printf(&tmp_vls, "ERROR, v4 names are limited to %d characters\n", NAMESIZE-1);
+	  bu_vls_printf(&tmp_vls, "ERROR, names are limited to %d characters\n", NAMESIZE-1);
 	  Tcl_AppendResult(interp, bu_vls_addr(&tmp_vls), (char *)NULL);
 	  return TCL_ERROR;
 	}
-	/* Save the solid name */
-	name = argv[1];
+	/* Save the solid name since argv[] might get bashed */
+	strcpy( name, argv[1] );
 
 	/* Get the solid type to be created and make it */
 	if( argc < 3 )  {
@@ -562,9 +537,9 @@ char **argv;
 	} else if( strcmp( argv[2], "bot" ) == 0 ) {
 		switch( bot_in(argc, argv, &internal, &p_bot[0]) ) {
 		case CMD_BAD:
-		  Tcl_AppendResult(interp, "ERROR, BOT not made!\n",
-				   (char *)NULL);
-		  rt_db_free_internal( &internal, &rt_uniresource );
+		  Tcl_AppendResult(interp, "ERROR, BOT not made!\n", (char *)NULL);
+		  if(internal.idb_type) rt_functab[internal.idb_type].
+					  ft_ifree( &internal );
 		  return TCL_ERROR;
 		case CMD_MORE:
 		  return TCL_ERROR;
@@ -583,21 +558,15 @@ char **argv;
 		menu = p_hf;
 		fn_in = hf_in;
 	} else if( strcmp( argv[2], "dsp" ) == 0 )  {
-		if (dbip->dbi_version <= 4) {
-			nvals = 6;
-			menu = p_dsp_v4;
-			fn_in = dsp_in_v4;
-		} else {
-			nvals = 8;
-			menu = p_dsp_v5;
-			fn_in = dsp_in_v5;
-		}
-
+		nvals = 6;
+		menu = p_dsp;
+		fn_in = dsp_in;
 	} else if( strcmp( argv[2], "pipe" ) == 0 ) {
 		switch( pipe_in(argc, argv, &internal, &p_pipe[0]) ) {
 		case CMD_BAD:
 		  Tcl_AppendResult(interp, "ERROR, pipe not made!\n", (char *)NULL);
-		  rt_db_free_internal( &internal, &rt_uniresource );
+		  if(internal.idb_type) rt_functab[internal.idb_type].
+					  ft_ifree( &internal );
 		  return TCL_ERROR;
 		case CMD_MORE:
 		  return TCL_ERROR;
@@ -607,7 +576,8 @@ char **argv;
 		switch( ars_in(argc, argv, &internal, &p_ars[0]) ) {
 		case CMD_BAD:
 		  Tcl_AppendResult(interp, "ERROR, ars not made!\n", (char *)NULL);
-		  rt_db_free_internal( &internal, &rt_uniresource );
+		  if(internal.idb_type) rt_functab[internal.idb_type].
+					  ft_ifree( &internal );
 		  return TCL_ERROR;
 		case CMD_MORE:
 		  return TCL_ERROR;
@@ -677,13 +647,9 @@ char **argv;
 		menu = p_box;
 		fn_in = box_in;
 	} else if( strcmp( argv[2], "rpp" ) == 0 )  {
-		nvals = 3*2;
+		nvals = 6*1;
 		menu = p_rpp;
 		fn_in = rpp_in;
-	} else if( strcmp( argv[2], "orpp" ) == 0 )  {
-		nvals = 3*1;
-		menu = p_orpp;
-		fn_in = orpp_in;
 	} else if( strcmp( argv[2], "rpc" ) == 0 )  {
 		nvals = 3*3 + 1;
 		menu = p_rpc;
@@ -708,12 +674,6 @@ char **argv;
 		nvals = 2*3 + 2;
 		menu = p_part;
 		fn_in = part_in;
-	} else if( strcmp( argv[2], "binunif" ) == 0 ) {
-		nvals = 2;
-		menu = p_binunif;
-		fn_in = binunif_in;
-		do_solid_edit = 0;
-		dont_draw = 1;
 	} else {
 	  Tcl_AppendResult(interp, "f_in:  ", argv[2], " is not a known primitive\n",
 			   (char *)NULL);
@@ -726,25 +686,24 @@ char **argv;
 	  return TCL_ERROR;
 	}
 
-	if (fn_in(argv, &internal, name) != 0)  {
+	if (fn_in(argv, &internal, menu) != 0)  {
 	  Tcl_AppendResult(interp, "ERROR, ", argv[2], " not made!\n", (char *)NULL);
-	  rt_db_free_internal( &internal, &rt_uniresource );
+	  if(internal.idb_type) rt_functab[internal.idb_type].
+				  ft_ifree( &internal );
 	  return TCL_ERROR;
 	}
 
 do_new_update:
-	/* The function may have already written via LIBWDB */
-	if( internal.idb_ptr != NULL )  {
-		if( (dp=db_diradd( dbip, name, -1L, 0, DIR_SOLID, (genptr_t)&internal.idb_type)) == DIR_NULL )  {
-			rt_db_free_internal( &internal, &rt_uniresource );
-			Tcl_AppendResult(interp, "Cannot add '", name, "' to directory\n", (char *)NULL );
-			return TCL_ERROR;
-		}
-		if( rt_db_put_internal( dp, dbip, &internal, &rt_uniresource ) < 0 )
-		{
-			rt_db_free_internal( &internal, &rt_uniresource );
-			TCL_WRITE_ERR_return;
-		}
+	if( (dp=db_diradd( dbip, name, -1L, 0, DIR_SOLID, NULL)) == DIR_NULL )
+	{
+		rt_db_free_internal( &internal );
+		Tcl_AppendResult(interp, "Cannot add '", name, "' to directory\n", (char *)NULL );
+		return TCL_ERROR;
+	}
+	if( rt_db_put_internal( dp, dbip, &internal ) < 0 )
+	{
+		rt_db_free_internal( &internal );
+		TCL_WRITE_ERR_return;
 	}
 
 	if( dont_draw )  return TCL_OK;
@@ -753,7 +712,7 @@ do_new_update:
 	new_cmd[0] = "e";
 	new_cmd[1] = name;
 	new_cmd[2] = (char *)NULL;
-	(void)cmd_draw( clientData, interp, 2, new_cmd );
+	(void)f_edit( clientData, interp, 2, new_cmd );
 
 	if( do_solid_edit )  {
 		/* Also kick off solid edit mode */
@@ -763,67 +722,6 @@ do_new_update:
 		(void)f_sed( clientData, interp, 2, new_cmd );
 	}
 	return TCL_OK;
-}
-
-int
-binunif_in( cmd_argvs, intern, name )
-char			*cmd_argvs[];
-struct rt_db_internal	*intern;
-const char		*name;
-{
-	unsigned int minor_type;
-
-	CHECK_DBI_NULL;
-
-	if( strlen( cmd_argvs[3] ) != 1 ) {
-		bu_log( "Unrecognized minor type (%s)\n", cmd_argvs[3] );
-		return 1;
-	}
-	
-	switch( *cmd_argvs[3] ) {
-		case 'f':
-			minor_type = DB5_MINORTYPE_BINU_FLOAT;
-			break;
-		case 'd':
-			minor_type = DB5_MINORTYPE_BINU_DOUBLE;
-			break;
-		case 'c':
-			minor_type = DB5_MINORTYPE_BINU_8BITINT;
-			break;
-		case 's':
-			minor_type = DB5_MINORTYPE_BINU_16BITINT;
-			break;
-		case 'i':
-			minor_type = DB5_MINORTYPE_BINU_32BITINT;
-			break;
-		case 'l':
-			minor_type = DB5_MINORTYPE_BINU_64BITINT;
-			break;
-		case 'C':
-			minor_type = DB5_MINORTYPE_BINU_8BITINT_U;
-			break;
-		case 'S':
-			minor_type = DB5_MINORTYPE_BINU_16BITINT_U;
-			break;
-		case 'I':
-			minor_type = DB5_MINORTYPE_BINU_32BITINT_U;
-			break;
-		case 'L':
-			minor_type = DB5_MINORTYPE_BINU_64BITINT_U;
-			break;
-		default:
-			bu_log( "Unrecognized minor type (%c)\n", *cmd_argvs[3] );
-			return 1;
-	}
-	if( mk_binunif( wdbp, name, cmd_argvs[4], minor_type ) ) {
-		bu_log( "Failed to create binary object %s from file %s\n",
-			name, cmd_argvs[4] );
-		return 1;
-	}
-
-	intern->idb_ptr = NULL;
-
-	return 0;
 }
 
 /*			E B M _ I N
@@ -850,7 +748,7 @@ struct rt_db_internal	*intern;
 	ebm->xdim = atoi( cmd_argvs[4] );
 	ebm->ydim = atoi( cmd_argvs[5] );
 	ebm->tallness = atof( cmd_argvs[6] ) * local2base;
-	MAT_IDN( ebm->mat );
+	bn_mat_idn( ebm->mat );
 
 	return( 0 );
 }
@@ -875,11 +773,9 @@ struct rt_db_internal	*intern;
 	intern->idb_ptr = (genptr_t)sip;
 	sip->magic = RT_SUBMODEL_INTERNAL_MAGIC;
 
-	bu_vls_init( &sip->treetop );
-	bu_vls_strcpy( &sip->treetop, cmd_argvs[3] );
+	strcpy( sip->treetop, cmd_argvs[3] );
 	sip->meth = atoi( cmd_argvs[4] );
-	bu_vls_init( &sip->file );
-	bu_vls_strcpy( &sip->file, cmd_argvs[5] );
+	strcpy( sip->file, cmd_argvs[5] );
 
 	return( 0 );
 }
@@ -889,7 +785,7 @@ struct rt_db_internal	*intern;
  *	Read DSP solid from keyboard
  */
 int
-dsp_in_v4 ( cmd_argvs, intern )
+dsp_in ( cmd_argvs, intern )
 char			*cmd_argvs[];
 struct rt_db_internal	*intern;
 {
@@ -901,76 +797,16 @@ struct rt_db_internal	*intern;
 	intern->idb_ptr = (genptr_t)dsp;
 	dsp->magic = RT_DSP_INTERNAL_MAGIC;
 
-	bu_vls_init( &dsp->dsp_name );
-	bu_vls_strcpy( &dsp->dsp_name, cmd_argvs[3] );
-
+	strcpy( dsp->dsp_file, cmd_argvs[3] );
 	dsp->dsp_xcnt = atoi( cmd_argvs[4] );
 	dsp->dsp_ycnt = atoi( cmd_argvs[5] );
 	dsp->dsp_smooth = atoi( cmd_argvs[6] );
-	MAT_IDN( dsp->dsp_stom );
+	bn_mat_idn( dsp->dsp_stom );
 	
 	dsp->dsp_stom[0] = dsp->dsp_stom[5] = 
 		atof( cmd_argvs[7] ) * local2base;
 
 	dsp->dsp_stom[10] = atof( cmd_argvs[8] ) * local2base;
-
-	bn_mat_inv( dsp->dsp_mtos, dsp->dsp_stom );
-
-	return( 0 );
-}
-
-extern void dsp_dump(struct rt_dsp_internal *dsp);
-
-/*			D S P _ I N
- *
- *	Read DSP solid from keyboard
- */
-int
-dsp_in_v5 ( cmd_argvs, intern )
-char			*cmd_argvs[];
-struct rt_db_internal	*intern;
-{
-	struct rt_dsp_internal	*dsp;
-
-	BU_GETSTRUCT( dsp, rt_dsp_internal );
-	intern->idb_type = ID_DSP;
-	intern->idb_meth = &rt_functab[ID_DSP];
-	intern->idb_ptr = (genptr_t)dsp;
-	dsp->magic = RT_DSP_INTERNAL_MAGIC;
-
-	if (*cmd_argvs[3] == 'f' || *cmd_argvs[3] == 'F')
-		dsp->dsp_datasrc = RT_DSP_SRC_FILE;
-	else if (*cmd_argvs[3] == 'O' || *cmd_argvs[3] == 'o')
-		dsp->dsp_datasrc = RT_DSP_SRC_OBJ;
-	else
-		return -1;
-
-	bu_vls_init( &dsp->dsp_name );
-	bu_vls_strcpy( &dsp->dsp_name, cmd_argvs[4] );
-
-	dsp->dsp_xcnt = atoi( cmd_argvs[5] );
-	dsp->dsp_ycnt = atoi( cmd_argvs[6] );
-	dsp->dsp_smooth = atoi( cmd_argvs[7] );
-	switch ( *cmd_argvs[8] == 'a' ) {
-	case 'a':	/* adaptive */
-	case 'A': 
-	    dsp->dsp_cuttype = DSP_CUT_DIR_ADAPT;
-	    break;
-	case 'l':	/* lower left to upper right */
-	    dsp->dsp_cuttype = DSP_CUT_DIR_llUR;
-	    break;
-	case 'L':	/* Upper Left to lower right */
-	    dsp->dsp_cuttype = DSP_CUT_DIR_ULlr;
-	    break;
-	
-	}
-
-	MAT_IDN( dsp->dsp_stom );
-	
-	dsp->dsp_stom[0] = dsp->dsp_stom[5] = 
-		atof( cmd_argvs[9] ) * local2base;
-
-	dsp->dsp_stom[10] = atof( cmd_argvs[10] ) * local2base;
 
 	bn_mat_inv( dsp->dsp_mtos, dsp->dsp_stom );
 
@@ -1073,7 +909,7 @@ struct rt_db_internal	*intern;
 	vol->cellsize[0] = atof( cmd_argvs[9] ) * local2base;
 	vol->cellsize[1] = atof( cmd_argvs[10] ) * local2base;
 	vol->cellsize[2] = atof( cmd_argvs[11] ) * local2base;
-	MAT_IDN( vol->mat );
+	bn_mat_idn( vol->mat );
 
 	return( 0 );
 }
@@ -1431,30 +1267,33 @@ char			*promp[];
  *					1 if unsuccessful read
  */
 int
-half_in(cmd_argvs, intern, name)
+half_in(cmd_argvs, intern)
 char			*cmd_argvs[];
 struct rt_db_internal	*intern;
-const char		*name;
 {
-	vect_t norm;
-	double d;
+	int			i;
+	struct rt_half_internal	*hip;
 
 	CHECK_DBI_NULL;
 
-	norm[X] = atof(cmd_argvs[3+0]);
-	norm[Y] = atof(cmd_argvs[3+1]);
-	norm[Z] = atof(cmd_argvs[3+2]);
-	d = atof(cmd_argvs[3+3]) * local2base;
+	intern->idb_type = ID_HALF;
+	intern->idb_meth = &rt_functab[ID_HALF];
+	intern->idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_half_internal),
+		"rt_half_internal" );
+	hip = (struct rt_half_internal *)intern->idb_ptr;
+	hip->magic = RT_HALF_INTERNAL_MAGIC;
 
-	if (MAGNITUDE(norm) < RT_LEN_TOL) {
+	for (i = 0; i < ELEMENTS_PER_PLANE; i++) {
+		hip->eqn[i] = atof(cmd_argvs[3+i]) * local2base;
+	}
+	VUNITIZE( hip->eqn );
+	
+	if (MAGNITUDE(hip->eqn) < RT_LEN_TOL) {
 	  Tcl_AppendResult(interp, "ERROR, normal vector is too small!\n", (char *)NULL);
 	  return(1);	/* failure */
 	}
-
-	VUNITIZE( norm );
-	if( mk_half( wdbp, name, norm, d ) < 0 )
-		return 1;	/* failure */
-	return 0;	/* success */
+	
+	return(0);	/* success */
 }
 
 /*   A R B _ I N ( ) :   	reads arb parameters from keyboard
@@ -1509,30 +1348,37 @@ struct rt_db_internal	*intern;
  *					1 if unsuccessful read
  */
 int
-sph_in(cmd_argvs, intern, name)
+sph_in(cmd_argvs, intern)
 char			*cmd_argvs[];
 struct rt_db_internal	*intern;
-const char		*name;
 {
-	point_t			center;
 	fastf_t			r;
 	int			i;
+	struct rt_ell_internal	*sip;
 
 	CHECK_DBI_NULL;
 
+	intern->idb_type = ID_ELL;
+	intern->idb_meth = &rt_functab[ID_ELL];
+	intern->idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_ell_internal),
+		"rt_ell_internal" );
+	sip = (struct rt_ell_internal *)intern->idb_ptr;
+	sip->magic = RT_ELL_INTERNAL_MAGIC;
+
 	for (i = 0; i < ELEMENTS_PER_PT; i++) {
-		center[i] = atof(cmd_argvs[3+i]) * local2base;
+		sip->v[i] = atof(cmd_argvs[3+i]) * local2base;
 	}
 	r = atof(cmd_argvs[6]) * local2base;
+	VSET( sip->a, r, 0., 0. );
+	VSET( sip->b, 0., r, 0. );
+	VSET( sip->c, 0., 0., r );
 	
 	if (r < RT_LEN_TOL) {
 	  Tcl_AppendResult(interp, "ERROR, radius must be greater than zero!\n", (char *)NULL);
 	  return(1);	/* failure */
 	}
-
-	if( mk_sph( wdbp, name, center, r ) < 0 )
-		return 1;	/* failure */
-	return 0;	/* success */
+	
+	return(0);	/* success */
 }
 
 /*   E L L _ I N ( ) :   	reads ell parameters from keyboard
@@ -1577,7 +1423,7 @@ struct rt_db_internal	*intern;
 	
 	if (!strcmp("ellg", cmd_argvs[2])) {
 		/* V, f1, f2, len */
-		/* convert ELLG format into ELL1 format */
+		/* convert ELL format into ELL1 format */
 		len = vals[6];
 		/* V is halfway between the foci */
 		VADD2( eip->v, &vals[0], &vals[3] );
@@ -1956,78 +1802,52 @@ struct rt_db_internal	*intern;
  *					1 if unsuccessful read
  */
 int
-rpp_in(cmd_argvs, intern, name)
+rpp_in(cmd_argvs, intern)
 char			*cmd_argvs[];
 struct rt_db_internal	*intern;
-const char		*name;
 {
-	point_t		min, max;
+	fastf_t			xmin, xmax, ymin, ymax, zmin, zmax;
+	struct rt_arb_internal	*aip;
 
 	CHECK_DBI_NULL;
 
-	min[X] = atof(cmd_argvs[3+0]) * local2base;
-	max[X] = atof(cmd_argvs[3+1]) * local2base;
-	min[Y] = atof(cmd_argvs[3+2]) * local2base;
-	max[Y] = atof(cmd_argvs[3+3]) * local2base;
-	min[Z] = atof(cmd_argvs[3+4]) * local2base;
-	max[Z] = atof(cmd_argvs[3+5]) * local2base;
+	intern->idb_type = ID_ARB8;
+	intern->idb_meth = &rt_functab[ID_ARB8];
+	intern->idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_arb_internal),
+		"rt_arb_internal" );
+	aip = (struct rt_arb_internal *)intern->idb_ptr;
+	aip->magic = RT_ARB_INTERNAL_MAGIC;
 
-	if (min[X] >= max[X]) {
+	xmin = atof(cmd_argvs[3+0]) * local2base;
+	xmax = atof(cmd_argvs[3+1]) * local2base;
+	ymin = atof(cmd_argvs[3+2]) * local2base;
+	ymax = atof(cmd_argvs[3+3]) * local2base;
+	zmin = atof(cmd_argvs[3+4]) * local2base;
+	zmax = atof(cmd_argvs[3+5]) * local2base;
+
+	if (xmin >= xmax) {
 	  Tcl_AppendResult(interp, "ERROR, XMIN greater than XMAX!\n", (char *)NULL);
 	  return(1);	/* failure */
 	}
-	if (min[Y] >= max[Y]) {
+	if (ymin >= ymax) {
 	  Tcl_AppendResult(interp, "ERROR, YMIN greater than YMAX!\n", (char *)NULL);
 	  return(1);	/* failure */
 	}
-	if (min[Z] >= max[Z]) {
+	if (zmin >= zmax) {
 	  Tcl_AppendResult(interp, "ERROR, ZMIN greater than ZMAX!\n", (char *)NULL);
 	  return(1);	/* failure */
 	}
 
-	if( mk_rpp( wdbp, name, min, max ) < 0 )
-		return 1;
-	return 0;	/* success */
-}
+	VSET( aip->pt[0], xmax, ymin, zmin );
+	VSET( aip->pt[1], xmax, ymax, zmin );
+	VSET( aip->pt[2], xmax, ymax, zmax );
+	VSET( aip->pt[3], xmax, ymin, zmax );
+	VSET( aip->pt[4], xmin, ymin, zmin );
+	VSET( aip->pt[5], xmin, ymax, zmin );
+	VSET( aip->pt[6], xmin, ymax, zmax );
+	VSET( aip->pt[7], xmin, ymin, zmax );
 
-/*
- *			O R P P _ I N ( )
- *
- * Reads origin-min rpp (box) parameters from keyboard
- *				returns 0 if successful read
- *					1 if unsuccessful read
- */
-int
-orpp_in(cmd_argvs, intern, name)
-char			*cmd_argvs[];
-struct rt_db_internal	*intern;
-const char		*name;
-{
-	point_t		min, max;
-
-	CHECK_DBI_NULL;
-
-	VSETALL( min, 0 );
-	max[X] = atof(cmd_argvs[3+0]) * local2base;
-	max[Y] = atof(cmd_argvs[3+1]) * local2base;
-	max[Z] = atof(cmd_argvs[3+2]) * local2base;
-
-	if (min[X] >= max[X]) {
-	  Tcl_AppendResult(interp, "ERROR, XMIN greater than XMAX!\n", (char *)NULL);
-	  return(1);	/* failure */
-	}
-	if (min[Y] >= max[Y]) {
-	  Tcl_AppendResult(interp, "ERROR, YMIN greater than YMAX!\n", (char *)NULL);
-	  return(1);	/* failure */
-	}
-	if (min[Z] >= max[Z]) {
-	  Tcl_AppendResult(interp, "ERROR, ZMIN greater than ZMAX!\n", (char *)NULL);
-	  return(1);	/* failure */
-	}
-
-	if( mk_rpp( wdbp, name, min, max ) < 0 )
-		return 1;
-	return 0;	/* success */
+	return(0);	/* success */
 }
 
 /*   P A R T _ I N ( ) :	reads particle parameters from keyboard

@@ -163,7 +163,7 @@ static int	max_scr_z;		/* based on (glGetIntegerv(XXX_ZMAX, &gdtmp), gdtmp) */
 /* End modifiable variables */
 
 static int	ogl_fd;			/* GL file descriptor to select() on */
-static const char ogl_title[] = "BRL MGED";
+static CONST char ogl_title[] = "BRL MGED";
 static int perspective_mode = 0;	/* Perspective flag */
 static int perspective_angle =3;	/* GLfloat of perspective */
 static int perspective_table[] = {
@@ -1883,7 +1883,7 @@ Ogl_configure_window_shape()
 
 	xlim_view = 1.0;
 	ylim_view = 1.0;
-	MAT_IDN(aspect_corr);
+	mat_idn(aspect_corr);
 
 #if 1
 	XGetWindowAttributes( dpy, win, &xwa );

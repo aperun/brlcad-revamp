@@ -16,7 +16,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -25,12 +25,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "machine.h"
 #include "externs.h"			/* For getopt */
 #include "fb.h"
-
-/* defined in libbn/asize.c */
-extern int bn_common_file_size();
-
-int mread();
-int skipbytes();
 
 static unsigned char *scanline;		/* 1 scanline pixel buffer */
 static int	scanbytes;		/* # of bytes of scanline */
@@ -62,7 +56,6 @@ Usage: pix-fb [-a -h -i -c -z -1] [-m #lines] [-F framebuffer]\n\
 	[-x file_xoff] [-y file_yoff] [-X scr_xoff] [-Y scr_yoff]\n\
 	[-S squarescrsize] [-W scr_width] [-N scr_height] [file.pix]\n";
 
-int
 get_args( argc, argv )
 register char **argv;
 {
@@ -160,7 +153,6 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main(argc, argv)
 int argc;
 char **argv;
@@ -344,7 +336,6 @@ char **argv;
 /*
  * Throw bytes away.  Use reads into scanline buffer if a pipe, else seek.
  */
-int
 skipbytes( fd, num )
 int	fd;
 off_t	num;
@@ -373,7 +364,6 @@ off_t	num;
  *  or the requested number of bytes is read.  This
  *  is important for pipes.
  */
-int
 mread( fd, bp, num )
 int	fd;
 register char	*bp;

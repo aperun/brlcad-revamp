@@ -4,9 +4,9 @@
  * 4 x 4 Matrix manipulation functions..............
  *
  *	bn_atan2()			Wrapper for library atan2()
- *(deprecated) bn_mat_zero( &m )		Fill matrix m with zeros
- *(deprecated) bn_mat_idn( &m )		Fill matrix m with identity matrix
- *(deprecated) bn_mat_copy( &o, &i )		Copy matrix i to matrix o
+ *	bn_mat_zero( &m )		Fill matrix m with zeros
+ *	bn_mat_idn( &m )		Fill matrix m with identity matrix
+ *	bn_mat_copy( &o, &i )		Copy matrix i to matrix o
  *	bn_mat_mul( &o, &i1, &i2 )	Multiply i1 by i2 and store in o
  *	bn_mat_mul2( &i, &o )
  *	bn_matXvec( &ov, &m, &iv )	Multiply m by vector iv, store in ov
@@ -19,7 +19,7 @@
  *	bn_mat_angles( &o, alpha, beta, gama )	Make rot matrix from angles
  *	bn_eigen2x2()			Eigen values and vectors
  *	bn_mat_lookat			Make rot mat:  xform from D to -Z
- *	bn_mat_fromto			Make rot mat:  xform from A to
+ *	bn_mat_fromto			Make rot mat:  xform from A to B
  *	bn_mat_arb_rot( &m, pt, dir, ang)	Make rot mat about axis (pt,dir), through ang
  *	bn_mat_is_equal()		Is mat a equal to mat b?
  *
@@ -53,7 +53,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char bn_RCSmat[] = "@(#)$Header$ (ARL)";
+static char bn_RCSmat[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -61,43 +61,41 @@ static const char bn_RCSmat[] = "@(#)$Header$ (ARL)";
 #include <stdio.h>
 #include <math.h>
 
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif 
-
 #include "machine.h"
 #include "bu.h"
 #include "vmath.h"
 #include "bn.h"
 
-const mat_t	bn_mat_identity = {
+CONST mat_t	bn_mat_identity = {
 		1.0, 0.0, 0.0, 0.0,
 		0.0, 1.0, 0.0, 0.0,
 		0.0, 0.0, 1.0, 0.0,
 		0.0, 0.0, 0.0, 1.0
 };
 
+/*
+ *			B N _ M A T _ P R I N T
+ */
 void
-bn_mat_print_guts(const char	*title,
-		  const mat_t	m,
-		  char		*obuf)
+bn_mat_print( title, m )
+CONST char	*title;
+CONST mat_t	m;
 {
 	register int	i;
+	char		obuf[1024];	/* sprintf may be non-PARALLEL */
 	register char	*cp;
 
 	sprintf(obuf, "MATRIX %s:\n  ", title);
 	cp = obuf+strlen(obuf);
-	if (!m) {
-		strcat(obuf, "(Identity)");
+	if( !m )  {
+		strcat( obuf, "(Identity)" );
 	} else {
-		for (i=0; i<16; i++)  {
+		for(i=0; i<16; i++)  {
 			sprintf(cp, " %8.3f", m[i]);
 			cp += strlen(cp);
-			if (i == 15) {
+			if( i == 15 )  {
 				break;
-			} else if((i&3) == 3) {
+			} else if( (i&3) == 3 )  {
 				*cp++ = '\n';
 				*cp++ = ' ';
 				*cp++ = ' ';
@@ -105,18 +103,6 @@ bn_mat_print_guts(const char	*title,
 		}
 		*cp++ = '\0';
 	}
-}
-
-/*
- *			B N _ M A T _ P R I N T
- */
-void
-bn_mat_print(const char		*title,
-	     const mat_t	m)
-{
-	char		obuf[1024];	/* sprintf may be non-PARALLEL */
-
-	bn_mat_print_guts(title, m, obuf);
 	bu_log("%s\n", obuf);
 }
 
@@ -153,7 +139,6 @@ mat_t	m;
 	register int i = 0;
 	register matp_t mp = m;
 
-	bu_log("libbn/mat.c:  bn_mat_zero() is deprecated, use MAT_ZERO()\n");
 	/* Clear everything */
 	for(; i<16; i++)
 		*mp++ = 0.0;
@@ -170,7 +155,6 @@ void
 bn_mat_idn( m )
 register mat_t	m;
 {
-	bu_log("libbn/mat.c:  bn_mat_idn() is deprecated, use MAT_IDN()\n");
 	memcpy(m, bn_mat_identity, sizeof(m));
 }
 
@@ -181,13 +165,12 @@ register mat_t	m;
 void
 bn_mat_copy( dest, src )
 register mat_t		dest;
-register const mat_t	src;
+register CONST mat_t	src;
 {
 	register int i;
 
 	/* Copy all elements */
 #	include "noalias.h"
-	bu_log("libbn/mat.c:  bn_mat_copy() is deprecated, use MAT_COPY()\n");
 	for( i=15; i>=0; i--)
 		dest[i] = src[i];
 }
@@ -205,8 +188,8 @@ register const mat_t	src;
 void
 bn_mat_mul( o, a, b )
 register mat_t		o;
-register const mat_t	a;
-register const mat_t	b;
+register CONST mat_t	a;
+register CONST mat_t	b;
 {
 	o[ 0] = a[ 0]*b[ 0] + a[ 1]*b[ 4] + a[ 2]*b[ 8] + a[ 3]*b[12];
 	o[ 1] = a[ 0]*b[ 1] + a[ 1]*b[ 5] + a[ 2]*b[ 9] + a[ 3]*b[13];
@@ -239,13 +222,13 @@ register const mat_t	b;
  */
 void
 bn_mat_mul2( i, o )
-register const mat_t	i;
+register CONST mat_t	i;
 register mat_t		o;
 {
 	mat_t	temp;
 
 	bn_mat_mul( temp, i, o );
-	MAT_COPY( o, temp );
+	bn_mat_copy( o, temp );
 }
 
 /*
@@ -258,9 +241,9 @@ register mat_t		o;
 void
 bn_mat_mul3( o, a, b, c )
 mat_t		o;
-const mat_t	a;
-const mat_t	b;
-const mat_t	c;
+CONST mat_t	a;
+CONST mat_t	b;
+CONST mat_t	c;
 {
 	mat_t	t;
 
@@ -278,10 +261,10 @@ const mat_t	c;
 void
 bn_mat_mul4( o, a, b, c, d )
 mat_t		o;
-const mat_t	a;
-const mat_t	b;
-const mat_t	c;
-const mat_t	d;
+CONST mat_t	a;
+CONST mat_t	b;
+CONST mat_t	c;
+CONST mat_t	d;
 {
 	mat_t	t, u;
 
@@ -300,8 +283,8 @@ const mat_t	d;
 void
 bn_matXvec(ov, im, iv)
 register hvect_t ov;
-register const mat_t im;
-register const hvect_t iv;
+register CONST mat_t im;
+register CONST hvect_t iv;
 {
 	register int eo = 0;		/* Position in output vector */
 	register int em = 0;		/* Position in input matrix */
@@ -332,17 +315,17 @@ register const hvect_t iv;
 void
 bn_mat_inv( output, input )
 register mat_t	output;
-const mat_t	input;
+CONST mat_t	input;
 {
 	register int i, j;			/* Indices */
 	LOCAL int k;				/* Indices */
 	LOCAL int	z[4];			/* Temporary */
 	LOCAL fastf_t	b[4];			/* Temporary */
 	LOCAL fastf_t	c[4];			/* Temporary */
-	
-	MAT_COPY( output, input );	/* Duplicate */
 
-        /* Initialization */
+	bn_mat_copy( output, input );	/* Duplicate */
+
+	/* Initialization */
 	for( j = 0; j < 4; j++ )
 		z[j] = j;
 
@@ -423,7 +406,7 @@ const mat_t	input;
 void
 bn_vtoh_move( h, v )
 register vect_t		h;
-register const vect_t	v;
+register CONST vect_t	v;
 {
 	h[X] = v[X];
 	h[Y] = v[Y];
@@ -441,7 +424,7 @@ register const vect_t	v;
 void
 bn_htov_move( v, h )
 register vect_t		v;
-register const vect_t	h;
+register CONST vect_t	h;
 {
 	register fastf_t inv;
 
@@ -468,7 +451,7 @@ register const vect_t	h;
 void
 bn_mat_trn( om, im )
 mat_t			om;
-register const mat_t	im;
+register CONST mat_t	im;
 {
 	register matp_t op = om;
 
@@ -548,7 +531,7 @@ void
 bn_ae_vec( azp, elp, v )
 fastf_t		*azp;
 fastf_t		*elp;
-const vect_t	v;
+CONST vect_t	v;
 {
 	register fastf_t	az;
 
@@ -632,7 +615,7 @@ double alpha_in, beta_in, ggamma_in;
 	LOCAL double salpha, sbeta, sgamma;
 
 	if( alpha_in == 0.0 && beta_in == 0.0 && ggamma_in == 0.0 )  {
-		MAT_IDN( mat );
+		bn_mat_idn( mat );
 		return;
 	}
 
@@ -663,56 +646,6 @@ double alpha_in, beta_in, ggamma_in;
 		sgamma = 0.0;
 	else
 		sgamma = sin( ggamma );
-
-	mat[0] = cbeta * cgamma;
-	mat[1] = -cbeta * sgamma;
-	mat[2] = sbeta;
-	mat[3] = 0.0;
-
-	mat[4] = salpha * sbeta * cgamma + calpha * sgamma;
-	mat[5] = -salpha * sbeta * sgamma + calpha * cgamma;
-	mat[6] = -salpha * cbeta;
-	mat[7] = 0.0;
-
-	mat[8] = salpha * sgamma - calpha * sbeta * cgamma;
-	mat[9] = salpha * cgamma + calpha * sbeta * sgamma;
-	mat[10] = calpha * cbeta;
-	mat[11] = 0.0;
-	mat[12] = mat[13] = mat[14] = 0.0;
-	mat[15] = 1.0;
-}
-
-/*
- *			B N _ M A T _ A N G L E S _ R A D
- *
- * This routine builds a Homogeneous rotation matrix, given
- * alpha, beta, and gamma as angles of rotation, in radians.
- *
- * Alpha is angle of rotation about the X axis, and is done third.
- * Beta is angle of rotation about the Y axis, and is done second.
- * Gamma is angle of rotation about Z axis, and is done first.
- */
-void
-bn_mat_angles_rad(register mat_t	mat,
-		  double		alpha,
-		  double		beta,
-		  double		ggamma)
-{
-	LOCAL double calpha, cbeta, cgamma;
-	LOCAL double salpha, sbeta, sgamma;
-
-	if (alpha == 0.0 && beta == 0.0 && ggamma == 0.0) {
-		MAT_IDN( mat );
-		return;
-	}
-
-	calpha = cos( alpha );
-	cbeta = cos( beta );
-	cgamma = cos( ggamma );
-
-	salpha = sin( alpha );
-	sbeta = sin( beta );
-	sgamma = sin( ggamma );
 
 	mat[0] = cbeta * cgamma;
 	mat[1] = -cbeta * sgamma;
@@ -798,7 +731,7 @@ fastf_t	a, b, c;
 void
 bn_vec_perp( new, old )
 vect_t		new;
-const vect_t	old;
+CONST vect_t	old;
 {
 	register int i;
 	LOCAL vect_t another;	/* Another vector, different */
@@ -828,8 +761,8 @@ const vect_t	old;
 void
 bn_mat_fromto( m, from, to )
 mat_t		m;
-const vect_t	from;
-const vect_t	to;
+CONST vect_t	from;
+CONST vect_t	to;
 {
 	vect_t	test_to;
 	vect_t	unit_from, unit_to;
@@ -859,7 +792,7 @@ const vect_t	to;
 	dot = VDOT(unit_from, unit_to);
 	if( dot > 1.0-0.00001 )  {
 		/* dot == 1, return identity matrix */
-		MAT_IDN(m);
+		bn_mat_idn(m);
 		return;
 	}
 	if( dot < -1.0+0.00001 )  {
@@ -873,7 +806,7 @@ const vect_t	to;
 	VUNITIZE( M );			/* should be unnecessary */
 
 	/* Almost everything here is done with pre-multiplys:  vector * mat */
-	MAT_IDN( Q );
+	bn_mat_idn( Q );
 	VMOVE( &Q[0], unit_from );
 	VMOVE( &Q[4], M );
 	VMOVE( &Q[8], N );
@@ -882,7 +815,7 @@ const vect_t	to;
 	/* w_prime = w * Qt */
 	MAT4X3VEC( w_prime, Q, unit_to );	/* post-multiply by transpose */
 
-	MAT_IDN( R );
+	bn_mat_idn( R );
 	VMOVE( &R[0], w_prime );
 	VSET( &R[4], -w_prime[Y], w_prime[X], w_prime[Z] );
 	VSET( &R[8], 0, 0, 1 );		/* is unnecessary */
@@ -1012,7 +945,7 @@ double	sinz, cosz;
 void
 bn_mat_lookat( rot, dir, yflip )
 mat_t		rot;
-const vect_t	dir;
+CONST vect_t	dir;
 int		yflip;
 {
 	mat_t	first;
@@ -1041,7 +974,7 @@ int		yflip;
 	if( hypot_xy < 1.0e-10 )  {
 		bu_log("Warning: bn_mat_lookat:  unable to twist correct, hypot=%g\n", hypot_xy);
 		VPRINT( "xproj", xproj );
-		MAT_COPY( rot, prod12 );
+		bn_mat_copy( rot, prod12 );
 		return;
 	}
 	bn_mat_zrot( third, -xproj[Y] / hypot_xy, xproj[X] / hypot_xy );
@@ -1052,8 +985,8 @@ int		yflip;
 		MAT4X3VEC( zproj, rot, z );
 		/* If original Z inverts sign, flip sign on resulting Y */
 		if( zproj[Y] < 0.0 )  {
-			MAT_COPY( prod12, rot );
-			MAT_IDN( third );
+			bn_mat_copy( prod12, rot );
+			bn_mat_idn( third );
 			third[5] = -1;
 			bn_mat_mul( rot, third, prod12 );
 		}
@@ -1076,7 +1009,7 @@ int		yflip;
 void
 bn_vec_ortho( out, in )
 register vect_t	out;
-register const vect_t	in;
+register CONST vect_t	in;
 {
 	register int j, k;
 	FAST fastf_t	f;
@@ -1130,19 +1063,19 @@ register const vect_t	in;
 int
 bn_mat_scale_about_pt( mat, pt, scale )
 mat_t		mat;
-const point_t	pt;
-const double	scale;
+CONST point_t	pt;
+CONST double	scale;
 {
 	mat_t	xlate;
 	mat_t	s;
 	mat_t	tmp;
 
-	MAT_IDN( xlate );
+	bn_mat_idn( xlate );
 	MAT_DELTAS_VEC_NEG( xlate, pt );
 
-	MAT_IDN( s );
+	bn_mat_idn( s );
 	if( NEAR_ZERO( scale, SMALL ) )  {
-		MAT_ZERO( mat );
+		bn_mat_zero( mat );
 		return -1;			/* ERROR */
 	}
 	s[15] = 1/scale;
@@ -1162,13 +1095,13 @@ const double	scale;
 void
 bn_mat_xform_about_pt( mat, xform, pt )
 mat_t		mat;
-const mat_t	xform;
-const point_t	pt;
+CONST mat_t	xform;
+CONST point_t	pt;
 {
 	mat_t	xlate;
 	mat_t	tmp;
 
-	MAT_IDN( xlate );
+	bn_mat_idn( xlate );
 	MAT_DELTAS_VEC_NEG( xlate, pt );
 
 	bn_mat_mul( tmp, xform, xlate );
@@ -1186,9 +1119,9 @@ const point_t	pt;
  */
 int
 bn_mat_is_equal(a, b, tol)
-const mat_t	a;
-const mat_t	b;
-const struct bn_tol	*tol;
+CONST mat_t	a;
+CONST mat_t	b;
+CONST struct bn_tol	*tol;
 {
 	register int i;
 	register double f;
@@ -1249,9 +1182,13 @@ const struct bn_tol	*tol;
  */
 int
 bn_mat_is_identity( m )
-const mat_t	m;
+CONST mat_t	m;
 {
-	return (! memcmp(m, bn_mat_identity, sizeof(mat_t)));
+	if( m[0]  != 1 || m[1]  != 0 || m[2]  != 0 || m[3]  != 0 )  return 0;
+	if( m[4]  != 0 || m[5]  != 1 || m[6]  != 0 || m[7]  != 0 )  return 0;
+	if( m[8]  != 0 || m[9]  != 0 || m[10] != 1 || m[11] != 0 )  return 0;
+	if( m[12] != 0 || m[13] != 0 || m[14] != 0 || m[15] != 1 )  return 0;
+	return 1;
 }
 
 /*	B N _ M A T _ A R B _ R O T
@@ -1264,9 +1201,9 @@ const mat_t	m;
 void
 bn_mat_arb_rot( m, pt, dir, ang)
 mat_t m;
-const point_t pt;
-const vect_t dir;
-const fastf_t ang;
+CONST point_t pt;
+CONST vect_t dir;
+CONST fastf_t ang;
 {
 	mat_t tran1,tran2,rot;
 	double cos_ang, sin_ang, one_m_cosang;
@@ -1275,12 +1212,12 @@ const fastf_t ang;
 
 	if( ang == 0.0 )
 	{
-		MAT_IDN( m );
+		bn_mat_idn( m );
 		return;
 	}
 
-	MAT_IDN( tran1 );
-	MAT_IDN( tran2 );
+	bn_mat_idn( tran1 );
+	bn_mat_idn( tran2 );
 
 	/* construct translation matrix to pt */
 	tran1[MDX] = (-pt[X]);
@@ -1303,7 +1240,7 @@ const fastf_t ang;
 	n1_n3 = dir[X]*dir[Z];
 	n2_n3 = dir[Y]*dir[Z];
 
-	MAT_IDN( rot );
+	bn_mat_idn( rot );
 	rot[0] = n1_sq + (1.0 - n1_sq)*cos_ang;
 	rot[1] = n1_n2 * one_m_cosang - dir[Z]*sin_ang;
 	rot[2] = n1_n3 * one_m_cosang + dir[Y]*sin_ang;
@@ -1328,12 +1265,12 @@ const fastf_t ang;
  */
 matp_t
 bn_mat_dup( in )
-const mat_t	in;
+CONST mat_t	in;
 {
 	matp_t	out;
 
 	out = (matp_t) bu_malloc( sizeof(mat_t), "bn_mat_dup" );
-	bcopy( (const char *)in, (char *)out, sizeof(mat_t) );
+	bcopy( (CONST char *)in, (char *)out, sizeof(mat_t) );
 	return out;
 }
 
@@ -1349,8 +1286,8 @@ const mat_t	in;
  */
 int
 bn_mat_ck( title, m )
-const char *title;
-const mat_t m;
+CONST char *title;
+CONST mat_t m;
 {
 	vect_t	A, B, C;
 	fastf_t	fx, fy, fz;
@@ -1400,7 +1337,7 @@ const mat_t m;
  */
 fastf_t
 bn_mat_det3( m )
-const mat_t m;
+CONST mat_t m;
 {
 	FAST fastf_t sum;
 
@@ -1419,7 +1356,7 @@ const mat_t m;
  */
 fastf_t
 bn_mat_determinant( m )
-const mat_t m;
+CONST mat_t m;
 {
 	fastf_t det[4];
 	fastf_t sum;

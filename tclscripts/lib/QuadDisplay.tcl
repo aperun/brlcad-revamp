@@ -43,10 +43,7 @@ class QuadDisplay {
     # methods for controlling the view object
     public method aet {args}
     public method center {args}
-    public method coord {args}
-    public method keypoint {args}
     public method rot {args}
-    public method rotate_about {args}
     public method size {args}
     public method slew {args}
     public method tra {args}
@@ -69,7 +66,6 @@ class QuadDisplay {
     public method linewidth {args}
     public method listen {args}
     public method perspective {args}
-    public method perspective_angle {args}
     public method rt {args}
     public method rtabort {{gi 0}}
     public method rtcheck {args}
@@ -332,20 +328,8 @@ body QuadDisplay::center {args} {
     eval $itk_component($itk_option(-pane)) center $args
 }
 
-body QuadDisplay::coord {args} {
-    eval $itk_component($itk_option(-pane)) coord $args
-}
-
-body QuadDisplay::keypoint {args} {
-    eval $itk_component($itk_option(-pane)) keypoint $args
-}
-
 body QuadDisplay::rot {args} {
     eval $itk_component($itk_option(-pane)) rot $args
-}
-
-body QuadDisplay::rotate_about {args} {
-    eval $itk_component($itk_option(-pane)) rotate_about $args
 }
 
 body QuadDisplay::slew {args} {
@@ -432,10 +416,6 @@ body QuadDisplay::light {args} {
 
 body QuadDisplay::perspective {args} {
     eval $itk_component($itk_option(-pane)) perspective $args
-}
-
-body QuadDisplay::perspective_angle {args} {
-    eval $itk_component($itk_option(-pane)) perspective_angle $args
 }
 
 body QuadDisplay::bg {args} {

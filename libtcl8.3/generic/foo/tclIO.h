@@ -377,4 +377,3 @@ typedef struct GetsState {
 				 * appended to objPtr so far, just before the
 				 * last call to FilterInputBytes(). */
 } GetsState;
-

@@ -14,7 +14,7 @@ double	ibuf[512];
 double	obuf[512];
 double	*obp;
 
-int main( argc, argv )
+main( argc, argv )
 int argc; char **argv;
 {
 	int	i, num, onum;
@@ -76,5 +76,4 @@ int argc; char **argv;
 		}
 		fwrite( &obuf[0], sizeof( obuf[0] ), onum, stdout );
 	}
-	return 0;
 }

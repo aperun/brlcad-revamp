@@ -23,22 +23,13 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <stdlib.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #include "machine.h"
 #include "fb.h"
 
@@ -60,7 +51,6 @@ void	disp_array();
 
 static char *Usage = "usage: pixhist3d [file.pix]\n";
 
-int
 main(argc, argv)
 int argc; char **argv;
 {
@@ -102,7 +92,6 @@ int argc; char **argv;
 	disp_array( bxg, 0, 256 );
 
 	fb_close( fbp );
-	return 0;
 }
 
 /*

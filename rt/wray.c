@@ -24,7 +24,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSwray[] = "@(#)$Header$ (BRL)";
+static char RCSwray[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -117,7 +117,7 @@ wray( pp, ap, fp, inormal )
 register struct partition *pp;
 register struct application *ap;
 FILE *fp;
-const vect_t	inormal;
+CONST vect_t	inormal;
 {
 	LOCAL struct vldray vldray;
 	register struct hit *hitp= pp->pt_inhit;

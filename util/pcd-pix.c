@@ -21,7 +21,7 @@
  *  any way. This software is not public domain.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 /* define DEBUG for some debugging informations, just remove the x from xDEBUG */
@@ -33,11 +33,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "conf.h"
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <math.h>
 #include "machine.h"
 #include "externs.h"
@@ -265,7 +260,7 @@ char **argv;
 {
 	int bildnr;
 	char *opt;
-	dim w=0,h=0;
+	dim w,h;
 	long cd_offset,cd_offhelp;
 	int do_info,do_overskip;
 	int	do_pixfb = 0;
@@ -1266,7 +1261,7 @@ static long Skip4Base()
 	cd_offset = L_Head + L_Base16 + L_Base4 + L_Base ;
 	SEEK(cd_offset+3);
 	EREADBUF;
-	cd_offhelp = ( ((long)sbuffer[510]) << 8 ) | (sbuffer[511] + 1);
+	cd_offhelp=(((long)sbuffer[510])<<8)|sbuffer[511] + 1;
 
 	cd_offset+=cd_offhelp;
 

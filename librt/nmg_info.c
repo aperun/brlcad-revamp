@@ -23,14 +23,11 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include <math.h>
 #include "machine.h"
 #include "vmath.h"
@@ -54,9 +51,9 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
  */
 struct model *
 nmg_find_model( magic_p_arg )
-const long	*magic_p_arg;
+CONST long	*magic_p_arg;
 {
-	register const long	*magic_p = magic_p_arg;
+	register CONST long	*magic_p = magic_p_arg;
 
 top:
 	if( magic_p == (long *)0 )  {
@@ -110,7 +107,7 @@ top:
 void
 nmg_model_bb( min_pt, max_pt, m )
 point_t min_pt, max_pt;
-const struct model *m;
+CONST struct model *m;
 {
 	struct nmgregion *r;
 	register int i;
@@ -152,7 +149,7 @@ const struct model *m;
  */
 int
 nmg_shell_is_empty(s)
-register const struct shell *s;
+register CONST struct shell *s;
 {
 
 	NMG_CK_SHELL(s);
@@ -171,7 +168,7 @@ register const struct shell *s;
  */
 struct shell *
 nmg_find_s_of_lu(lu)
-const struct loopuse *lu;
+CONST struct loopuse *lu;
 {
 	if (*lu->up.magic_p == NMG_SHELL_MAGIC) return(lu->up.s_p);
 	else if (*lu->up.magic_p != NMG_FACEUSE_MAGIC) 
@@ -187,7 +184,7 @@ const struct loopuse *lu;
  */
 struct shell *
 nmg_find_s_of_eu(eu)
-const struct edgeuse *eu;
+CONST struct edgeuse *eu;
 {
 	if (*eu->up.magic_p == NMG_SHELL_MAGIC) return(eu->up.s_p);
 	else if (*eu->up.magic_p != NMG_LOOPUSE_MAGIC)
@@ -203,7 +200,7 @@ const struct edgeuse *eu;
  */
 struct shell *
 nmg_find_s_of_vu(vu)
-const struct vertexuse *vu;
+CONST struct vertexuse *vu;
 {
 	NMG_CK_VERTEXUSE(vu);
 
@@ -226,7 +223,7 @@ const struct vertexuse *vu;
  */
 struct faceuse *
 nmg_find_fu_of_eu(eu)
-const struct edgeuse *eu;
+CONST struct edgeuse *eu;
 {
 	NMG_CK_EDGEUSE(eu);
 
@@ -242,7 +239,7 @@ const struct edgeuse *eu;
  */
 struct faceuse *
 nmg_find_fu_of_lu(lu)
-const struct loopuse *lu;
+CONST struct loopuse *lu;
 {
 	switch (*lu->up.magic_p) {
 	case NMG_FACEUSE_MAGIC:
@@ -265,7 +262,7 @@ const struct loopuse *lu;
  */
 struct faceuse *
 nmg_find_fu_of_vu(vu)
-const struct vertexuse *vu;
+CONST struct vertexuse *vu;
 {
 	NMG_CK_VERTEXUSE(vu);
 
@@ -309,8 +306,8 @@ const struct vertexuse *vu;
  */
 struct faceuse *
 nmg_find_fu_with_fg_in_s( s1, fu2 )
-const struct shell	*s1;
-const struct faceuse	*fu2;
+CONST struct shell	*s1;
+CONST struct faceuse	*fu2;
 {
 	struct faceuse		*fu1;
 	struct face		*f2;
@@ -365,10 +362,10 @@ const struct faceuse	*fu2;
  */
 double
 nmg_measure_fu_angle( eu, xvec, yvec, zvec )
-const struct edgeuse	*eu;
-const vect_t		xvec;
-const vect_t		yvec;
-const vect_t		zvec;
+CONST struct edgeuse	*eu;
+CONST vect_t		xvec;
+CONST vect_t		yvec;
+CONST vect_t		zvec;
 {
 	vect_t			left;
 	double			ret;
@@ -393,7 +390,7 @@ const vect_t		zvec;
  */
 struct loopuse *
 nmg_find_lu_of_vu( vu )
-const struct vertexuse *vu;
+CONST struct vertexuse *vu;
 {
 	NMG_CK_VERTEXUSE( vu );
 	if ( *vu->up.magic_p == NMG_LOOPUSE_MAGIC )
@@ -436,7 +433,7 @@ const struct vertexuse *vu;
  */
 int
 nmg_loop_is_a_crack( lu )
-const struct loopuse	*lu;
+CONST struct loopuse	*lu;
 {
 	struct edgeuse	*cur_eu;
 	struct edgeuse	*cur_eumate;
@@ -526,9 +523,9 @@ out:
  */
 int
 nmg_loop_is_ccw( lu, norm, tol )
-const struct loopuse	*lu;
-const plane_t		norm;
-const struct bn_tol	*tol;
+CONST struct loopuse	*lu;
+CONST plane_t		norm;
+CONST struct bn_tol	*tol;
 {
 	fastf_t area;
 	fastf_t dot;
@@ -539,7 +536,7 @@ const struct bn_tol	*tol;
 
 	if( area <= 0.0 )
 	{
-		if( RT_G_DEBUG & DEBUG_MATH )
+		if( rt_g.debug & DEBUG_MATH )
 		{
 			bu_log( "nmg_loop_is_ccw: Loop has no area\n" );
 			nmg_pr_lu_briefly( lu, " " );
@@ -550,7 +547,7 @@ const struct bn_tol	*tol;
 
 	if( NEAR_ZERO( area, tol->dist_sq ) )
 	{
-		if( RT_G_DEBUG & DEBUG_MATH )
+		if( rt_g.debug & DEBUG_MATH )
 		{
 			bu_log( "nmg_loop_is_ccw: Loop area (%g) is less than tol->dist_sq (%g)\n", area, tol->dist_sq );
 			nmg_pr_lu_briefly( lu, " " );
@@ -563,7 +560,7 @@ const struct bn_tol	*tol;
 
 	if( NEAR_ZERO( dot, tol->perp ) )
 	{
-		if( RT_G_DEBUG & DEBUG_MATH )
+		if( rt_g.debug & DEBUG_MATH )
 		{
 			bu_log( "nmg_loop_is_ccw: normal ( %g %g %g ) is in plane of loop ( %g %g %g %g ), dot = %g\n",
 				V3ARGS( norm ), V4ARGS( pl ), dot );
@@ -599,20 +596,20 @@ out:
  *	vu	Yes, the loop touches itself at least once, at this vu.
  *	0	No, the loop does not touch itself.
  */
-const struct vertexuse *
+CONST struct vertexuse *
 nmg_loop_touches_self( lu )
-const struct loopuse	*lu;
+CONST struct loopuse	*lu;
 {
-	const struct edgeuse	*eu;
-	const struct vertexuse	*vu;
-	const struct vertex	*v;
+	CONST struct edgeuse	*eu;
+	CONST struct vertexuse	*vu;
+	CONST struct vertex	*v;
 
 	if( BU_LIST_FIRST_MAGIC( &lu->down_hd ) != NMG_EDGEUSE_MAGIC )
-		return (const struct vertexuse *)0;
+		return (CONST struct vertexuse *)0;
 
 	/* For each edgeuse, get vertexuse and vertex */
 	for( BU_LIST_FOR( eu, edgeuse, &lu->down_hd ) )  {
-		const struct vertexuse	*tvu;
+		CONST struct vertexuse	*tvu;
 
 		vu = eu->vu_p;
 		NMG_CK_VERTEXUSE(vu);
@@ -628,8 +625,8 @@ const struct loopuse	*lu;
 		 *  a table-based approach, for most cases.
 		 */
 		for( BU_LIST_FOR( tvu, vertexuse, &v->vu_hd ) )  {
-			const struct edgeuse		*teu;
-			const struct loopuse		*tlu;
+			CONST struct edgeuse		*teu;
+			CONST struct loopuse		*tlu;
 
 			if( tvu == vu )  continue;
 			/*
@@ -649,7 +646,7 @@ const struct loopuse	*lu;
 			return vu;
 		}
 	}
-	return (const struct vertexuse *)0;
+	return (CONST struct vertexuse *)0;
 }
 
 /************************************************************************
@@ -668,10 +665,10 @@ const struct loopuse	*lu;
  */
 struct edgeuse *
 nmg_find_matching_eu_in_s( eu1, s2 )
-const struct edgeuse	*eu1;
-const struct shell	*s2;
+CONST struct edgeuse	*eu1;
+CONST struct shell	*s2;
 {
-	const struct vertexuse	*vu1a, *vu1b;
+	CONST struct vertexuse	*vu1a, *vu1b;
 	struct edgeuse		*eu2;
 
 	NMG_CK_EDGEUSE(eu1);
@@ -713,14 +710,14 @@ const struct shell	*s2;
  */
 struct edgeuse *
 nmg_findeu(v1, v2, s, eup, dangling_only)
-const struct vertex	*v1, *v2;
-const struct shell	*s;
-const struct edgeuse	*eup;
+CONST struct vertex	*v1, *v2;
+CONST struct shell	*s;
+CONST struct edgeuse	*eup;
 int		dangling_only;
 {
-	register const struct vertexuse	*vu;
-	register const struct edgeuse	*eu;
-	const struct edgeuse		*eup_mate;
+	register CONST struct vertexuse	*vu;
+	register CONST struct edgeuse	*eu;
+	CONST struct edgeuse		*eup_mate;
 	int				eup_orientation;
 
 	NMG_CK_VERTEX(v1);
@@ -813,15 +810,15 @@ out:
  */
 struct edgeuse *
 nmg_find_eu_in_face( v1, v2, fu, eup, dangling_only )
-const struct vertex	*v1;
-const struct vertex	*v2;
-const struct faceuse	*fu;
-const struct edgeuse	*eup;
+CONST struct vertex	*v1;
+CONST struct vertex	*v2;
+CONST struct faceuse	*fu;
+CONST struct edgeuse	*eup;
 int		dangling_only;
 {
-	register const struct vertexuse	*vu;
-	register const struct edgeuse	*eu;
-	const struct edgeuse		*eup_mate;
+	register CONST struct vertexuse	*vu;
+	register CONST struct edgeuse	*eu;
+	CONST struct edgeuse		*eup_mate;
 	int				eup_orientation;
 
 	NMG_CK_VERTEX(v1);
@@ -923,13 +920,13 @@ out:
  */
 struct edgeuse *
 nmg_find_e(v1, v2, s, ep)
-const struct vertex	*v1;
-const struct vertex	*v2;
-const struct shell	*s;
-const struct edge	*ep;
+CONST struct vertex	*v1;
+CONST struct vertex	*v2;
+CONST struct shell	*s;
+CONST struct edge	*ep;
 {
-	register const struct vertexuse	*vu;
-	register const struct edgeuse	*eu;
+	register CONST struct vertexuse	*vu;
+	register CONST struct edgeuse	*eu;
 
 	NMG_CK_VERTEX(v1);
 	NMG_CK_VERTEX(v2);
@@ -1002,7 +999,7 @@ out:
  */
 struct edgeuse *
 nmg_find_eu_of_vu(vu)
-const struct vertexuse	*vu;
+CONST struct vertexuse	*vu;
 {
 	NMG_CK_VERTEXUSE(vu);
 	if( *vu->up.magic_p != NMG_EDGEUSE_MAGIC )
@@ -1017,8 +1014,8 @@ const struct vertexuse	*vu;
  */
 struct edgeuse *
 nmg_find_eu_with_vu_in_lu( lu, vu )
-const struct loopuse		*lu;
-const struct vertexuse	*vu;
+CONST struct loopuse		*lu;
+CONST struct vertexuse	*vu;
 {
 	register struct edgeuse	*eu;
 
@@ -1040,12 +1037,12 @@ const struct vertexuse	*vu;
  *	Looking radially around an edge, find another edge in the same
  *	face as the current edge. (this could be the mate to the current edge)
  */
-const struct edgeuse *
+CONST struct edgeuse *
 nmg_faceradial(eu)
-const struct edgeuse *eu;
+CONST struct edgeuse *eu;
 {
-	const struct faceuse *fu;
-	const struct edgeuse *eur;
+	CONST struct faceuse *fu;
+	CONST struct edgeuse *eur;
 
 	NMG_CK_EDGEUSE(eu);
 	NMG_CK_LOOPUSE(eu->up.lu_p);
@@ -1069,12 +1066,12 @@ const struct edgeuse *eu;
  *	looking radially around an edge, find another edge which is a part
  *	of a face in the same shell
  */
-const struct edgeuse *
+CONST struct edgeuse *
 nmg_radial_face_edge_in_shell(eu)
-const struct edgeuse *eu;
+CONST struct edgeuse *eu;
 {
-	const struct edgeuse *eur;
-	const struct shell	*s;
+	CONST struct edgeuse *eur;
+	CONST struct shell	*s;
 
 	NMG_CK_EDGEUSE(eu);
 	s = nmg_find_s_of_eu(eu);
@@ -1112,14 +1109,14 @@ const struct edgeuse *eu;
  *
  *  NULL is also returned if no common edge could be found.
  */
-const struct edgeuse *
+CONST struct edgeuse *
 nmg_find_edge_between_2fu(fu1, fu2, tol)
-const struct faceuse	*fu1;
-const struct faceuse	*fu2;
-const struct bn_tol	*tol;
+CONST struct faceuse	*fu1;
+CONST struct faceuse	*fu2;
+CONST struct bn_tol	*tol;
 {
-	const struct loopuse	*lu1;
-	const struct edgeuse	*ret = (const struct edgeuse *)NULL;
+	CONST struct loopuse	*lu1;
+	CONST struct edgeuse	*ret = (CONST struct edgeuse *)NULL;
 	int			coincident;
 
 	NMG_CK_FACEUSE(fu1);
@@ -1127,12 +1124,12 @@ const struct bn_tol	*tol;
 	BN_CK_TOL(tol);
 
 	for( BU_LIST_FOR( lu1, loopuse, &fu1->lu_hd ) )  {
-		const struct edgeuse	*eu1;
+		CONST struct edgeuse	*eu1;
 		NMG_CK_LOOPUSE(lu1);
 		if( BU_LIST_FIRST_MAGIC(&lu1->down_hd) == NMG_VERTEXUSE_MAGIC )
 			continue;
 		for( BU_LIST_FOR( eu1, edgeuse, &lu1->down_hd ) )  {
-			const struct edgeuse *eur;
+			CONST struct edgeuse *eur;
 
 			NMG_CK_EDGEUSE(eu1);
 			/* Walk radially around the edge */
@@ -1197,7 +1194,7 @@ struct fen2d_state {
 	struct edge	*ep;		/* closest edge */
 	mat_t		mat;
 	point_t		pt2;
-	const struct bn_tol	*tol;
+	CONST struct bn_tol	*tol;
 };
 
 static void
@@ -1249,9 +1246,9 @@ int		first;
 struct edge *
 nmg_find_e_nearest_pt2( magic_p, pt2, mat, tol )
 long		*magic_p;
-const point_t	pt2;		/* 2d point */
-const mat_t	mat;		/* 3d to 3d xform */
-const struct bn_tol	*tol;
+CONST point_t	pt2;		/* 2d point */
+CONST mat_t	mat;		/* 3d to 3d xform */
+CONST struct bn_tol	*tol;
 {
 	struct model			*m;
 	struct nmg_visit_handlers	htab;
@@ -1264,7 +1261,7 @@ const struct bn_tol	*tol;
 	st.visited = (char *)bu_calloc(m->maxindex+1, sizeof(char), "visited[]");
 	st.mindist = INFINITY;
 	VMOVE( st.pt2, pt2 );
-	MAT_COPY( st.mat, mat );
+	bn_mat_copy( st.mat, mat );
 	st.ep = (struct edge *)NULL;
 	st.tol = tol;
 
@@ -1298,10 +1295,10 @@ nmg_eu_2vecs_perp( xvec, yvec, zvec, eu, tol )
 vect_t		xvec;
 vect_t		yvec;
 vect_t		zvec;
-const struct edgeuse	*eu;
-const struct bn_tol	*tol;
+CONST struct edgeuse	*eu;
+CONST struct bn_tol	*tol;
 {
-	const struct vertex	*v1, *v2;
+	CONST struct vertex	*v1, *v2;
 	fastf_t			len;
 
 	NMG_CK_EDGEUSE(eu);
@@ -1342,10 +1339,10 @@ const struct bn_tol	*tol;
 int
 nmg_find_eu_leftvec( left, eu )
 vect_t			left;
-const struct edgeuse	*eu;
+CONST struct edgeuse	*eu;
 {
-	const struct loopuse	*lu;
-	const struct faceuse	*fu;
+	CONST struct loopuse	*lu;
+	CONST struct faceuse	*fu;
 	vect_t			Norm;
 	vect_t			edgevect;
 	fastf_t			dot;
@@ -1378,8 +1375,8 @@ const struct edgeuse	*eu;
 
 	if( NEAR_ZERO( sin_sq, 0.000001) )	/* we don't have a tol structure available XXX */
 	{
-		const struct edgeuse *eu_next;
-		const struct edgeuse *eu_prev;
+		CONST struct edgeuse *eu_next;
+		CONST struct edgeuse *eu_prev;
 		vect_t next_left;
 		vect_t prev_left;
 		vect_t other_edge;
@@ -1494,10 +1491,10 @@ const struct edgeuse	*eu;
 int
 nmg_find_eu_left_non_unit( left, eu )
 vect_t			left;
-const struct edgeuse	*eu;
+CONST struct edgeuse	*eu;
 {
-	const struct loopuse	*lu;
-	const struct faceuse	*fu;
+	CONST struct loopuse	*lu;
+	CONST struct faceuse	*fu;
 	vect_t			Norm;
 	vect_t			edgevect;
 	pointp_t		p1,p2;
@@ -1529,7 +1526,7 @@ const struct edgeuse	*eu;
  */
 struct edgeuse *
 nmg_find_ot_same_eu_of_e( e )
-const struct edge	*e;
+CONST struct edge	*e;
 {
 	register struct edgeuse	*eu1;
 	register struct edgeuse	*eu;
@@ -1566,8 +1563,8 @@ const struct edge	*e;
  */
 struct vertexuse *
 nmg_find_v_in_face(v, fu)
-const struct vertex	*v;
-const struct faceuse	*fu;
+CONST struct vertex	*v;
+CONST struct faceuse	*fu;
 {
 	struct vertexuse *vu;
 	struct edgeuse *eu;
@@ -1606,8 +1603,8 @@ const struct faceuse	*fu;
  */
 struct vertexuse *
 nmg_find_v_in_shell( v, s, edges_only )
-const struct vertex	*v;
-const struct shell	*s;
+CONST struct vertex	*v;
+CONST struct shell	*s;
 int			edges_only;
 {
 	struct vertexuse	*vu;
@@ -1650,9 +1647,9 @@ int			edges_only;
  */
 struct vertexuse *
 nmg_find_pt_in_lu(lu, pt, tol)
-const struct loopuse	*lu;
-const point_t		pt;
-const struct bn_tol	*tol;
+CONST struct loopuse	*lu;
+CONST point_t		pt;
+CONST struct bn_tol	*tol;
 {
 	struct edgeuse		*eu;
 	vect_t			delta;
@@ -1703,9 +1700,9 @@ const struct bn_tol	*tol;
  */
 struct vertexuse *
 nmg_find_pt_in_face(fu, pt, tol)
-const struct faceuse	*fu;
-const point_t		pt;
-const struct bn_tol	*tol;
+CONST struct faceuse	*fu;
+CONST point_t		pt;
+CONST struct bn_tol	*tol;
 {
 	register struct loopuse	*lu;
 	struct vertexuse	*vu;
@@ -1740,16 +1737,16 @@ const struct bn_tol	*tol;
  */
 struct vertex *
 nmg_find_pt_in_shell( s, pt, tol )
-const struct shell	*s;
-const point_t		pt;
-const struct bn_tol	*tol;
+CONST struct shell	*s;
+CONST point_t		pt;
+CONST struct bn_tol	*tol;
 {
-	const struct faceuse	*fu;
-	const struct loopuse	*lu;
-	const struct edgeuse	*eu;
-	const struct vertexuse	*vu;
+	CONST struct faceuse	*fu;
+	CONST struct loopuse	*lu;
+	CONST struct edgeuse	*eu;
+	CONST struct vertexuse	*vu;
 	struct vertex		*v;
-	const struct vertex_g	*vg;
+	CONST struct vertex_g	*vg;
 	vect_t		delta;
 
 	NMG_CK_SHELL(s);
@@ -1820,9 +1817,9 @@ const struct bn_tol	*tol;
  */
 struct vertex *
 nmg_find_pt_in_model( m, pt, tol )
-const struct model	*m;
-const point_t		pt;
-const struct bn_tol	*tol;
+CONST struct model	*m;
+CONST point_t		pt;
+CONST struct bn_tol	*tol;
 {
 	struct nmgregion	*r;
 	struct shell		*s;
@@ -1853,10 +1850,10 @@ const struct bn_tol	*tol;
  */
 int
 nmg_is_vertex_in_edgelist( v, hd )
-register const struct vertex	*v;
-const struct bu_list		*hd;
+register CONST struct vertex	*v;
+CONST struct bu_list		*hd;
 {
-	register const struct edgeuse	*eu;
+	register CONST struct edgeuse	*eu;
 
 	NMG_CK_VERTEX(v);
 	for( BU_LIST_FOR( eu, edgeuse, hd ) )  {
@@ -1877,11 +1874,11 @@ const struct bu_list		*hd;
  */
 int
 nmg_is_vertex_in_looplist( v, hd, singletons )
-register const struct vertex	*v;
-const struct bu_list		*hd;
+register CONST struct vertex	*v;
+CONST struct bu_list		*hd;
 int				singletons;
 {
-	register const struct loopuse	*lu;
+	register CONST struct loopuse	*lu;
 	long			magic1;
 
 	NMG_CK_VERTEX(v);
@@ -1889,7 +1886,7 @@ int				singletons;
 		NMG_CK_LOOPUSE(lu);
 		magic1 = BU_LIST_FIRST_MAGIC( &lu->down_hd );
 		if( magic1 == NMG_VERTEXUSE_MAGIC )  {
-			register const struct vertexuse	*vu;
+			register CONST struct vertexuse	*vu;
 			if( !singletons )  continue;
 			vu = BU_LIST_FIRST(vertexuse, &lu->down_hd );
 			NMG_CK_VERTEXUSE(vu);
@@ -1914,8 +1911,8 @@ int				singletons;
  */
 struct vertexuse *
 nmg_is_vertex_in_face( v, f )
-const struct vertex	*v;
-const struct face	*f;
+CONST struct vertex	*v;
+CONST struct face	*f;
 {
 	struct vertexuse	*vu;
 
@@ -1923,9 +1920,9 @@ const struct face	*f;
 	NMG_CK_FACE(f);
 
 	for( BU_LIST_FOR( vu, vertexuse, &v->vu_hd ) )  {
-		register const struct edgeuse	*eu;
-		register const struct loopuse	*lu;
-		register const struct faceuse	*fu;
+		register CONST struct edgeuse	*eu;
+		register CONST struct loopuse	*lu;
+		register CONST struct faceuse	*fu;
 
 		if( *vu->up.magic_p != NMG_EDGEUSE_MAGIC )  continue;
 		if( *(eu = vu->up.eu_p)->up.magic_p != NMG_LOOPUSE_MAGIC )  continue;
@@ -1951,17 +1948,17 @@ const struct face	*f;
  */
 int
 nmg_is_vertex_a_selfloop_in_shell(v, s)
-const struct vertex	*v;
-const struct shell	*s;
+CONST struct vertex	*v;
+CONST struct shell	*s;
 {
-	const struct vertexuse *vu;
+	CONST struct vertexuse *vu;
 
 	NMG_CK_VERTEX(v);
 	NMG_CK_SHELL(s);
 
 	/* try to find the vertex in a loopuse of this shell */
 	for (BU_LIST_FOR(vu, vertexuse, &v->vu_hd)) {
-		register const struct loopuse	*lu;
+		register CONST struct loopuse	*lu;
 		NMG_CK_VERTEXUSE(vu);
 		if (*vu->up.magic_p != NMG_LOOPUSE_MAGIC )  continue;
 		lu = vu->up.lu_p;
@@ -1983,10 +1980,10 @@ const struct shell	*s;
  */
 int
 nmg_is_vertex_in_facelist( v, hd )
-register const struct vertex	*v;
-const struct bu_list		*hd;
+register CONST struct vertex	*v;
+CONST struct bu_list		*hd;
 {
-	register const struct faceuse	*fu;
+	register CONST struct faceuse	*fu;
 
 	NMG_CK_VERTEX(v);
 	for( BU_LIST_FOR( fu, faceuse, hd ) )  {
@@ -2006,10 +2003,10 @@ const struct bu_list		*hd;
  */
 int
 nmg_is_edge_in_edgelist( e, hd )
-const struct edge	*e;
-const struct bu_list	*hd;
+CONST struct edge	*e;
+CONST struct bu_list	*hd;
 {
-	register const struct edgeuse	*eu;
+	register CONST struct edgeuse	*eu;
 
 	NMG_CK_EDGE(e);
 	for( BU_LIST_FOR( eu, edgeuse, hd ) )  {
@@ -2029,10 +2026,10 @@ const struct bu_list	*hd;
  */
 int
 nmg_is_edge_in_looplist( e, hd )
-const struct edge	*e;
-const struct bu_list	*hd;
+CONST struct edge	*e;
+CONST struct bu_list	*hd;
 {
-	register const struct loopuse	*lu;
+	register CONST struct loopuse	*lu;
 	long			magic1;
 
 	NMG_CK_EDGE(e);
@@ -2061,10 +2058,10 @@ const struct bu_list	*hd;
  */
 int
 nmg_is_edge_in_facelist( e, hd )
-const struct edge	*e;
-const struct bu_list	*hd;
+CONST struct edge	*e;
+CONST struct bu_list	*hd;
 {
-	register const struct faceuse	*fu;
+	register CONST struct faceuse	*fu;
 
 	NMG_CK_EDGE(e);
 	for( BU_LIST_FOR( fu, faceuse, hd ) )  {
@@ -2084,11 +2081,11 @@ const struct bu_list	*hd;
  */
 int
 nmg_is_loop_in_facelist( l, fu_hd )
-const struct loop	*l;
-const struct bu_list	*fu_hd;
+CONST struct loop	*l;
+CONST struct bu_list	*fu_hd;
 {
-	register const struct faceuse	*fu;
-	register const struct loopuse	*lu;
+	register CONST struct faceuse	*fu;
+	register CONST struct loopuse	*lu;
 
 	NMG_CK_LOOP(l);
 	for( BU_LIST_FOR( fu, faceuse, fu_hd ) )  {
@@ -2146,7 +2143,7 @@ int		first;
 void
 nmg_vertex_tabulate( tab, magic_p )
 struct bu_ptbl		*tab;
-const long		*magic_p;
+CONST long		*magic_p;
 {
 	struct model		*m;
 	struct vf_state		st;
@@ -2203,7 +2200,7 @@ int		first;
 void
 nmg_vertexuse_normal_tabulate( tab, magic_p )
 struct bu_ptbl		*tab;
-const long		*magic_p;
+CONST long		*magic_p;
 {
 	struct model		*m;
 	struct vf_state		st;
@@ -2257,7 +2254,7 @@ int		first;
 void
 nmg_edgeuse_tabulate( tab, magic_p )
 struct bu_ptbl		*tab;
-const long		*magic_p;
+CONST long		*magic_p;
 {
 	struct model		*m;
 	struct vf_state		st;
@@ -2311,7 +2308,7 @@ int		first;
 void
 nmg_edge_tabulate( tab, magic_p )
 struct bu_ptbl		*tab;
-const long		*magic_p;
+CONST long		*magic_p;
 {
 	struct model		*m;
 	struct vf_state		st;
@@ -2374,7 +2371,7 @@ int		first;
 void
 nmg_edge_g_tabulate( tab, magic_p )
 struct bu_ptbl		*tab;
-const long		*magic_p;
+CONST long		*magic_p;
 {
 	struct model		*m;
 	struct vf_state		st;
@@ -2428,7 +2425,7 @@ int		first;
 void
 nmg_face_tabulate( tab, magic_p )
 struct bu_ptbl		*tab;
-const long		*magic_p;
+CONST long		*magic_p;
 {
 	struct model		*m;
 	struct vf_state		st;
@@ -2458,7 +2455,7 @@ const long		*magic_p;
 void
 nmg_edgeuse_with_eg_tabulate( tab, eg )
 struct bu_ptbl			*tab;
-const struct edge_g_lseg	*eg;	/* can also be edge_g_cnurb */
+CONST struct edge_g_lseg	*eg;	/* can also be edge_g_cnurb */
 {
 	struct bu_list	*midway;	/* &eu->l2, midway into edgeuse */
 	struct edgeuse	*eu;
@@ -2547,10 +2544,10 @@ int		first;
 void
 nmg_edgeuse_on_line_tabulate( tab, magic_p, pt, dir, tol )
 struct bu_ptbl		*tab;
-const long		*magic_p;
-const point_t		pt;
-const vect_t		dir;
-const struct bn_tol	*tol;
+CONST long		*magic_p;
+CONST point_t		pt;
+CONST vect_t		dir;
+CONST struct bn_tol	*tol;
 {
 	struct model		*m;
 	struct edge_line_state		st;
@@ -2646,7 +2643,7 @@ void
 nmg_e_and_v_tabulate( eutab, vtab, magic_p )
 struct bu_ptbl		*eutab;
 struct bu_ptbl		*vtab;
-const long		*magic_p;
+CONST long		*magic_p;
 {
 	struct model			*m;
 	struct e_and_v_state		st;
@@ -2683,9 +2680,9 @@ const long		*magic_p;
  */
 int
 nmg_2edgeuse_g_coincident( eu1, eu2, tol )
-const struct edgeuse	*eu1;
-const struct edgeuse	*eu2;
-const struct bn_tol	*tol;
+CONST struct edgeuse	*eu1;
+CONST struct edgeuse	*eu2;
+CONST struct bn_tol	*tol;
 {
 	struct edge_g_lseg	*eg1;
 	struct edge_g_lseg	*eg2;

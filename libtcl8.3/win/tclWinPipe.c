@@ -571,7 +571,7 @@ TclpMakeFile(channel, direction)
 
 TclFile
 TclpOpenFile(path, mode)
-    const char *path;		/* The name of the file to open. */
+    CONST char *path;		/* The name of the file to open. */
     int mode;			/* In what mode to open the file? */
 {
     HANDLE handle;
@@ -692,10 +692,10 @@ TclpOpenFile(path, mode)
 
 TclFile
 TclpCreateTempFile(contents)
-    const char *contents;	/* String to write into temp file, or NULL. */
+    CONST char *contents;	/* String to write into temp file, or NULL. */
 {
     WCHAR name[MAX_PATH];
-    const char *native;
+    CONST char *native;
     Tcl_DString dstring;
     HANDLE handle;
 
@@ -716,7 +716,7 @@ TclpCreateTempFile(contents)
 
     if (contents != NULL) {
 	DWORD result, length;
-	const char *p;
+	CONST char *p;
 
 	/*
 	 * Convert the contents from UTF to native encoding
@@ -1491,14 +1491,14 @@ ApplicationType(interp, originalName, fullName)
 
 static void
 BuildCommandLine(
-    const char *executable,	/* Full path of executable (including 
+    CONST char *executable,	/* Full path of executable (including 
 				 * extension).  Replacement for argv[0]. */
     int argc,			/* Number of arguments. */
     char **argv,		/* Argument strings in UTF. */
     Tcl_DString *linePtr)	/* Initialized Tcl_DString that receives the
 				 * command line (TCHAR). */
 {
-    const char *arg, *start, *special;
+    CONST char *arg, *start, *special;
     int quote, i;
     Tcl_DString ds;
 
@@ -2493,7 +2493,7 @@ Tcl_PidObjCmd(
     ClientData dummy,		/* Not used. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *const *objv)	/* Argument strings. */
+    Tcl_Obj *CONST *objv)	/* Argument strings. */
 {
     Tcl_Channel chan;
     Tcl_ChannelType *chanTypePtr;

@@ -894,12 +894,12 @@ pchr pc;
  * Note that it does not need to report anything except equal/unequal.
  * Note also that the length is exact, and the comparison should not
  * stop at embedded NULs!
- ^ static int cmp(const chr *, const chr *, size_t);
+ ^ static int cmp(CONST chr *, CONST chr *, size_t);
  */
 static int			/* 0 for equal, nonzero for unequal */
 cmp(x, y, len)
-const chr *x;
-const chr *y;
+CONST chr *x;
+CONST chr *y;
 size_t len;			/* exact length of comparison */
 {
 	return memcmp(VS(x), VS(y), len*sizeof(chr));
@@ -911,21 +911,20 @@ size_t len;			/* exact length of comparison */
  * Note that it does not need to report anything except equal/unequal.
  * Note also that the length is exact, and the comparison should not
  * stop at embedded NULs!
- ^ static int casecmp(const chr *, const chr *, size_t);
+ ^ static int casecmp(CONST chr *, CONST chr *, size_t);
  */
 static int			/* 0 for equal, nonzero for unequal */
 casecmp(x, y, len)
-const chr *x;
-const chr *y;
+CONST chr *x;
+CONST chr *y;
 size_t len;			/* exact length of comparison */
 {
 	size_t i;
-	const chr *xp;
-	const chr *yp;
+	CONST chr *xp;
+	CONST chr *yp;
 
 	for (xp = x, yp = y, i = len; i > 0; i--)
 		if (Tcl_UniCharToLower(*xp++) != Tcl_UniCharToLower(*yp++))
 			return 1;
 	return 0;
 }
-

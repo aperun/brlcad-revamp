@@ -22,17 +22,16 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSppview[] = "@(#)$Header$ (BRL)";
+static char RCSppview[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <string.h>
 #include "machine.h"
 #include "vmath.h"
 #include "raytrace.h"
-#include "rtprivate.h"
+#include "./rdebug.h"
 #include "./rad.h"
 
 #define	MAXREFLECT	16
@@ -103,82 +102,15 @@ static int radmiss();
  *  Called at the start of a run.
  *  Returns 1 if framebuffer should be opened, else 0.
  */
-int view_init( register struct application *ap,
-	       char *file, 
-	       char *obj,
-	       int minus_o)
+view_init( ap, file, obj, minus_o )
+register struct application *ap;
+char *file, *obj;
 {
 	ap->a_hit = radhit;
 	ap->a_miss = radmiss;
 	ap->a_onehit = 1;
 
 	return(0);		/* no framebuffer needed */
-}
-/*
- *  Output a physical record (256 logical records)
- *
- *  Turns on -1 flags in unused logical records
- */
-int
-writephysrec( fp )
-FILE *fp;
-{
-	union radrec	skiprec;
-	long	length;
-static int totbuf = 0;
-int buf = 0;
-
-	/* Pad out the record if not full */
-	memset( (char *)&skiprec, 0, sizeof(skiprec) );
-	skiprec.p.pad[16] = -1;
-	while( precindex < 256 ) {
-		bcopy( &skiprec, &physrec[precindex*sizeof(union radrec)], sizeof(skiprec) );
-		precindex++;
-buf++;
-	}
-
-	length = sizeof(physrec);
-	fwrite( &length, sizeof(length), 1, fp );
-	if( fwrite( physrec, sizeof(physrec), 1, fp ) != 1 ) {
-		bu_log( "writephysrec: error writing physical record\n" );
-		return( 0 );
-	}
-	fwrite( &length, sizeof(length), 1, fp );
-
-	memset( (char *)physrec, 0, sizeof(physrec) );	/* paranoia */
-	precindex = 0;
-	precnum++;
-
-totbuf += buf;
-/*fprintf( stderr, "PREC %d, buf = %d, totbuf = %d\n", precnum, buf, totbuf );*/
-
-	return( 1 );
-}
-
-/*
- *  Write a logical record
- *
- *  Outputs the current physical record if full.
- */
-int
-writerec( rp, fp )
-union radrec *rp;
-FILE *fp;
-{
-	if( precindex >= 256 ) {
-		if( writephysrec( fp ) == 0 )
-			return( 0 );
-	}
-	bcopy( rp, &physrec[precindex*sizeof(*rp)], sizeof(*rp) );
-
-	precindex++;
-	recnum++;
-
-	if( precindex >= 256 ) {
-		if( writephysrec( fp ) == 0 )
-			return( 0 );
-	}
-	return( 1 );
 }
 
 /* beginning of a frame */
@@ -199,7 +131,7 @@ struct application *ap;
 	bu_log( "Ray Spacing: %f rays/cm\n", 10.0*(width/viewsize) );
 
 	/* Header Record */
-	memset( (char *)&r, 0, sizeof(r) );
+	bzero( (char *)&r, sizeof(r) );
 
 	/*XXX*/
 	r.h.head[0] = 'h'; r.h.head[1] = 'e';
@@ -225,7 +157,7 @@ struct application *ap;
 	writerec( &r, outfp );
 
 	/* XXX - write extra header records */
-	memset( (char *)&r, 0, sizeof(r) );
+	bzero( (char *)&r, sizeof(r) );
 	writerec( &r, outfp );
 	writerec( &r, outfp );
 }
@@ -432,7 +364,7 @@ static int
 isvisible( ap, hitp, norm )
 struct application *ap;
 struct hit *hitp;
-const vect_t	norm;
+CONST vect_t	norm;
 {
 	struct application sub_ap;
 	vect_t	rdir;
@@ -474,7 +406,7 @@ int depth;
 	/* Firing record */
 	/*printf( "Ray [%d %d], depth = %d\n", ap->a_x, ap->a_y, depth );*/
 
-	memset( (char *)&r, 0, sizeof(r) );
+	bzero( (char *)&r, sizeof(r) );
 
 	/*XXX*/
 	r.f.head[0] = 'f'; r.f.head[1] = 'i';
@@ -508,7 +440,7 @@ int depth;
 		return;			/* no escape */
 
 	/* Escape record */
-	memset( (char *)&r, 0, sizeof(r) );
+	bzero( (char *)&r, sizeof(r) );
 
 	/*XXX*/
 	r.e.head[0] = 'e'; r.e.head[1] = 's';
@@ -535,7 +467,7 @@ struct rayinfo *rp;
 #endif
 
 	/* Reflection record */
-	memset( (char *)&r, 0, sizeof(r) );
+	bzero( (char *)&r, sizeof(r) );
 
 	/*XXX*/
 	r.r.head[0] = 'r'; r.r.head[1] = 'e';
@@ -562,6 +494,71 @@ struct rayinfo *rp;
 	writerec( &r, outfp );
 }
 
+/*
+ *  Write a logical record
+ *
+ *  Outputs the current physical record if full.
+ */
+int
+writerec( rp, fp )
+union radrec *rp;
+FILE *fp;
+{
+	if( precindex >= 256 ) {
+		if( writephysrec( fp ) == 0 )
+			return( 0 );
+	}
+	bcopy( rp, &physrec[precindex*sizeof(*rp)], sizeof(*rp) );
 
+	precindex++;
+	recnum++;
+
+	if( precindex >= 256 ) {
+		if( writephysrec( fp ) == 0 )
+			return( 0 );
+	}
+	return( 1 );
+}
+
+/*
+ *  Output a physical record (256 logical records)
+ *
+ *  Turns on -1 flags in unused logical records
+ */
+int
+writephysrec( fp )
+FILE *fp;
+{
+	union radrec	skiprec;
+	long	length;
+static int totbuf = 0;
+int buf = 0;
+
+	/* Pad out the record if not full */
+	bzero( (char *)&skiprec, sizeof(skiprec) );
+	skiprec.p.pad[16] = -1;
+	while( precindex < 256 ) {
+		bcopy( &skiprec, &physrec[precindex*sizeof(union radrec)], sizeof(skiprec) );
+		precindex++;
+buf++;
+	}
+
+	length = sizeof(physrec);
+	fwrite( &length, sizeof(length), 1, fp );
+	if( fwrite( physrec, sizeof(physrec), 1, fp ) != 1 ) {
+		bu_log( "writephysrec: error writing physical record\n" );
+		return( 0 );
+	}
+	fwrite( &length, sizeof(length), 1, fp );
+
+	bzero( (char *)physrec, sizeof(physrec) );	/* paranoia */
+	precindex = 0;
+	precnum++;
+
+totbuf += buf;
+/*fprintf( stderr, "PREC %d, buf = %d, totbuf = %d\n", precnum, buf, totbuf );*/
+
+	return( 1 );
+}
 
 void application_init () {}

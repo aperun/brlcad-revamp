@@ -27,9 +27,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "tcl.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include <sys/time.h>		/* for struct timeval */
 #include "machine.h"
 #include "externs.h"
@@ -341,7 +338,7 @@ NEWPG\n\
 		((struct ps_vars *)dmp->dm_vars.priv_vars)->scale,
 		((struct ps_vars *)dmp->dm_vars.priv_vars)->scale);
 
-	MAT_IDN(psmat);
+	bn_mat_idn(psmat);
 
 	Tcl_SetObjResult(interp, obj);
 	return dmp;
@@ -438,7 +435,7 @@ int which_eye;
 		bu_vls_free(&tmp_vls);
 	}
 
-	MAT_COPY(psmat, mat);
+	bn_mat_copy(psmat, mat);
 
 	Tcl_SetObjResult(dmp->dm_interp, obj);
 	return TCL_OK;

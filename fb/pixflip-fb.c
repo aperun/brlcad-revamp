@@ -20,17 +20,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <sys/time.h>		/* For struct timeval */
 
 #include "machine.h"
@@ -64,7 +59,6 @@ Usage: pixflip-fb [-h]\n\
 	[-f frames/sec] [-p passes] [-r] [-v] [-z]\n\
 	[-o startframe] basename [file2 ... fileN]\n";
 
-int
 get_args( argc, argv )
 register char **argv;
 {
@@ -127,7 +121,6 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main( argc, argv )
 char **argv;
 {

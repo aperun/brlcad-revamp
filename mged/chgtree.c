@@ -28,7 +28,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -44,16 +44,22 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "bu.h"
 #include "vmath.h"
 #include "bn.h"
+#include "wdb.h"
 #include "./sedit.h"
 #include "raytrace.h"
-#include "wdb.h"
 #include "rtgeom.h"
 #include "./ged.h"
 #include "externs.h"
 #include "./mged_solid.h"
 #include "./mged_dm.h"
 #include "./mgedtcl.h"
-#include "./cmd.h"
+
+/* XXX Move to raytrace.h */
+BU_EXTERN(struct animate	*db_parse_1anim, (struct db_i *dbip,
+				int argc, CONST char **argv));
+BU_EXTERN(union tree		*db_find_named_leaf, (union tree *tp,
+				CONST char *cp));
+
 
 extern void solid_list_callback(); /* chgview.c */
 extern struct db_tree_state	mged_initial_tree_state;	/* dodraw.c */
@@ -62,24 +68,363 @@ extern struct rt_tess_tol	mged_ttol;	/* XXX needs to replace mged_abs_tol, et.al
 
 void	aexists();
 
+/* Rename an object */
+/* Format: mv oldname newname	*/
+int
+f_name(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
+{
+	register struct directory *dp;
+	struct rt_db_internal	intern;
+
+	CHECK_DBI_NULL;
+	CHECK_READ_ONLY;
+
+	if(argc < 3 || 3 < argc){
+	  struct bu_vls vls;
+
+	  bu_vls_init(&vls);
+	  bu_vls_printf(&vls, "help mv");
+	  Tcl_Eval(interp, bu_vls_addr(&vls));
+	  bu_vls_free(&vls);
+	  return TCL_ERROR;
+	}
+
+	if( (dp = db_lookup( dbip,  argv[1], LOOKUP_NOISY )) == DIR_NULL )
+	  return TCL_ERROR;
+
+	if( db_lookup( dbip,  argv[2], LOOKUP_QUIET ) != DIR_NULL )  {
+	  aexists( argv[2] );
+	  return TCL_ERROR;
+	}
+
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
+		TCL_READ_ERR_return;
+	}
+
+	/*  Change object name in the in-memory directory. */
+	if( db_rename( dbip, dp, argv[2] ) < 0 )  {
+		rt_db_free_internal( &intern );
+	  Tcl_AppendResult(interp, "error in db_rename to ", argv[2],
+			   ", aborting\n", (char *)NULL);
+	  TCL_ERROR_RECOVERY_SUGGESTION;
+	  return TCL_ERROR;
+	}
+
+	/* Re-write to the database.  New name is applied on the way out. */
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
+		TCL_WRITE_ERR_return;
+	}
+	return TCL_OK;
+}
+
+/* Copy an object */
+/* Format: cp oldname newname	*/
+int
+f_copy(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
+{
+	register struct directory *proto;
+	register struct directory *dp;
+	struct bu_external external;
+
+	CHECK_DBI_NULL;
+	CHECK_READ_ONLY;
+
+	if(argc < 3 || 3 < argc){
+	  struct bu_vls vls;
+
+	  bu_vls_init(&vls);
+	  bu_vls_printf(&vls, "help cp");
+	  Tcl_Eval(interp, bu_vls_addr(&vls));
+	  bu_vls_free(&vls);
+	  return TCL_ERROR;
+	}
+
+	if( (proto = db_lookup( dbip,  argv[1], LOOKUP_NOISY )) == DIR_NULL )
+	  return TCL_ERROR;
+
+	if( db_lookup( dbip,  argv[2], LOOKUP_QUIET ) != DIR_NULL )  {
+	  aexists( argv[2] );
+	  return TCL_ERROR;
+	}
+
+	if( db_get_external( &external , proto , dbip ) ) {
+	  TCL_READ_ERR_return;
+	}
+
+	/* no interuprts */
+	(void)signal( SIGINT, SIG_IGN );
+
+	if( (dp=db_diradd( dbip, argv[2], -1, proto->d_len, proto->d_flags, NULL)) == DIR_NULL ||
+	    db_alloc( dbip, dp, proto->d_len ) < 0 )  {
+	  TCL_ALLOC_ERR_return;
+	}
+
+	if (db_put_external( &external, dp, dbip ) < 0 )
+	{
+	  db_free_external( &external );
+	  TCL_WRITE_ERR_return;
+	}
+	db_free_external( &external );
+
+	{
+	  char *av[3];
+
+	  av[0] = "e";
+	  av[1] = argv[2]; /* depends on solid name being in argv[2] */
+	  av[2] = NULL;
+
+	  /* draw the new object */
+	  return f_edit( clientData, interp, 2, av );
+	}
+}
+
+/* Create an instance of something */
+/* Format: i object combname [op]	*/
+int
+f_instance(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
+{
+	register struct directory *dp;
+	char oper;
+
+	CHECK_DBI_NULL;
+	CHECK_READ_ONLY;
+
+	if(argc < 3 || 4 < argc){
+	  struct bu_vls vls;
+
+	  bu_vls_init(&vls);
+	  bu_vls_printf(&vls, "help i");
+	  Tcl_Eval(interp, bu_vls_addr(&vls));
+	  bu_vls_free(&vls);
+	  return TCL_ERROR;
+	}
+
+	if( (dp = db_lookup( dbip,  argv[1], LOOKUP_NOISY )) == DIR_NULL )
+	  return TCL_ERROR;
+
+	oper = WMOP_UNION;
+	if( argc == 4 )
+		oper = argv[3][0];
+	if(oper != WMOP_UNION && oper != WMOP_SUBTRACT &&	oper != WMOP_INTERSECT) {
+	  struct bu_vls tmp_vls;
+
+	  bu_vls_init(&tmp_vls);
+	  bu_vls_printf(&tmp_vls, "bad operation: %c\n", oper );
+	  Tcl_AppendResult(interp, bu_vls_addr(&tmp_vls), (char *)NULL);
+	  bu_vls_free(&tmp_vls);
+	  return TCL_ERROR;
+	}
+	if( combadd( dp, argv[2], 0, oper, 0, 0 ) == DIR_NULL )
+	  return TCL_ERROR;
+
+	return TCL_OK;
+}
+
+/* add solids to a region or create the region */
+/* and then add solids */
+/* Format: r regionname opr1 sol1 opr2 sol2 ... oprn soln */
+int
+f_region(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
+{
+	register struct directory *dp;
+	int i;
+	int ident, air;
+	char oper;
+
+	CHECK_DBI_NULL;
+	CHECK_READ_ONLY;
+
+	if(argc < 4 || MAXARGS < argc){
+	  struct bu_vls vls;
+
+	  bu_vls_init(&vls);
+	  bu_vls_printf(&vls, "help r");
+	  Tcl_Eval(interp, bu_vls_addr(&vls));
+	  bu_vls_free(&vls);
+	  return TCL_ERROR;
+	}
+
+ 	ident = item_default;
+ 	air = air_default;
+ 
+	/* Check for even number of arguments */
+	if( argc & 01 )  {
+	  Tcl_AppendResult(interp, "error in number of args!\n", (char *)NULL);
+	  return TCL_ERROR;
+	}
+
+	if( db_lookup( dbip, argv[1], LOOKUP_QUIET) == DIR_NULL ) {
+		/* will attempt to create the region */
+		if(item_default) {
+		  struct bu_vls tmp_vls;
+
+		  item_default++;
+		  bu_vls_init(&tmp_vls);
+		  bu_vls_printf(&tmp_vls, "Defaulting item number to %d\n", item_default);
+		  Tcl_AppendResult(interp, bu_vls_addr(&tmp_vls), (char *)NULL);
+		  bu_vls_free(&tmp_vls);
+		}
+	}
+
+	/* Get operation and solid name for each solid */
+	for( i = 2; i < argc; i += 2 )  {
+		if( argv[i][1] != '\0' )  {
+		  Tcl_AppendResult(interp, "bad operation: ", argv[i],
+				   " skip member: ", argv[i+1], "\n", (char *)NULL);
+		  continue;
+		}
+		oper = argv[i][0];
+		if( (dp = db_lookup( dbip,  argv[i+1], LOOKUP_NOISY )) == DIR_NULL )  {
+		  Tcl_AppendResult(interp, "skipping ", argv[i+1], "\n", (char *)NULL);
+		  continue;
+		}
+
+		if(oper != WMOP_UNION && oper != WMOP_SUBTRACT &&	oper != WMOP_INTERSECT) {
+		  struct bu_vls tmp_vls;
+
+		  bu_vls_init(&tmp_vls);
+		  bu_vls_printf(&tmp_vls, "bad operation: %c skip member: %s\n",
+				oper, dp->d_namep );
+		  Tcl_AppendResult(interp, bu_vls_addr(&tmp_vls), (char *)NULL);
+		  bu_vls_free(&tmp_vls);
+		  continue;
+		}
+
+		/* Adding region to region */
+		if( dp->d_flags & DIR_REGION )  {
+		    Tcl_AppendResult(interp, "Note: ", dp->d_namep,
+				     " is a region\n", (char *)NULL);
+		}
+
+		if( combadd( dp, argv[1], 1, oper, ident, air ) == DIR_NULL )  {
+		  Tcl_AppendResult(interp, "error in combadd\n", (char *)NULL);
+		  return TCL_ERROR;
+		}
+	}
+
+	if( db_lookup( dbip, argv[1], LOOKUP_QUIET) == DIR_NULL ) {
+		/* failed to create region */
+		if(item_default > 1)
+			item_default--;
+		return TCL_ERROR;
+	}
+
+	return TCL_OK;
+}
+
+/*
+ *			F _ C O M B
+ *
+ *  Create or add to the end of a combination, with one or more solids,
+ *  with explicitly specified operations.
+ *
+ *  Format: comb comb_name sol1 opr2 sol2 ... oprN solN
+ */
+int
+f_comb(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
+{
+	register struct directory *dp;
+	char	*comb_name;
+	register int	i;
+	char	oper;
+
+	CHECK_DBI_NULL;
+	CHECK_READ_ONLY;
+
+	if(argc < 4 || MAXARGS < argc){
+	  struct bu_vls vls;
+
+	  bu_vls_init(&vls);
+	  bu_vls_printf(&vls, "help comb");
+	  Tcl_Eval(interp, bu_vls_addr(&vls));
+	  bu_vls_free(&vls);
+	  return TCL_ERROR;
+	}
+
+	/* Check for odd number of arguments */
+	if( argc & 01 )  {
+	  Tcl_AppendResult(interp, "error in number of args!\n", (char *)NULL);
+	  return TCL_ERROR;
+	}
+
+	/* Save combination name, for use inside loop */
+	comb_name = argv[1];
+	if( (dp=db_lookup( dbip, comb_name, LOOKUP_QUIET )) != DIR_NULL )
+	{
+		if( !(dp->d_flags & DIR_COMB))
+		{
+			Tcl_AppendResult(interp, "ERROR: ", comb_name, " is not a combination\n", (char *)0 );
+			return TCL_ERROR;
+		}
+	}
+
+	/* Get operation and solid name for each solid */
+	for( i = 2; i < argc; i += 2 )  {
+		if( argv[i][1] != '\0' )  {
+		  Tcl_AppendResult(interp, "bad operation: ", argv[i],
+				   " skip member: ", argv[i+1], "\n", (char *)NULL);
+		  continue;
+		}
+		oper = argv[i][0];
+		if( (dp = db_lookup( dbip,  argv[i+1], LOOKUP_NOISY )) == DIR_NULL )  {
+		  Tcl_AppendResult(interp, "skipping ", argv[i+1], "\n", (char *)NULL);
+		  continue;
+		}
+
+		if(oper != WMOP_UNION && oper != WMOP_SUBTRACT &&	oper != WMOP_INTERSECT) {
+		  struct bu_vls tmp_vls;
+
+		  bu_vls_init(&tmp_vls);
+		  bu_vls_printf(&tmp_vls, "bad operation: %c skip member: %s\n",
+				oper, dp->d_namep );
+		  Tcl_AppendResult(interp, bu_vls_addr(&tmp_vls), (char *)NULL);
+			continue;
+		}
+
+		if( combadd( dp, comb_name, 0, oper, 0, 0 ) == DIR_NULL )  {
+		  Tcl_AppendResult(interp, "error in combadd\n", (char *)NULL);
+		  return TCL_ERROR;
+		}
+	}
+
+	if( db_lookup( dbip, comb_name, LOOKUP_QUIET) == DIR_NULL ) {
+	  Tcl_AppendResult(interp, "Error:  ", comb_name,
+			   " not created\n", (char *)NULL);
+	  return TCL_ERROR;
+	}
+
+	return TCL_OK;
+}
+
 /* Remove an object or several from the description */
 /* Format: kill [-f] object1 object2 .... objectn	*/
 int
-cmd_kill(ClientData	clientData,
-	 Tcl_Interp	*interp,
-	 int		argc,
-	 char		**argv)
+f_kill(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
-#if 0
-	int ret;
-
-	CHECK_DBI_NULL;
-
-	ret = wdb_kill_cmd(wdbp, interp, argc, argv);
-	solid_list_callback();
-
-	return ret;
-#else
 	register int		i;
 	struct directory	*dp;
 	struct directory	*dpp[2] = {DIR_NULL, DIR_NULL};
@@ -89,7 +434,7 @@ cmd_kill(ClientData	clientData,
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
 
-	if(argc < 2){
+	if(argc < 2 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -123,7 +468,110 @@ cmd_kill(ClientData	clientData,
 
 	solid_list_callback();
 	return TCL_OK;
-#endif
+}
+
+/* Grouping command */
+/* Format: g groupname object1 object2 .... objectn	*/
+int
+f_group(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
+{
+	register struct directory *dp;
+	register int i;
+
+	CHECK_DBI_NULL;
+	CHECK_READ_ONLY;
+
+	if(argc < 3 || MAXARGS < argc){
+	  struct bu_vls vls;
+
+	  bu_vls_init(&vls);
+	  bu_vls_printf(&vls, "help g");
+	  Tcl_Eval(interp, bu_vls_addr(&vls));
+	  bu_vls_free(&vls);
+	  return TCL_ERROR;
+	}
+
+	/* get objects to add to group */
+	for( i = 2; i < argc; i++ )  {
+		if( (dp = db_lookup( dbip,  argv[i], LOOKUP_NOISY)) != DIR_NULL )  {
+			if( combadd( dp, argv[1], 0,
+				     WMOP_UNION, 0, 0) == DIR_NULL )
+			  return TCL_ERROR;
+		}  else
+		  Tcl_AppendResult(interp, "skip member ", argv[i], "\n", (char *)NULL);
+	}
+	return TCL_OK;
+}
+
+/* Delete members of a combination */
+/* Format: rm comb memb1 memb2 .... membn	*/
+int
+f_rm(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
+{
+	register struct directory *dp;
+	register int	i;
+	int		num_deleted;
+	struct rt_db_internal	intern;
+	struct rt_comb_internal	*comb;
+	int			ret;
+
+	CHECK_DBI_NULL;
+	CHECK_READ_ONLY;
+
+	if(argc < 3 || MAXARGS < argc){
+	  struct bu_vls vls;
+
+	  bu_vls_init(&vls);
+	  bu_vls_printf(&vls, "help rm");
+	  Tcl_Eval(interp, bu_vls_addr(&vls));
+	  bu_vls_free(&vls);
+	  return TCL_ERROR;
+	}
+
+	if( (dp = db_lookup( dbip,  argv[1], LOOKUP_NOISY )) == DIR_NULL )
+	  return TCL_ERROR;
+
+	if( (dp->d_flags & DIR_COMB) == 0 )  {
+		Tcl_AppendResult(interp, "rm: ", dp->d_namep,
+			" is not a combination\n", (char *)NULL );
+		return TCL_ERROR;
+	}
+
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
+		TCL_READ_ERR_return;
+	}
+	comb = (struct rt_comb_internal *)intern.idb_ptr;
+	RT_CK_COMB(comb);
+
+	/* Process each argument */
+	num_deleted = 0;
+	ret = TCL_OK;
+	for( i = 2; i < argc; i++ )  {
+		if( db_tree_del_dbleaf( &(comb->tree), argv[i] ) < 0 )  {
+			Tcl_AppendResult(interp, "  ERROR_deleting ",
+				dp->d_namep, "/", argv[i],
+				"\n", (char *)NULL);
+			ret = TCL_ERROR;
+		} else {
+			Tcl_AppendResult(interp, "deleted ",
+				dp->d_namep, "/", argv[i],
+				"\n", (char *)NULL);
+			num_deleted++;
+		}
+	}
+
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
+		TCL_WRITE_ERR_return;
+	}
+	return ret;
 }
 
 /* Copy a cylinder and position at end of original cylinder
@@ -166,7 +614,7 @@ char	**argv;
 	  return TCL_ERROR;
 	}
 
-	if( (id = rt_db_get_internal( &internal, proto, dbip, (fastf_t *)NULL, &rt_uniresource )) < 0 )  {
+	if( (id = rt_db_get_internal( &internal, proto, dbip, (fastf_t *)NULL )) < 0 )  {
 		TCL_READ_ERR_return;
 	}
 	/* make sure it is a TGC */
@@ -174,7 +622,7 @@ char	**argv;
 	{
 	  Tcl_AppendResult(interp, "f_copy_inv: ", argv[1],
 			   " is not a cylinder\n", (char *)NULL);
-		rt_db_free_internal( &internal, &rt_uniresource );
+		rt_db_free_internal( &internal );
 		return TCL_ERROR;
 	}
 	tgc_ip = (struct rt_tgc_internal *)internal.idb_ptr;
@@ -185,10 +633,10 @@ char	**argv;
 	/* no interuprts */
 	(void)signal( SIGINT, SIG_IGN );
 
-	if( (dp = db_diradd( dbip, argv[2], -1L, 0, proto->d_flags, &proto->d_minor_type)) == DIR_NULL )  {
+	if( (dp = db_diradd( dbip, argv[2], -1L, 0, proto->d_flags, NULL)) == DIR_NULL )  {
 	    	TCL_ALLOC_ERR_return;
 	}
-	if( rt_db_put_internal( dp, dbip, &internal, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &internal ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 
@@ -200,7 +648,7 @@ char	**argv;
 	  av[2] = NULL;
 
 	  /* draw the new solid */
-	  (void)cmd_draw( clientData, interp, 2, av );
+	  (void)f_edit( clientData, interp, 2, av );
 	}
 
 	if(state == ST_VIEW) {
@@ -247,7 +695,7 @@ char	**argv;
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
 
-	if(argc < 3){
+	if(argc < 3 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -264,7 +712,7 @@ char	**argv;
 			   "'\n", (char *)NULL);
 	  return TCL_ERROR;
 	}
-	if( !(anp = db_parse_1anim( dbip, argc, (const char **)argv ) ) )  {
+	if( !(anp = db_parse_1anim( dbip, argc, (CONST char **)argv ) ) )  {
 	  Tcl_AppendResult(interp, "arced: unable to parse command\n", (char *)NULL);
 	  return TCL_ERROR;
 	}
@@ -287,7 +735,7 @@ char	**argv;
 #endif
 
 	/* Only the matrix rarc, lmul, and rmul directives are useful here */
-	MAT_IDN( stack );
+	bn_mat_idn( stack );
 
 	/* Load the combination into memory */
 	dp = anp->an_path.fp_names[anp->an_path.fp_len-2];
@@ -296,7 +744,7 @@ char	**argv;
 	  Tcl_AppendResult(interp, dp->d_namep, ": not a combination\n", (char *)NULL);
 	  return TCL_ERROR;
 	}
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		db_free_1anim( anp );
 		TCL_READ_ERR_return;
 	}
@@ -330,7 +778,7 @@ char	**argv;
 		tp->tr_l.tl_mat = (matp_t)NULL;
 	}
 
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 		TCL_WRITE_ERR;
 		goto fail;
 	}
@@ -338,9 +786,32 @@ char	**argv;
 	return TCL_OK;
 		
 fail:
-	rt_db_free_internal( &intern, &rt_uniresource );
+	rt_db_free_internal( &intern );
 	db_free_1anim( anp );
 	return TCL_ERROR;
+}
+
+/*
+ *			P A T H L I S T _ L E A F _ F U N C
+ */
+static union tree *
+pathlist_leaf_func( tsp, pathp, ext, id, client_data )
+struct db_tree_state	*tsp;
+struct db_full_path	*pathp;
+struct bu_external	*ext;
+int			id;
+genptr_t		client_data;
+{
+	char	*str;
+
+	RT_CK_FULL_PATH( pathp );
+
+	str = db_path_to_string( pathp );
+
+	Tcl_AppendElement( interp, str );
+
+	bu_free( (genptr_t)str, "path string" );
+	return TREE_NULL;
 }
 
 /*
@@ -352,14 +823,35 @@ fail:
  *  Similar to the "tree" command, only suitable for programs, not humans.
  */
 int
-cmd_pathlist(ClientData	clientData,
-	     Tcl_Interp	*interp,
-	     int	argc,
-	     char	**argv)
+cmd_pathlist(clientData, interp, argc, argv)
+ClientData	clientData;
+Tcl_Interp	*interp;
+int		argc;
+char	        **argv;
 {
   CHECK_DBI_NULL;
 
-  return wdb_pathlist_cmd(wdbp, interp, argc, argv);
+  if(argc < 2 || MAXARGS < argc){
+    struct bu_vls vls;
+
+    bu_vls_init(&vls);
+    bu_vls_printf(&vls, "help pathlist");
+    Tcl_Eval(interp, bu_vls_addr(&vls));
+    bu_vls_free(&vls);
+    return TCL_ERROR;
+  }
+
+  mged_initial_tree_state.ts_ttol = &mged_ttol;
+  mged_initial_tree_state.ts_tol = &mged_tol;
+
+  if( db_walk_tree( dbip, argc-1, (CONST char **)argv+1, 1,
+		    &mged_initial_tree_state,
+		    0, 0, pathlist_leaf_func, (genptr_t)NULL ) < 0 )  {
+    Tcl_AppendResult(interp, "db_walk_tree() error", (char *)NULL);
+    return TCL_ERROR;
+  }
+
+  return TCL_OK;
 }
 
 /*
@@ -371,12 +863,28 @@ register struct db_full_path	*pathp;
 {
 	register struct solid	*sp;
 	int			count = 0;
+	int			i;
 	struct solid		*ret = (struct solid *)NULL;
 
 	RT_CK_FULL_PATH(pathp);
 
-	FOR_ALL_SOLIDS(sp, &dgop->dgo_headSolid)  {
-		if( !db_identical_full_paths( pathp, &sp->s_fullpath ) )  continue;
+	FOR_ALL_SOLIDS(sp, &HeadSolid.l)  {
+		int not_this_solid=0;
+
+		if( pathp->fp_len != sp->s_last+1 )
+			continue;
+
+		for( i=0 ; i<pathp->fp_len ; i++ )
+		{
+			if( pathp->fp_names[i] != sp->s_path[i] )
+			{
+				not_this_solid = 1;
+				break;
+			}
+		}
+
+		if( not_this_solid )
+			continue;
 
 		/* Paths are the same */
 		ret = sp;
@@ -434,7 +942,7 @@ char      	**argv;
 		Tcl_AppendResult(interp, "MGED state is not VIEW", (char *)NULL);
 		return TCL_ERROR;
 	}
-	if(BU_LIST_IS_EMPTY(&dgop->dgo_headSolid)) {
+	if(BU_LIST_IS_EMPTY(&HeadSolid.l)) {
 		Tcl_AppendResult(interp, "no solids in view", (char *)NULL);
 		return TCL_ERROR;
 	}
@@ -465,10 +973,10 @@ char      	**argv;
 #endif
 
 	/* Patterned after  ill_common() ... */
-	illump = BU_LIST_NEXT(solid, &dgop->dgo_headSolid);/* any valid solid would do */
+	illump = BU_LIST_NEXT(solid, &HeadSolid.l);/* any valid solid would do */
 	edobj = 0;		/* sanity */
 	movedir = 0;		/* No edit modes set */
-	MAT_IDN( modelchanges );	/* No changes yet */
+	bn_mat_idn( modelchanges );	/* No changes yet */
 	(void)chg_state( ST_VIEW, ST_O_PICK, "internal change of state");
 	/* reset accumulation local scale factors */
 	acc_sc[0] = acc_sc[1] = acc_sc[2] = 1.0;
@@ -554,7 +1062,7 @@ char	**argv;
     CHECK_DBI_NULL;
     CHECK_READ_ONLY;
 
-    if(argc < 3 || 18 < argc){
+    if(argc < 3 || MAXARGS < argc){
       struct bu_vls vls;
 
       bu_vls_init(&vls);
@@ -678,10 +1186,9 @@ char **argv;
     BU_GETSTRUCT(anp, animate);
     anp -> magic = ANIMATE_MAGIC;
 
-    ts = mged_initial_tree_state;	/* struct copy */
+    bzero((char *) &ts, sizeof(ts));
     ts.ts_dbip = dbip;
-    ts.ts_resp = &rt_uniresource;
-    MAT_IDN(ts.ts_mat);
+    mat_idn(ts.ts_mat);
     db_full_path_init(&anp -> an_path);
     if (db_follow_path_for_state(&ts, &(anp -> an_path), argv[1], LOOKUP_NOISY)
 	< 0 )
@@ -697,7 +1204,7 @@ char **argv;
     parent = bu_vls_addr(&pvls);
     sep = strchr(parent, '/') - parent;
     bu_vls_trunc(&pvls, sep);
-    switch (rt_db_lookup_internal(dbip, parent, &dp, &intern, LOOKUP_NOISY, &rt_uniresource))
+    switch (rt_db_lookup_internal(dbip, parent, &dp, &intern, LOOKUP_NOISY))
     {
 	case ID_COMBINATION:
 	    if (dp -> d_flags & DIR_COMB)
@@ -749,7 +1256,7 @@ char **argv;
 	tp -> tr_l.tl_mat = (matp_t) 0;
     }
 
-    if (rt_db_put_internal(dp, dbip, &intern, &rt_uniresource) < 0)
+    if (rt_db_put_internal(dp, dbip, &intern) < 0)
     {
 	TCL_WRITE_ERR;
 	status = TCL_ERROR;
@@ -762,6 +1269,6 @@ wrapup:
 
     bu_vls_free(&pvls);
     if (status == TCL_ERROR)
-	rt_db_free_internal(&intern, &rt_uniresource);
+	rt_db_free_internal(&intern);
     return status;
 }

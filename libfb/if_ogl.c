@@ -30,11 +30,6 @@ static char RCSid[] = "@(#)$Header$ (ARL)";
 #include "conf.h"
 
 #include <stdio.h> 
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <stdlib.h>  
 #include <unistd.h>
 #include <ctype.h>
@@ -74,9 +69,7 @@ _LOCAL_ void		ogl_clipper();
 _LOCAL_ int		ogl_getmem();
 _LOCAL_ void		backbuffer_to_screen();
 _LOCAL_ void		ogl_cminit();
-#if 0
 _LOCAL_ void		reorder_cursor();
-#endif
 _LOCAL_ XVisualInfo *	ogl_choose_visual();
 _LOCAL_ int		is_linear_cmap();
 
@@ -103,16 +96,14 @@ _LOCAL_ int	ogl_open(),
 		ogl_getview(),
 		ogl_setcursor(),
 		ogl_cursor(),
-#if 0
 		ogl_getcursor(),
 		ogl_readrect(),
-		fb_cnull(),
-#endif
 		ogl_writerect(),
 		ogl_bwwriterect(),
 		ogl_poll(),
 		ogl_flush(),
 		ogl_free(),
+		fb_cnull(),
 		ogl_help();
 
 /* This is the ONLY thing that we normally "export" */
@@ -1523,7 +1514,7 @@ _LOCAL_ int
 ogl_write( ifp, xstart, ystart, pixelp, count ) /*write count pixels from pixelp starting at xstart,ystart*/
 FBIO	*ifp;
 int	xstart, ystart;
-const unsigned char	*pixelp;
+CONST unsigned char	*pixelp;
 int	count;
 {
 	register short		scan_count;	/* # pix on this scanline */
@@ -1667,7 +1658,7 @@ ogl_writerect( ifp, xmin, ymin, width, height, pp )
 FBIO		*ifp;
 int		xmin, ymin;
 int		width, height;
-const unsigned char	*pp;
+CONST unsigned char	*pp;
 {
 	register int		x;
 	register int		y;
@@ -1740,7 +1731,7 @@ ogl_bwwriterect( ifp, xmin, ymin, width, height, pp )
 FBIO		*ifp;
 int		xmin, ymin;
 int		width, height;
-const unsigned char	*pp;
+CONST unsigned char	*pp;
 {
 	register int		x;
 	register int		y;
@@ -1863,7 +1854,7 @@ register FBIO	*ifp;
 _LOCAL_ int
 ogl_wmap( ifp, cmp )
 register FBIO	*ifp;
-register const ColorMap	*cmp;
+register CONST ColorMap	*cmp;
 {
 	register int	i;
 	int		prev;	/* !0 = previous cmap was non-linear */
@@ -1997,7 +1988,7 @@ FBIO	*ifp;
 _LOCAL_ int
 ogl_setcursor( ifp, bits, xbits, ybits, xorig, yorig )
 FBIO	*ifp;
-const unsigned char *bits;
+CONST unsigned char *bits;
 int	xbits, ybits;
 int	xorig, yorig;
 {
@@ -2097,14 +2088,14 @@ FBIO	*ifp;
 	return(0);
 }
 
-#if 0
+
 _LOCAL_ int 
 fb_cnull(ifp)
 FBIO *ifp;
 {
 	return(0);
 }
-#endif
+
 
 /*
  * O G L _ C L I P P E R ( ) 
@@ -2387,7 +2378,6 @@ int width, height;
   ogl_clipper(ifp);
 }
 
-#if 0
 /* reorder_cursor - reverses the order of the scanlines. 
  * scanlines are byte aligned, the specified cursor is xbits
  * by ybits bits in size.
@@ -2409,7 +2399,6 @@ reorder_cursor(char *dst,char *src, int xbits, int ybits)
 	}
 
 }
-#endif
 
 /* BACKBUFFER_TO_SCREEN - copy pixels from copy on the backbuffer
  * to the front buffer. Do one scanline specified by one_y, or whole

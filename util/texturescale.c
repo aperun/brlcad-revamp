@@ -20,7 +20,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -105,8 +105,7 @@ FILE		*infp;
 /*
  *		    G E T _ A R G S ( )
  */
-static int
-get_args (argc, argv)
+static get_args (argc, argv)
 
 int		argc;
 register char **argv;
@@ -188,7 +187,6 @@ register char **argv;
 /*
  *			M A I N ( )
  */
-int
 main (argc, argv)
 
 int	argc;

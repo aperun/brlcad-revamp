@@ -26,7 +26,7 @@
  * 
  */
 #ifndef lint
-static const char rcs_ident[] = "$Header$";
+static char rcs_ident[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -39,7 +39,7 @@ static const char rcs_ident[] = "$Header$";
 
 char buffer[4096];
 
-int
+void
 main(argc, argv)
 int	argc;
 char	*argv[];

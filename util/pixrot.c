@@ -26,16 +26,15 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
 
 extern int	getopt();
 extern char	*optarg;
 extern int	optind;
+extern unsigned char *malloc();
 
 /* 4 times bigger than typ. screen */
 /*#define	MAXBUFBYTES	(1280*1024*3*4) */
@@ -63,7 +62,6 @@ void	fill_buffer(), reverse_buffer();
 static char	*file_name;
 FILE	*ifp, *ofp;
 
-int
 get_args( argc, argv )
 register char **argv;
 {
@@ -135,7 +133,6 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main( argc, argv )
 int argc; char **argv;
 {
@@ -243,7 +240,6 @@ int argc; char **argv;
 
 		yin += buflines;
 	}
-	return 0;
 }
 
 void

@@ -16,7 +16,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "./iges_struct.h"
@@ -124,7 +124,7 @@ Orient_face_loops( fu )
 struct faceuse *fu;
 {
 	struct loopuse *lu;
-	struct loopuse *lu_outer=NULL;
+	struct loopuse *lu_outer;
 	struct loop_list *lptr;
 	int orient=OT_SAME;
 

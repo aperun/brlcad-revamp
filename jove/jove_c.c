@@ -4,9 +4,6 @@
  * $Revision$
  *
  * $Log$
- * Revision 11.3  1997/01/03  17:42:17  jra
- * Mods for Irix 6.2
- *
  * Revision 11.2  1995/06/21  03:39:14  gwyn
  * Eliminated trailing blanks.
  *
@@ -34,7 +31,7 @@
  *
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$";
+static char RCSid[] = "@(#)$Header$";
 #endif
 
 /*
@@ -156,7 +153,6 @@ FindMatch(dir)
 
 char	quots[10];
 
-int
 NotInQuotes(buf, pos)
 char	*buf;
 {

@@ -1196,7 +1196,7 @@ struct dm *dmp;
 static void
 Pex_mat_copy( dest, src )
 register PEXMatrix	dest;
-register const mat_t	src;
+register CONST mat_t	src;
 {
   register int i, j, k;
 

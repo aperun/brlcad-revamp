@@ -16,7 +16,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -45,7 +45,6 @@ char usage[] = "\
 Usage: fbscanplot [-h] [-v] [-c] [-o] [-r]\n\
 	[-W scr_width] [-F outframebuffer] yline\n";
 
-int
 get_args( argc, argv )
 register char **argv;
 {
@@ -90,7 +89,6 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main( argc, argv )
 int argc; char **argv;
 {

@@ -69,7 +69,7 @@ typedef FILE	*FILPTR;
  */
 static char default_asciistr[] = "@BR*#$PX0woIcv:+!~\"., ";
 
-int
+void
 main(argc, argv)
 int  argc;
 char *argv[];
@@ -145,5 +145,4 @@ char *argv[];
 	}
 	printf("\n");
     }
-    return 0;
 }

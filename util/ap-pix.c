@@ -16,18 +16,11 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
-
-#include "conf.h"
 
 #include <stdio.h>
-#include <stdlib.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
+
 /* Dots are least most signifigant bit first in increasing index */
 struct	app_record {
 	unsigned char	ml[432];
@@ -44,7 +37,6 @@ int	verbose = 0;
 
 static char *Usage = "usage: ap-pix [-v] file.ap > file.pix (3456 x ?)\n";
 
-int
 main( argc, argv )
 int argc; char **argv;
 {
@@ -89,5 +81,4 @@ int argc; char **argv;
 		if( verbose )
 			fprintf( stderr, "wrote line %d\n", line );
 	}
-	return 0;
 }

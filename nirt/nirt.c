@@ -17,7 +17,7 @@
  *
  */
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -82,7 +82,7 @@ com_table	ComTab[] =
 		    { "!", sh_esc, "escape to the shell" },
 		    { "q", quit, "quit" },
 		    { "?", show_menu, "display this help menu" },
-		    { (char *)NULL, NULL, (char *)NULL, (char *)NULL }
+		    { 0 }
 		};
 int		do_backout = 0;			/* Backout before shooting? */
 int		overlap_claims = OVLP_RESOLVE;	/* Rebuild/retain overlaps? */
@@ -93,7 +93,7 @@ int		nirt_debug = 0;			/* Control of diagnostics */
 /* Parallel structures needed for operation w/ and w/o air */
 struct rt_i		*rti_tab[2];
 struct rt_i		*rtip;
-struct resource		res_tab;
+struct resource		res_tab[2];
 
 struct application	ap;
 
@@ -211,12 +211,12 @@ struct bu_list	*sl;
 	show_scripts(sl, "after running them");
 }
 
-int
 main (argc, argv)
 int argc;
 char **argv;
 {
     char                db_title[TITLE_LEN+1];/* title from MGED file      */
+    extern char		*local_unit[];
     extern char		local_u_name[];
     extern double	base2local;
     extern double	local2base;
@@ -303,10 +303,10 @@ char **argv;
 		silent_flag = SILENT_NO;	/* Positively no */
 		break;
             case 'x':
-		sscanf( optarg, "%x", (unsigned int *)&rt_g.debug );
+		sscanf( optarg, "%x", &rt_g.debug );
 		break;
             case 'X':
-		sscanf( optarg, "%x", (unsigned int *)&nirt_debug );
+		sscanf( optarg, "%x", &nirt_debug );
 		break;
             case 'u':
                 if (sscanf(optarg, "%d", &use_of_air) != 1)
@@ -411,7 +411,8 @@ char **argv;
     do_rt_gettrees (rtip, argv + optind, argc - optind);
  
     /* Initialize the table of resource structures */
-    rt_init_resource( &res_tab, 0, rtip );
+    res_tab[use_of_air].re_magic =
+	(res_tab[1 - use_of_air].re_magic = RESOURCE_MAGIC);
 
     /* initialization of the application structure */
     ap.a_hit = if_hit;        /* branch to if_hit routine            */
@@ -419,7 +420,7 @@ char **argv;
     ap.a_overlap = if_overlap;/* branch to if_overlap routine        */
     ap.a_logoverlap = rt_silent_logoverlap;
     ap.a_onehit = 0;          /* continue through shotline after hit */
-    ap.a_resource = &res_tab;
+    ap.a_resource = &res_tab[use_of_air];
     ap.a_purpose = "NIRT ray";
     ap.a_rt_i = rtip;         /* rt_i pointer                        */
     ap.a_zero1 = 0;           /* sanity check, sayth raytrace.h      */
@@ -478,7 +479,6 @@ char **argv;
     }
     else
 	interact(READING_FILE, stdin);
-    return 0;
 }
  
 char	usage[] = "\
@@ -501,8 +501,8 @@ void printusage()
     (void) fputs(usage, stderr);
 }
 
-void
-do_rt_gettrees (rtip, object_name, nm_objects)
+void do_rt_gettrees (rtip, object_name, nm_objects)
+
 struct rt_i	*rtip;
 char		*object_name[];
 int		nm_objects;

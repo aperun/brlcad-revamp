@@ -15,19 +15,14 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSpolyif[] = "@(#)$Header$ (BRL)";
+static char RCSpolyif[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
-#include <stdio.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <math.h>
 #include <signal.h>
+#include <stdio.h>
 #include "machine.h"
 #include "vmath.h"
 #include "mater.h"
@@ -117,7 +112,7 @@ char	**argv;
 	  return TCL_ERROR;
 	}
 
-	FOR_ALL_SOLIDS(sp, &dgop->dgo_headSolid)  {
+	FOR_ALL_SOLIDS(sp, &HeadSolid.l)  {
 		for( BU_LIST_FOR( vp, rt_vlist, &(sp->s_vlist) ) )  {
 			register int	i;
 			register int	nused = vp->nused;

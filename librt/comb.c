@@ -21,7 +21,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 
@@ -29,6 +29,7 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include <math.h>
 #include <string.h>
 #include "machine.h"
+#include "db.h"
 #include "externs.h"
 #include "bu.h"
 #include "vmath.h"
@@ -78,7 +79,7 @@ char *argv[];
 		exit( 1 );
 	}
 
-	MAT_IDN( identity_mat );
+	bn_mat_idn( identity_mat );
 	bu_vls_init( &file );
 
 	if( (dbip = db_open( argv[1] , "r" ) ) == NULL )
@@ -89,7 +90,7 @@ char *argv[];
 	}
 
 	/* Scan the database */
-	db_dirbuild( dbip );
+	db_scan(dbip, (int (*)())db_diradd, 1);
 
 	for( i=2 ; i<argc ; i++ )
 	{
@@ -98,7 +99,12 @@ char *argv[];
 		printf( "%s\n" , argv[i] );
 
 		dp = db_lookup( dbip , argv[i] , 1 );
-		if( rt_db_get_internal( &ip, dp, dbip, NULL ) < 0 )  {
+		if( db_get_external( &ep , dp , dbip ) )
+		{
+			bu_log( "db_get_external failed for %s\n" , argv[i] );
+			continue;
+		}
+		if( rt_comb_v4_import( &ip , &ep , NULL ) < 0 )  {
 			bu_log("import of %s failed\n", dp->d_namep);
 			continue;
 		}
@@ -109,7 +115,6 @@ char *argv[];
 		if( ip.idb_type != ID_COMBINATION )
 		{
 			bu_log( "idb_type = %d\n" , ip.idb_type );
-			rt_db_free_internal( &ip );
 			continue;
 		}
 
@@ -151,7 +156,7 @@ char *argv[];
 			fwrite( ep.ext_buf, ep.ext_nbytes, 1, fp );
 			fclose(fp);
 		}
-		bu_free_external( &ep );
+		db_free_external( &ep );
 		bu_vls_free( &file );
 
 		/* Convert internal back to external, and write both to files */
@@ -165,11 +170,11 @@ char *argv[];
 			fwrite( ep.ext_buf, ep.ext_nbytes, 1, fp );
 			fclose(fp);
 		}
-		bu_free_external( &ep );
+		db_free_external( &ep );
 		bu_vls_free( &file );
 
 		/* Test the lumberjacks */
-		rt_db_free_internal( &ip );
+		ip.idb_meth->ft_ifree( &ip );
 
 	}
 }

@@ -11,7 +11,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "";
+static char RCSid[] = "";
 #endif
 
 #include "conf.h"
@@ -32,6 +32,14 @@ extern void mged_center(); /* from chgview.c */
 extern int mged_vscale();
 
 static void adjust_rect_for_zoom();
+void rb_set_dirty_flag();
+void draw_rect();
+void rect_view2image();
+void rect_image2view();
+void set_rect();
+void paint_rect_area();
+void rt_rect_area();
+void zoom_rect_area();
 
 struct _rubber_band default_rubber_band = {
 /* rb_rc */		1,
@@ -59,7 +67,7 @@ struct bu_structparse rubber_band_vparse[] = {
 };
 
 void
-rb_set_dirty_flag(void)
+rb_set_dirty_flag()
 {
   struct dm_list *dmlp;
 
@@ -73,7 +81,7 @@ rb_set_dirty_flag(void)
  * position and dimensions in image coordinates.
  */
 void
-rect_view2image(void)
+rect_view2image()
 {
   rubber_band->rb_pos[X] = dm_Normal2Xx(dmp, rubber_band->rb_x);
   rubber_band->rb_pos[Y] = dmp->dm_height - dm_Normal2Xy(dmp, rubber_band->rb_y, 1);
@@ -86,7 +94,7 @@ rect_view2image(void)
  * position and dimensions in normalized view coordinates.
  */
 void
-rect_image2view(void)
+rect_image2view()
 {
   rubber_band->rb_x = dm_Xx2Normal(dmp, rubber_band->rb_pos[X]);
   rubber_band->rb_y = dm_Xy2Normal(dmp, dmp->dm_height - rubber_band->rb_pos[Y], 1);
@@ -95,7 +103,7 @@ rect_image2view(void)
 }
 
 void
-set_rect(void)
+set_rect()
 {
   rect_image2view();
   rb_set_dirty_flag();
@@ -133,7 +141,7 @@ adjust_rect_for_zoom()
 }
 
 void
-draw_rect(void)
+draw_rect()
 {
   int line_style;
 
@@ -179,7 +187,7 @@ draw_rect(void)
 }
 
 void
-paint_rect_area(void)
+paint_rect_area()
 {
   if(!fbp)
     return;
@@ -189,7 +197,7 @@ paint_rect_area(void)
 }
 
 void
-rt_rect_area(void)
+rt_rect_area()
 {
   int xmin, xmax;
   int ymin, ymax;
@@ -238,7 +246,7 @@ rt_rect_area(void)
 }
 
 void
-zoom_rect_area(void)
+zoom_rect_area()
 {
   fastf_t width, height;
   fastf_t sf;
@@ -254,8 +262,8 @@ zoom_rect_area(void)
   adjust_rect_for_zoom();
 
   /* find old view center */
-  MAT_DELTAS_GET_NEG(old_model_center, view_state->vs_vop->vo_center);
-  MAT4X3PNT(old_view_center, view_state->vs_vop->vo_model2view, old_model_center);
+  MAT_DELTAS_GET_NEG(old_model_center, view_state->vs_toViewcenter);
+  MAT4X3PNT(old_view_center, view_state->vs_model2view, old_model_center);
 
   /* calculate new view center */
   VSET(new_view_center,
@@ -264,7 +272,7 @@ zoom_rect_area(void)
        old_view_center[Z]);
 
   /* find new model center */
-  MAT4X3PNT(new_model_center, view_state->vs_vop->vo_view2model, new_view_center);
+  MAT4X3PNT(new_model_center, view_state->vs_view2model, new_view_center);
   mged_center(new_model_center);
 
   /* zoom in to fill rectangle */

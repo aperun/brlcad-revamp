@@ -12,12 +12,6 @@
  */
 #include "conf.h"
 
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include <stdio.h>
 #include <math.h>
 
@@ -30,7 +24,7 @@ double	obuf[512];
 static char usage[] = "\
 Usage: f-d [-n || scale] < floats > doubles\n";
 
-int main( argc, argv )
+main( argc, argv )
 int	argc;
 char	**argv;
 {
@@ -63,6 +57,4 @@ char	**argv;
 
 		fwrite( &obuf[0], sizeof( obuf[0] ), num, stdout );
 	}
-
-	return 0;
 }

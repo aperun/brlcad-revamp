@@ -20,10 +20,7 @@
 
 #include "../Cakefile.defs"
 
-#define CPP_ONLY	1	/* needed for conf.h to stay pure */
-#include "../h/conf.h"		/* to get HAVE_POSIX_REGEXEC */
-
-#if !defined(HAVE_POSIX_REGEXEC)
+#ifndef HAVE_POSIX_REGEXEC
 #	define	EXTRA_OBJ	regcomp.o regexec.o regfree.o regerror.o
 #endif
 

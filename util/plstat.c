@@ -16,24 +16,10 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
-
-#include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-#include <unistd.h>
-#include <stdlib.h>
-
-#include "conf.h"
-#include "machine.h"
-#include "bu.h"
-
 
 #define	TBAD	0	/* no such command */
 #define TNONE	1	/* no arguments */
@@ -119,25 +105,6 @@ void	outchar(), outstring(), outshort(), outfloat();
 static char usage[] = "\
 Usage: pldebug [-v] [unix_plot]\n";
 
-
-int
-getshort()
-{
-	register long	v, w;
-
-	v = getc(fp);
-	v |= (getc(fp)<<8);	/* order is important! */
-
-	/* worry about sign extension - sigh */
-	if( v <= 0x7FFF )  return(v);
-	w = -1;
-	w &= ~0x7FFF;
-	return( w | v );
-}
-
-
-
-int
 main( argc, argv )
 int	argc;
 char	**argv;
@@ -212,7 +179,6 @@ char	**argv;
 			fprintf( stderr, "%s %ld\n", letters[i].desc, counts[i] );
 		}
 	}
-	return 0;
 }
 
 void
@@ -254,11 +220,11 @@ outfloat( n )
 int	n;
 {
 	int	i;
-	unsigned char	in[8*16];
+	char	in[8*16];
 	double	out[16];
 
 	fread( in, 8, n, fp );
-	ntohd( (unsigned char *)out, in, n );
+	ntohd( out, in, n );
 
 	for( i = 0; i < n; i++ ) {
 		/*printf("%g", out[i] );*/
@@ -266,3 +232,16 @@ int	n;
 	}
 }
 
+getshort()
+{
+	register long	v, w;
+
+	v = getc(fp);
+	v |= (getc(fp)<<8);	/* order is important! */
+
+	/* worry about sign extension - sigh */
+	if( v <= 0x7FFF )  return(v);
+	w = -1;
+	w &= ~0x7FFF;
+	return( w | v );
+}

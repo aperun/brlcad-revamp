@@ -30,7 +30,7 @@
  * $Id$
  */
 #ifndef lint
-static const char rcs_ident[] = "$Id$";
+static char rcs_ident[] = "$Id$";
 #endif
 
 #include "conf.h"
@@ -193,7 +193,7 @@ rle_hdr * the_hdr;
 	    i++;			/* extra for NULL pointer at end */
 	    /* Get space to put pointers to comments */
 	    the_hdr->comments =
-		(const char **)malloc( (unsigned)(i * sizeof(char *)) );
+		(CONST char **)malloc( (unsigned)(i * sizeof(char *)) );
 	    if ( the_hdr->comments == NULL )
 	    {
 		fprintf( stderr,
@@ -248,8 +248,8 @@ rle_hdr * the_hdr;
 int
 rle_get_error( code, pgmname, fname )
 int code;
-const char *pgmname;
-const char *fname;
+CONST char *pgmname;
+CONST char *fname;
 {
     if (! fname)
 	fname = "Standard Input";
@@ -311,8 +311,8 @@ const char *fname;
 void
 rle_get_setup_ok( the_hdr, prog_name, file_name )
 rle_hdr * the_hdr;
-const char *prog_name;
-const char *file_name;
+CONST char *prog_name;
+CONST char *file_name;
 {
     int code;
 
@@ -407,7 +407,6 @@ rle_pixel *scanline[];
 	the_hdr->priv.get.vert_skip--;
 	the_hdr->priv.get.scan_y++;
 	if ( the_hdr->priv.get.vert_skip > 0 )
-    	{
 	    if ( the_hdr->priv.get.scan_y >= the_hdr->ymax )
 	    {
 		int y = the_hdr->priv.get.scan_y;
@@ -417,7 +416,6 @@ rle_pixel *scanline[];
 	    }
 	    else
 		return the_hdr->priv.get.scan_y;
-    	}
     }
 
     /* If EOF has been encountered, return also */
@@ -506,7 +504,6 @@ rle_pixel *scanline[];
 		    (void)getc( infile );	/* throw away odd byte */
 	    }
 	    else
-	    {
 		if ( the_hdr->priv.get.is_seek )
 		    fseek( infile, ((nc + 1) / 2) * 2, 1 );
 		else
@@ -515,12 +512,10 @@ rle_pixel *scanline[];
 		    for ( ii = ((nc + 1) / 2) * 2; ii > 0; ii-- )
 			(void) getc( infile );	/* discard it */
 		}
-	    }
 
 	    scanc += nc;
 	    scan_x += nc;
 	    if ( debug_f )
-	    {
 		if ( RLE_BIT( *the_hdr, channel ) )
 		{
 		    rle_pixel * cp = scanc - nc;
@@ -529,7 +524,6 @@ rle_pixel *scanline[];
 			fprintf( stderr, "%02x", *cp++ );
 		    putc( '\n', stderr );
 		}
-	    }
 	    else
 		fprintf( stderr, "Pixel data %d (to %d)\n", nc, scan_x );
 	    break;

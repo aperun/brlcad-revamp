@@ -27,15 +27,12 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 
 #include "machine.h"
 #include "vmath.h"
@@ -89,7 +86,7 @@ double	scale;
 
 	mark_str[0] = (char)c;
 	mark_str[1] = '\0';
-	MAT_IDN( mat );
+	bn_mat_idn( mat );
 	VSET( p, x - scale*0.5, y - scale*0.5, z );
 	tp_3symbol( fp, mark_str, p, mat, scale );
 }

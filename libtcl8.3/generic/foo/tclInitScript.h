@@ -108,4 +108,3 @@ TclSetPreInitScript (string)
     tclPreInitScript = string;
     return(prevString);
 }
-

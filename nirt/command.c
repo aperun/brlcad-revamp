@@ -1,6 +1,6 @@
 /*      COMMAND.C       */ 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 /*	INCLUDES	*/
@@ -37,9 +37,6 @@ extern outval			ValTab[];
 extern int			overlap_claims;
 extern char			*ocname[];
 extern int			nirt_debug;
-
-void		printusage();
-void		do_rt_gettrees();
 
 void az_el(buffer, ctp)
 char			*buffer;
@@ -441,8 +438,11 @@ char		*buffer;
 com_table	*ctp;
 
 {
+    double		tmp_dbl;
     int			i = 0;      /* current position on the *buffer */
     int			j;
+    extern struct rt_i	*rtip;
+
     double		mk_cvt_factor();
 
     while (isspace(*(buffer+i)))
@@ -496,7 +496,7 @@ com_table	*ctp;
 	}
 
 	/* Set a new value */
-	if (sscanf( cp, "%x", (unsigned int *)&nirt_debug ) == 1)
+	if (sscanf( cp, "%x", &nirt_debug ) == 1)
 	{
 	    bu_printb( "debug ", nirt_debug, DEBUG_FMT );
 	    bu_log("\n");
@@ -517,15 +517,15 @@ com_table	*ctp;
 	if (*cp == '\0')
 	{
 	    /* display current value */
-	    bu_printb( "libdebug ", RT_G_DEBUG, RT_DEBUG_FMT );
+	    bu_printb( "libdebug ", rt_g.debug, RT_DEBUG_FMT );
 	    bu_log("\n");
 	    return;
 	}
 
 	/* Set a new value */
-	if (sscanf( cp, "%x", (unsigned int *)&rt_g.debug ) == 1)
+	if (sscanf( cp, "%x", &rt_g.debug ) == 1)
 	{
-	    bu_printb( "libdebug ", RT_G_DEBUG, RT_DEBUG_FMT );
+	    bu_printb( "libdebug ", rt_g.debug, RT_DEBUG_FMT );
 	    bu_log("\n");
 	}
 	else

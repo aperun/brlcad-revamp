@@ -13,7 +13,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -21,16 +21,11 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include <stdio.h>
 #include <math.h>
 
-#include "externs.h"
-
-#include "./fft.h"
-
 extern int irfft_adds, irfft_mults;
 
 static char usage[] = "\
 Usage: ifftc length > fftlength.c\n";
 
-int
 main( argc, argv )
 int	argc;
 char	**argv;

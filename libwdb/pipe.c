@@ -25,7 +25,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char part_RCSid[] = "@(#)$Header$ (BRL)";
+static char part_RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -40,10 +40,6 @@ static const char part_RCSid[] = "@(#)$Header$ (BRL)";
 #include "raytrace.h"
 #include "wdb.h"
 
-
-extern int rt_pipe_ck( const struct bu_list *headp );
-
-
 /*
  *			M K _ P A R T I C L E
  *
@@ -54,24 +50,23 @@ extern int rt_pipe_ck( const struct bu_list *headp );
  */
 int
 mk_particle( fp, name, vertex, height, vradius, hradius )
-struct rt_wdb	*fp;
-const char	*name;
+FILE	*fp;
+char	*name;
 point_t	vertex;
 vect_t	height;
 double	vradius;
 double	hradius;
 {
-	struct rt_part_internal	*part;
+	struct rt_part_internal	part;
 
-	BU_GETSTRUCT( part, rt_part_internal );
-	part->part_magic = RT_PART_INTERNAL_MAGIC;
-	VMOVE( part->part_V, vertex );
-	VMOVE( part->part_H, height );
-	part->part_vrad = vradius;
-	part->part_hrad = hradius;
-	part->part_type = 0;		/* sanity, unused */
+	part.part_magic = RT_PART_INTERNAL_MAGIC;
+	VMOVE( part.part_V, vertex );
+	VMOVE( part.part_H, height );
+	part.part_vrad = vradius;
+	part.part_hrad = hradius;
+	part.part_type = 0;		/* sanity, unused */
 
-	return wdb_export( fp, name, (genptr_t)part, ID_PARTICLE, mk_conv2mm );
+	return mk_export_fwrite( fp, name, (genptr_t)&part, ID_PARTICLE );
 }
 
 
@@ -87,9 +82,9 @@ double	hradius;
  */
 int
 mk_pipe( fp, name, headp )
-struct rt_wdb		*fp;
-const char			*name;
-struct bu_list	*headp;
+FILE			*fp;
+char			*name;
+struct wdb_pipept	*headp;
 {
 	struct rt_pipe_internal		*pipe;
 	int				ret;
@@ -104,12 +99,12 @@ struct bu_list	*headp;
 	pipe->pipe_magic = RT_PIPE_INTERNAL_MAGIC;
 	BU_LIST_INIT( &pipe->pipe_segs_head );
 	/* "borrow" linked list from caller */
-	BU_LIST_APPEND_LIST( &pipe->pipe_segs_head, headp );
+	BU_LIST_APPEND_LIST( &pipe->pipe_segs_head, &headp->l );
 
-	ret = wdb_export( fp, name, (genptr_t)pipe, ID_PIPE, mk_conv2mm );
+	ret = mk_export_fwrite( fp, name, (genptr_t)pipe, ID_PIPE );
 
 	/* "return" linked list to caller */
-	BU_LIST_APPEND_LIST( headp, &pipe->pipe_segs_head );
+	BU_LIST_APPEND_LIST( &headp->l, &pipe->pipe_segs_head );
 	return ret;
 }
 
@@ -120,11 +115,12 @@ struct bu_list	*headp;
  *  The head is left in initialized state (ie, forward & back point to head).
  */
 void
-mk_pipe_free( struct bu_list *headp )
+mk_pipe_free( headp )
+register struct wdb_pipept	*headp;
 {
 	register struct wdb_pipept	*wp;
 
-	while( BU_LIST_WHILE( wp, wdb_pipept, headp ) )  {
+	while( BU_LIST_WHILE( wp, wdb_pipept, &headp->l ) )  {
 		BU_LIST_DEQUEUE( &wp->l );
 		bu_free( (char *)wp, "mk_pipe_free" );
 	}
@@ -138,12 +134,10 @@ mk_pipe_free( struct bu_list *headp )
  *
  */
 void
-mk_add_pipe_pt(
-	struct bu_list *headp,
-	const point_t coord,
-	double od,
-	double id,
-	double bendradius )
+mk_add_pipe_pt( headp, coord, od, id, bendradius )
+struct wdb_pipept *headp;
+point_t coord;
+fastf_t od, id, bendradius;
 {
 	struct wdb_pipept *new;
 
@@ -155,7 +149,7 @@ mk_add_pipe_pt(
 	new->pp_id = id;
 	new->pp_bendradius = bendradius;
 	VMOVE( new->pp_coord, coord );
-	BU_LIST_INSERT( headp, &new->l );
+	BU_LIST_INSERT( &headp->l, &new->l );
 }
 
 /*
@@ -164,8 +158,10 @@ mk_add_pipe_pt(
  *	initialize a linked list of pipe segments with the first segment
  */
 void
-mk_pipe_init( struct bu_list *headp )
+mk_pipe_init( head )
+struct wdb_pipept *head;
 {
-	BU_LIST_INIT( headp );
-	headp->magic = WDB_PIPESEG_MAGIC;
+	BU_LIST_INIT( &head->l );
+	head->l.magic = WDB_PIPESEG_MAGIC;
 }
+

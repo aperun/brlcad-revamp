@@ -61,12 +61,11 @@ class Display {
 
     # methods that override methods inherited from View
     public method slew {x y}
-    public method perspective_angle {args}
 
     # methods that override methods inherited from Dm
-    public method perspective {args}
     public method fb_active {args}
     public method light {args}
+    public method perspective {args}
     public method zbuffer {args}
     public method zclip {args}
 
@@ -269,42 +268,31 @@ body Display::slew {x1 y1} {
     set sf [expr 2.0 * $invWidth]
 
     set _x [expr ($x1 - $x2) * $sf]
-    set _y [expr ($y2 - $y1) * $sf]
-#    set _y [expr (-1.0 * $y1 + $y2) * $sf]
+    set _y [expr (-1.0 * $y1 + $y2) * $sf]
 	
     View::slew $_x $_y
 }
 
-body Display::perspective_angle {args} {
-    if {$args == ""} {
-	# get perspective angle
-	return $perspective_angle
-    } else {
-	# set perspective angle
-	View::perspective $args
-    }
-
-    if {$perspective_angle > 0} {
-	# turn perspective mode on
-	Dm::perspective 1
-    } else {
-	# turn perspective mode off
-	Dm::perspective 0
-    }
-
+body Display::zclip {args} {
+    eval Dm::zclip $args
     refresh
-    return $perspective_angle
+    return $itk_option(-zclip)
+}
+
+body Display::zbuffer {args} {
+    eval Dm::zbuffer $args
+    refresh
+    return $itk_option(-zbuffer)
+}
+
+body Display::light {args} {
+    eval Dm::light $args
+    refresh
+    return $itk_option(-light)
 }
 
 body Display::perspective {args} {
     eval Dm::perspective $args
-
-    if {$itk_option(-perspective)} {
-	View::perspective [lindex $perspective_angles $perspective_angle_index]
-    } else {
-	View::perspective -1
-    }
-
     refresh
     return $itk_option(-perspective)
 }
@@ -316,24 +304,6 @@ body Display::fb_active {args} {
 	eval Dm::fb_active $args
 	refresh
     }
-}
-
-body Display::light {args} {
-    eval Dm::light $args
-    refresh
-    return $itk_option(-light)
-}
-
-body Display::zbuffer {args} {
-    eval Dm::zbuffer $args
-    refresh
-    return $itk_option(-zbuffer)
-}
-
-body Display::zclip {args} {
-    eval Dm::zclip $args
-    refresh
-    return $itk_option(-zclip)
 }
 
 ########################### Protected Methods ###########################
@@ -357,13 +327,6 @@ body Display::toggle_light {} {
 
 body Display::toggle_perspective {} {
     Dm::toggle_perspective
-
-    if {$itk_option(-perspective)} {
-	View::perspective [lindex $perspective_angles $perspective_angle_index]
-    } else {
-	View::perspective -1
-    }
-
     refresh
     return $itk_option(-perspective)
 }
@@ -375,9 +338,7 @@ body Display::toggle_perspective_angle {} {
 	incr perspective_angle_index
     }
 
-    if {$itk_option(-perspective)} {
-	View::perspective [lindex $perspective_angles $perspective_angle_index]
-    }
+    View::perspective [lindex $perspective_angles $perspective_angle_index]
 }
 
 body Display::idle_mode {} {
@@ -428,7 +389,8 @@ body Display::constrain_tmode {coord _x _y} {
 body Display::handle_rotation {_x _y} {
     set dx [expr ($y - $_y) * $itk_option(-rscale)]
     set dy [expr ($x - $_x) * $itk_option(-rscale)]
-    vrot $dx $dy 0
+    rot "$dx $dy 0"
+    refresh
 
     #update instance variables x and y
     set x $_x
@@ -438,7 +400,8 @@ body Display::handle_rotation {_x _y} {
 body Display::handle_translation {_x _y} {
     set dx [expr ($x - $_x) * $invWidth * $View::size]
     set dy [expr ($_y - $y) * $invWidth * $View::size]
-    vtra $dx $dy 0
+    tra "$dx $dy 0"
+    refresh
 
     #update instance variables x and y
     set x $_x
@@ -456,6 +419,7 @@ body Display::handle_scale {_x _y} {
     }
 
     zoom $f
+    refresh
 
     #update instance variables x and y
     set x $_x
@@ -473,15 +437,16 @@ body Display::handle_constrain_rot {coord _x _y} {
     }
     switch $coord {
 	x {
-	    rot $f 0 0
+	    rot "$f 0 0"
 	}
 	y {
-	    rot 0 $f 0
+	    rot "0 $f 0"
 	}
 	z {
-	    rot 0 0 $f
+	    rot "0 0 $f"
 	}
     }
+    refresh
 
     #update instance variables x and y
     set x $_x
@@ -499,15 +464,16 @@ body Display::handle_constrain_tran {coord _x _y} {
     }
     switch $coord {
 	x {
-	    tra $f 0 0
+	    tra "$f 0 0"
 	}
 	y {
-	    tra 0 $f 0
+	    tra "0 $f 0"
 	}
 	z {
-	    tra 0 0 $f
+	    tra "0 0 $f"
 	}
     }
+    refresh
 
     #update instance variables x and y
     set x $_x

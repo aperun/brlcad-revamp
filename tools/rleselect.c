@@ -35,7 +35,7 @@
 
 static void insert();
 
-static const char *my_name = "rleselect";
+static CONST char *my_name = "rleselect";
 
 /*****************************************************************
  * TAG( rleselect )
@@ -77,7 +77,7 @@ static const char *my_name = "rleselect";
  * 	specially.)  Read images, skipping if they are not in the
  * 	list, and copying if they are.
  */
-int
+void
 main( argc, argv )
 int argc;
 char **argv;

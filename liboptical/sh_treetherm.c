@@ -13,7 +13,7 @@
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 #include "rtgeom.h"
 
 #define tthrm_MAGIC 0x7468726d	/* 'thrm' */
@@ -215,7 +215,7 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	register struct tthrm_specific	*tthrm_sp;
 	struct bu_mapped_file	*tt_file;
 	char			*tt_data;
-	long			cyl_tot = 0;
+	long			cyl_tot;
 	long			tseg;
 	float			*fp;
 	float			fv[4];
@@ -227,7 +227,8 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	static const double	inv_nodes = 1.0/8.0;
 	int			node;
 	int			i;
-	int			long_size = 0;
+	int			long_size;
+	int			computed_size;
 	int			file_size_long;
 	int			file_size_int;
 
@@ -427,7 +428,7 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	 *
 	 * Shading is done in "region coordinates":
 	 */
-	db_region_mat(tthrm_sp->tthrm_m_to_sh, rtip->rti_dbip, rp->reg_name, &rt_uniresource);
+	db_region_mat(tthrm_sp->tthrm_m_to_sh, rtip->rti_dbip, rp->reg_name);
 
 	if (rdebug&RDEBUG_SHADE) {
 		bu_log("min_temp: %17.14e  max_temp %17.14e temp_scale: %17.14e\n",

@@ -201,6 +201,5 @@ char **argv;
 			progname,
 			clip_high, clip_low );
 	}
-
-	return 0;
+	return(0);
 }

@@ -1636,7 +1636,7 @@ sgi_write( ifp, xstart, ystart, pixelp, count )
 register FBIO	*ifp;
 int		xstart;
 int		ystart;
-const unsigned char	*pixelp;
+CONST unsigned char	*pixelp;
 int		count;
 {
 	register short		scan_count;	/* # pix on this scanline */
@@ -1764,7 +1764,7 @@ sgi_writerect( ifp, xmin, ymin, width, height, pp )
 FBIO		*ifp;
 int		xmin, ymin;
 int		width, height;
-const unsigned char	*pp;
+CONST unsigned char	*pp;
 {
 	register int		x;
 	register int		y;
@@ -1874,7 +1874,7 @@ register FBIO	*ifp;
 _LOCAL_ int
 sgi_wmap( ifp, cmp )
 register FBIO	*ifp;
-register const ColorMap	*cmp;
+register CONST ColorMap	*cmp;
 {
 	register int	i;
 	int		prev;	/* !0 = previous cmap was non-linear */
@@ -1916,7 +1916,7 @@ register const ColorMap	*cmp;
 _LOCAL_ int
 sgi_setcursor( ifp, bits, xbits, ybits, xorig, yorig )
 FBIO	*ifp;
-const unsigned char	*bits;
+CONST unsigned char	*bits;
 int		xbits, ybits;
 int		xorig, yorig;
 {

@@ -16,14 +16,14 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Id$ (BRL)";
+static char RCSid[] = "@(#)$Id$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <time.h>
-#ifdef HAVE_STRING_H
+#ifdef USE_STRING_H
 #include <string.h>
 #else
 #include <strings.h>
@@ -135,7 +135,6 @@ register char	**argv;
 /*
  *			M A I N
  */
-int
 main( argc, argv )
 int	argc;
 char	*argv[];
@@ -164,7 +163,7 @@ char	*argv[];
 	outrle.xmin = outrle.ymin = 0;
 	outrle.xmax = file_width-1;
 	outrle.ymax = file_height-1;
-	outrle.comments = (const char **)0;
+	outrle.comments = (CONST char **)0;
 
 	/* Add comments to the header file, since we have one */
 	sprintf( comment, "converted_from=%s", infile );

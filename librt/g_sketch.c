@@ -38,17 +38,13 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSsketch[] = "@(#)$Header$ (BRL)";
+static char RCSsketch[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include <math.h>
-#include <ctype.h>
 #include "tcl.h"
 #include "machine.h"
 #include "vmath.h"
@@ -79,7 +75,6 @@ int noisey;
 		struct line_seg *lsg;
 		struct carc_seg *csg;
 		struct nurb_seg *nsg;
-		struct bezier_seg *bsg;
 		long *lng;
 
 		lng = (long *)crv->segments[i];
@@ -104,15 +99,6 @@ int noisey;
 				{
 					if( nsg->ctl_points[j] >= skt->vert_count )
 					{
-						ret++;
-						break;
-					}
-				}
-				break;
-			case CURVE_BEZIER_MAGIC:
-				bsg = (struct bezier_seg *)lng;
-				for( j=0 ; j<=bsg->degree ; j++ ) {
-					if( bsg->ctl_points[j] >= skt->vert_count ) {
 						ret++;
 						break;
 					}
@@ -160,7 +146,7 @@ struct rt_i		*rtip;
  */
 void
 rt_sketch_print( stp )
-register const struct soltab *stp;
+register CONST struct soltab *stp;
 {
 }
 
@@ -276,7 +262,7 @@ rt_sketch_class()
 int
 curve_to_vlist( vhead, ttol, V, u_vec, v_vec, sketch_ip, crv )
 struct bu_list          *vhead;
-const struct rt_tess_tol *ttol;
+CONST struct rt_tess_tol *ttol;
 point_t			V;
 vect_t			u_vec, v_vec;
 struct rt_sketch_internal *sketch_ip;
@@ -287,7 +273,6 @@ struct curve                    *crv;
 	struct line_seg *lsg;
 	struct carc_seg *csg;
 	struct nurb_seg *nsg;
-	struct bezier_seg *bsg;
 	fastf_t delta;
 	point_t center, start_pt, end_pt;
 	fastf_t pt[4];
@@ -603,106 +588,6 @@ struct curve                    *crv;
 				bu_free( (char *)eg.ctl_points, "eg.ctl_points" );
 				break;
 			}
-			case CURVE_BEZIER_MAGIC: {
-				struct bezier_2d_list *bezier_hd, *bz;
-				fastf_t epsilon;
-
-				bsg = (struct bezier_seg *)lng;
-
-				for( i=0 ; i<=bsg->degree ; i++ ) {
-					if( bsg->ctl_points[i] >= sketch_ip->vert_count ) {
-						ret++;
-						break;
-					}
-				}
-
-				if( bsg->degree < 1 ) {
-					bu_log( "g_sketch: ERROR: Bezier curve with illegal degree (%d)\n",
-						bsg->degree );
-					ret++;
-					break;
-				}
-
-				if( bsg->degree == 1 ) {
-					/* straight line */
-					VJOIN2( start_pt, V, sketch_ip->verts[bsg->ctl_points[0]][0],
-						u_vec, sketch_ip->verts[bsg->ctl_points[0]][1], v_vec );
-					RT_ADD_VLIST( vhead, start_pt, BN_VLIST_LINE_MOVE );
-					for( i=1 ; i<=bsg->degree ; i++ ) {
-						VJOIN2( pt, V, sketch_ip->verts[bsg->ctl_points[i]][0],
-							u_vec, sketch_ip->verts[bsg->ctl_points[i]][1], v_vec );
-						RT_ADD_VLIST( vhead, pt, BN_VLIST_LINE_DRAW );
-					}
-					break;
-				}
-
-				/* use tolerance to determine coarseness of plot */
-				epsilon = MAX_FASTF;
-				if( ttol->abs > 0.0 && ttol->abs < epsilon )
-					epsilon = ttol->abs;
-				if( ttol->rel > 0.0 )
-				{
-					point2d_t min_pt, max_pt, tmp_pt;
-					point2d_t diff;
-					fastf_t tmp_epsilon;
-
-					min_pt[0] = MAX_FASTF;
-					min_pt[1] = MAX_FASTF;
-					max_pt[0] = -MAX_FASTF;
-					max_pt[1] = -MAX_FASTF;
-
-					for( i=0 ; i<=bsg->degree ; i++ )
-					{
-						V2MOVE( tmp_pt, sketch_ip->verts[bsg->ctl_points[i]] );
-						if( tmp_pt[0] > max_pt[0] )
-							max_pt[0] = tmp_pt[0];
-						if( tmp_pt[1] > max_pt[1] )
-							max_pt[1] = tmp_pt[1];
-						if( tmp_pt[0] < min_pt[0] )
-							min_pt[0] = tmp_pt[0];
-						if( tmp_pt[1] < min_pt[1] )
-							min_pt[1] = tmp_pt[1];
-					}
-
-					V2SUB2( diff, max_pt, min_pt )
-					tmp_epsilon = ttol->rel * sqrt( MAG2SQ( diff ) );
-					if( tmp_epsilon < epsilon )
-						epsilon = tmp_epsilon;
-					
-				}
-				
-
-				/* Create an initial bezier_2d_list */
-				bezier_hd = (struct bezier_2d_list *)bu_malloc( sizeof( struct bezier_2d_list ),
-									     "g_sketch.c: bezier_hd" );
-				BU_LIST_INIT( &bezier_hd->l );
-				bezier_hd->ctl = (point2d_t *)bu_calloc( bsg->degree + 1, sizeof( point2d_t ),
-									 "g_sketch.c: bezier_hd->ctl" );
-				for( i=0 ; i<=bsg->degree ; i++ ) {
-					V2MOVE( bezier_hd->ctl[i], sketch_ip->verts[bsg->ctl_points[i]] );
-				}
-
-				/* now do subdivision as necessary */
-				bezier_hd = subdivide_bezier( bezier_hd, bsg->degree, epsilon, 0 );
-
-				/* plot the results */
-				bz = BU_LIST_FIRST( bezier_2d_list, &bezier_hd->l );
-				VJOIN2( pt, V, bz->ctl[0][0], u_vec, bz->ctl[0][1], v_vec);
-				RT_ADD_VLIST( vhead, pt, BN_VLIST_LINE_MOVE );
-
-				while( BU_LIST_WHILE( bz, bezier_2d_list, &(bezier_hd->l) ) ) {
-					BU_LIST_DEQUEUE( &bz->l );
-					for( i=1 ; i<=bsg->degree ; i++ ) {
-						VJOIN2( pt, V, bz->ctl[i][0], u_vec,
-							bz->ctl[i][1], v_vec);
-						RT_ADD_VLIST( vhead, pt, BN_VLIST_LINE_DRAW );
-					}
-					bu_free( (char *)bz->ctl, "g_sketch.c: bz->ctl" );
-					bu_free( (char *)bz, "g_sketch.c: bz" );
-				}
-				bu_free( (char *)bezier_hd, "g_sketch.c: bezier_hd" );
-				break;
-			}
 			default:
 				bu_log( "curve_to_vlist: ERROR: unrecognized segment type!!!!\n" );
 				break;
@@ -725,8 +610,8 @@ int
 rt_sketch_plot( vhead, ip, ttol, tol )
 struct bu_list		*vhead;
 struct rt_db_internal	*ip;
-const struct rt_tess_tol *ttol;
-const struct bn_tol		*tol;
+CONST struct rt_tess_tol *ttol;
+CONST struct bn_tol		*tol;
 {
 	LOCAL struct rt_sketch_internal	*sketch_ip;
 	int				ret;
@@ -758,8 +643,8 @@ rt_sketch_tess( r, m, ip, ttol, tol )
 struct nmgregion	**r;
 struct model		*m;
 struct rt_db_internal	*ip;
-const struct rt_tess_tol *ttol;
-const struct bn_tol		*tol;
+CONST struct rt_tess_tol *ttol;
+CONST struct bn_tol		*tol;
 {
 	return(-1);
 }
@@ -773,15 +658,17 @@ const struct bn_tol		*tol;
 int
 rt_sketch_import( ip, ep, mat, dbip )
 struct rt_db_internal		*ip;
-const struct bu_external	*ep;
-register const mat_t		mat;
-const struct db_i		*dbip;
+CONST struct bu_external	*ep;
+register CONST mat_t		mat;
+CONST struct db_i		*dbip;
 {
 	LOCAL struct rt_sketch_internal	*sketch_ip;
 	union record			*rp;
 	vect_t				v;
 	int				seg_no;
+	int				curve_no;
 	unsigned char			*ptr;
+	genptr_t			*segs;
 	struct curve			*crv;
 	int				i;
 
@@ -799,7 +686,7 @@ const struct db_i		*dbip;
 		bu_mem_barriercheck();
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_SKETCH;
 	ip->idb_meth = &rt_functab[ID_SKETCH];
 	ip->idb_ptr = bu_calloc( 1, sizeof(struct rt_sketch_internal), "rt_sketch_internal");
@@ -832,7 +719,6 @@ const struct db_i		*dbip;
 		struct line_seg *lsg;
 		struct carc_seg *csg;
 		struct nurb_seg *nsg;
-		struct bezier_seg *bsg;
 		int i;
 
 		magic = bu_glong( ptr );
@@ -893,18 +779,6 @@ const struct db_i		*dbip;
 					nsg->weights = (fastf_t *)NULL;
 				sketch_ip->skt_curve.segments[seg_no] = (genptr_t)nsg;
 				break;
-			case CURVE_BEZIER_MAGIC:
-				bsg = (struct bezier_seg *)bu_malloc( sizeof( struct bezier_seg ), "bsg" );
-				bsg->magic = magic;
-				bsg->degree = bu_glong( ptr );
-				ptr += 4;
-				bsg->ctl_points = (int *)bu_calloc( bsg->degree + 1, sizeof( int ), "bsg->ctl_points" );
-				for( i=0 ; i<=bsg->degree ; i++ ) {
-					bsg->ctl_points[i] = bu_glong( ptr );
-					ptr += 4;
-				}
-				sketch_ip->skt_curve.segments[seg_no] = (genptr_t)bsg;
-				break;
 			default:
 				bu_bomb( "rt_sketch_import: ERROR: unrecognized segment type!!!\n" );
 				break;
@@ -937,15 +811,16 @@ const struct db_i		*dbip;
 int
 rt_sketch_export( ep, ip, local2mm, dbip )
 struct bu_external		*ep;
-const struct rt_db_internal	*ip;
+CONST struct rt_db_internal	*ip;
 double				local2mm;
-const struct db_i		*dbip;
+CONST struct db_i		*dbip;
 {
 	struct rt_sketch_internal	*sketch_ip;
 	union record		*rec;
-	int	i, seg_no, nbytes=0, ngran;
+	int	i, curve_no, seg_no, nbytes=0, ngran;
 	vect_t tmp_vec;
 	unsigned char *ptr;
+	struct curve *crv;
 
 	RT_CK_DB_INTERNAL(ip);
 	if( ip->idb_type != ID_SKETCH )  return(-1);
@@ -958,7 +833,7 @@ const struct db_i		*dbip;
 		bu_mem_barriercheck();
 	}
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 
 	nbytes = sizeof(union record);		/* base record */
 	nbytes += sketch_ip->vert_count*(8*2);	/* vertex list */
@@ -967,7 +842,6 @@ const struct db_i		*dbip;
 	{
 		long *lng;
 		struct nurb_seg *nseg;
-		struct bezier_seg *bseg;
 
 		lng = (long *)sketch_ip->skt_curve.segments[seg_no];
 		switch( *lng )
@@ -983,10 +857,6 @@ const struct db_i		*dbip;
 				nbytes += 16 + sizeof( struct knot_vector) + nseg->k.k_size * 8 + nseg->c_size * 4;
 				if( RT_NURB_IS_PT_RATIONAL( nseg->pt_type ) )
 					nbytes += nseg->c_size * 8;	/* weights */
-				break;
-			case CURVE_BEZIER_MAGIC:
-				bseg = (struct bezier_seg *)lng;
-				nbytes += 8 + (bseg->degree + 1) * 4;
 				break;
 			default:
 				bu_log( "rt_sketch_export: unsupported segement type (x%x)\n", *lng );
@@ -1024,7 +894,7 @@ const struct db_i		*dbip;
 		point2d_t pt2d;
 
 		V2SCALE( pt2d, sketch_ip->verts[i], local2mm )
-		htond( ptr, (const unsigned char *)pt2d, 2 );
+		htond( ptr, (CONST unsigned char *)pt2d, 2 );
 		ptr += 16;
 	}
 
@@ -1033,7 +903,6 @@ const struct db_i		*dbip;
 		struct line_seg *lseg;
 		struct carc_seg *cseg;
 		struct nurb_seg *nseg;
-		struct bezier_seg *bseg;
 		long *lng;
 		fastf_t tmp_fastf;
 
@@ -1076,7 +945,7 @@ const struct db_i		*dbip;
 				ptr += 4;
 				(void)bu_plong( ptr, nseg->k.k_size );
 				ptr += 4;
-				htond( ptr, (const unsigned char *)nseg->k.knots, nseg->k.k_size );
+				htond( ptr, (CONST unsigned char *)nseg->k.knots, nseg->k.k_size );
 				ptr += nseg->k.k_size * 8;
 				(void)bu_plong( ptr, nseg->c_size );
 				ptr += 4;
@@ -1087,19 +956,8 @@ const struct db_i		*dbip;
 				}
 				if( RT_NURB_IS_PT_RATIONAL( nseg->pt_type ) )
 				{
-					htond( ptr, (const unsigned char *)nseg->weights, nseg->c_size );
+					htond( ptr, (CONST unsigned char *)nseg->weights, nseg->c_size );
 					ptr += 8 * nseg->c_size;
-				}
-				break;
-			case CURVE_BEZIER_MAGIC:
-				bseg = (struct bezier_seg *)lng;
-				(void)bu_plong( ptr, CURVE_BEZIER_MAGIC );
-				ptr += 4;
-				(void)bu_plong( ptr, bseg->degree );
-				ptr += 4;
-				for( i=0 ; i<=bseg->degree ; i++ ) {
-					(void)bu_plong( ptr, bseg->ctl_points[i] );
-					ptr += 4;
 				}
 				break;
 			default:
@@ -1123,366 +981,6 @@ const struct db_i		*dbip;
 	return(0);
 }
 
-
-/*
- *			R T _ S K E T C H _ I M P O R T 5
- *
- *  Import an SKETCH from the database format to the internal format.
- *  Apply modeling transformations as well.
- */
-int
-rt_sketch_import5( ip, ep, mat, dbip )
-struct rt_db_internal		*ip;
-const struct bu_external	*ep;
-register const mat_t		mat;
-const struct db_i		*dbip;
-{
-	LOCAL struct rt_sketch_internal	*sketch_ip;
-	vect_t				v;
-	int				seg_no;
-	unsigned char			*ptr;
-	struct curve			*crv;
-	int				i;
-
-	BU_CK_EXTERNAL( ep );
-
-	if( bu_debug&BU_DEBUG_MEM_CHECK )
-	{
-		bu_log( "Barrier check at start of sketch_import5():\n" );
-		bu_mem_barriercheck();
-	}
-
-	RT_CK_DB_INTERNAL( ip );
-	ip->idb_type = ID_SKETCH;
-	ip->idb_meth = &rt_functab[ID_SKETCH];
-	ip->idb_ptr = bu_calloc( 1, sizeof(struct rt_sketch_internal), "rt_sketch_internal");
-	sketch_ip = (struct rt_sketch_internal *)ip->idb_ptr;
-	sketch_ip->magic = RT_SKETCH_INTERNAL_MAGIC;
-
-	ptr = ep->ext_buf;
-	ntohd( (unsigned char *)v, ptr, 3 );
-	MAT4X3PNT( sketch_ip->V, mat, v );
-	ptr += SIZEOF_NETWORK_DOUBLE * 3;
-	ntohd( (unsigned char *)v, ptr, 3 );
-	MAT4X3VEC( sketch_ip->u_vec, mat, v );
-	ptr += SIZEOF_NETWORK_DOUBLE * 3;
-	ntohd( (unsigned char *)v, ptr, 3 );
-	MAT4X3VEC( sketch_ip->v_vec, mat, v );
-	ptr += SIZEOF_NETWORK_DOUBLE * 3;
-	sketch_ip->vert_count = bu_glong( ptr );
-	ptr += SIZEOF_NETWORK_LONG;
-	sketch_ip->skt_curve.seg_count = bu_glong( ptr );
-	ptr += SIZEOF_NETWORK_LONG;
-
-	if( sketch_ip->vert_count )
-		sketch_ip->verts = (point2d_t *)bu_calloc( sketch_ip->vert_count, sizeof( point2d_t ), "sketch_ip->vert" );
-	ntohd( (unsigned char *)sketch_ip->verts, ptr, sketch_ip->vert_count*2 );
-	ptr += SIZEOF_NETWORK_DOUBLE * 2 * sketch_ip->vert_count;
-
-	if( sketch_ip->skt_curve.seg_count )
-		sketch_ip->skt_curve.segments = (genptr_t *)bu_calloc( sketch_ip->skt_curve.seg_count, sizeof( genptr_t ), "segs" );
-	else
-		sketch_ip->skt_curve.segments = (genptr_t *)NULL;
-	for( seg_no=0 ; seg_no < sketch_ip->skt_curve.seg_count ; seg_no++ )
-	{
-		long magic;
-		struct line_seg *lsg;
-		struct carc_seg *csg;
-		struct nurb_seg *nsg;
-		struct bezier_seg *bsg;
-		int i;
-
-		magic = bu_glong( ptr );
-		ptr += SIZEOF_NETWORK_LONG;
-		switch( magic )
-		{
-			case CURVE_LSEG_MAGIC:
-				lsg = (struct line_seg *)bu_malloc( sizeof( struct line_seg ), "lsg" );
-				lsg->magic = magic;
-				lsg->start = bu_glong( ptr );
-				ptr += SIZEOF_NETWORK_LONG;
-				lsg->end = bu_glong( ptr );
-				ptr += SIZEOF_NETWORK_LONG;
-				sketch_ip->skt_curve.segments[seg_no] = (genptr_t)lsg;
-				break;
-			case CURVE_CARC_MAGIC:
-				csg = (struct carc_seg *)bu_malloc( sizeof( struct carc_seg ), "csg" );
-				csg->magic = magic;
-				csg->start = bu_glong( ptr );
-				ptr += SIZEOF_NETWORK_LONG;
-				csg->end = bu_glong( ptr );
-				ptr += SIZEOF_NETWORK_LONG;
-				csg->orientation = bu_glong( ptr );
-				ptr += SIZEOF_NETWORK_LONG;
-				csg->center_is_left = bu_glong( ptr );
-				ptr += SIZEOF_NETWORK_LONG;
-				ntohd( (unsigned char *)&csg->radius, ptr, 1 );
-				ptr += SIZEOF_NETWORK_DOUBLE;
-				sketch_ip->skt_curve.segments[seg_no] = (genptr_t)csg;
-				break;
-			case CURVE_NURB_MAGIC:
-				nsg = (struct nurb_seg *)bu_malloc( sizeof( struct nurb_seg ), "nsg" );
-				nsg->magic = magic;
-				nsg->order = bu_glong( ptr );
-				ptr += SIZEOF_NETWORK_LONG;
-				nsg->pt_type = bu_glong( ptr );
-				ptr += SIZEOF_NETWORK_LONG;
-				nsg->k.k_size = bu_glong( ptr );
-				ptr += SIZEOF_NETWORK_LONG;
-				nsg->k.knots = (fastf_t *)bu_malloc( nsg->k.k_size * sizeof( fastf_t ), "nsg->k.knots" );
-				ntohd( (unsigned char *)nsg->k.knots, ptr, nsg->k.k_size );
-				ptr += SIZEOF_NETWORK_DOUBLE * nsg->k.k_size;
-				nsg->c_size = bu_glong( ptr );
-				ptr += SIZEOF_NETWORK_LONG;
-				nsg->ctl_points = (int *)bu_malloc( nsg->c_size * sizeof( int ), "nsg->ctl_points" );
-				for( i=0 ; i<nsg->c_size ; i++ )
-				{
-					nsg->ctl_points[i] = bu_glong( ptr );
-					ptr += SIZEOF_NETWORK_LONG;
-				}
-				if( RT_NURB_IS_PT_RATIONAL( nsg->pt_type ) )
-				{
-					nsg->weights = (fastf_t *)bu_malloc( nsg->c_size * sizeof( fastf_t ), "nsg->weights" );
-					ntohd( (unsigned char *)nsg->weights, ptr, nsg->c_size );
-					ptr += SIZEOF_NETWORK_DOUBLE * nsg->c_size;
-				}
-				else
-					nsg->weights = (fastf_t *)NULL;
-				sketch_ip->skt_curve.segments[seg_no] = (genptr_t)nsg;
-				break;
-			case CURVE_BEZIER_MAGIC:
-				bsg = (struct bezier_seg *)bu_malloc( sizeof( struct bezier_seg ), "bsg" );
-				bsg->magic = magic;
-				bsg->degree = bu_glong( ptr );
-				ptr += SIZEOF_NETWORK_LONG;
-				bsg->ctl_points = (int *)bu_calloc( bsg->degree+1, sizeof( int ), "bsg->ctl_points" );
-				for( i=0 ; i<=bsg->degree ; i++ ) {
-					bsg->ctl_points[i] = bu_glong( ptr );
-					ptr += SIZEOF_NETWORK_LONG;
-				}
-				sketch_ip->skt_curve.segments[seg_no] = (genptr_t)bsg;
-				break;
-			default:
-				bu_bomb( "rt_sketch_import: ERROR: unrecognized segment type!!!\n" );
-				break;
-		}
-	}
-
-	crv = &sketch_ip->skt_curve;
-
-	crv->reverse = (int *)bu_calloc( crv->seg_count, sizeof(int), "crv->reverse" );
-	for( i=0 ; i<crv->seg_count ; i++ )
-	{
-		crv->reverse[i] = bu_glong( ptr );
-		ptr += SIZEOF_NETWORK_LONG;
-	}
-
-	if( bu_debug&BU_DEBUG_MEM_CHECK )
-	{
-		bu_log( "Barrier check at end of sketch_import5():\n" );
-		bu_mem_barriercheck();
-	}
-
-	return(0);			/* OK */
-}
-
-/*
- *			R T _ S K E T C H _ E X P O R T 5
- *
- *  The name is added by the caller, in the usual place.
- */
-int
-rt_sketch_export5( ep, ip, local2mm, dbip )
-struct bu_external		*ep;
-const struct rt_db_internal	*ip;
-double				local2mm;
-const struct db_i		*dbip;
-{
-	struct rt_sketch_internal	*sketch_ip;
-	unsigned char			*cp;
-	int				seg_no;
-	int				i;
-	vect_t				tmp_vec;
-
-	if( bu_debug&BU_DEBUG_MEM_CHECK )
-	{
-		bu_log( "Barrier check at start of sketch_export5():\n" );
-		bu_mem_barriercheck();
-	}
-
-	RT_CK_DB_INTERNAL(ip);
-	if( ip->idb_type != ID_SKETCH )  return(-1);
-	sketch_ip = (struct rt_sketch_internal *)ip->idb_ptr;
-	RT_SKETCH_CK_MAGIC(sketch_ip);
-
-	BU_CK_EXTERNAL(ep);
-
-	/* tally up size of buffer needed */
-	ep->ext_nbytes = 3 * (3 * SIZEOF_NETWORK_DOUBLE)	/* V, u_vec, v_vec */
-		+ 2 * SIZEOF_NETWORK_LONG		/* vert_count and seg_count */
-		+ 2 * sketch_ip->vert_count * SIZEOF_NETWORK_DOUBLE	/* 2D-vertices */
-		+ sketch_ip->skt_curve.seg_count * SIZEOF_NETWORK_LONG;	/* reverse flags */
-
-	for( seg_no=0 ; seg_no < sketch_ip->skt_curve.seg_count ; seg_no++ )
-	{
-		long *lng;
-		struct nurb_seg *nseg;
-		struct bezier_seg *bseg;
-
-		lng = (long *)sketch_ip->skt_curve.segments[seg_no];
-		switch( *lng )
-		{
-			case CURVE_LSEG_MAGIC:
-				ep->ext_nbytes += 3 * SIZEOF_NETWORK_LONG;
-				break;
-			case CURVE_CARC_MAGIC:
-				ep->ext_nbytes += 5 * SIZEOF_NETWORK_LONG + SIZEOF_NETWORK_DOUBLE;
-				break;
-			case CURVE_NURB_MAGIC:
-				nseg = (struct nurb_seg *)lng;
-				ep->ext_nbytes += 3 * SIZEOF_NETWORK_LONG; /* order, pt_type, c_size */
-				ep->ext_nbytes +=  SIZEOF_NETWORK_LONG + nseg->k.k_size * SIZEOF_NETWORK_DOUBLE;	/* knot vector */
-				ep->ext_nbytes += nseg->c_size * SIZEOF_NETWORK_LONG; /* control point indices */
-				if( RT_NURB_IS_PT_RATIONAL( nseg->pt_type ) )
-					ep->ext_nbytes += nseg->c_size * SIZEOF_NETWORK_DOUBLE;	/* weights */
-				break;
-			case CURVE_BEZIER_MAGIC:
-				bseg = (struct bezier_seg *)lng;
-				ep->ext_nbytes += (bseg->degree + 3) * SIZEOF_NETWORK_LONG;
-				break;
-			default:
-				bu_log( "rt_sketch_export: unsupported segement type (x%x)\n", *lng );
-				bu_bomb( "rt_sketch_export: unsupported segement type\n" );
-		}
-	}
-	ep->ext_buf = (genptr_t)bu_malloc( ep->ext_nbytes, "sketch external");
-
-	cp = (unsigned char *)ep->ext_buf;
-
-	/* scale and export */
-	VSCALE( tmp_vec, sketch_ip->V, local2mm );
-	htond( cp, (unsigned char *)tmp_vec, 3 );
-	cp += 3 * SIZEOF_NETWORK_DOUBLE;
-
-	/* uvec and uvec are unit vectors, do not convert to/from mm */
-	htond( cp, (unsigned char *)sketch_ip->u_vec, 3 );
-	cp += 3 * SIZEOF_NETWORK_DOUBLE;
-	htond( cp, (unsigned char *)sketch_ip->v_vec, 3 );
-	cp += 3 * SIZEOF_NETWORK_DOUBLE;
-
-	(void)bu_plong( cp, sketch_ip->vert_count );
-	cp += SIZEOF_NETWORK_LONG;
-	(void)bu_plong( cp, sketch_ip->skt_curve.seg_count );
-	cp += SIZEOF_NETWORK_LONG;
-
-	/* convert 2D points to mm */
-	for( i=0 ; i<sketch_ip->vert_count ; i++ )
-	{
-		point2d_t pt2d;
-
-		V2SCALE( pt2d, sketch_ip->verts[i], local2mm )
-		htond( cp, (const unsigned char *)pt2d, 2 );
-		cp += 2 * SIZEOF_NETWORK_DOUBLE;
-	}
-
-	for( seg_no=0 ; seg_no < sketch_ip->skt_curve.seg_count ; seg_no++ )
-	{
-		struct line_seg *lseg;
-		struct carc_seg *cseg;
-		struct nurb_seg *nseg;
-		struct bezier_seg *bseg;
-		long *lng;
-		fastf_t tmp_fastf;
-
-		/* write segment type ID, and segement parameters */
-		lng = (long *)sketch_ip->skt_curve.segments[seg_no];
-		switch (*lng )
-		{
-			case CURVE_LSEG_MAGIC:
-				lseg = (struct line_seg *)lng;
-				(void)bu_plong( cp, CURVE_LSEG_MAGIC );
-				cp += SIZEOF_NETWORK_LONG;
-				(void)bu_plong( cp, lseg->start );
-				cp += SIZEOF_NETWORK_LONG;
-				(void)bu_plong( cp, lseg->end );
-				cp += SIZEOF_NETWORK_LONG;
-				break;
-			case CURVE_CARC_MAGIC:
-				cseg = (struct carc_seg *)lng;
-				(void)bu_plong( cp, CURVE_CARC_MAGIC );
-				cp += SIZEOF_NETWORK_LONG;
-				(void)bu_plong( cp, cseg->start );
-				cp += SIZEOF_NETWORK_LONG;
-				(void)bu_plong( cp, cseg->end );
-				cp += SIZEOF_NETWORK_LONG;
-				(void) bu_plong( cp, cseg->orientation );
-				cp += SIZEOF_NETWORK_LONG;
-				(void) bu_plong( cp, cseg->center_is_left );
-				cp += SIZEOF_NETWORK_LONG;
-				tmp_fastf = cseg->radius * local2mm;
-				htond( cp, (unsigned char *)&tmp_fastf, 1 );
-				cp += SIZEOF_NETWORK_DOUBLE;
-				break;
-			case CURVE_NURB_MAGIC:
-				nseg = (struct nurb_seg *)lng;
-				(void)bu_plong( cp, CURVE_NURB_MAGIC );
-				cp += SIZEOF_NETWORK_LONG;
-				(void)bu_plong( cp, nseg->order );
-				cp += SIZEOF_NETWORK_LONG;
-				(void)bu_plong( cp, nseg->pt_type );
-				cp += SIZEOF_NETWORK_LONG;
-				(void)bu_plong( cp, nseg->k.k_size );
-				cp += SIZEOF_NETWORK_LONG;
-				htond( cp, (const unsigned char *)nseg->k.knots, nseg->k.k_size );
-				cp += nseg->k.k_size * SIZEOF_NETWORK_DOUBLE;
-				(void)bu_plong( cp, nseg->c_size );
-				cp += SIZEOF_NETWORK_LONG;
-				for( i=0 ; i<nseg->c_size ; i++ )
-				{
-					(void)bu_plong( cp, nseg->ctl_points[i] );
-					cp += SIZEOF_NETWORK_LONG;
-				}
-				if( RT_NURB_IS_PT_RATIONAL( nseg->pt_type ) )
-				{
-					htond( cp, (const unsigned char *)nseg->weights, nseg->c_size );
-					cp += SIZEOF_NETWORK_DOUBLE * nseg->c_size;
-				}
-				break;
-			case CURVE_BEZIER_MAGIC:
-				bseg = (struct bezier_seg *)lng;
-				(void)bu_plong( cp, CURVE_BEZIER_MAGIC );
-				cp += SIZEOF_NETWORK_LONG;
-				(void)bu_plong( cp, bseg->degree );
-				cp += SIZEOF_NETWORK_LONG;
-				for( i=0 ; i<=bseg->degree ; i++ ) {
-					(void)bu_plong( cp, bseg->ctl_points[i] );
-					cp += SIZEOF_NETWORK_LONG;
-				}
-				break;
-			default:
-				bu_bomb( "rt_sketch_export: ERROR: unrecognized curve type!!!!\n" );
-				break;
-				
-		}
-	}
-
-	for( seg_no=0 ; seg_no < sketch_ip->skt_curve.seg_count ; seg_no++ )
-	{
-		(void)bu_plong( cp, sketch_ip->skt_curve.reverse[seg_no] );
-		cp += SIZEOF_NETWORK_LONG;
-	}
-
-	if( bu_debug&BU_DEBUG_MEM_CHECK )
-	{
-		bu_log( "Barrier check at end of sketch_export5():\n" );
-		bu_mem_barriercheck();
-	}
-
-	return(0);
-}
-
-
-
 /*
  *			R T _ S K E T C H _ D E S C R I B E
  *
@@ -1493,7 +991,7 @@ const struct db_i		*dbip;
 int
 rt_sketch_describe( str, ip, verbose, mm2local )
 struct bu_vls		*str;
-const struct rt_db_internal	*ip;
+CONST struct rt_db_internal	*ip;
 int			verbose;
 double			mm2local;
 {
@@ -1542,7 +1040,6 @@ double			mm2local;
 		struct line_seg *lsg;
 		struct carc_seg *csg;
 		struct nurb_seg *nsg;
-		struct bezier_seg *bsg;
 
 		lsg = (struct line_seg *)sketch_ip->skt_curve.segments[seg_no];
 		switch( lsg->magic )
@@ -1673,34 +1170,6 @@ double			mm2local;
 					nsg->k.knots[0], nsg->k.knots[nsg->k.k_size-1] );
 				bu_vls_strcat( str, buf );
 				break;
-			case CURVE_BEZIER_MAGIC:
-				bsg = (struct bezier_seg *)sketch_ip->skt_curve.segments[seg_no];
-				bu_vls_strcat( str, "\t\tBezier segment:\n" );
-				sprintf( buf, "\t\t\tdegree = %d\n", bsg->degree );
-				bu_vls_strcat( str, buf );
-				if( bsg->ctl_points[0] >= sketch_ip->vert_count ||
-				    bsg->ctl_points[bsg->degree] >= sketch_ip->vert_count ) {
-					if( sketch_ip->skt_curve.reverse[seg_no] ){
-						sprintf( buf, "\t\t\tstarts at vertex #%d\n\t\t\tends at vertex #%d\n",
-							 bsg->ctl_points[bsg->degree],
-							 bsg->ctl_points[0] );
-					} else {
-						sprintf( buf, "\t\t\tstarts at vertex #%d\n\t\t\tends at vertex #%d\n",
-							 bsg->ctl_points[0],
-							 bsg->ctl_points[bsg->degree] );
-					}
-				} else {
-					if( sketch_ip->skt_curve.reverse[seg_no] )
-						sprintf( buf, "\t\t\tstarts at (%g %g)\n\t\t\tends at (%g %g)\n",
-							V2ARGS( sketch_ip->verts[bsg->ctl_points[bsg->degree]]),
-							V2ARGS( sketch_ip->verts[bsg->ctl_points[0]] ) );
-					else
-						sprintf( buf, "\t\t\tstarts at (%g %g)\n\t\t\tends at (%g %g)\n",
-							V2ARGS( sketch_ip->verts[bsg->ctl_points[0]] ),
-							V2ARGS( sketch_ip->verts[bsg->ctl_points[bsg->degree]]));
-				}
-				bu_vls_strcat( str, buf );
-				break;
 			default:
 				bu_bomb( "rt_sketch_describe: ERROR: unrecognized segment type\n" );
 		}
@@ -1709,64 +1178,19 @@ double			mm2local;
 	return(0);
 }
 
-void
-rt_curve_free( crv )
-struct curve *crv;
-{
-	int i;
-
-	if( crv->seg_count )
-		bu_free( (char *)crv->reverse, "crv->reverse" );
-	for( i=0 ; i<crv->seg_count ; i++ )
-	{
-		long *lng;
-		struct nurb_seg *nsg;
-		struct bezier_seg *bsg;
-
-		lng = (long *)crv->segments[i];
-		switch( *lng )
-		{
-			case CURVE_NURB_MAGIC:
-				nsg = (struct nurb_seg *)lng;
-				bu_free( (char *)nsg->ctl_points, "nsg->ctl_points" );
-				if( nsg->weights )
-					bu_free( ( char *)nsg->weights, "nsg->weights" );
-				bu_free( ( char *)nsg->k.knots, "nsg->k.knots" );
-				bu_free( (char *)lng, "curve segment" );
-				break;
-			case CURVE_BEZIER_MAGIC:
-				bsg = (struct bezier_seg *)lng;
-				bu_free( (char *)bsg->ctl_points, "bsg->ctl_points" );
-				bu_free( (char *)lng, "curve segment" );
-				break;
-			case CURVE_LSEG_MAGIC:
-			case CURVE_CARC_MAGIC:
-				bu_free( (char *)lng, "curve segment" );
-				break;
-			default:
-				bu_log( "ERROR: rt_curve_free: unrecognized curve segments type!!!!\n");
-				break;
-		}
-	}
-
-	if( crv->seg_count > 0 )
-		bu_free( (char *)crv->segments, "crv->segments" );
-
-	crv->seg_count = 0;
-	crv->reverse = (int *)NULL;
-	crv->segments = (genptr_t)NULL;
-}
-
 /*
  *			R T _ S K E T C H _ I F R E E
  *
  *  Free the storage associated with the rt_db_internal version of this solid.
  */
 void
-rt_sketch_ifree( struct rt_db_internal	*ip )
+rt_sketch_ifree( ip )
+struct rt_db_internal	*ip;
 {
 	register struct rt_sketch_internal	*sketch_ip;
 	struct curve				*crv;
+	long					*lng;
+	int					seg_no;
 
 	RT_CK_DB_INTERNAL(ip);
 	sketch_ip = (struct rt_sketch_internal *)ip->idb_ptr;
@@ -1784,7 +1208,18 @@ rt_sketch_ifree( struct rt_db_internal	*ip )
 
 	crv = &sketch_ip->skt_curve;
 
-	rt_curve_free( crv );
+	for( seg_no=0 ; seg_no < crv->seg_count ; seg_no++ )
+	{
+		lng = (long *)crv->segments[seg_no];
+		if( *lng > 0 )
+		{
+			*lng = 0;
+			bu_free( (char *)lng, "lng" );
+		}
+	}
+
+	bu_free( (char *)crv->reverse, "crv->reverse" );
+	bu_free( (char *)crv->segments, "crv->segments" );
 
 	bu_free( (char *)sketch_ip, "sketch ifree" );
 	ip->idb_ptr = GENPTR_NULL;	/* sanity */
@@ -1798,9 +1233,45 @@ rt_sketch_ifree( struct rt_db_internal	*ip )
 }
 
 void
+rt_curve_free( crv )
+struct curve *crv;
+{
+	int i;
+
+	if( crv->seg_count )
+		bu_free( (char *)crv->reverse, "crv->reverse" );
+	for( i=0 ; i<crv->seg_count ; i++ )
+	{
+		long *lng;
+		struct nurb_seg *nsg;
+
+		lng = (long *)crv->segments[i];
+		switch( *lng )
+		{
+			case CURVE_NURB_MAGIC:
+				nsg = (struct nurb_seg *)lng;
+				bu_free( (char *)nsg->ctl_points, "nsg->ctl_points" );
+				if( nsg->weights )
+					bu_free( ( char *)nsg->weights, "nsg->weights" );
+				bu_free( ( char *)nsg->k.knots, "nsg->k.knots" );
+			case CURVE_LSEG_MAGIC:
+			case CURVE_CARC_MAGIC:
+				bu_free( (char *)lng, "curve segment" );
+				break;
+			default:
+				bu_log( "ERROR: rt_curve_free: unrecognized curve segments type!!!!\n");
+				break;
+		}
+	}
+	crv->seg_count = 0;
+	crv->reverse = (int *)NULL;
+	crv->segments = (genptr_t)NULL;
+}
+
+void
 rt_copy_curve( crv_out, crv_in )
 struct curve *crv_out;
-const struct curve *crv_in;
+CONST struct curve *crv_in;
 {
 	int i, j;
 
@@ -1813,7 +1284,6 @@ const struct curve *crv_in;
 		struct line_seg *lsg_out, *lsg_in;
 		struct carc_seg *csg_out, *csg_in;
 		struct nurb_seg *nsg_out, *nsg_in;
-		struct bezier_seg *bsg_out, *bsg_in;
 
 		crv_out->reverse[j] = crv_in->reverse[j];
 		lng = (long *)crv_in->segments[j];
@@ -1851,17 +1321,6 @@ const struct curve *crv_in;
 				for( i=0 ; i<nsg_in->k.k_size ; i++ )
 					nsg_out->k.knots[i] = nsg_in->k.knots[i];
 				break;
-			case CURVE_BEZIER_MAGIC:
-				bsg_in = (struct bezier_seg *)lng;
-				bsg_out = (struct bezier_seg *)bu_malloc( sizeof( struct bezier_seg ), "bezier_seg" );
-				crv_out->segments[j] = (genptr_t)bsg_out;
-				*bsg_out = *bsg_in;
-				bsg_out->ctl_points = (int *)bu_calloc( bsg_out->degree + 1,
-									sizeof( int ), "bsg_out->ctl_points" );
-				for( i=0 ; i<=bsg_out->degree ; i++ ) {
-					bsg_out->ctl_points[i] = bsg_in->ctl_points[i];
-				}
-				break;
 			default:
 				bu_bomb( "rt_copy_sketch: ERROR: unrecognized segment type!!!!\n" );
 		}
@@ -1871,10 +1330,11 @@ const struct curve *crv_in;
 
 struct rt_sketch_internal *
 rt_copy_sketch( sketch_ip )
-const struct rt_sketch_internal *sketch_ip;
+CONST struct rt_sketch_internal *sketch_ip;
 {
 	struct rt_sketch_internal *out;
 	int i;
+	struct bu_ptbl curves;
 	struct curve *crv_out;
 
 	RT_SKETCH_CK_MAGIC( sketch_ip );
@@ -1909,7 +1369,7 @@ curve_to_tcl_list( vls, crv )
 struct bu_vls *vls;
 struct curve *crv;
 {
-	int i,j;
+	int j;
 
 	bu_vls_printf( vls, " SL {" );
 	for( j=0 ; j<crv->seg_count ; j++ )
@@ -1928,15 +1388,6 @@ struct curve *crv;
 				bu_vls_printf( vls, " { carc S %d E %d R %.25g L %d O %d }",
 					csg->start, csg->end, csg->radius,
 					csg->center_is_left, csg->orientation );
-			}
-			break;
-		    case CURVE_BEZIER_MAGIC:
-			{
-				struct bezier_seg *bsg = (struct bezier_seg *)crv->segments[j];
-				bu_vls_printf( vls, " { bezier D %d P {", bsg->degree );
-				for( i=0 ; i<=bsg->degree ; i++ )
-					bu_vls_printf( vls, " %d", bsg->ctl_points[i] );
-				bu_vls_printf( vls, " } }" );
 			}
 			break;
 		    case CURVE_NURB_MAGIC:
@@ -1966,21 +1417,11 @@ struct curve *crv;
 	return( 0 );
 }
 
-int rt_sketch_tclform( const struct rt_functab *ftp, Tcl_Interp *interp)
-{
-	RT_CK_FUNCTAB(ftp);
-
-	Tcl_AppendResult( interp,
-			  "V {%f %f %f} A {%f %f %f} B {%f %f %f} VL { {%f %f} {%f %f} ...} SL { { segment_data } { segment_data} }" );
-
-	return TCL_OK;
-}
-
 int
 rt_sketch_tclget( interp, intern, attr )
 Tcl_Interp			*interp;
-const struct rt_db_internal	*intern;
-const char			*attr;
+CONST struct rt_db_internal	*intern;
+CONST char			*attr;
 {
 	register struct rt_sketch_internal *skt=(struct rt_sketch_internal *)intern->idb_ptr;
 	Tcl_DString     ds;
@@ -2063,7 +1504,8 @@ Tcl_Interp *interp;
 struct curve *crv;
 Tcl_Obj *seg_list;
 {
-	int seg_count;
+	Tcl_Obj *SL, *segments;
+	int len2, seg_count;
 	int ret, j;
 
 	/* get number of segments */
@@ -2087,7 +1529,6 @@ Tcl_Obj *seg_list;
 		char *type, *elem;
 		int k, seg_len;
 
-
 		/* get the next segment */
 		if( (ret=Tcl_ListObjIndex( interp, seg_list, j, &seg ) ))
 		{
@@ -2095,11 +1536,17 @@ Tcl_Obj *seg_list;
 		}
 
 		if( (ret=Tcl_ListObjLength( interp, seg, &seg_len )) )
+		{
+			Tcl_DecrRefCount( seg );
 			return( ret );
+		}
 
 		/* get the segment type */
 		if( (ret=Tcl_ListObjIndex( interp, seg, 0, &seg_type ) ))
+		{
+			Tcl_DecrRefCount( seg );
 			return( ret );
+		}
 		type = Tcl_GetString( seg_type );
 
 		if( !strcmp( type, "line" ) )
@@ -2110,11 +1557,18 @@ Tcl_Obj *seg_list;
 			for( k=1 ; k<seg_len ; k += 2 )
 			{
 				if( (ret=Tcl_ListObjIndex( interp, seg, k, &seg_elem ) ))
+				{
+					Tcl_DecrRefCount( seg_type );
+					Tcl_DecrRefCount( seg );
 					return( ret );
-
+				}
 				if( (ret=Tcl_ListObjIndex( interp, seg, k+1, &seg_val ) ))
+				{
+					Tcl_DecrRefCount( seg_elem );
+					Tcl_DecrRefCount( seg_type );
+					Tcl_DecrRefCount( seg );
 					return( ret );
-
+				}
 				elem = Tcl_GetString( seg_elem );
 				switch( *elem )
 				{
@@ -2128,42 +1582,9 @@ Tcl_Obj *seg_list;
 			}
 			lsg->magic = CURVE_LSEG_MAGIC;
 			crv->segments[j] = (genptr_t)lsg;
-		}
-		else if( !strcmp( type, "bezier" ) )
-		{
-			struct bezier_seg *bsg;
-			int num_points;
-
-			bsg = (struct bezier_seg *)bu_calloc( 1, sizeof( struct bezier_seg ), "bsg" );
-			for( k=1 ; k<seg_len ; k+= 2 ) {
-
-				if( (ret=Tcl_ListObjIndex( interp, seg, k, &seg_elem ) ))
-					return( ret );
-
-				if( (ret=Tcl_ListObjIndex( interp, seg, k+1, &seg_val ) ))
-					return( ret );
-
-				elem = Tcl_GetString( seg_elem );
-				switch( *elem )
-				{
-					case 'D': /* degree */
-						Tcl_GetIntFromObj( interp, seg_val,
-								   &bsg->degree );
-						break;
-					case 'P': /* list of control points */
-						num_points = 0;
-						(void)tcl_obj_to_int_array( interp,
-						              seg_val, &bsg->ctl_points,
-							      &num_points );
-
-						if( num_points != bsg->degree + 1 ) {
-							Tcl_SetResult( interp, "ERROR: degree and number of control points disagree for a Bezier segment\n", TCL_STATIC );
-							return( TCL_ERROR );
-						}
-				}
-			}
-			bsg->magic = CURVE_BEZIER_MAGIC;
-			crv->segments[j] = (genptr_t)bsg;
+			Tcl_DecrRefCount( seg_val );
+			Tcl_DecrRefCount( seg_elem );
+			Tcl_DecrRefCount( seg_type );
 		}
 		else if( !strcmp( type, "carc" ) )
 		{
@@ -2174,11 +1595,18 @@ Tcl_Obj *seg_list;
 			for( k=1 ; k<seg_len ; k += 2 )
 			{
 				if( (ret=Tcl_ListObjIndex( interp, seg, k, &seg_elem ) ))
+				{
+					Tcl_DecrRefCount( seg_type );
+					Tcl_DecrRefCount( seg );
 					return( ret );
-
+				}
 				if( (ret=Tcl_ListObjIndex( interp, seg, k+1, &seg_val ) ))
+				{
+					Tcl_DecrRefCount( seg_elem );
+					Tcl_DecrRefCount( seg_type );
+					Tcl_DecrRefCount( seg );
 					return( ret );
-
+				}
 				elem = Tcl_GetString( seg_elem );
 				switch( *elem )
 				{
@@ -2202,6 +1630,9 @@ Tcl_Obj *seg_list;
 			}
 			csg->magic = CURVE_CARC_MAGIC;
 			crv->segments[j] = (genptr_t)csg;
+			Tcl_DecrRefCount( seg_val );
+			Tcl_DecrRefCount( seg_elem );
+			Tcl_DecrRefCount( seg_type );
 		}
 		else if( !strcmp( type, "nurb" ) )
 		{
@@ -2211,11 +1642,18 @@ Tcl_Obj *seg_list;
 			for( k=1 ; k<seg_len ; k += 2 )
 			{
 				if( (ret=Tcl_ListObjIndex( interp, seg, k, &seg_elem ) ))
+				{
+					Tcl_DecrRefCount( seg_type );
+					Tcl_DecrRefCount( seg );
 					return( ret );
-
+				}
 				if( (ret=Tcl_ListObjIndex( interp, seg, k+1, &seg_val ) ))
+				{
+					Tcl_DecrRefCount( seg_elem );
+					Tcl_DecrRefCount( seg_type );
+					Tcl_DecrRefCount( seg );
 					return( ret );
-
+				}
 				elem = Tcl_GetString( seg_elem );
 				switch( *elem )
 				{
@@ -2238,9 +1676,14 @@ Tcl_Obj *seg_list;
 			}
 			nsg->magic = CURVE_NURB_MAGIC;
 			crv->segments[j] = (genptr_t)nsg;
+			Tcl_DecrRefCount( seg_val );
+			Tcl_DecrRefCount( seg_elem );
+			Tcl_DecrRefCount( seg_type );
 		}
 		else
 		{
+			Tcl_DecrRefCount( seg_type );
+			Tcl_DecrRefCount( seg );
 			Tcl_ResetResult( interp );
 			Tcl_AppendResult( interp, "ERROR: Unrecognized segment type: ",
 				Tcl_GetString( seg ), (char *)NULL);
@@ -2272,37 +1715,22 @@ char			**argv;
 		{
 			new = skt->V;
 			array_len = 3;
-			if( tcl_list_to_fastf_array( interp, argv[1], &new, &array_len) != 
-			    array_len ) {
-				Tcl_SetResult( interp,
-				      "ERROR: Incorrect number of coordinates for vertex\n",
-				      TCL_STATIC );
-				return( TCL_ERROR );
-		         }
+			if( (ret=tcl_list_to_fastf_array( interp, argv[1], &new, &array_len )) != TCL_OK )
+				return( ret );
 		}
 		else if( !strcmp( argv[0], "A" ) )
 		{
 			new = skt->u_vec;
 			array_len = 3;
-			if( tcl_list_to_fastf_array( interp, argv[1], &new, &array_len) != 
-			    array_len ) {
-				Tcl_SetResult( interp,
-				      "ERROR: Incorrect number of coordinates for vertex\n",
-				      TCL_STATIC );
-				return( TCL_ERROR );
-		         }
+			if( (ret=tcl_list_to_fastf_array( interp, argv[1], &new, &array_len )) != TCL_OK )
+				return( ret );
 		}
 		else if( !strcmp( argv[0], "B" ) )
 		{
 			new = skt->v_vec;
 			array_len = 3;
-			if( tcl_list_to_fastf_array( interp, argv[1], &new, &array_len) != 
-			    array_len ) {
-				Tcl_SetResult( interp,
-				      "ERROR: Incorrect number of coordinates for vertex\n",
-				      TCL_STATIC );
-				return( TCL_ERROR );
-		         }
+			if( (ret=tcl_list_to_fastf_array( interp, argv[1], &new, &array_len )) != TCL_OK )
+				return( ret );
 		}
 		else if( !strcmp( argv[0], "VL" ) )
 		{
@@ -2322,13 +1750,8 @@ char			**argv;
 			}
 
 			len = 0;
-                        (void)tcl_list_to_fastf_array( interp, argv[1], &new_verts, &len );
-                        if( len%2 ) {
-				Tcl_SetResult( interp,
-				    "ERROR: Incorrect number of coordinates for vertices\n",
-				    TCL_STATIC );
-				return( TCL_ERROR );
-                        }
+			if( (ret=tcl_list_to_fastf_array( interp, argv[1], &new_verts, &len )) != TCL_OK )
+				return( ret );
 
 			if( skt->verts )
 				bu_free( (char *)skt->verts, "verts" );
@@ -2349,11 +1772,13 @@ char			**argv;
 			crv->segments = (genptr_t)NULL;
 
 			if( (ret=get_tcl_curve( interp, crv, tmp )) != TCL_OK )
+			{
+				Tcl_DecrRefCount( tmp );
 				return( ret );
+			}
 		}
-		else if( *argv[0] == 'V' && isdigit( *(argv[0]+1) )  )
+		else if( *argv[0] == 'V' && isdigit( *(argv[0]+1) )  )	/* changing a specific vertex */
 		{
-			/* changing a specific vertex */
 			int vert_no;
 			fastf_t *new_vert;
 
@@ -2361,21 +1786,14 @@ char			**argv;
 			new_vert = skt->verts[vert_no];
 			if( vert_no < 0 || vert_no > skt->vert_count )
 			{
-				Tcl_SetResult( interp, "ERROR: Illegal vertex number\n",
-					       TCL_STATIC );
+				Tcl_SetResult( interp, "ERROR: Illegal vertex number\n", TCL_STATIC );
 				return( TCL_ERROR );
 			}
 			array_len = 2;
-                        if(tcl_list_to_fastf_array( interp, argv[1], &new_vert, &array_len)
-				!= array_len ) 
-			{
-				Tcl_SetResult( interp,
-				    "ERROR: Incorrect number of coordinates for vertex\n",
-				    TCL_STATIC );
-				return( TCL_ERROR );
-			}
+			if( (ret=tcl_list_to_fastf_array( interp, argv[1], &new_vert, &array_len )) != TCL_OK )
+				return( ret );
 		}
-
+next_arg:
 		argc -= 2;
 		argv += 2;
 	}

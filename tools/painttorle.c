@@ -38,14 +38,6 @@
 
 #include <stdio.h>
 
-#include <stdlib.h>
-
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include "machine.h"
 #include "rle.h"
 
@@ -58,7 +50,7 @@ int invert_flag = 0, oflag = 0;
 
 void init(), read_scan(), write_scan();
 
-int
+void
 main(argc,argv) 
 int argc;
 char *argv[];

@@ -78,8 +78,8 @@
 #endif
 
 /* const */
-#ifndef const
-#define	const	const			/* for old compilers, might be empty */
+#ifndef CONST
+#define	CONST	const			/* for old compilers, might be empty */
 #endif
 
 /* function-pointer declarator */
@@ -412,8 +412,7 @@ struct guts {
 	struct cnfa search;	/* for fast preliminary search */
 	int ntree;
 	struct colormap cmap;
-	int FUNCPTR(compare, (const chr *, const chr *, size_t));
+	int FUNCPTR(compare, (CONST chr *, CONST chr *, size_t));
 	struct subre *lacons;	/* lookahead-constraint vector */
 	int nlacons;		/* size of lacons */
 };
-

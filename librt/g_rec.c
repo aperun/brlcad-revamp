@@ -123,15 +123,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSrec[] = "@(#)$Header$ (BRL)";
+static char RCSrec[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include <math.h>
 #include "machine.h"
 #include "vmath.h"
@@ -247,7 +244,7 @@ struct rt_i		*rtip;
 	VSET( invsq, 1.0/magsq_a, 1.0/magsq_b, 1.0/magsq_h );
 
 	/* Compute R and Rinv matrices */
-	MAT_IDN( R );
+	bn_mat_idn( R );
 	f = 1.0/mag_a;
 	VSCALE( &R[0], tip->a, f );
 	f = 1.0/mag_b;
@@ -257,7 +254,7 @@ struct rt_i		*rtip;
 	bn_mat_trn( Rinv, R );			/* inv of rot mat is trn */
 
 	/* Compute S */
-	MAT_IDN( S );
+	bn_mat_idn( S );
 	S[ 0] = sqrt( invsq[0] );
 	S[ 5] = sqrt( invsq[1] );
 	S[10] = sqrt( invsq[2] );
@@ -363,9 +360,9 @@ struct rt_i		*rtip;
  */
 void
 rt_rec_print( stp )
-register const struct soltab *stp;
+register CONST struct soltab *stp;
 {
-	register const struct rec_specific *rec =
+	register CONST struct rec_specific *rec =
 		(struct rec_specific *)stp->st_specific;
 
 	VPRINT("V", rec->rec_V);
@@ -527,14 +524,14 @@ hit:
 		 */
 		k1 = hits[0].hit_dist - hits[1].hit_dist;
 		if( NEAR_ZERO( k1, tol_dist ) )  {
-			if(RT_G_DEBUG&DEBUG_ARB8)bu_log("rt_rec_shot(%s): 3 hits, collapsing 0&1\n", stp->st_name);
+			if(rt_g.debug&DEBUG_ARB8)bu_log("rt_rec_shot(%s): 3 hits, collapsing 0&1\n", stp->st_name);
 			hits[1] = hits[2];	/* struct copy */
 			nhits--;
 			goto hit;
 		}
 		k1 = hits[1].hit_dist - hits[2].hit_dist;
 		if( NEAR_ZERO( k1, tol_dist ) )  {
-			if(RT_G_DEBUG&DEBUG_ARB8)bu_log("rt_rec_shot(%s): 3 hits, collapsing 1&2\n", stp->st_name);
+			if(rt_g.debug&DEBUG_ARB8)bu_log("rt_rec_shot(%s): 3 hits, collapsing 1&2\n", stp->st_name);
 			nhits--;
 			goto hit;
 		}

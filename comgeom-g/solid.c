@@ -23,17 +23,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <ctype.h>
 #include <math.h>
 
@@ -44,18 +39,8 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "raytrace.h"
 #include "wdb.h"
 
-/* defined in read.c */
-extern int getline();
-extern int getint();
-extern void namecvt();
 
-/* defined in cvt.c */
-extern void col_pr();
-
-/* defined in solid.c */
-extern int read_arbn();
-
-extern struct rt_wdb	*outfp;
+extern FILE	*outfp;
 extern int	version;
 extern int	verbose;
 
@@ -197,7 +182,6 @@ register char	*cp;
  *	 0	conversion OK
  *	 1	EOF
  */
-int
 getsolid()
 {
 	char	given_solid_num[16];
@@ -515,7 +499,7 @@ getsolid()
 		double			dia;
 		double			*pts;		/* 3 entries per pt */
 		struct	wdb_pipept	*ps;
-		struct	bu_list		head;		/* allow a whole struct for head */
+		struct	wdb_pipept	head;		/* allow a whole struct for head */
 
 		/* This might be getint( solid_type, 3, 2 ); for non-V5 */
 		numpts = getint( scard, 8, 2 );
@@ -535,7 +519,7 @@ getsolid()
 		/* allocate nodes on a list and store all information in
 		 * the appropriate location.
 		 */
-		RT_LIST_INIT( &head );
+		RT_LIST_INIT( &head.l );
 		for( i = 0; i < numpts; i++ )  {
 			/* malloc a new structure */
 			if( (ps = (struct wdb_pipept *)malloc( 
@@ -548,7 +532,7 @@ getsolid()
 			ps->pp_id = 0;				/* solid */
 			ps->pp_od = dia;
 			ps->pp_bendradius = dia;
-			RT_LIST_INSERT( &head, &ps->l );
+			RT_LIST_INSERT( &head.l, &ps->l );
 		}
 
 		if( mk_pipe( outfp, name, &head ) < 0 )
@@ -681,7 +665,6 @@ ell1:
 	return(-1);
 }
 
-int
 read_arbn( name )
 char	*name;
 {

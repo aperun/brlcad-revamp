@@ -17,12 +17,11 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSnmg_index[] = "@(#)$Header$ (BRL)";
+static char RCSnmg_index[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 #include "externs.h"
 #include "machine.h"
@@ -42,7 +41,7 @@ static const char RCSnmg_index[] = "@(#)$Header$ (BRL)";
  */
 int
 nmg_index_of_struct( p )
-register const long	*p;
+register CONST long	*p;
 {
 	switch(*p)  {
 	case NMG_MODEL_MAGIC:
@@ -278,7 +277,7 @@ struct model	*m;
 				MARK_VU(vu);
 			}
 			/* Lone vertex in shell */
-			if( (vu = s->vu_p) )  {
+			if( vu = s->vu_p )  {
 				MARK_VU(vu);
 			}
 		}
@@ -448,7 +447,7 @@ register long	newindex;
 				ASSIGN_VU(vu);
 			}
 			/* Lone vertex in shell */
-			if( (vu = s->vu_p) )  {
+			if( vu = s->vu_p )  {
 				ASSIGN_VU(vu);
 			}
 		}
@@ -469,7 +468,7 @@ register long	newindex;
 void
 nmg_vls_struct_counts( str, ctr )
 struct bu_vls			*str;
-const struct nmg_struct_counts	*ctr;
+CONST struct nmg_struct_counts	*ctr;
 {
 	BU_CK_VLS( str );
 
@@ -512,8 +511,8 @@ const struct nmg_struct_counts	*ctr;
  */
 void
 nmg_pr_struct_counts( ctr, str )
-const struct nmg_struct_counts	*ctr;
-const char			*str;
+CONST struct nmg_struct_counts	*ctr;
+CONST char			*str;
 {
 	struct bu_vls		vls;
 
@@ -536,7 +535,7 @@ const char			*str;
 long **
 nmg_m_struct_count( ctr, m )
 register struct nmg_struct_counts	*ctr;
-const struct model			*m;
+CONST struct model			*m;
 {
 	struct nmgregion	*r;
 	struct shell		*s;
@@ -714,7 +713,7 @@ const struct model			*m;
 				UNIQ_VU(vu);
 			}
 			/* Lone vertex in shell */
-			if( (vu = s->vu_p) )  {
+			if( vu = s->vu_p )  {
 				ctr->shells_of_lone_vert++;
 				UNIQ_VU(vu);
 			}
@@ -731,8 +730,8 @@ const struct model			*m;
  */
 void
 nmg_struct_counts( m, str )
-const struct model	*m;
-const char		*str;
+CONST struct model	*m;
+CONST char		*str;
 {
 	struct nmg_struct_counts	cnts;
 	long	**tab;
@@ -812,7 +811,7 @@ struct model *m2;
  */
 long
 nmg_find_max_index( m )
-const struct model *m;
+CONST struct model *m;
 {
 	long			maxindex=0;
 	struct nmgregion	*r;
@@ -933,7 +932,7 @@ const struct model *m;
 				CHECK_VU_INDEX(vu);
 			}
 			/* Lone vertex in shell */
-			if( (vu = s->vu_p) )  {
+			if( vu = s->vu_p )  {
 				CHECK_VU_INDEX(vu);
 			}
 		}

@@ -4,13 +4,6 @@
  * $Revision$
  *
  * $Log$
- * Revision 11.4  2000/08/24 23:12:22  mike
- *
- * lint, RCSid
- *
- * Revision 11.3  1997/01/03  17:42:17  jra
- * Mods for Irix 6.2
- *
  * Revision 11.2  1995/06/21  03:40:22  gwyn
  * Eliminated trailing blanks.
  * Eliminated blank line at EOF.
@@ -54,7 +47,7 @@
  *
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$";
+static char RCSid[] = "@(#)$Header$";
 #endif
 
 /*
@@ -338,7 +331,10 @@ PrevPage()
 
 #include "./termcap.h"
 
+static char	*BufToUse;	/* Buffer to pop to if we are using buffers */
 static WINDOW	*LastW;		/* Save old window here so we can return */
+static BUFFER	*LastB;		/* Buffer that used to be in LastW (in case it
+				   isn't when we're done. */
 
 static int	Gobble,
 		Wrapped,
@@ -365,7 +361,9 @@ TellWBuffers(bname, clobber)
 char	*bname;
 {
 	WhichKind = WITHBUFFER;		/* So we know how to clean up */
+	BufToUse = bname;
 	LastW = curwind;
+	LastB = curbuf;
 	pop_wind(bname, clobber);	/* This creates the window and
 					   makes it the current window. */
 }

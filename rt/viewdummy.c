@@ -17,7 +17,7 @@
  *	Aberdeen Proving Ground, Maryland  21005
  */
 #ifndef lint
-static const char RCSview[] = "@(#)$Header$ (BRL)";
+static char RCSview[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -27,7 +27,7 @@ static const char RCSview[] = "@(#)$Header$ (BRL)";
 #include "vmath.h"
 #include "raytrace.h"
 
-#include "rtprivate.h"
+#include "./rdebug.h"
 
 /*
  *  If this variable is set to zero, then "air" solids in the model

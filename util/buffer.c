@@ -23,16 +23,10 @@
  *	Public Domain, Distribution Unlimited
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
-#include "conf.h"	/* optional */
-
 #include <stdio.h>
-
-#include "externs.h"	/* optional */
-
-int mread(int fd, char *bufp, int n );
 
 char	template[] = "/usr/tmp/bufferXXXXXX";
 
@@ -40,7 +34,6 @@ char	template[] = "/usr/tmp/bufferXXXXXX";
 
 char	buf[SIZE];
 
-int
 main()
 {
 	register int	count;

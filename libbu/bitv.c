@@ -21,7 +21,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char libbu_bitv_RCSid[] = "@(#)$Header$ (ARL)";
+static char libbu_bitv_RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -31,7 +31,6 @@ static const char libbu_bitv_RCSid[] = "@(#)$Header$ (ARL)";
 #else
 #include <strings.h>
 #endif
-#include <ctype.h>
 #include "machine.h"
 #include "externs.h"
 #include "bu.h"
@@ -99,10 +98,10 @@ struct bu_bitv	*bv;
 void
 bu_bitv_or( ov, iv )
 struct bu_bitv		*ov;
-const struct bu_bitv	*iv;
+CONST struct bu_bitv	*iv;
 {
 	register bitv_t		*out;
-	register const bitv_t	*in;
+	register CONST bitv_t	*in;
 	register int		words;
 
 	if( ov->nbits != iv->nbits )  bu_bomb("bu_bitv_or: length mis-match");
@@ -125,10 +124,10 @@ const struct bu_bitv	*iv;
 void
 bu_bitv_and( ov, iv )
 struct bu_bitv		*ov;
-const struct bu_bitv	*iv;
+CONST struct bu_bitv	*iv;
 {
 	register bitv_t		*out;
-	register const bitv_t	*in;
+	register CONST bitv_t	*in;
 	register int		words;
 
 	if( ov->nbits != iv->nbits )  bu_bomb("bu_bitv_and: length mis-match");
@@ -153,7 +152,7 @@ const struct bu_bitv	*iv;
 void
 bu_bitv_vls( v, bv )
 struct bu_vls			*v;
-register const struct bu_bitv	*bv;
+register CONST struct bu_bitv	*bv;
 {
 	int		seen = 0;
 	register int	i;
@@ -184,8 +183,8 @@ register const struct bu_bitv	*bv;
  */
 void
 bu_pr_bitv( str, bv )
-const char			*str;
-register const struct bu_bitv	*bv;
+CONST char			*str;
+register CONST struct bu_bitv	*bv;
 {
 	struct bu_vls	v;
 
@@ -207,7 +206,7 @@ register const struct bu_bitv	*bv;
 void
 bu_bitv_to_hex( v, bv )
 struct bu_vls *v;
-register const struct bu_bitv	*bv;
+register CONST struct bu_bitv	*bv;
 {
 	int word_count, byte_no;
 
@@ -236,10 +235,10 @@ register const struct bu_bitv	*bv;
  */
 struct bu_bitv *
 bu_hex_to_bitv( str )
-const char *str;
+CONST char *str;
 {
 	char abyte[3];
-	const char *str_start;
+	CONST char *str_start;
 	int len=0;
 	int bytes;
 	struct bu_bitv *bv;
@@ -304,7 +303,7 @@ const char *str;
  */
 struct bu_bitv *
 bu_bitv_dup( bv )
-register const struct bu_bitv	*bv;
+register CONST struct bu_bitv	*bv;
 {
 	struct bu_bitv *bv2;
 

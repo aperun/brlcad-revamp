@@ -15,12 +15,11 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char librt_htbl_RCSid[] = "@(#)$Header$ (ARL)";
+static char librt_htbl_RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 #include <stdio.h>
-#include <string.h>
 #include "machine.h"
 #include "externs.h"
 #include "bu.h"
@@ -34,7 +33,7 @@ void
 rt_htbl_init(b, len, str)
 struct rt_htbl	*b;
 int		len;		/* initial len. */
-const char	*str;
+CONST char	*str;
 {
 	if (bu_debug & BU_DEBUG_PTBL)
 		bu_log("rt_htbl_init(%8x, len=%d, %s)\n", b, len, str);

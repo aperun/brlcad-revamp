@@ -1,12 +1,10 @@
 /*      INTERACT.C      */
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 /*	INCLUDES	*/ 
 #include "conf.h"
-
-#include <stdlib.h>
 
 #include <stdio.h>
 #include <ctype.h>
@@ -24,8 +22,6 @@ static const char RCSid[] = "$Header$";
 extern int		nirt_debug;
 extern com_table	ComTab[];
 extern int		silent_flag;
-
-extern void		bu_log();
 
 static int sgetc (string)
 
@@ -146,7 +142,6 @@ void	*sPtr;
 	    if ((input_source == READING_STRING) && (Ch == '\0'))
 		break;
 	    if (Ch == EOF)
-	    {
 		if ((input_source == READING_FILE) && (sPtr == stdin))
 		{
 		    bu_log( "Unexpected EOF in input!!\n");
@@ -154,7 +149,6 @@ void	*sPtr;
 		}
 		else
 		    return;
-	    }
 	    if (key_len == 0 && (Ch == ' ' || Ch == '\t'))
 		key_len = i;      /* length of key word */
 	    line_buffer[i] = Ch;

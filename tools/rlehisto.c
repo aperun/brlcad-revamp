@@ -22,7 +22,7 @@
  *    -o fname	Direct output to file.
  */
 #ifndef lint
-static const char rcs_ident[] = "$Id$";
+static char rcs_ident[] = "$Id$";
 #endif
 
 #include "conf.h"
@@ -36,7 +36,7 @@ static const char rcs_ident[] = "$Id$";
 
 #define MAXCHAN 10
 
-int
+void
 main(argc, argv)
 int	argc;
 char	*argv[];

@@ -90,13 +90,13 @@ configbody Db::dbfile {
 body Db::constructor {filename} {
     set dbfile $filename
     set db [subst $this]_db
-    wdb_open $db $dbfile
+    wdb_open $db db $dbfile
     Db::help_init
 }
 
 body Db::destructor {} {
-    rename $db ""
-    catch {delete object $help}
+    $db close
+    delete object $help
 }
 
 body Db::open {args} {

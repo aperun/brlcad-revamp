@@ -24,8 +24,7 @@
 #include "shadefuncs.h"
 #include "shadework.h"
 #include "../rt/ext.h"
-#include "rtprivate.h"
-#include "plot3.h"
+#include "../rt/rdebug.h"
 
 #define prj_MAGIC 0x70726a00	/* "prj" */
 #define CK_prj_SP(_p) BU_CKMAG(_p, prj_MAGIC, "prj_specific")
@@ -69,10 +68,10 @@ struct prj_specific {
  */
 static void 
 persp_hook( sdp, name, base, value )
-register const struct bu_structparse	*sdp;	/* structure description */
-register const char			*name;	/* struct member name */
+register CONST struct bu_structparse	*sdp;	/* structure description */
+register CONST char			*name;	/* struct member name */
 char					*base;	/* begining of structure */
-const char				*value;	/* string containing value */
+CONST char				*value;	/* string containing value */
 {
 	struct img_specific *img_sp = (struct img_specific *)base;
 
@@ -97,10 +96,10 @@ const char				*value;	/* string containing value */
  */
 static void 
 dimen_hook( sdp, name, base, value )
-register const struct bu_structparse	*sdp;	/* structure description */
-register const char			*name;	/* struct member name */
+register CONST struct bu_structparse	*sdp;	/* structure description */
+register CONST char			*name;	/* struct member name */
 char					*base;	/* begining of structure */
-const char				*value;	/* string containing value */
+CONST char				*value;	/* string containing value */
 {
 	if (! strcmp("%f", sdp->sp_fmt)) {
 		fastf_t *f;
@@ -125,10 +124,10 @@ const char				*value;	/* string containing value */
 #if 0
 static void 
 noop_hook( sdp, name, base, value )
-register const struct bu_structparse	*sdp;	/* structure description */
-register const char			*name;	/* struct member name */
+register CONST struct bu_structparse	*sdp;	/* structure description */
+register CONST char			*name;	/* struct member name */
 char					*base;	/* begining of structure */
-const char				*value;	/* string containing value */
+CONST char				*value;	/* string containing value */
 {
 	struct img_specific *img_sp = (struct img_specific *)base;
 
@@ -148,10 +147,10 @@ const char				*value;	/* string containing value */
  */
 static void 
 orient_hook( sdp, name, base, value )
-register const struct bu_structparse	*sdp;	/* structure description */
-register const char			*name;	/* struct member name */
+register CONST struct bu_structparse	*sdp;	/* structure description */
+register CONST char			*name;	/* struct member name */
 char					*base;	/* begining of structure */
-const char				*value;	/* string containing value */
+CONST char				*value;	/* string containing value */
 {
 	struct prj_specific	*prj_sp;
 	struct img_specific	*img_sp = (struct img_specific *)base;
@@ -185,10 +184,10 @@ const char				*value;	/* string containing value */
 	 *
 	 *	prj_coord = scale * rot * translate * region_coord
 	 */
-	MAT_IDN(trans);
+	bn_mat_idn(trans);
 	MAT_DELTAS_VEC_NEG(trans, img_new->i_eye_pt);
 
-	MAT_IDN(scale);
+	bn_mat_idn(scale);
 	MAT_SCALE_ALL(scale, img_new->i_viewsize);
 
 	bn_mat_mul(tmp, img_new->i_mat, trans);
@@ -384,6 +383,7 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	prj_sp->prj_images.i_through = '0';
 	prj_sp->prj_images.i_behind = '0';
 
+
 	if(bu_struct_parse( &parameter_data, img_parse_tab, 
 	    (char *)&prj_sp->prj_images) < 0)
 		return -1;
@@ -395,7 +395,7 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	for (BU_LIST_FOR(img_sp, img_specific, &prj_sp->prj_images.l)) {
 		if (img_sp->i_antialias != '0') {
 			if (rdebug&RDEBUG_SHADE)
-				bu_log("prj_setup(%s) setting prismtrace 1\n", rp->reg_name);
+				bu_log("setting prismtrace 1");
 			rtip->rti_prismtrace = 1;
 			break;
 		}
@@ -413,10 +413,8 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	 * db_region_mat returns a matrix which maps points on/in the region
 	 * as it exists where the region is defined (as opposed to the 
 	 * (possibly transformed) one we are rendering.
-	 *
-	 *  Non-PARALLEL, which is OK, because shaders are prepped serially.
 	 */
-	db_region_mat(prj_sp->prj_m_to_sh, rtip->rti_dbip, rp->reg_name, &rt_uniresource);
+	db_region_mat(prj_sp->prj_m_to_sh, rtip->rti_dbip, rp->reg_name);
 
 
 	if (rdebug&RDEBUG_SHADE) {
@@ -472,19 +470,18 @@ char *cp;
 
 	bu_free( cp, "prj_specific" );
 }
-static const double	cs = (1.0/255.0);
-static const point_t delta = {0.5, 0.5, 0.0};
+static CONST double	cs = (1.0/255.0);
+static CONST point_t delta = {0.5, 0.5, 0.0};
 
-#if 0
 static int
 project_antialiased(sh_color, img_sp, prj_sp, ap, r_pe, r_N, r_pt)
 point_t sh_color;
-const struct img_specific *img_sp;
-const struct prj_specific *prj_sp;
-const struct application *ap;
-const struct pixel_ext *r_pe;	/* pts on plane of hit */
-const plane_t r_N;
-const point_t r_pt;
+CONST struct img_specific *img_sp;
+CONST struct prj_specific *prj_sp;
+CONST struct application *ap;
+CONST struct pixel_ext *r_pe;	/* pts on plane of hit */
+CONST plane_t r_N;
+CONST point_t r_pt;
 {
 	int i, x, y;
 	point_t sh_pts[CORNER_PTS];
@@ -509,7 +506,7 @@ const point_t r_pt;
 	}
 	return 0;
 }
-#endif
+
 static int
 project_point(sh_color, img_sp, prj_sp, r_pt)
 point_t sh_color;

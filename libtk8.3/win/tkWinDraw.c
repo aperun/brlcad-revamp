@@ -104,7 +104,7 @@ static int bltModes[] = {
  */
 
 typedef BOOL (CALLBACK *WinDrawFunc) _ANSI_ARGS_((HDC dc,
-			    const POINT* points, int npoints));
+			    CONST POINT* points, int npoints));
 
 typedef struct ThreadSpecificData {
     POINT *winPoints;    /* Array of points that is reused. */

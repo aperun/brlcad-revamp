@@ -354,7 +354,7 @@ static void		GetYView _ANSI_ARGS_((Tcl_Interp *interp,
 static DLine *		LayoutDLine _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *indexPtr));
 static int		MeasureChars _ANSI_ARGS_((Tk_Font tkfont,
-			    const char *source, int maxBytes, int startX,
+			    CONST char *source, int maxBytes, int startX,
 			    int maxX, int tabOrigin, int *nextXPtr));
 static void		MeasureUp _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *srcPtr, int distance,
@@ -5128,7 +5128,7 @@ NextTabStop(tkfont, x, tabOrigin)
 static int
 MeasureChars(tkfont, source, maxBytes, startX, maxX, tabOrigin, nextXPtr)
     Tk_Font tkfont;		/* Font in which to draw characters. */
-    const char *source;		/* Characters to be displayed.  Need not
+    CONST char *source;		/* Characters to be displayed.  Need not
 				 * be NULL-terminated. */
     int maxBytes;		/* Maximum # of bytes to consider from
 				 * source. */
@@ -5142,7 +5142,7 @@ MeasureChars(tkfont, source, maxBytes, startX, maxX, tabOrigin, nextXPtr)
 				 * character here. */
 {
     int curX, width, ch;
-    const char *special, *end, *start;
+    CONST char *special, *end, *start;
 
     ch = 0;			/* lint. */
     curX = startX;

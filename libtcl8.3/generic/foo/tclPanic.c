@@ -121,4 +121,3 @@ panic TCL_VARARGS_DEF(char *,arg1)
     Tcl_PanicVA(format, argList);
     va_end (argList);
 }
-

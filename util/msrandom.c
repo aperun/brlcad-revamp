@@ -28,7 +28,6 @@
 struct bn_gauss *gp;
 struct bn_unif *up;
 
-int
 main(argc,argv)
 int argc;
 char **argv;
@@ -38,7 +37,7 @@ char **argv;
 
 	int seed = getpid();
 	int high, low;
-	double  center = 0;
+	double  center;
 	int verbose = 0;
 	int gauss = 0;
 	int uniform = 0;
@@ -112,6 +111,4 @@ char **argv;
 		tmp*=BN_UNIF_DOUBLE(up)+0.5;
 		fprintf(stdout,"%d\n", low +(int)tmp);
 	}
-	return 0;
 }
- 

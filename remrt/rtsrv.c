@@ -15,7 +15,7 @@
  *	This software is Copyright (C) 1985 by the United States Army.
  *	All rights reserved.
  */
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "conf.h"
 
@@ -24,11 +24,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include <stdio.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #ifdef HAVE_STDARG_H
 # include <stdarg.h>
 #else
@@ -48,17 +43,17 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #undef	VMIN
 #include "machine.h"
-#include "externs.h"
-#include "bu.h"
 #include "vmath.h"
-#include "bn.h"
+#include "rtlist.h"
+#include "rtstring.h"
+#include "externs.h"
 #include "raytrace.h"
 #include "pkg.h"
 #include "fb.h"
 
 #include "../librt/debug.h"
 #include "../rt/ext.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
 #include "./protocol.h"
 
@@ -171,10 +166,10 @@ char **argv;
 		if( strcmp( argv[1], "-d" ) == 0 )  {
 			debug++;
 		} else if( strcmp( argv[1], "-x" ) == 0 )  {
-			sscanf( argv[2], "%x", (unsigned int *)&rt_g.debug );
+			sscanf( argv[2], "%x", &rt_g.debug );
 			argc--; argv++;
 		} else if( strcmp( argv[1], "-X" ) == 0 )  {
-			sscanf( argv[2], "%x", (unsigned int *)&rdebug );
+			sscanf( argv[2], "%x", &rdebug );
 			argc--; argv++;
 		} else {
 			fprintf(stderr, srv_usage);
@@ -316,11 +311,13 @@ char **argv;
 	}
 
 	/*
-	 *  Initialize the non-parallel memory resource.
-	 *  The parallel guys are initialized after the rt_dirbuild().
+	 *  Initialize all the per-CPU memory resources.
+	 *  Go for the max, as TCL interface may change npsw as we run.
 	 */
-	rt_init_resource( &rt_uniresource, MAX_PSW, NULL );
-	bn_rand_init( rt_uniresource.re_randptr, MAX_PSW );
+	for( n=0; n < MAX_PSW; n++ )  {
+		rt_init_resource( &resource[n], n );
+		bn_rand_init( resource[n].re_randptr, n );
+	}
 
 	BU_LIST_INIT( &WorkHead );
 
@@ -452,7 +449,6 @@ char *buf;
 #define MAXARGS 1024
 	char	*argv[MAXARGS+1];
 	struct rt_i *rtip;
-	int	n;
 
 	if( debug )  fprintf(stderr, "ph_dirbuild: %s\n", buf );
 
@@ -477,15 +473,6 @@ char *buf;
 	}
 	ap.a_rt_i = rtip;
 	seen_dirbuild = 1;
-
-	/*
-	 *  Initialize all the per-CPU memory resources.
-	 *  Go for the max, as TCL interface may change npsw as we run.
-	 */
-	for( n=0; n < MAX_PSW; n++ )  {
-		rt_init_resource( &resource[n], n, rtip );
-		bn_rand_init( resource[n].re_randptr, n );
-	}
 
 	if( pkg_send( MSG_DIRBUILD_REPLY,
 	    idbuf, strlen(idbuf)+1, pcsrv ) < 0 )
@@ -540,7 +527,7 @@ char *buf;
 	}
 
 	/* Load the desired portion of the model */
-	if( rt_gettrees(rtip, argc, (const char **)argv, npsw) < 0 )
+	if( rt_gettrees(rtip, argc, (CONST char **)argv, npsw) < 0 )
 		fprintf(stderr,"rt_gettrees(%s) FAILED\n", argv[0]);
 
 	/* In case it changed from startup time via an OPT command */
@@ -623,11 +610,9 @@ ph_matrix(pc, buf)
 register struct pkg_conn *pc;
 char *buf;
 {
-#ifndef NO_MAGIC_CHECKING
 	register struct rt_i *rtip = ap.a_rt_i;
 
 	RT_CK_RTI(rtip);
-#endif
 
 	if( debug )  fprintf(stderr, "ph_matrix: %s\n", buf );
 
@@ -937,7 +922,7 @@ jmp_buf		bu_jmpbuf;		/* for BU_SETJMP() */
 
 void
 bu_bomb(str)
-const char *str;
+CONST char *str;
 {
 	char	*bomb = "RTSRV terminated by rt_bomb()\n";
 
@@ -950,7 +935,7 @@ const char *str;
 
 	if(debug)  fprintf(stderr,"\n%s\n", str);
 	fflush(stderr);
-	if( RT_G_DEBUG || rt_g.NMG_debug || bu_debug || debug )
+	if( rt_g.debug || rt_g.NMG_debug || bu_debug || debug )
 		abort();	/* should dump */
 	exit(12);
 }
@@ -996,10 +981,4 @@ char *buf;
 {
 	fprintf(stderr,"msg: %s\n", buf);
 	(void)free(buf);
-}
-
-/* Stub for do.c */
-void
-memory_summary()
-{
 }

@@ -2088,4 +2088,3 @@ Tcl_DbIsShared(objPtr, file, line)
 #endif
     return ((objPtr)->refCount > 1);
 }
-

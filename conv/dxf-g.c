@@ -21,15 +21,13 @@
 
 static char *usage="dxf-g [-v] [-d] [-p] [-t tolerance] [-i input_file] [-o output_file_name]";
 
-int
 main( argc , argv )
 int argc;
 char *argv[];
 {
 	register int c;
 	FILE *dxf;
-	struct rt_wdb *out_fp;
-	char *output_file = "dxf.g";
+	FILE *out_fp;
 	char *base_name,*dxf_name;
 	char *ptr1,*ptr2;
 	char curr_name[LINELEN];
@@ -54,6 +52,7 @@ char *argv[];
         tol.perp = 1e-6;
         tol.para = 1 - tol.perp;
 
+	out_fp = stdout;
 	dxf = stdin;
 	dxf_name = (char *)NULL;
 	base_name = (char *)NULL;
@@ -81,7 +80,12 @@ char *argv[];
 				}
 				break;
 			case 'o':	/* output file name */
-				output_file = optarg;
+				if( (out_fp = fopen( optarg , "w" )) == NULL )
+				{
+					bu_log( "Cannot open %s\n" , optarg );
+					perror( "tankill-g" );
+					rt_bomb( "Cannot open output file\n" );
+				}
 				break;
 			case 'p':	/* produce polysolids as output instead of NMG's */
 				polysolids = 1;
@@ -92,12 +96,10 @@ char *argv[];
 		}
 	}
 
-	if( (out_fp = wdb_fopen( output_file )) == NULL )
+	if( isatty( fileno( out_fp ) ) )
 	{
-		rt_bomb( "Cannot open output file\n" );
-		bu_log( "tankill-g: Cannot open %s\n" , output_file );
-		perror( output_file );
-
+		bu_log( "This routine creates a BRL-CAD which you wold not want sent to your terminal\n" );
+		rt_bomb( usage );
 	}
 
 	if( dxf_name )
@@ -343,8 +345,7 @@ char *argv[];
 					}
 					else if( line_entity )
 					{
-						struct edgeuse *eu = 
-							(struct edgeuse *)NULL;
+						struct edgeuse *eu;
 
 						for( i=1 ; i<no_of_pts ; i++ )
 						{

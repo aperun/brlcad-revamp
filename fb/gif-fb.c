@@ -43,7 +43,8 @@
 			no explicit GIF file name is specified)
 */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char	RCSid[] =		/* for "what" utility */
+	"@(#)$Header$ (BRL)";
 #endif
 
 #define	USAGE	"gif-fb [-F fb_file] [-c] [-i image#] [-o] [-v] [-z] [gif_file]"
@@ -690,7 +691,7 @@ main( argc, argv )
 			Message( "background color index %d", background );
 			}
 
-		if ( (desc[5] & 0x08) != 0x00 )
+		if ( desc[5] & 0x08 != 0x00 )
 			Message( "Screen descriptor byte 6 bit 3 unknown" );
 
 		if ( desc[6] != 0x00 )
@@ -730,7 +731,7 @@ main( argc, argv )
 		if ( cr == 8 )
 			cr_mask = ~0;	/* shift by 0 can tickle compiler bug */
 		else
-			cr_mask = ~0 << (8 - cr);
+			cr_mask = ~0 << 8 - cr;
 
 		expand = 255.0 / (double)(0xFF & cr_mask);
 

@@ -13,7 +13,6 @@
 
 #include "conf.h"
 
-#include <stdlib.h>
 #include <stdio.h>
 #ifdef USE_STRING_H
 #include <string.h>

@@ -24,7 +24,7 @@ HWND tkWinCurrentDialog;
 int			TkplatformtestInit(Tcl_Interp *interp);
 static int		TestclipboardObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+			    Tcl_Obj *CONST objv[]);
 static int		TestwineventCmd(ClientData clientData, 
 			    Tcl_Interp *interp, int argc, char **argv);
 
@@ -84,7 +84,7 @@ TestclipboardObjCmd(clientData, interp, objc, objv)
     ClientData clientData;		/* Main window for application. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int objc;				/* Number of arguments. */
-    Tcl_Obj *const objv[];		/* Argument values. */
+    Tcl_Obj *CONST objv[];		/* Argument values. */
 {
     TkWindow *winPtr = (TkWindow *) clientData;
     HGLOBAL handle;

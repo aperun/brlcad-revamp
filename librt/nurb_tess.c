@@ -45,7 +45,7 @@
 
 fastf_t
 rt_nurb_par_edge(srf, epsilon)
-const struct face_g_snurb * srf;
+CONST struct face_g_snurb * srf;
 fastf_t epsilon;
 {
 	struct face_g_snurb * us, *vs, * uus, * vvs, *uvs;
@@ -147,7 +147,7 @@ fastf_t epsilon;
  */
 fastf_t
 rt_cnurb_par_edge( crv, epsilon )
-const struct edge_g_cnurb *crv;
+CONST struct edge_g_cnurb *crv;
 fastf_t epsilon;
 {
 	struct edge_g_cnurb *d1, *d2;

@@ -9,7 +9,6 @@
 #include "conf.h"
 
 #include<stdio.h>
-#include <stdlib.h>
 #ifdef USE_STRING_H
 #include<string.h>
 #else
@@ -19,7 +18,6 @@
 #include<X11/Xlib.h>
 #include<X11/Xutil.h>
 
-int
 main()
 {
    int ichoice;			/*  Choice.  */
@@ -137,5 +135,5 @@ main()
 	(void)fflush(stdout);
 	system(X_or_SGI);
    }
-   return 0;
+
 }

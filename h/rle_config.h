@@ -6,7 +6,7 @@
  */
 #include "machine.h"
 
-#define CONST_DECL const
+#define CONST_DECL CONST
 
 #if __STDC__
 #	define VOID_STAR		/* for the Utah Raster Toolkit */

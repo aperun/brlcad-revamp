@@ -20,30 +20,15 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
-
-#include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-#include <stdlib.h>
 
 extern int	fd;
 extern char	cmd;
 extern int	polaroid;
 
-extern void dunnopen();
-extern int ready(int nsecs);
-extern void getexposure(char *title);
-extern int dunnsend(char color, int val);
-
-
-int
 main(argc, argv)
 int argc;
 char **argv;
@@ -84,5 +69,4 @@ char **argv;
 		printf("dunncolor:  camera not ready\n");
 		exit(50);
 	}
-	return 0;
 }

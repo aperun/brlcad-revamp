@@ -20,7 +20,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 
@@ -41,6 +41,7 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "vmath.h"
 #include "bn.h"
 
+
 /* Support routines for the math functions */
 
 /* XXX Really need a decode_array function that uses atof(),
@@ -51,10 +52,10 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 int
 bn_decode_mat(m, str)
 mat_t m;
-const char *str;
+char *str;
 {
 	if( strcmp( str, "I" ) == 0 )  {
-		MAT_IDN( m );
+		bn_mat_idn( m );
 		return 16;
 	}
 	if( *str == '{' )  str++;
@@ -68,7 +69,7 @@ const char *str;
 int
 bn_decode_quat(q, str)
 quat_t q;
-const char *str;
+char *str;
 {
 	if( *str == '{' )  str++;
 	return sscanf(str, "%lf %lf %lf %lf", &q[0], &q[1], &q[2], &q[3]);
@@ -77,7 +78,7 @@ const char *str;
 int
 bn_decode_vect(v, str)
 vect_t v;
-const char *str;
+char *str;
 {
 	if( *str == '{' )  str++;
 	return sscanf(str, "%lf %lf %lf", &v[0], &v[1], &v[2]);
@@ -86,7 +87,7 @@ const char *str;
 int
 bn_decode_hvect(v, str)
 hvect_t v;
-const char *str;
+char *str;
 {
 	if( *str == '{' )  str++;
 	return sscanf(str, "%lf %lf %lf %lf", &v[0], &v[1], &v[2], &v[3]);
@@ -95,7 +96,7 @@ const char *str;
 void
 bn_encode_mat(vp, m)
 struct bu_vls *vp;
-const mat_t m;
+mat_t m;
 {
 	if( m == NULL )  {
 		bu_vls_putc(vp, 'I');
@@ -110,7 +111,7 @@ const mat_t m;
 void
 bn_encode_quat(vp, q)
 struct bu_vls *vp;
-const quat_t q;
+quat_t q;
 {
 	bu_vls_printf(vp, "%g %g %g %g", V4ARGS(q));
 }
@@ -118,7 +119,7 @@ const quat_t q;
 void
 bn_encode_vect(vp, v)
 struct bu_vls *vp;
-const vect_t v;
+vect_t v;
 {
 	bu_vls_printf(vp, "%g %g %g", V3ARGS(v));
 }
@@ -126,7 +127,7 @@ const vect_t v;
 void
 bn_encode_hvect(vp, v)
 struct bu_vls *vp;
-const hvect_t v;
+hvect_t v;
 {
 	bu_vls_printf(vp, "%g %g %g %g", V4ARGS(v));
 }
@@ -143,8 +144,8 @@ void
 bn_mat_scale_about_pt_wrapper(statusp, mat, pt, scale)
 int *statusp;
 mat_t mat;
-const point_t pt;
-const double scale;
+CONST point_t pt;
+CONST double scale;
 {
 	*statusp = bn_mat_scale_about_pt(mat, pt, scale);
 }
@@ -167,7 +168,7 @@ mat_t m;
 
 static void
 bn_hdivide(o, i)
-const hvect_t i;
+CONST hvect_t i;
 vect_t o;
 {
 	HDIVIDE(o, i);
@@ -176,13 +177,12 @@ vect_t o;
 static void
 bn_vjoin1(o, pnt, scale, dir )
 point_t o;
-const point_t pnt;
+CONST point_t pnt;
 double scale;
-const vect_t dir;
+CONST vect_t dir;
 {
 	VJOIN1( o, pnt, scale, dir );
 }
-
 
 static void bn_vblend( a, b, c, d, e )
 point_t a;
@@ -191,7 +191,7 @@ point_t c;
 fastf_t d;
 point_t e;
 {
-	VBLEND2( a, b, c, d, e );
+      VBLEND2( a, b, c, d, e )
 }
 
 /*
@@ -288,14 +288,13 @@ char **argv;
 
 		VJOIN1( o, b, c, d );	/* bn_vjoin1( o, b, c, d ) */
 		bn_encode_vect(&result, o);
-
-	} else if ( math_func == bn_vblend) {
+      } else if ( math_func == bn_vblend) {
 		point_t a, c, e;
 		fastf_t b, d;
 
 		if( argc < 5 ) {
-			bu_vls_printf(&result, "usage: %s scale pnt scale pnt", argv[0]);
-			goto error;
+		        bu_vls_printf(&result, "usage: %s scale pnt scale pnt", argv[0]);
+		        goto error;
 		}
 
 		if( Tcl_GetDouble(interp, argv[1], &b) != TCL_OK) goto error;
@@ -305,7 +304,6 @@ char **argv;
 
 		VBLEND2( a, b, c, d, e )
 		bn_encode_vect( &result, a );
-
 	} else if (math_func == bn_mat_ae) {
 		mat_t o;
 		double az, el;
@@ -570,41 +568,41 @@ static struct math_func_link {
 	char *name;
 	void (*func)();
 } math_funcs[] = {
-	{"mat_mul",            bn_mat_mul},
-	{"mat_inv",            bn_mat_inv},
-	{"mat_trn",            bn_mat_trn},
-	{"matXvec",            bn_matXvec},
-	{"mat4x3vec",          bn_mat4x3vec},
-	{"mat4x3pnt",          bn_mat4x3pnt},
-	{"hdivide",            bn_hdivide},
-	{"vjoin1",	      bn_vjoin1},
-	{"vblend",		bn_vblend},
-	{"mat_ae",             bn_mat_ae},
-	{"mat_ae_vec",         bn_ae_vec},
-	{"mat_aet_vec",        bn_aet_vec},
-	{"mat_angles",         bn_mat_angles},
-	{"mat_eigen2x2",       bn_eigen2x2},
-	{"mat_fromto",         bn_mat_fromto},
-	{"mat_xrot",           bn_mat_xrot},
-	{"mat_yrot",           bn_mat_yrot},
-	{"mat_zrot",           bn_mat_zrot},
-	{"mat_lookat",         bn_mat_lookat},
-	{"mat_vec_ortho",      bn_vec_ortho},
-	{"mat_vec_perp",       bn_vec_perp},
-	{"mat_scale_about_pt", bn_mat_scale_about_pt_wrapper},
-	{"mat_xform_about_pt", bn_mat_xform_about_pt},
-	{"mat_arb_rot",        bn_mat_arb_rot},
-	{"quat_mat2quat",      quat_mat2quat},
-	{"quat_quat2mat",      quat_quat2mat},
-	{"quat_distance",      bn_quat_distance_wrapper},
-	{"quat_double",        quat_double},
-	{"quat_bisect",        quat_bisect},
-	{"quat_slerp",         quat_slerp},
-	{"quat_sberp",         quat_sberp},
-	{"quat_make_nearest",  quat_make_nearest},
-	{"quat_exp",           quat_exp},
-	{"quat_log",           quat_log},
-	{0, 0}
+	"mat_mul",            bn_mat_mul,
+	"mat_inv",            bn_mat_inv,
+	"mat_trn",            bn_mat_trn,
+	"matXvec",            bn_matXvec,
+	"mat4x3vec",          bn_mat4x3vec,
+	"mat4x3pnt",          bn_mat4x3pnt,
+	"hdivide",            bn_hdivide,
+	"vjoin1",	      bn_vjoin1,
+	"vblend",	      bn_vblend,
+	"mat_ae",             bn_mat_ae,
+	"mat_ae_vec",         bn_ae_vec,
+	"mat_aet_vec",        bn_aet_vec,
+	"mat_angles",         bn_mat_angles,
+	"mat_eigen2x2",       bn_eigen2x2,
+	"mat_fromto",         bn_mat_fromto,
+	"mat_xrot",           bn_mat_xrot,
+	"mat_yrot",           bn_mat_yrot,
+	"mat_zrot",           bn_mat_zrot,
+	"mat_lookat",         bn_mat_lookat,
+	"mat_vec_ortho",      bn_vec_ortho,
+	"mat_vec_perp",       bn_vec_perp,
+	"mat_scale_about_pt", bn_mat_scale_about_pt_wrapper,
+	"mat_xform_about_pt", bn_mat_xform_about_pt,
+	"mat_arb_rot",        bn_mat_arb_rot,
+	"quat_mat2quat",      quat_mat2quat,
+	"quat_quat2mat",      quat_quat2mat,
+	"quat_distance",      bn_quat_distance_wrapper,
+	"quat_double",        quat_double,
+	"quat_bisect",        quat_bisect,
+	"quat_slerp",         quat_slerp,
+	"quat_sberp",         quat_sberp,
+	"quat_make_nearest",  quat_make_nearest,
+	"quat_exp",           quat_exp,
+	"quat_log",           quat_log,
+	0, 0
 };
 
 /*
@@ -812,61 +810,6 @@ bn_cmd_noise_slice(ClientData clientData,
 }
 
 
-int
-bn_cmd_random(ClientData clientData,
-		  Tcl_Interp *interp,
-		  int argc,
-		  char **argv)
-{
-	int val;
-	char *str;
-	double rnd;
-	char buf[32];
-
-	if (argc != 2) {
-		Tcl_AppendResult(interp, "Wrong # args:  Should be \"",
-				 argv[0], " varname\"", NULL);
-		return TCL_ERROR;
-	}
-
-	if (! (str=Tcl_GetVar(interp, argv[1], 0))) {
-		Tcl_AppendResult(interp, "Error getting variable ", 
-				 argv[1], NULL);
-		return TCL_ERROR;
-	}
-	val = atoi(str);
-
-	if (val < 0) val = 0;
-
-	rnd = BN_RANDOM(val);
-
-	sprintf(buf, "%d", val);
-
-	if (!Tcl_SetVar(interp, argv[1], buf, 0)) {
-		Tcl_AppendResult(interp, "Error setting variable ",
-				 argv[1], NULL);
-		return TCL_ERROR;
-	}
-
-	sprintf(buf, "%g", rnd);
-	Tcl_AppendResult(interp, buf, NULL);
-	return TCL_OK;
-}
-
-/*
- *			B N _ M A T _ P R I N T
- */
-void
-bn_tcl_mat_print(Tcl_Interp		*interp,
-		 const char		*title,
-		 const mat_t		m)
-{
-	char		obuf[1024];	/* sprintf may be non-PARALLEL */
-
-	bn_mat_print_guts(title, m, obuf);
-	Tcl_AppendResult(interp, obuf, "\n", (char *)NULL);
-}
-
 /*
  *			B N _ T C L _ S E T U P
  *
@@ -903,10 +846,6 @@ Tcl_Interp *interp;
 
 	(void)Tcl_CreateCommand(interp, "bn_common_file_size",
 		bn_cmd_common_file_size, (ClientData)NULL,
-		(Tcl_CmdDeleteProc *)NULL);
-
-	(void)Tcl_CreateCommand(interp, "bn_random",
-		bn_cmd_random, (ClientData)NULL,
 		(Tcl_CmdDeleteProc *)NULL);
 
 

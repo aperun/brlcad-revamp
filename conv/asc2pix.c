@@ -19,20 +19,18 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 
 int lmap[256];		/* Map HEX ASCII to binary in left nybble */
 int rmap[256];		/* Map HEX ASCII to binary in right nybble */
 
 unsigned char line[256];
 
-int
 main()
 {
 	register int	a, b;

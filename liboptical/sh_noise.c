@@ -25,15 +25,12 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include <math.h>
 #include "machine.h"
 #include "bu.h"
@@ -42,11 +39,8 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
-extern int rr_render(struct application	*ap,
-		     struct partition	*pp,
-		     struct shadework   *swp);
 #define noise_MAGIC 0x1847
 #define CK_noise_SP(_p) BU_CKMAG(_p, noise_MAGIC, "noise_specific")
 
@@ -55,10 +49,10 @@ extern int rr_render(struct application	*ap,
  */
 void
 noise_cvt_parse( sdp, name, base, value )
-register const struct bu_structparse	*sdp;	/* structure description */
-register const char			*name;	/* struct member name */
+register CONST struct bu_structparse	*sdp;	/* structure description */
+register CONST char			*name;	/* struct member name */
 char					*base;	/* begining of structure */
-const char				*value;	/* string containing value */
+CONST char				*value;	/* string containing value */
 {
 	double *p = (double *)(base+sdp->sp_offset);
 
@@ -74,10 +68,10 @@ const char				*value;	/* string containing value */
 
 void
 noise_deg_to_rad( sdp, name, base, value )
-register const struct bu_structparse	*sdp;	/* structure description */
-register const char			*name;	/* struct member name */
+register CONST struct bu_structparse	*sdp;	/* structure description */
+register CONST char			*name;	/* struct member name */
 char					*base;	/* begining of structure */
-const char				*value;	/* string containing value */
+CONST char				*value;	/* string containing value */
 {
 	double *p = (double *)(base+sdp->sp_offset);
 
@@ -107,7 +101,7 @@ struct noise_specific {
 };
 
 /* The default values for the variables in the shader specific structure */
-static const
+static CONST
 struct noise_specific noise_defaults = {
 	noise_MAGIC,
 	2.1753974,	/* lacunarity */
@@ -274,9 +268,9 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 found:
 	noise_sp->shader_number = i;
 
-	db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name, &rt_uniresource);
+	db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name);
 
-	MAT_IDN(tmp);
+	bn_mat_idn(tmp);
 	if (noise_sp->size != 1.0) {
 		/* the user sets "size" to the size of the biggest
 		 * noise-space blob in model coordinates
@@ -291,7 +285,7 @@ found:
 	bn_mat_mul(noise_sp->m_to_sh, tmp, model_to_region);
 
 	/* Add any translation within shader/region space */
-	MAT_IDN(tmp);
+	bn_mat_idn(tmp);
 	tmp[MDX] = noise_sp->delta[0];
 	tmp[MDY] = noise_sp->delta[1];
 	tmp[MDZ] = noise_sp->delta[2];

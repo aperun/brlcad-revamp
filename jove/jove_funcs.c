@@ -4,10 +4,6 @@
  * $Revision$
  *
  * $Log$
- * Revision 11.4  1998/08/23  00:45:53  mike
- * xterm arrow keys use a different prefix than the regular vt100 ones.
- * Handle it.
- *
  * Revision 11.3  1997/01/03  17:42:17  jra
  * Mods for Irix 6.2
  *
@@ -49,7 +45,7 @@
  *
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$";
+static char RCSid[] = "@(#)$Header$";
 #endif
 
 /*

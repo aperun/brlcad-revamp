@@ -13,39 +13,26 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <ctype.h>
 
 #include "machine.h"
 #include "externs.h"
 #include "vmath.h"
-#include "raytrace.h"
+#include "rtlist.h"
 #include "wdb.h"
-
-/* defined in read.c */
-extern int getline();
-extern int getint();
-extern void namecvt();
-
-/* defined in cvt.c */
-extern void col_pr();
 
 extern char	name_it[];
 
 extern struct wmember	*wmp;	/* array indexed by region number */
 
-extern FILE		*infp;
-extern struct rt_wdb	*outfp;
+extern FILE	*infp;
+extern FILE	*outfp;
 
 extern int	reg_total;
 extern int	version;
@@ -68,7 +55,6 @@ void	group_write();
  *	-1	error
  *	 0	done
  */
-int
 getregion()
 {
 	int i, j;
@@ -134,8 +120,6 @@ top:
 			cp = rcard + 6;
 		}
 
-		op = WMOP_UNION; /* default */
-
 		/* Scan each of the 9 fields on the card */
 		for( i=0; i<9; i++, cp += 7 )  {
 			char	nbuf[32];
@@ -193,7 +177,7 @@ top:
 				namecvt( inst_num, inst_name, 's' );
 			reg_reg_flag = 0;
 
-			(void)mk_addmember( inst_name, &wmp[reg_num].l, op );
+			(void)mk_addmember( inst_name, &wmp[reg_num], op );
 		}
 	}
 
@@ -356,7 +340,7 @@ char		*name;
 	i = 0;
 
 add:
-	(void)mk_addmember( name, &groups[i].grp_wm.l, WMOP_UNION );
+	(void)mk_addmember( name, &groups[i].grp_wm, WMOP_UNION );
 }
 
 void
@@ -377,7 +361,7 @@ group_write()
 		mk_lfcomb( outfp, wp->wm_name, wp, 0 );
 
 		/* Add it to "all.g" */
-		(void)mk_addmember( wp->wm_name, &allhead.l, WMOP_UNION );
+		(void)mk_addmember( wp->wm_name, &allhead, WMOP_UNION );
 
 		if(verbose) col_pr( wp->wm_name );
 	}

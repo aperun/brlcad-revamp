@@ -14,7 +14,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -28,13 +28,11 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 #include "machine.h"
 #include "externs.h"
-#include "bu.h"
 #include "vmath.h"
-#include "bn.h"
 #include "nmg.h"
 #include "raytrace.h"
 #include "rtgeom.h"
-#include "wdb.h"
+#include "rtlist.h"
 #include "../librt/debug.h"
 
 #define		MAX_NUM_PTS	15360
@@ -48,20 +46,16 @@ static struct rt_tol	tol;
 
 static char	usage[] = "Usage: %s [-r region] [-g group] [jack_db] [brlcad_db]\n";
 
-RT_EXTERN( fastf_t nmg_loop_plane_area, (const struct loopuse *lu, plane_t pl ) );
+RT_EXTERN( fastf_t nmg_loop_plane_area, (CONST struct loopuse *lu, plane_t pl ) );
 
-int	psurf_to_nmg();
-int	create_brlcad_db();
 void	jack_to_brlcad();
 
-int
 main(argc, argv)
 int	argc;
 char	*argv[];
 {
 	char		*base, *bfile, *grp_name, *jfile, *reg_name;
-	FILE		*fpin;
-	struct rt_wdb	*fpout;
+	FILE		*fpin, *fpout;
 	int		doti;
 	register int	c;
 
@@ -103,15 +97,24 @@ char	*argv[];
 	optind++;
 	if (optind >= argc) {
 		bfile = "-";
-		fprintf(stderr, usage, argv[0]);
-		exit(1);
+		fpout = stdout;
 	} else {
 		bfile = argv[optind];
-		if ((fpout = wdb_fopen(bfile)) == NULL) {
-			fprintf(stderr,
-				"%s: cannot open %s for writing\n",
-				argv[0], bfile);
-			exit(1);
+		if ((fpout = fopen(bfile, "r")) == NULL) {
+			if ((fpout = fopen(bfile, "w")) == NULL) {
+				fprintf(stderr,
+					"%s: cannot open %s for writing\n",
+					argv[0], bfile);
+				exit(1);
+			}
+		} else {
+			fclose(fpout);
+			if ((fpout = fopen(bfile, "a")) == NULL) {
+				fprintf(stderr,
+					"%s: cannot open %s for appending\n",
+					argv[0], bfile);
+				exit(1);
+			}
 		}
 	}
 
@@ -136,8 +139,7 @@ char	*argv[];
 
 	jack_to_brlcad(fpin, fpout, reg_name, grp_name, jfile, bfile);
 	fclose(fpin);
-	wdb_close(fpout);
-	return 0;
+	fclose(fpout);
 }
 
 /*
@@ -246,8 +248,8 @@ char		*jfile;	/* Name of Jack data base file. */
 	r = nmg_mrsv(m);	/* Make region, empty shell, vertex. */
 	s = RT_LIST_FIRST(shell, &r->s_hd);
 
-	while ( (nv = read_psurf_vertices(fp, &vert)) != 0 ) {
-		while ( (nf = read_psurf_face(fp, lst)) != 0 ) {
+	while (nv = read_psurf_vertices(fp, &vert)) {
+		while (nf = read_psurf_face(fp, lst)) {
 
 			/* Make face out of vertices in lst (ccw ordered). */
 			for (i = 0; i < nf; i++)
@@ -314,7 +316,7 @@ char		*jfile;	/* Name of Jack data base file. */
  */
 int
 create_brlcad_db(fpout, m, reg_name, grp_name)
-struct rt_wdb	*fpout;
+FILE		*fpout;
 char		*grp_name, *reg_name;
 struct model	*m;
 {

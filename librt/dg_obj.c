@@ -2,7 +2,7 @@
  *				D G _ O B J . C
  *
  * A drawable geometry object contains methods and attributes
- * for preparing geometry that is ready (i.e. vlists) for
+ * for creating/destroying geometry that is ready (i.e. vlists) for
  * display. Much of this code was extracted from MGED and modified
  * to work herein.
  * 
@@ -27,19 +27,16 @@
  *	This software is Copyright (C) 1997 by the United States Army
  *	in all countries except the USA.  All rights reserved.
  */
-#include "conf.h"
 
-#include <stdio.h>
+#include <fcntl.h>
+#include <math.h>
+#include <signal.h>
+#include "conf.h"
 #ifdef USE_STRING_H
 #include <string.h>
 #else
 #include <strings.h>
 #endif
-#include <fcntl.h>
-#include <math.h>
-#include <signal.h>
-#include "conf.h"
-
 #include "tcl.h"
 #include "machine.h"
 #include "externs.h"
@@ -50,15 +47,6 @@
 #include "raytrace.h"
 #include "rtgeom.h"
 #include "solid.h"
-/* XXX this should be done else where? */
-int rt_pg_plot(struct bu_list *, struct rt_db_internal *,
-	       const struct rt_tess_tol *, const struct bn_tol *);
-int rt_pg_plot_poly(struct bu_list *, struct rt_db_internal *,
-		    const struct rt_tess_tol *, const struct bn_tol *);
-int rt_bot_plot(struct bu_list *, struct rt_db_internal *,
-		    const struct rt_tess_tol *, const struct bn_tol *);
-int rt_bot_plot_poly(struct bu_list *, struct rt_db_internal *,
-		    const struct rt_tess_tol *, const struct bn_tol *);
 
 #include "./debug.h"
 
@@ -80,15 +68,12 @@ extern struct mater *rt_material_head;	/* now defined in librt/mater.c */
 extern struct bu_cmdtab vdraw_cmds[];
 
 static int dgo_open_tcl();
-#if 0
 static int dgo_close_tcl();
-#endif
 static int dgo_cmd();
 static int dgo_headSolid_tcl();
 static int dgo_illum_tcl();
 static int dgo_label_tcl();
 static int dgo_draw_tcl();
-static int dgo_ev_tcl();
 static int dgo_erase_tcl();
 static int dgo_erase_all_tcl();
 static int dgo_who_tcl();
@@ -106,10 +91,6 @@ static int dgo_tol_tcl();
 static int dgo_rtcheck_tcl();
 static int dgo_observer_tcl();
 static int dgo_report_tcl();
-#if 1
-extern int dgo_E_tcl();
-#endif
-static int dgo_autoview_tcl();
 
 static union tree *dgo_wireframe_region_end();
 static union tree *dgo_wireframe_leaf();
@@ -117,12 +98,12 @@ static int dgo_drawtrees();
 static void dgo_cvt_vlblock_to_solids();
 int dgo_invent_solid();
 static void dgo_bound_solid();
-void dgo_drawH_part2();
-void dgo_eraseobjpath();
+static void dgo_drawH_part2();
+static void dgo_eraseobjpath();
 static void dgo_eraseobjall();
 void dgo_eraseobjall_callback();
 static void dgo_eraseobj();
-void dgo_color_soltab();
+static void dgo_color_soltab();
 static int dgo_run_rt();
 static int dgo_build_tops();
 static void dgo_rt_write();
@@ -136,38 +117,31 @@ struct dg_obj HeadDGObj;		/* head of drawable geometry object list */
 static struct solid FreeSolid;		/* head of free solid list */
 
 static struct bu_cmdtab dgo_cmds[] = {
-	{"assoc",		dgo_assoc_tcl},
-	{"autoview",		dgo_autoview_tcl},
-	{"blast",		dgo_blast_tcl},
-	{"clear",		dgo_zap_tcl},
+	"assoc",		dgo_assoc_tcl,
+	"blast",		dgo_blast_tcl,
+	"clear",		dgo_zap_tcl,
+	"close",		dgo_close_tcl,
+	"draw",			dgo_draw_tcl,
+	"erase",		dgo_erase_tcl,
+	"erase_all",		dgo_erase_all_tcl,
+	"ev",			dgo_draw_tcl,
+	"get_autoview",		dgo_get_autoview_tcl,
+	"headSolid",		dgo_headSolid_tcl,
+	"illum",		dgo_illum_tcl,
+	"label",		dgo_label_tcl,
+	"observer",		dgo_observer_tcl,
+	"overlay",		dgo_overlay_tcl,
+	"report",		dgo_report_tcl,
+	"rt",			dgo_rt_tcl,
+	"rtabort",		dgo_rtabort_tcl,
+	"rtcheck",		dgo_rtcheck_tcl,
 #if 0
-	{"close",		dgo_close_tcl},
+	"tol",			dgo_tol_tcl,
 #endif
-	{"draw",		dgo_draw_tcl},
-#if 1
-	{"E",			dgo_E_tcl},
-#endif
-	{"erase",		dgo_erase_tcl},
-	{"erase_all",		dgo_erase_all_tcl},
-	{"ev",			dgo_ev_tcl},
-	{"get_autoview",	dgo_get_autoview_tcl},
-	{"headSolid",		dgo_headSolid_tcl},
-	{"illum",		dgo_illum_tcl},
-	{"label",		dgo_label_tcl},
-	{"observer",		dgo_observer_tcl},
-	{"overlay",		dgo_overlay_tcl},
-	{"report",		dgo_report_tcl},
-	{"rt",			dgo_rt_tcl},
-	{"rtabort",		dgo_rtabort_tcl},
-	{"rtcheck",		dgo_rtcheck_tcl},
-	{"rtedge",		dgo_rt_tcl},
-#if 0
-	{"tol",			dgo_tol_tcl},
-#endif
-	{"vdraw",		dgo_vdraw_tcl},
-	{"who",			dgo_who_tcl},
-	{"zap",			dgo_zap_tcl},
-	{(char *)0,		(int (*)())0}
+	"vdraw",		dgo_vdraw_tcl,
+	"who",			dgo_who_tcl,
+	"zap",			dgo_zap_tcl,
+	(char *)0,		(int (*)())0
 };
 
 /*
@@ -227,7 +201,6 @@ dgo_deleteProc(clientData)
 	bu_free((genptr_t)dgop, "dgo_deleteProc: dgop");
 }
 
-#if 0
 /*
  * Close a drawable geometry object.
  *
@@ -257,33 +230,6 @@ dgo_close_tcl(clientData, interp, argc, argv)
 
 	return TCL_OK;
 }
-#endif
-
-/*
- * Create an command/object named "oname" in "interp".
- */
-struct dg_obj *
-dgo_open_cmd(char		*oname,
-	     struct rt_wdb	*wdbp)
-{
-	struct dg_obj *dgop;
-
-	BU_GETSTRUCT(dgop,dg_obj);
-
-	/* initialize dg_obj */
-	bu_vls_init(&dgop->dgo_name);
-	bu_vls_strcpy(&dgop->dgo_name, oname);
-	dgop->dgo_wdbp = wdbp;
-	BU_LIST_INIT(&dgop->dgo_headSolid);
-	BU_LIST_INIT(&dgop->dgo_headVDraw);
-	BU_LIST_INIT(&dgop->dgo_observers.l);
-	BU_LIST_INIT(&dgop->dgo_headRunRt.l);
-
-	/* append to list of dg_obj's */
-	BU_LIST_APPEND(&HeadDGObj.l,&dgop->l);
-
-	return dgop;
-}
 
 /*
  * Open/create a drawable geometry object that's associated with the
@@ -293,10 +239,11 @@ dgo_open_cmd(char		*oname,
  *	  dgo_open [name rt_wdb]
  */
 static int
-dgo_open_tcl(ClientData	clientData,
-	     Tcl_Interp	*interp,
-	     int	argc,
-	     char	**argv)
+dgo_open_tcl(clientData, interp, argc, argv)
+     ClientData clientData;
+     Tcl_Interp *interp;
+     int     argc;
+     char    **argv;
 {
 	struct dg_obj *dgop;
 	struct rt_wdb *wdbp;
@@ -324,13 +271,50 @@ dgo_open_tcl(ClientData	clientData,
 			break;
 	}
 
-	if (BU_LIST_IS_HEAD(wdbp, &rt_g.rtg_headwdb.l))
+	if (BU_LIST_IS_HEAD(wdbp, &rt_g.rtg_headwdb.l)) {
+#if 0
+		Tcl_AppendResult(interp, "dgo_open: bad database object - ", argv[2],
+				 "\n", (char *)NULL);
+		return TCL_ERROR;
+#else
 		wdbp = RT_WDB_NULL;
+#endif
+	}
 
-	/* first, delete any commands by this name */
-	(void)Tcl_DeleteCommand(interp, argv[1]);
+	/* acquire dg_obj struct */
+	BU_GETSTRUCT(dgop,dg_obj);
 
-	dgop = dgo_open_cmd(argv[1], wdbp);
+	/* initialize dg_obj */
+	bu_vls_init(&dgop->dgo_name);
+	bu_vls_strcpy(&dgop->dgo_name,argv[1]);
+	dgop->dgo_wdbp = wdbp;
+	BU_LIST_INIT(&dgop->dgo_headSolid);
+	BU_LIST_INIT(&dgop->dgo_headVDraw);
+	BU_LIST_INIT(&dgop->dgo_observers.l);
+	BU_LIST_INIT(&dgop->dgo_headRunRt.l);
+
+#if 0
+	/* initilize tolerance structures */
+	dgop->dgo_ttol.magic = RT_TESS_TOL_MAGIC;
+	dgop->dgo_ttol.abs = 0.0;		/* disabled */
+	dgop->dgo_ttol.rel = 0.01;
+	dgop->dgo_ttol.norm = 0.0;		/* disabled */
+
+	dgop->dgo_tol.magic = BN_TOL_MAGIC;
+	dgop->dgo_tol.dist = 0.005;
+	dgop->dgo_tol.dist_sq = dgop->dgo_tol.dist * dgop->dgo_tol.dist;
+	dgop->dgo_tol.perp = 1e-6;
+	dgop->dgo_tol.para = 1 - dgop->dgo_tol.perp;
+
+	/* initialize tree state */
+	dgop->dgo_initial_tree_state = rt_initial_tree_state;  /* struct copy */
+	dgop->dgo_initial_tree_state.ts_ttol = &dgop->dgo_ttol;
+	dgop->dgo_initial_tree_state.ts_tol = &dgop->dgo_tol;
+#endif
+
+	/* append to list of dg_obj's */
+	BU_LIST_APPEND(&HeadDGObj.l,&dgop->l);
+
 	(void)Tcl_CreateCommand(interp,
 				bu_vls_addr(&dgop->dgo_name),
 				dgo_cmd,
@@ -340,37 +324,10 @@ dgo_open_tcl(ClientData	clientData,
 	/* Return new function name as result */
 	Tcl_ResetResult(interp);
 	Tcl_AppendResult(interp, bu_vls_addr(&dgop->dgo_name), (char *)NULL);
-
 	return TCL_OK;
 }
 
 /****************** Drawable Geometry Object Methods ********************/
-
-#if 0
-/* skeleton functions for dg_obj methods */
-int
-dgo__cmd(struct dg_obj	*dgop,
-	 Tcl_Interp	*interp,
-	 int		argc,
-	 char 		**argv)
-{
-}
-
-/*
- * Usage:
- *        procname 
- */
-static int
-dgo__tcl(ClientData	clientData,
-	 Tcl_Interp	*interp,
-	 int		argc,
-	 char		**argv)
-{
-	struct dg_obj *dgop = (struct dg_obj *)clientData;
-
-	return dgo__cmd(dgop, interp, argc-1, argv+1);
-}
-#endif
 
 /*
  *
@@ -380,10 +337,11 @@ dgo__tcl(ClientData	clientData,
  * Returns: database object's headSolid.
  */
 static int
-dgo_headSolid_tcl(ClientData	clientData,
-		  Tcl_Interp	*interp,
-		  int     	argc,
-		  char    	**argv)
+dgo_headSolid_tcl(clientData, interp, argc, argv)
+     ClientData clientData;
+     Tcl_Interp *interp;
+     int     argc;
+     char    **argv;
 {
 	struct dg_obj *dgop = (struct dg_obj *)clientData;
 	struct bu_vls vls;
@@ -391,7 +349,7 @@ dgo_headSolid_tcl(ClientData	clientData,
 	bu_vls_init(&vls);
 
 	if (argc != 2) {
-		bu_vls_printf(&vls, "helplib_alias dgo_headSolid %s", argv[0]);
+		bu_vls_printf(&vls, "helplib dgo_headSolid");
 		Tcl_Eval(interp, bu_vls_addr(&vls));
 		bu_vls_free(&vls);
 		return TCL_ERROR;
@@ -403,19 +361,30 @@ dgo_headSolid_tcl(ClientData	clientData,
 	return TCL_OK;
 }
 
-int
-dgo_illum_cmd(struct dg_obj	*dgop,
-	      Tcl_Interp	*interp,
-	      int		argc,
-	      char 		**argv)
+/*
+ * Illuminate/highlight database object
+ *
+ * Usage:
+ *        procname illum [-n] obj
+ *
+ */
+static int
+dgo_illum_tcl(clientData, interp, argc, argv)
+     ClientData clientData;
+     Tcl_Interp *interp;
+     int     argc;
+     char    **argv;
 {
+	struct dg_obj *dgop = (struct dg_obj *)clientData;
 	register struct solid *sp;
 	struct bu_vls vls;
 	int found = 0;
 	int illum = 1;
 
-	if (argc == 3) {
-		if (argv[1][0] == '-' && argv[1][1] == 'n')
+	DGO_CHECK_WDBP_NULL(dgop,interp);
+
+	if (argc == 4) {
+		if (argv[2][0] == '-' && argv[2][1] == 'n')
 			illum = 0;
 		else
 			goto bad;
@@ -424,15 +393,16 @@ dgo_illum_cmd(struct dg_obj	*dgop,
 		++argv;
 	}
 
-	if (argc != 2)
+	if (argc != 3)
 		goto bad;
 
 	FOR_ALL_SOLIDS(sp, &dgop->dgo_headSolid) {
+		register struct solid *forw;
 		register int i;
 
-		for (i = 0; i < sp->s_fullpath.fp_len; ++i) {
-			if (*argv[1] == *DB_FULL_PATH_GET(&sp->s_fullpath,i)->d_namep &&
-			    strcmp(argv[1], DB_FULL_PATH_GET(&sp->s_fullpath,i)->d_namep) == 0) {
+		for (i = 0; i <= sp->s_last; ++i) {
+			if (*argv[2] == *sp->s_path[i]->d_namep &&
+			    strcmp(argv[2], sp->s_path[i]->d_namep) == 0) {
 				found = 1;
 				if (illum)
 					sp->s_iflag = UP;
@@ -444,53 +414,21 @@ dgo_illum_cmd(struct dg_obj	*dgop,
 
 	if (!found) {
 		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "illum: %s not found", argv[1]);
+		bu_vls_printf(&vls, "illum: %s not found", argv[2]);
 		Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 		bu_vls_free(&vls);
 		return TCL_ERROR;
 	}
 
+	dgo_notify(dgop, interp);
 	return TCL_OK;
 
 bad:
 	bu_vls_init(&vls);
-	bu_vls_printf(&vls, "helplib_alias dgo_illum %s", argv[0]);
+	bu_vls_strcpy(&vls, "helplib dgo_illum");
 	Tcl_Eval(interp, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
 	return TCL_ERROR;
-}
-
-/*
- * Illuminate/highlight database object
- *
- * Usage:
- *        procname illum [-n] obj
- *
- */
-static int
-dgo_illum_tcl(ClientData	clientData,
-	      Tcl_Interp	*interp,
-	      int		argc,
-	      char		**argv)
-{
-	struct dg_obj	*dgop = (struct dg_obj *)clientData;
-	int		ret;
-
-	DGO_CHECK_WDBP_NULL(dgop,interp);
-
-	if ((ret = dgo_illum_cmd(dgop, interp, argc-1, argv+1)) == TCL_OK)
-		dgo_notify(dgop, interp);
-
-	return ret;
-}
-
-int
-dgo_label_cmd(struct dg_obj	*dgop,
-	      Tcl_Interp	*interp,
-	      int		argc,
-	      char 		**argv)
-{
-	return TCL_OK;
 }
 
 /*
@@ -507,47 +445,27 @@ dgo_label_tcl(clientData, interp, argc, argv)
      int     argc;
      char    **argv;
 {
-	struct dg_obj	*dgop = (struct dg_obj *)clientData;
+	struct dg_obj *dgop = (struct dg_obj *)clientData;
 
 	DGO_CHECK_WDBP_NULL(dgop,interp);
 
-	return dgo_label_cmd(dgop, interp, argc-1, argv+1);
+	return TCL_OK;
 }
 
-int
-dgo_draw_cmd(struct dg_obj	*dgop,
-	     Tcl_Interp		*interp,
-	     int		argc,
-	     char 		**argv,
-	     int		kind)
+static void
+dgo_draw(dgop, interp, argc, argv, kind)
+     struct dg_obj *dgop;
+     Tcl_Interp *interp;
+     int     argc;
+     char    **argv;
+     int kind;
 {
-	if (argc < 2) {
-		struct bu_vls vls;
+	register struct directory *dp;
+	register int i;
 
-		bu_vls_init(&vls);
-
-		switch (kind) {
-		default:
-		case 1:
-			bu_vls_printf(&vls, "helplib_alias dgo_draw %s", argv[0]);
-			break;
-		case 2:
-			bu_vls_printf(&vls, "helplib_alias dgo_E %s", argv[0]);
-			break;
-		case 3:
-			bu_vls_printf(&vls, "helplib_alias dgo_ev %s", argv[0]);
-			break;
-		}
-
-		Tcl_Eval(interp, bu_vls_addr(&vls));
-		bu_vls_free(&vls);
-
-		return TCL_ERROR;
-	}
-
-	/* skip past cmd */
-	--argc;
-	++argv;
+	/* skip past procname and cmd */
+	argc -= 2;
+	argv += 2;
 
 	/*  First, delete any mention of these objects.
 	 *  Silently skip any leading options (which start with minus signs).
@@ -555,8 +473,6 @@ dgo_draw_cmd(struct dg_obj	*dgop,
 	dgo_eraseobjpath(dgop, interp, argc, argv, LOOKUP_QUIET, 0);
 	dgo_drawtrees(dgop, interp, argc, argv, kind);
 	dgo_color_soltab(&dgop->dgo_headSolid);
-
-	return TCL_OK;
 }
 
 /*
@@ -573,59 +489,29 @@ dgo_draw_tcl(clientData, interp, argc, argv)
      int     argc;
      char    **argv;
 {
-	struct dg_obj	*dgop = (struct dg_obj *)clientData;
-	int		ret;
+	struct dg_obj *dgop = (struct dg_obj *)clientData;
+	int kind;
 
 	DGO_CHECK_WDBP_NULL(dgop,interp);
 
-	if ((ret = dgo_draw_cmd(dgop, interp, argc-1, argv+1, 1)) == TCL_OK)
-		dgo_notify(dgop, interp);
-
-	return ret;
-}
-
-/*
- * Prepare database objects for drawing.
- *
- * Usage:
- *        procname ev [args]
- *
- */
-static int
-dgo_ev_tcl(ClientData	clientData,
-	   Tcl_Interp	*interp,
-	   int     	argc,
-	   char    	**argv)
-{
-	struct dg_obj	*dgop = (struct dg_obj *)clientData;
-	int		ret;
-
-	DGO_CHECK_WDBP_NULL(dgop,interp);
-
-	if ((ret = dgo_draw_cmd(dgop, interp, argc-1, argv+1, 3)) == TCL_OK)
-		dgo_notify(dgop, interp);
-
-	return ret;
-}
-
-int
-dgo_erase_cmd(struct dg_obj	*dgop,
-	      Tcl_Interp	*interp,
-	      int		argc,
-	      char 		**argv)
-{
-
-	if (argc < 2) {
+	if (argc < 3) {
 		struct bu_vls vls;
 
 		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib_alias dgo_erase %s", argv[0]);
+		bu_vls_printf(&vls, "helplib dgo_draw");
 		Tcl_Eval(interp, bu_vls_addr(&vls));
 		bu_vls_free(&vls);
+
 		return TCL_ERROR;
 	}
 
-	dgo_eraseobjpath(dgop, interp, argc-1, argv+1, LOOKUP_NOISY, 0);
+	if (argv[1][0] == 'e' && argv[1][1] == 'v')
+		kind = 3;
+	else
+		kind = 1;
+
+	dgo_draw(dgop, interp, argc, argv, kind);
+	dgo_notify(dgop, interp);
 
 	return TCL_OK;
 }
@@ -644,34 +530,21 @@ dgo_erase_tcl(clientData, interp, argc, argv)
      int     argc;
      char    **argv;
 {
-	struct dg_obj	*dgop = (struct dg_obj *)clientData;
-	int		ret;
+	struct dg_obj *dgop = (struct dg_obj *)clientData;
+	struct bu_vls vls;
 
 	DGO_CHECK_WDBP_NULL(dgop,interp);
 
-	if ((ret = dgo_erase_cmd(dgop, interp, argc-1, argv+1)) == TCL_OK)
-		dgo_notify(dgop, interp);
-
-	return ret;
-}
-
-int
-dgo_erase_all_cmd(struct dg_obj	*dgop,
-		  Tcl_Interp	*interp,
-		  int		argc,
-		  char 		**argv)
-{
-	if (argc < 2) {
-		struct bu_vls vls;
-
+	if (argc < 3) {
 		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib_alias dgo_erase %s", argv[0]);
+		bu_vls_printf(&vls, "helplib dgo_erase");
 		Tcl_Eval(interp, bu_vls_addr(&vls));
 		bu_vls_free(&vls);
 		return TCL_ERROR;
 	}
 
-	dgo_eraseobjpath(dgop, interp, argc-1, argv+1, LOOKUP_NOISY, 1);
+	dgo_eraseobjpath(dgop, interp, argc-2, argv+2, LOOKUP_NOISY, 0);
+	dgo_notify(dgop, interp);
 
 	return TCL_OK;
 }
@@ -687,31 +560,49 @@ dgo_erase_all_tcl(clientData, interp, argc, argv)
      int	argc;
      char	**argv;
 {
-	struct dg_obj	*dgop = (struct dg_obj *)clientData;
-	int		ret;
+	struct dg_obj *dgop = (struct dg_obj *)clientData;
+	struct bu_vls vls;
 
 	DGO_CHECK_WDBP_NULL(dgop,interp);
 
-	if ((ret = dgo_erase_all_cmd(dgop, interp, argc-1, argv+1)) == TCL_OK)
-		dgo_notify(dgop, interp);
+	if (argc < 3) {
+		bu_vls_init(&vls);
+		bu_vls_printf(&vls, "helplib dgo_erase");
+		Tcl_Eval(interp, bu_vls_addr(&vls));
+		bu_vls_free(&vls);
+		return TCL_ERROR;
+	}
 
-	return ret;
+	dgo_eraseobjpath(dgop, interp, argc-2, argv+2, LOOKUP_NOISY, 1);
+	dgo_notify(dgop, interp);
+
+	return TCL_OK;
 }
 
-int
-dgo_who_cmd(struct dg_obj	*dgop,
-	    Tcl_Interp		*interp,
-	    int			argc,
-	    char 		**argv)
+/*
+ * List the objects currently being drawn.
+ *
+ * Usage:
+ *        procname who [r(eal)|p(hony)|b(oth)]
+ */
+static int
+dgo_who_tcl(clientData, interp, argc, argv)
+     ClientData clientData;
+     Tcl_Interp *interp;
+     int     argc;
+     char    **argv;
 {
+	struct dg_obj *dgop = (struct dg_obj *)clientData;
 	register struct solid *sp;
 	int skip_real, skip_phony;
 
-	if (argc < 1 || 2 < argc) {
+	DGO_CHECK_WDBP_NULL(dgop,interp);
+
+	if (argc < 2 || 3 < argc) {
 		struct bu_vls vls;
 
 		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib_alias dgo_who %s", argv[0]);
+		bu_vls_printf(&vls, "help dgo_who");
 		Tcl_Eval(interp, bu_vls_addr(&vls));
 		bu_vls_free(&vls);
 		return TCL_ERROR;
@@ -719,8 +610,8 @@ dgo_who_cmd(struct dg_obj	*dgop,
 
 	skip_real = 0;
 	skip_phony = 1;
-	if (argc == 2) {
-		switch (argv[1][0]) {
+	if (argc > 2) {
+		switch (argv[2][0]) {
 		case 'b':
 			skip_real = 0;
 			skip_phony = 0;
@@ -750,15 +641,15 @@ dgo_who_cmd(struct dg_obj	*dgop,
 
 		if (sp->s_flag == UP)
 			continue;
-		if (FIRST_SOLID(sp)->d_addr == RT_DIR_PHONY_ADDR) {
+		if (sp->s_path[0]->d_addr == RT_DIR_PHONY_ADDR) {
 			if (skip_phony) continue;
 		} else {
 			if (skip_real) continue;
 		}
-		Tcl_AppendResult(interp, FIRST_SOLID(sp)->d_namep, " ", (char *)NULL);
+		Tcl_AppendResult(interp, sp->s_path[0]->d_namep, " ", (char *)NULL);
 		sp->s_flag = UP;
 		FOR_REST_OF_SOLIDS(forw, sp, &dgop->dgo_headSolid){
-			if (FIRST_SOLID(forw) == FIRST_SOLID(sp))
+			if (forw->s_path[0] == sp->s_path[0])
 				forw->s_flag = UP;
 		}
 	}
@@ -766,25 +657,6 @@ dgo_who_cmd(struct dg_obj	*dgop,
 		sp->s_flag = DOWN;
 
 	return TCL_OK;
-}
-
-/*
- * List the objects currently being drawn.
- *
- * Usage:
- *        procname who [r(eal)|p(hony)|b(oth)]
- */
-static int
-dgo_who_tcl(clientData, interp, argc, argv)
-     ClientData clientData;
-     Tcl_Interp *interp;
-     int     argc;
-     char    **argv;
-{
-	struct dg_obj *dgop = (struct dg_obj *)clientData;
-
-	DGO_CHECK_WDBP_NULL(dgop,interp);
-	return dgo_who_cmd(dgop, interp, argc-1, argv+1);
 }
 
 static void
@@ -811,49 +683,6 @@ dgo_overlay(dgop, interp, fp, name, char_size)
 	rt_vlblock_free(vbp);
 }
 
-int
-dgo_overlay_cmd(struct dg_obj	*dgop,
-		Tcl_Interp	*interp,
-		int		argc,
-		char 		**argv)
-{
-	FILE	*fp;
-	double	char_size;
-	char	*name;
-
-	if (argc < 3 || 4 < argc) {
-		struct bu_vls vls;
-
-		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "help dgo_overlay");
-		Tcl_Eval(interp, bu_vls_addr(&vls));
-		bu_vls_free(&vls);
-
-		return TCL_ERROR;
-	}
-
-	if (sscanf(argv[2], "%lf", &char_size) != 1) {
-		Tcl_AppendResult(interp, "dgo_overlay: bad character size - ",
-				 argv[2], "\n", (char *)NULL);
-		return TCL_ERROR;
-	}
-
-	if (argc == 3)
-		name = "_PLOT_OVERLAY_";
-	else
-		name = argv[3];
-
-	if ((fp = fopen(argv[1], "r")) == NULL) {
-		Tcl_AppendResult(interp, "dgo_overlay: failed to open file - ",
-				 argv[1], "\n", (char *)NULL);
-
-		return TCL_ERROR;
-	}
-
-	dgo_overlay(dgop, interp, fp, name, char_size);
-	return TCL_OK;
-}
-
 /*
  * Usage:
  *        procname overlay file.plot char_size [name]
@@ -865,128 +694,46 @@ Tcl_Interp *interp;
 int	argc;
 char	**argv;
 {
-	struct dg_obj	*dgop = (struct dg_obj *)clientData;
-	int		ret;
+	struct dg_obj *dgop = (struct dg_obj *)clientData;
+	FILE		*fp;
+	double char_size;
+	char		*name;
 
 	DGO_CHECK_WDBP_NULL(dgop,interp);
 
-	if ((ret = dgo_overlay_cmd(dgop, interp, argc-1, argv+1)) == TCL_OK)
-		dgo_notify(dgop, interp);
-
-	return ret;
-}
-
-void
-dgo_autoview(struct dg_obj	*dgop,
-	     struct view_obj	*vop,
-	     Tcl_Interp		*interp)
-{
-	register struct solid	*sp;
-	vect_t		min, max;
-	vect_t		minus, plus;
-	vect_t		center;
-	vect_t		radial;
-
-	VSETALL(min,  INFINITY);
-	VSETALL(max, -INFINITY);
-
-	FOR_ALL_SOLIDS(sp, &dgop->dgo_headSolid) {
-		minus[X] = sp->s_center[X] - sp->s_size;
-		minus[Y] = sp->s_center[Y] - sp->s_size;
-		minus[Z] = sp->s_center[Z] - sp->s_size;
-		VMIN(min, minus);
-		plus[X] = sp->s_center[X] + sp->s_size;
-		plus[Y] = sp->s_center[Y] + sp->s_size;
-		plus[Z] = sp->s_center[Z] + sp->s_size;
-		VMAX(max, plus);
-	}
-
-	if (BU_LIST_IS_EMPTY(&dgop->dgo_headSolid)) {
-		/* Nothing is in view */
-		VSETALL(center, 0.0);
-		VSETALL(radial, 1000.0);	/* 1 meter */
-	} else {
-		VADD2SCALE(center, max, min, 0.5);
-		VSUB2(radial, max, center);
-	}
-
-	if (VNEAR_ZERO(radial , SQRT_SMALL_FASTF))
-		VSETALL(radial , 1.0);
-
-	MAT_IDN(vop->vo_center);
-	MAT_DELTAS(vop->vo_center, -center[X], -center[Y], -center[Z]);
-	vop->vo_scale = radial[X];
-	V_MAX(vop->vo_scale, radial[Y]);
-	V_MAX(vop->vo_scale, radial[Z]);
-
-	vop->vo_size = 2.0 * vop->vo_scale;
- 	vop->vo_invSize = 1.0 / vop->vo_size;
-	vo_update(vop, interp, 1);
-}
-
-int
-dgo_autoview_cmd(struct dg_obj		*dgop,
-		 struct view_obj	*vop,
-		 Tcl_Interp		*interp,
-		 int			argc,
-		 char			**argv)
-{
-	if (argc != 1) {
+	if (argc < 4 || 5 < argc) {
 		struct bu_vls vls;
 
 		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib_alias dgo_autoview %s", argv[0]);
+		bu_vls_printf(&vls, "help dgo_overlay");
 		Tcl_Eval(interp, bu_vls_addr(&vls));
 		bu_vls_free(&vls);
+
 		return TCL_ERROR;
 	}
 
-	DGO_CHECK_WDBP_NULL(dgop,interp);
-	dgo_autoview(dgop, vop, interp);
+	if (sscanf(argv[3], "%lf", &char_size) != 1) {
+		Tcl_AppendResult(interp, "dgo_overlay: bad character size - ",
+				 argv[3], "\n", (char *)NULL);
+		return TCL_ERROR;
+	}
+
+	if (argc == 4)
+		name = "_PLOT_OVERLAY_";
+	else
+		name = argv[4];
+
+	if ((fp = fopen(argv[2], "r")) == NULL) {
+		Tcl_AppendResult(interp, "dgo_overlay: failed to open file - ",
+				 argv[2], "\n", (char *)NULL);
+
+		return TCL_ERROR;
+	}
+
+	dgo_overlay(dgop, interp, fp, name, char_size);
+	dgo_notify(dgop, interp);
 
 	return TCL_OK;
-}
-
-/*
- * Usage:
- *        procname autoview view_obj
- */
-static int
-dgo_autoview_tcl(ClientData	clientData,
-		 Tcl_Interp	*interp,
-		 int		argc,
-		 char		**argv)
-{
-	struct dg_obj *dgop = (struct dg_obj *)clientData;
-	struct view_obj	*vop;
-
-	if (argc != 3) {
-		struct bu_vls vls;
-
-		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib_alias dgo_autoview %s", argv[0]);
-		Tcl_Eval(interp, bu_vls_addr(&vls));
-		bu_vls_free(&vls);
-		return TCL_ERROR;
-	}
-
-#if 0
-	DGO_CHECK_WDBP_NULL(dgop,interp);
-#endif
-
-	/* search for view object */
-	for (BU_LIST_FOR(vop, view_obj, &HeadViewObj.l)) {
-		if (strcmp(bu_vls_addr(&vop->vo_name), argv[2]) == 0)
-			break;
-	}
-
-	if (BU_LIST_IS_HEAD(vop, &HeadViewObj.l)) {
-		Tcl_AppendResult(interp, "dgo_autoview: bad view object - ", argv[2],
-				 "\n", (char *)NULL);
-		return TCL_ERROR;
-	}
-
-	return dgo_autoview_cmd(dgop, vop, interp, argc-2, argv+2);
 }
 
 /*
@@ -994,10 +741,11 @@ dgo_autoview_tcl(ClientData	clientData,
  *        procname get_autoview
  */
 static int
-dgo_get_autoview_tcl(ClientData	clientData,
-		     Tcl_Interp *interp,
-		     int	argc,
-		     char	**argv)
+dgo_get_autoview_tcl(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	struct dg_obj *dgop = (struct dg_obj *)clientData;
 	struct bu_vls vls;
@@ -1043,42 +791,57 @@ dgo_get_autoview_tcl(ClientData	clientData,
 	return TCL_OK;
 }
 
-int
-dgo_rt_cmd(struct dg_obj	*dgop,
-	   struct view_obj	*vop,
-	   Tcl_Interp		*interp,
-	   int			argc,
-	   char 		**argv)
+/*
+ * Usage:
+ *        procname rt view_obj arg(s)
+ */
+static int
+dgo_rt_tcl(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
+	struct dg_obj *dgop = (struct dg_obj *)clientData;
+	struct view_obj *vop;
 	register char **vp;
 	register int i;
-	char	pstring[32];
 
-	if (argc < 1 || MAXARGS < argc) {
-		struct bu_vls vls;
+	DGO_CHECK_WDBP_NULL(dgop,interp);
 
-		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib_alias dgo_%s %s", argv[0], argv[0]);
-		Tcl_Eval(interp, bu_vls_addr(&vls));
-		bu_vls_free(&vls);
+	if (argc < 3 || MAXARGS < argc) {
+	  struct bu_vls vls;
+
+	  bu_vls_init(&vls);
+	  bu_vls_printf(&vls, "help dgo_rt");
+	  Tcl_Eval(interp, bu_vls_addr(&vls));
+	  bu_vls_free(&vls);
+	  return TCL_ERROR;
+	}
+
+	/* search for view object */
+	for (BU_LIST_FOR(vop, view_obj, &HeadViewObj.l)) {
+		if (strcmp(bu_vls_addr(&vop->vo_name), argv[2]) == 0)
+			break;
+	}
+
+	if (BU_LIST_IS_HEAD(vop, &HeadViewObj.l)) {
+		Tcl_AppendResult(interp, "dgo_rt: bad view object - ", argv[2],
+				 "\n", (char *)NULL);
 		return TCL_ERROR;
 	}
 
 	vp = &dgop->dgo_rt_cmd[0];
-#if 1
-	*vp++ = argv[0];
-#else
 	*vp++ = "rt";
-#endif
 	*vp++ = "-s50";
 	*vp++ = "-M";
-
-	if (vop->vo_perspective > 0) {
-		(void)sprintf(pstring, "-p%g", vop->vo_perspective);
+#if 0
+	if (mged_variables->mv_perspective > 0) {
+		(void)sprintf(pstring, "-p%g", mged_variables->mv_perspective);
 		*vp++ = pstring;
 	}
-
-	for (i=1; i < argc; i++) {
+#endif
+	for (i=3; i < argc; i++) {
 		if (argv[i][0] == '-' && argv[i][1] == '-' &&
 		    argv[i][2] == '\0') {
 			++i;
@@ -1116,76 +879,26 @@ dgo_rt_cmd(struct dg_obj	*dgop,
 
 /*
  * Usage:
- *        procname rt view_obj arg(s)
+ *        procname vdraw cmd arg(s)
  */
 static int
-dgo_rt_tcl(clientData, interp, argc, argv)
+dgo_vdraw_tcl(clientData, interp, argc, argv)
 ClientData clientData;
 Tcl_Interp *interp;
 int	argc;
 char	**argv;
 {
-	struct dg_obj	*dgop = (struct dg_obj *)clientData;
-	struct view_obj	*vop;
-
-	if (argc < 3 || MAXARGS < argc) {
-		struct bu_vls vls;
-
-		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib_alias dgo_%s %s", argv[0], argv[0]);
-		Tcl_Eval(interp, bu_vls_addr(&vls));
-		bu_vls_free(&vls);
-		return TCL_ERROR;
-	}
-
-	DGO_CHECK_WDBP_NULL(dgop,interp);
-
-	/* search for view object */
-	for (BU_LIST_FOR(vop, view_obj, &HeadViewObj.l)) {
-		if (strcmp(bu_vls_addr(&vop->vo_name), argv[2]) == 0)
-			break;
-	}
-
-	if (BU_LIST_IS_HEAD(vop, &HeadViewObj.l)) {
-		Tcl_AppendResult(interp, "dgo_rt: bad view object - ", argv[2],
-				 "\n", (char *)NULL);
-		return TCL_ERROR;
-	}
-
-	/* copy command name into argv[2], could be rt or rtedge  */
-	argv[2] = argv[1];
-	return dgo_rt_cmd(dgop, vop, interp, argc-2, argv+2);
-}
-
-int
-dgo_vdraw_cmd(struct dg_obj	*dgop,
-	      Tcl_Interp	*interp,
-	      int		argc,
-	      char 		**argv)
-{
-	return bu_cmd((ClientData)dgop, interp, argc-1, argv+1, vdraw_cmds, 0);
-}
-
-/*
- * Usage:
- *        procname vdraw cmd arg(s)
- */
-static int
-dgo_vdraw_tcl(ClientData	clientData,
-	      Tcl_Interp	*interp,
-	      int		argc,
-	      char		**argv)
-{
 	struct dg_obj *dgop = (struct dg_obj *)clientData;
 
 	DGO_CHECK_WDBP_NULL(dgop,interp);
 
-	return dgo_vdraw_cmd(dgop, interp, argc-1, argv+1);
+	return bu_cmd(clientData, interp, argc, argv, vdraw_cmds, 2);
 }
 
-void
-dgo_zap_cmd(struct dg_obj	*dgop,
-	    Tcl_Interp		*interp)
+static void
+dgo_zap(dgop, interp)
+     struct dg_obj *dgop;
+     Tcl_Interp *interp;
 {
 	register struct solid *sp;
 	register struct solid *nsp;
@@ -1193,7 +906,7 @@ dgo_zap_cmd(struct dg_obj	*dgop,
 
 	sp = BU_LIST_NEXT(solid, &dgop->dgo_headSolid);
 	while (BU_LIST_NOT_HEAD(sp, &dgop->dgo_headSolid)) {
-		dp = FIRST_SOLID(sp);
+		dp = sp->s_path[0];
 		RT_CK_DIR(dp);
 		if (dp->d_addr == RT_DIR_PHONY_ADDR) {
 			if (db_dirdelete(dgop->dgo_wdbp->dbip, dp) < 0) {
@@ -1213,42 +926,30 @@ dgo_zap_cmd(struct dg_obj	*dgop,
  *        procname clear|zap
  */
 static int
-dgo_zap_tcl(ClientData	clientData,
-	    Tcl_Interp	*interp,
-	    int		argc,
-	    char	**argv)
+dgo_zap_tcl(clientData, interp, argc, argv)
+     ClientData clientData;
+     Tcl_Interp *interp;
+     int	argc;
+     char	**argv;
 {
-	struct dg_obj	*dgop = (struct dg_obj *)clientData;
+	struct dg_obj *dgop = (struct dg_obj *)clientData;
 
 	DGO_CHECK_WDBP_NULL(dgop,interp);
 
 	if (argc != 2) {
-		struct bu_vls vls;
+	  struct bu_vls vls;
 
-		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib_alias dgo_%s %s", argv[1], argv[1]);
-		Tcl_Eval(interp, bu_vls_addr(&vls));
-		bu_vls_free(&vls);
-		return TCL_ERROR;
+	  bu_vls_init(&vls);
+	  bu_vls_printf(&vls, "helplib dgo_%s", argv[1]);
+	  Tcl_Eval(interp, bu_vls_addr(&vls));
+	  bu_vls_free(&vls);
+	  return TCL_ERROR;
 	}
 
-	dgo_zap_cmd(dgop, interp);
+	dgo_zap(dgop, interp);
 	dgo_notify(dgop, interp);
 
 	return TCL_OK;
-}
-
-int
-dgo_blast_cmd(struct dg_obj	*dgop,
-	      Tcl_Interp	*interp,
-	      int		argc,
-	      char 		**argv)
-{
-	/* First, clear the screen. */
-	dgo_zap_cmd(dgop, interp);
-
-	/* Now, draw the new object(s). */
-	return dgo_draw_cmd(dgop, interp, argc, argv, 1);
 }
 
 /*
@@ -1262,8 +963,7 @@ dgo_blast_tcl(clientData, interp, argc, argv)
      int	argc;
      char	**argv;
 {
-	struct dg_obj	*dgop = (struct dg_obj *)clientData;
-	int		ret;
+	struct dg_obj *dgop = (struct dg_obj *)clientData;
 
 	DGO_CHECK_WDBP_NULL(dgop,interp);
 
@@ -1271,17 +971,21 @@ dgo_blast_tcl(clientData, interp, argc, argv)
 		struct bu_vls vls;
 
 		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib_alias dgo_blast %s", argv[0]);
+		bu_vls_printf(&vls, "helplib dgo_blast");
 		Tcl_Eval(interp, bu_vls_addr(&vls));
 		bu_vls_free(&vls);
 
 		return TCL_ERROR;
 	}
 
-	if ((ret = dgo_blast_cmd(dgop, interp, argc-1, argv+1)) == TCL_OK)
-		dgo_notify(dgop, interp);
+	/* First, clear the screen. */
+	dgo_zap(dgop, interp);
 
-	return ret;
+	/* Now, draw the new object(s). */
+	dgo_draw(dgop, interp, argc, argv, 1);
+	dgo_notify(dgop, interp);
+
+	return TCL_OK;
 }
 
 #if 0
@@ -1311,7 +1015,7 @@ dgo_tol_tcl(clientData, interp, argc, argv)
 
 	if (argc < 2 || 4 < argc){
 		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib_alias dgo_tol %s", argv[0]);
+		bu_vls_printf(&vls, "helplib dgo_tol");
 		Tcl_Eval(interp, bu_vls_addr(&vls));
 		bu_vls_free(&vls);
 		return TCL_ERROR;
@@ -1565,8 +1269,6 @@ dgo_rtcheck_vector_handler(clientData, mask)
 		while ((rpid = wait(&retcode)) != rtcp->pid && rpid != -1)
 			dgo_wait_status(rtcp->interp, retcode);
 
-		dgo_notify(rtcp->dgop, rtcp->interp);
-
 		/* free rtcp */
 		bu_free((genptr_t)rtcp, "dgo_rtcheck_vector_handler: rtcp");
 
@@ -1605,13 +1307,19 @@ dgo_rtcheck_output_handler(clientData, mask)
 	bu_log("%s", line);
 }
 
-int
-dgo_rtcheck_cmd(struct dg_obj	*dgop,
-		struct view_obj	*vop,
-		Tcl_Interp	*interp,
-		int		argc,
-		char 		**argv)
+/*
+ * Usage:
+ *        procname rtcheck view_obj [args]
+ */
+static int
+dgo_rtcheck_tcl(clientData, interp, argc, argv)
+     ClientData clientData;
+     Tcl_Interp *interp;
+     int	argc;
+     char	**argv;
 {
+	struct dg_obj *dgop = (struct dg_obj *)clientData;
+	struct view_obj *vop;
 	register char **vp;
 	register int i;
 	int	pid; 	 
@@ -1623,11 +1331,36 @@ dgo_rtcheck_cmd(struct dg_obj	*dgop,
 	vect_t temp;
 	vect_t eye_model;
 
+	DGO_CHECK_WDBP_NULL(dgop,interp);
+
+	if (argc < 3 || MAXARGS < argc) {
+		struct bu_vls vls;
+
+		bu_vls_init(&vls);
+		bu_vls_printf(&vls, "helplib dgo_rtcheck");
+		Tcl_Eval(interp, bu_vls_addr(&vls));
+		bu_vls_free(&vls);
+
+		return TCL_ERROR;
+	}
+
+	/* search for view object */
+	for (BU_LIST_FOR(vop, view_obj, &HeadViewObj.l)) {
+		if (strcmp(bu_vls_addr(&vop->vo_name), argv[2]) == 0)
+			break;
+	}
+
+	if (BU_LIST_IS_HEAD(vop, &HeadViewObj.l)) {
+		Tcl_AppendResult(interp, "dgo_rtcheck: bad view object - ", argv[2],
+				 "\n", (char *)NULL);
+		return TCL_ERROR;
+	}
+
 	vp = &dgop->dgo_rt_cmd[0];
 	*vp++ = "rtcheck";
 	*vp++ = "-s50";
 	*vp++ = "-M";
-	for (i=1; i < argc; i++)
+	for (i=3; i < argc; i++)
 		*vp++ = argv[i];
 	*vp++ = dgop->dgo_wdbp->dbip->dbi_filename;
 
@@ -1721,48 +1454,6 @@ dgo_rtcheck_cmd(struct dg_obj	*dgop,
 }
 
 /*
- * Usage:
- *        procname rtcheck view_obj [args]
- */
-static int
-dgo_rtcheck_tcl(clientData, interp, argc, argv)
-     ClientData clientData;
-     Tcl_Interp *interp;
-     int	argc;
-     char	**argv;
-{
-	struct dg_obj *dgop = (struct dg_obj *)clientData;
-	struct view_obj *vop;
-
-	DGO_CHECK_WDBP_NULL(dgop,interp);
-
-	if (argc < 3 || MAXARGS < argc) {
-		struct bu_vls vls;
-
-		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib_alias dgo_rtcheck %s", argv[0]);
-		Tcl_Eval(interp, bu_vls_addr(&vls));
-		bu_vls_free(&vls);
-
-		return TCL_ERROR;
-	}
-
-	/* search for view object */
-	for (BU_LIST_FOR(vop, view_obj, &HeadViewObj.l)) {
-		if (strcmp(bu_vls_addr(&vop->vo_name), argv[2]) == 0)
-			break;
-	}
-
-	if (BU_LIST_IS_HEAD(vop, &HeadViewObj.l)) {
-		Tcl_AppendResult(interp, "dgo_rtcheck: bad view object - ", argv[2],
-				 "\n", (char *)NULL);
-		return TCL_ERROR;
-	}
-
-	return dgo_rtcheck_cmd(dgop, vop, interp, argc-2, argv+2);
-}
-
-/*
  * Associate this drawable geometry object with a database object.
  *
  * Usage:
@@ -1800,7 +1491,7 @@ dgo_assoc_tcl(clientData, interp, argc, argv)
 			wdbp = RT_WDB_NULL;
 
 		if (dgop->dgo_wdbp != RT_WDB_NULL)
-			dgo_zap_cmd(dgop, interp);
+			dgo_zap(dgop, interp);
 
 		dgop->dgo_wdbp = wdbp;
 		dgo_notify(dgop, interp);
@@ -1810,7 +1501,7 @@ dgo_assoc_tcl(clientData, interp, argc, argv)
 
 	/* return help message */
 	bu_vls_init(&vls);
-	bu_vls_printf(&vls, "helplib_alias dgo_assoc %s", argv[0]);
+	bu_vls_printf(&vls, "helplib dgo_assoc");
 	Tcl_Eval(interp, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
 
@@ -1838,7 +1529,7 @@ dgo_observer_tcl(clientData, interp, argc, argv)
 
 		/* return help message */
 		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib_alias dgo_observer %s", argv[0]);
+		bu_vls_printf(&vls, "helplib dgo_observer");
 		Tcl_Eval(interp, bu_vls_addr(&vls));
 		bu_vls_free(&vls);
 		return TCL_ERROR;
@@ -1846,35 +1537,6 @@ dgo_observer_tcl(clientData, interp, argc, argv)
 
 	return bu_cmd((ClientData)&dgop->dgo_observers,
 		      interp, argc - 2, argv + 2, bu_observer_cmds, 0);
-}
-
-int
-dgo_report_cmd(struct dg_obj	*dgop,
-	       Tcl_Interp	*interp,
-	       int		argc,
-	       char 		**argv)
-{
-	int		lvl = 0;
-
-	if (argc < 1 || 2 < argc) {
-		struct bu_vls vls;
-
-		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib_alias dgo_report %s", argv[0]);
-		Tcl_Eval(interp, bu_vls_addr(&vls));
-		bu_vls_free(&vls);
-		return TCL_ERROR;
-	}
-
-	if (argc == 2)
-		lvl = atoi(argv[1]);
-
-	if (lvl <= 3)
-		dgo_print_schain(dgop, interp, lvl);
-	else
-		dgo_print_schain_vlcmds(dgop, interp);
-
-	return TCL_OK;
 }
 
 /*
@@ -1887,45 +1549,35 @@ dgo_report_tcl(clientData, interp, argc, argv)
      int	argc;
      char	**argv;
 {
+	int		lvl = 0;
 	struct dg_obj	*dgop = (struct dg_obj *)clientData;
 
-	return dgo_report_cmd(dgop, interp, argc-1, argv+1);
+	if (argc < 2 || 3 < argc) {
+		struct bu_vls vls;
+
+		bu_vls_init(&vls);
+		bu_vls_printf(&vls, "helplib dgo_report");
+		Tcl_Eval(interp, bu_vls_addr(&vls));
+		bu_vls_free(&vls);
+		return TCL_ERROR;
+	}
+
+	if (argc == 3)
+		lvl = atoi(argv[2]);
+
+	if (lvl <= 3) 
+		dgo_print_schain(dgop, interp, lvl);
+	else
+		dgo_print_schain_vlcmds(dgop, interp);
+
+	return TCL_OK;
 }
 
-
-#if 0
-/* skeleton functions for dg_obj methods */
-int
-dgo__cmd(struct dg_obj	*dgop,
-	 Tcl_Interp	*interp,
-	 int		argc,
-	 char 		**argv)
-{
-}
-
-/*
- * Usage:
- *        procname 
- */
-static int
-dgo__tcl(ClientData	clientData,
-	 Tcl_Interp	*interp,
-	 int		argc,
-	 char		**argv)
-{
-	struct dg_obj *dgop = (struct dg_obj *)clientData;
-
-	return dgo__cmd(dgop, interp, argc-1, argv+1);
-}
-#endif
-
-/****************** Utility Routines ********************/
+/****************** utility routines ********************/
 
 struct dg_client_data {
 	struct dg_obj		*dgop;
 	Tcl_Interp		*interp;
-	int			wireframe_color_override;
-	int			wireframe_color[3];
 	int			draw_nmg_only;
 	int			nmg_triangulate;
 	int			draw_wireframes;
@@ -1934,6 +1586,8 @@ struct dg_client_data {
 	int			draw_no_surfaces;
 	int			shade_per_vertex_normals;
 	int			draw_edge_uses;
+	int			wireframe_color_override;
+	int			wireframe_color[3];
 	int			fastpath_count;			/* statistics */
 	int			do_not_draw_nmg_solids_during_debugging;
 	struct bn_vlblock	*draw_edge_uses_vbp;
@@ -1955,12 +1609,14 @@ dgo_wireframe_region_end(tsp, pathp, curtree, client_data)
  *  This routine must be prepared to run in parallel.
  */
 static union tree *
-dgo_wireframe_leaf(tsp, pathp, ip, client_data)
+dgo_wireframe_leaf(tsp, pathp, ep, id, client_data)
      struct db_tree_state	*tsp;
      struct db_full_path	*pathp;
-     struct rt_db_internal	*ip;
+     struct bu_external		*ep;
+     int			id;
      genptr_t			client_data;
 {
+	struct rt_db_internal	intern;
 	union tree	*curtree;
 	int		dashflag;		/* draw with dashed lines */
 	struct bu_list	vhead;
@@ -1968,15 +1624,13 @@ dgo_wireframe_leaf(tsp, pathp, ip, client_data)
 
 	RT_CK_TESS_TOL(tsp->ts_ttol);
 	BN_CK_TOL(tsp->ts_tol);
-	RT_CK_RESOURCE(tsp->ts_resp);
 
 	BU_LIST_INIT(&vhead);
 
-	if (RT_G_DEBUG&DEBUG_TREEWALK) {
+	if (rt_g.debug&DEBUG_TREEWALK) {
 		char	*sofar = db_path_to_string(pathp);
 
-		Tcl_AppendResult(dgcdp->interp, "dgo_wireframe_leaf(",
-				 ip->idb_meth->ft_name,
+		Tcl_AppendResult(dgcdp->interp, "dgo_wireframe_leaf(", rt_functab[id].ft_name,
 				 ") path='", sofar, "'\n", (char *)NULL);
 		bu_free((genptr_t)sofar, "path string");
 	}
@@ -1986,13 +1640,24 @@ dgo_wireframe_leaf(tsp, pathp, ip, client_data)
 	else
 		dashflag = (tsp->ts_sofar & (TS_SOFAR_MINUS|TS_SOFAR_INTER));
 
-	RT_CK_DB_INTERNAL(ip);
+	RT_INIT_DB_INTERNAL(&intern);
+	if (rt_functab[id].ft_import(&intern, ep, tsp->ts_mat, dgcdp->dgop->dgo_wdbp->dbip) < 0) {
+		Tcl_AppendResult(dgcdp->interp, DB_FULL_PATH_CUR_DIR(pathp)->d_namep,
+				 ":  solid import failure\n", (char *)NULL);
 
-	if (ip->idb_meth->ft_plot(&vhead, ip,
+		if (intern.idb_ptr)
+			rt_functab[id].ft_ifree( &intern );
+		return (TREE_NULL);		/* ERROR */
+	}
+	RT_CK_DB_INTERNAL(&intern);
+
+	if (rt_functab[id].ft_plot(&vhead,
+				   &intern,
 				   tsp->ts_ttol,
 				   tsp->ts_tol) < 0) {
 		Tcl_AppendResult(dgcdp->interp, DB_FULL_PATH_CUR_DIR(pathp)->d_namep,
 				 ": plot failure\n", (char *)NULL);
+		rt_functab[id].ft_ifree(&intern);
 		return (TREE_NULL);		/* ERROR */
 	}
 
@@ -2002,7 +1667,7 @@ dgo_wireframe_leaf(tsp, pathp, ip, client_data)
 	 * solids, this needs to be something different and drawH
 	 * has no idea or need to know what type of solid this is.
 	 */
-	if (ip->idb_type == ID_GRIP) {
+	if (intern.idb_type == ID_GRIP) {
 		int r,g,b;
 		r= tsp->ts_mater.ma_color[0];
 		g= tsp->ts_mater.ma_color[1];
@@ -2017,9 +1682,10 @@ dgo_wireframe_leaf(tsp, pathp, ip, client_data)
 	} else {
 		dgo_drawH_part2(dashflag, &vhead, pathp, tsp, SOLID_NULL, dgcdp);
 	}
+	rt_functab[id].ft_ifree(&intern);
 
 	/* Indicate success by returning something other than TREE_NULL */
-	RT_GET_TREE(curtree, tsp->ts_resp);
+	BU_GETUNION(curtree, tree);
 	curtree->magic = RT_TREE_MAGIC;
 	curtree->tr_op = OP_NOP;
 
@@ -2039,11 +1705,11 @@ dgo_wireframe_leaf(tsp, pathp, ip, client_data)
  *  further processing of this region.
  *  A hack to view polygonal models (converted from FASTGEN) more rapidly.
  */
-static int
+int
 dgo_nmg_region_start(tsp, pathp, combp, client_data)
      struct db_tree_state		*tsp;
      struct db_full_path		*pathp;
-     const struct rt_comb_internal	*combp;
+     CONST struct rt_comb_internal	*combp;
      genptr_t				client_data;
 {
 	union tree		*tp;
@@ -2054,16 +1720,13 @@ dgo_nmg_region_start(tsp, pathp, combp, client_data)
 	struct bu_list		vhead;
 	struct dg_client_data *dgcdp = (struct dg_client_data *)client_data;
 
-	if (RT_G_DEBUG&DEBUG_TREEWALK) {
+	if (rt_g.debug&DEBUG_TREEWALK) {
 		char	*sofar = db_path_to_string(pathp);
 		bu_log("dgo_nmg_region_start(%s)\n", sofar);
 		bu_free((genptr_t)sofar, "path string");
 		rt_pr_tree( combp->tree, 1 );
 		db_pr_tree_state(tsp);
 	}
-
-	RT_CK_DBI(tsp->ts_dbip);
-	RT_CK_RESOURCE(tsp->ts_resp);
 
 	BU_LIST_INIT(&vhead);
 
@@ -2095,31 +1758,58 @@ dgo_nmg_region_start(tsp, pathp, combp, client_data)
 			matp = (matp_t)NULL;
 		}
 	}
-	if (rt_db_get_internal(&intern, dp, tsp->ts_dbip, matp, &rt_uniresource) < 0)
+	if (rt_db_get_internal(&intern, dp, tsp->ts_dbip, matp) < 0)
 		return 0;	/* proceed as usual */
 
 	switch (intern.idb_type) {
 	case ID_POLY:
 		{
-			if (RT_G_DEBUG&DEBUG_TREEWALK) {
-				bu_log("fastpath draw ID_POLY %s\n", dp->d_namep);
+			struct rt_pg_internal	*pgp;
+			register int	i;
+			int		p;
+
+			if (rt_g.debug&DEBUG_TREEWALK) {
+				bu_log("fastpath draw ID_POLY\n", dp->d_namep);
 			}
+			pgp = (struct rt_pg_internal *)intern.idb_ptr;
+			RT_PG_CK_MAGIC(pgp);
+
 			if (dgcdp->draw_wireframes) {
-				(void)rt_pg_plot( &vhead, &intern, tsp->ts_ttol, tsp->ts_tol );
+				for (p = 0; p < pgp->npoly; p++) {
+					register struct rt_pg_face_internal	*pp;
+
+					pp = &pgp->poly[p];
+					RT_ADD_VLIST( &vhead, &pp->verts[3*(pp->npts-1)],
+						BN_VLIST_LINE_MOVE );
+					for (i=0; i < pp->npts; i++) {
+						RT_ADD_VLIST(&vhead, &pp->verts[3*i],
+							      BN_VLIST_LINE_DRAW);
+					}
+				}
 			} else {
-				(void)rt_pg_plot_poly( &vhead, &intern, tsp->ts_ttol, tsp->ts_tol );
-			}
-		}
-		goto out;
-	case ID_BOT:
-		{
-			if (RT_G_DEBUG&DEBUG_TREEWALK) {
-				bu_log("fastpath draw ID_BOT %s\n", dp->d_namep);
-			}
-			if (dgcdp->draw_wireframes) {
-				(void)rt_bot_plot( &vhead, &intern, tsp->ts_ttol, tsp->ts_tol );
-			} else {
-				(void)rt_bot_plot_poly( &vhead, &intern, tsp->ts_ttol, tsp->ts_tol );
+				for (p = 0; p < pgp->npoly; p++) {
+					register struct rt_pg_face_internal	*pp;
+					vect_t aa, bb, norm;
+
+					pp = &pgp->poly[p];
+					if (pp->npts < 3)
+						continue;
+					VSUB2( aa, &pp->verts[3*(0)], &pp->verts[3*(1)] );
+					VSUB2( bb, &pp->verts[3*(0)], &pp->verts[3*(2)] );
+					VCROSS( norm, aa, bb );
+					VUNITIZE(norm);
+					RT_ADD_VLIST(&vhead, norm,
+						     BN_VLIST_POLY_START);
+
+					RT_ADD_VLIST(&vhead, &pp->verts[3*(pp->npts-1)],
+						     BN_VLIST_POLY_MOVE);
+					for (i=0; i < pp->npts-1; i++) {
+						RT_ADD_VLIST(&vhead, &pp->verts[3*i],
+							     BN_VLIST_POLY_DRAW);
+					}
+					RT_ADD_VLIST(&vhead, &pp->verts[3*(pp->npts-1)],
+						     BN_VLIST_POLY_END);
+				}
 			}
 		}
 		goto out;
@@ -2127,7 +1817,7 @@ dgo_nmg_region_start(tsp, pathp, combp, client_data)
 	default:
 		break;
 	}
-	rt_db_free_internal(&intern, tsp->ts_resp);
+	rt_db_free_internal(&intern);
 	return 0;
 
 out:
@@ -2135,7 +1825,7 @@ out:
 	db_add_node_to_full_path(pathp, dp);
 	dgo_drawH_part2(0, &vhead, pathp, tsp, SOLID_NULL, dgcdp);
 	DB_FULL_PATH_POP(pathp);
-	rt_db_free_internal(&intern, tsp->ts_resp);
+	rt_db_free_internal(&intern);
 	dgcdp->fastpath_count++;
 	return -1;	/* SKIP THIS REGION */
 }
@@ -2160,11 +1850,10 @@ dgo_nmg_region_end(tsp, pathp, curtree, client_data)
 	RT_CK_TESS_TOL(tsp->ts_ttol);
 	BN_CK_TOL(tsp->ts_tol);
 	NMG_CK_MODEL(*tsp->ts_m);
-	RT_CK_RESOURCE(tsp->ts_resp);
 
 	BU_LIST_INIT( &vhead );
 
-	if(RT_G_DEBUG&DEBUG_TREEWALK)  {
+	if(rt_g.debug&DEBUG_TREEWALK)  {
 	  char	*sofar = db_path_to_string(pathp);
 
 	  Tcl_AppendResult(dgcdp->interp, "dgo_nmg_region_end() path='", sofar,
@@ -2185,27 +1874,27 @@ dgo_nmg_region_end(tsp, pathp, curtree, client_data)
 				" failed!!!\n", (char *)NULL );
 			bu_free((genptr_t)sofar, "path string");
 			if( curtree )
-				db_free_tree( curtree, tsp->ts_resp );
+				db_free_tree( curtree );
 			return (union tree *)NULL;
 		}
-		failed = nmg_boolean( curtree, *tsp->ts_m, tsp->ts_tol, tsp->ts_resp );
+		failed = nmg_boolean( curtree, *tsp->ts_m, tsp->ts_tol );
 		BU_UNSETJUMP;
 		if( failed )  {
-			db_free_tree( curtree, tsp->ts_resp );
+			db_free_tree( curtree );
 			return (union tree *)NULL;
 		}
 	}
 	else if( curtree->tr_op != OP_NMG_TESS )
 	{
 	  Tcl_AppendResult(dgcdp->interp, "Cannot use '-d' option when Boolean evaluation is required\n", (char *)NULL);
-	  db_free_tree( curtree, tsp->ts_resp );
+	  db_free_tree( curtree );
 	  return (union tree *)NULL;
 	}
 	r = curtree->tr_d.td_r;
 	NMG_CK_REGION(r);
 
 	if( dgcdp->do_not_draw_nmg_solids_during_debugging && r )  {
-		db_free_tree( curtree, tsp->ts_resp );
+		db_free_tree( curtree );
 		return (union tree *)NULL;
 	}
 
@@ -2219,7 +1908,7 @@ dgo_nmg_region_end(tsp, pathp, curtree, client_data)
 				" failed!!!\n", (char *)NULL );
 			bu_free((genptr_t)sofar, "path string");
 			if( curtree )
-				db_free_tree( curtree, tsp->ts_resp );
+				db_free_tree( curtree );
 			return (union tree *)NULL;
 		}
 		nmg_triangulate_model(*tsp->ts_m, tsp->ts_tol);
@@ -2255,7 +1944,7 @@ dgo_nmg_region_end(tsp, pathp, curtree, client_data)
 			nmg_vlblock_r(dgcdp->draw_edge_uses_vbp, r, 1);
 		}
 		/* NMG region is no longer necessary, only vlist remains */
-		db_free_tree( curtree, tsp->ts_resp );
+		db_free_tree( curtree );
 		return (union tree *)NULL;
 	}
 
@@ -2391,7 +2080,7 @@ dgo_drawtrees(dgop, interp, argc, argv, kind)
 				struct bu_vls vls;
 
 				bu_vls_init(&vls);
-				bu_vls_printf(&vls, "helplib %s", argv[0]);
+				bu_vls_printf(&vls, "help %s", argv[0]);
 				Tcl_Eval(interp, bu_vls_addr(&vls));
 				bu_vls_free(&vls);
 				bu_free((genptr_t)dgcdp, "dgo_drawtrees: dgcdp");
@@ -2409,7 +2098,7 @@ dgo_drawtrees(dgop, interp, argc, argv, kind)
 	  bu_free((genptr_t)dgcdp, "dgo_drawtrees: dgcdp");
 	  return(-1);
 	case 1:		/* Wireframes */
-		ret = db_walk_tree(dgop->dgo_wdbp->dbip, argc, (const char **)argv,
+		ret = db_walk_tree(dgop->dgo_wdbp->dbip, argc, (CONST char **)argv,
 			ncpu,
 			&dgop->dgo_wdbp->wdb_initial_tree_state,
 			0,			/* take all regions */
@@ -2430,7 +2119,7 @@ dgo_drawtrees(dgop, interp, argc, argv, kind)
 			dgcdp->draw_edge_uses_vbp = rt_vlblock_init();
 	  	}
 
-		ret = db_walk_tree(dgop->dgo_wdbp->dbip, argc, (const char **)argv,
+		ret = db_walk_tree(dgop->dgo_wdbp->dbip, argc, (CONST char **)argv,
 				   ncpu,
 				   &dgop->dgo_wdbp->wdb_initial_tree_state,
 				   dgo_enable_fastpath ? dgo_nmg_region_start : 0,
@@ -2513,7 +2202,6 @@ dgo_invent_solid(dgop, interp, name, vhead, rgb, copy)
 	register struct directory	*dp;
 	struct directory		*dpp[2] = {DIR_NULL, DIR_NULL};
 	register struct solid		*sp;
-	unsigned char			type='0';
 
 	if (dgop->dgo_wdbp->dbip == DBI_NULL)
 		return 0;
@@ -2533,7 +2221,7 @@ dgo_invent_solid(dgop, interp, name, vhead, rgb, copy)
 		dgo_eraseobjall(dgop, interp, dpp);
 	}
 	/* Need to enter phony name in directory structure */
-	dp = db_diradd(dgop->dgo_wdbp->dbip,  name, RT_DIR_PHONY_ADDR, 0, DIR_SOLID, (genptr_t)&type);
+	dp = db_diradd(dgop->dgo_wdbp->dbip,  name, RT_DIR_PHONY_ADDR, 0, DIR_SOLID, NULL);
 
 	/* Obtain a fresh solid structure, and fill it in */
 	GET_SOLID(sp,&FreeSolid.l);
@@ -2549,7 +2237,8 @@ dgo_invent_solid(dgop, interp, name, vhead, rgb, copy)
 	dgo_bound_solid(interp, sp);
 
 	/* set path information -- this is a top level node */
-	db_add_node_to_full_path( &sp->s_fullpath, dp );
+	sp->s_last = 0;
+	sp->s_path[0] = dp;
 
 	sp->s_iflag = DOWN;
 	sp->s_soldash = 0;
@@ -2559,11 +2248,6 @@ dgo_invent_solid(dgop, interp, name, vhead, rgb, copy)
 	sp->s_color[2] = sp->s_basecolor[2] = (rgb    ) & 0xFF;
 	sp->s_regionid = 0;
 	sp->s_dlist = BU_LIST_LAST(solid, &dgop->dgo_headSolid)->s_dlist + 1;
-
-	sp->s_uflag = 0;
-	sp->s_dflag = 0;
-	sp->s_cflag = 0;
-	sp->s_wflag = 0;
 
 	/* Solid successfully drawn, add to linked list of solid structs */
 	BU_LIST_APPEND(dgop->dgo_headSolid.back, &sp->l);
@@ -2642,7 +2326,7 @@ dgo_bound_solid(interp, sp)
  *
  *  This routine must be prepared to run in parallel.
  */
-void
+static void
 dgo_drawH_part2(dashflag, vhead, pathp, tsp, existing_sp, dgcdp)
      int			 dashflag;
      struct bu_list		 *vhead;
@@ -2652,8 +2336,17 @@ dgo_drawH_part2(dashflag, vhead, pathp, tsp, existing_sp, dgcdp)
      struct dg_client_data	 *dgcdp; 
 {
 	register struct solid *sp;
+	register int	i;
 
 	if (!existing_sp) {
+		if (pathp->fp_len > MAX_PATH) {
+		  char *cp = db_path_to_string(pathp);
+
+		  Tcl_AppendResult(dgcdp->interp, "drawH_part2: path too long, solid ignored.\n\t",
+				   cp, "\n", (char *)NULL);
+		  bu_free((genptr_t)cp, "Path string");
+		  return;
+		}
 		/* Handling a new solid */
 		GET_SOLID(sp, &FreeSolid.l);
 		/* NOTICE:  The structure is dirty & not initialized for you! */
@@ -2707,7 +2400,12 @@ dgo_drawH_part2(dashflag, vhead, pathp, tsp, existing_sp, dgcdp)
 		sp->s_iflag = DOWN;
 		sp->s_soldash = dashflag;
 		sp->s_Eflag = 0;	/* This is a solid */
-		db_dup_full_path( &sp->s_fullpath, pathp );
+		sp->s_last = pathp->fp_len-1;
+
+		/* Copy path information */
+		for (i=0; i<=sp->s_last; i++) {
+			sp->s_path[i] = pathp->fp_names[i];
+		}
 		sp->s_regionid = tsp->ts_regionid;
 
 		/* Add to linked list of solid structs */
@@ -2758,23 +2456,22 @@ dgo_eraseobjall_callback(dbip, interp, dp)
  * Builds an array of directory pointers from argv and calls
  * either dgo_eraseobj or dgo_eraseobjall.
  */
-void
-dgo_eraseobjpath(struct dg_obj	*dgop,
-		 Tcl_Interp	*interp,
-		 int		argc,
-		 char		**argv,
-		 int		noisy,
-		 int		all)
+static void
+dgo_eraseobjpath(dgop, interp, argc, argv, noisy, all)
+     struct dg_obj *dgop;
+     Tcl_Interp	*interp;
+     int	argc;
+     char	**argv;
+     int	noisy;	
+     int	all;
 {
 	register struct directory *dp;
 	register int i;
 	struct bu_vls vls;
-#if 0
 	Tcl_Obj *save_result;
 
 	save_result = Tcl_GetObjResult(interp);
 	Tcl_IncrRefCount(save_result);
-#endif
 
 	bu_vls_init(&vls);
 	for (i = 0; i < argc; i++) {
@@ -2843,11 +2540,8 @@ dgo_eraseobjpath(struct dg_obj	*dgop,
 		Tcl_Free((char *)av_orig);
 	}
 	bu_vls_free(&vls);
-
-#if 0
 	Tcl_SetObjResult(interp, save_result);
 	Tcl_DecrRefCount(save_result);
-#endif
 }
 
 /*
@@ -2857,34 +2551,46 @@ dgo_eraseobjpath(struct dg_obj	*dgop,
  * from the solid list which contain the specified object anywhere in their 'path'
  */
 static void
-dgo_eraseobjall(struct dg_obj			*dgop,
-		Tcl_Interp			*interp,
-		register struct directory	**dpp)
+dgo_eraseobjall(dgop, interp, dpp)
+     struct dg_obj *dgop;
+     Tcl_Interp *interp;
+     register struct directory **dpp;
 {
 	register struct directory **tmp_dpp;
 	register struct solid *sp;
 	register struct solid *nsp;
-	struct db_full_path	subpath;
+	register int i;
 
 	if(dgop->dgo_wdbp->dbip == DBI_NULL)
 		return;
 
-	if (*dpp == DIR_NULL)
-		return;
-
-	db_full_path_init(&subpath);
-	for (tmp_dpp = dpp; *tmp_dpp != DIR_NULL; ++tmp_dpp)  {
+	for (tmp_dpp = dpp; *tmp_dpp != DIR_NULL; ++tmp_dpp)
 		RT_CK_DIR(*tmp_dpp);
-		db_add_node_to_full_path(&subpath, *tmp_dpp);
-	}
 
 	sp = BU_LIST_NEXT(solid, &dgop->dgo_headSolid);
 	while (BU_LIST_NOT_HEAD(sp, &dgop->dgo_headSolid)) {
 		nsp = BU_LIST_PNEXT(solid, sp);
-		if( db_full_path_subset( &sp->s_fullpath, &subpath ) )  {
+		for (i=0; i <= sp->s_last; i++) {
+			/* look for first path element */
+			if (sp->s_path[i] != *dpp)
+				continue;
+
+			/* look for rest of path */
+			for (++i, tmp_dpp = dpp+1;
+			     i <= sp->s_last && *tmp_dpp != DIR_NULL;
+			     ++i, ++tmp_dpp)
+				if (sp->s_path[i] != *tmp_dpp)
+					goto end;
+
+			if (*tmp_dpp != DIR_NULL)
+				goto end;
+
 			BU_LIST_DEQUEUE(&sp->l);
 			FREE_SOLID(sp, &FreeSolid.l);
+
+			break;
 		}
+	end:
 		sp = nsp;
 	}
 
@@ -2893,7 +2599,6 @@ dgo_eraseobjall(struct dg_obj			*dgop,
 			Tcl_AppendResult(interp, "dgo_eraseobjall: db_dirdelete failed\n", (char *)NULL);
 		}
 	}
-	db_free_full_path(&subpath);
 }
 
 /*
@@ -2904,15 +2609,11 @@ dgo_eraseobjall(struct dg_obj			*dgop,
  * beginning of their 'path'
  */
 static void
-dgo_eraseobj(struct dg_obj		*dgop,
-	     Tcl_Interp			*interp,
-	     register struct directory	**dpp)
+dgo_eraseobj(dgop, interp, dpp)
+     struct dg_obj *dgop;
+     Tcl_Interp *interp;
+     register struct directory **dpp;
 {
-#if 1
-	/*XXX
-	 * Temporarily put back the old behavior (as seen in Brlcad5.3),
-	 * as the behavior after the #else is identical to dgo_eraseobjall.
-	 */
 	register struct directory **tmp_dpp;
 	register struct solid *sp;
 	register struct solid *nsp;
@@ -2931,9 +2632,9 @@ dgo_eraseobj(struct dg_obj		*dgop,
 	while (BU_LIST_NOT_HEAD(sp, &dgop->dgo_headSolid)) {
 		nsp = BU_LIST_PNEXT(solid, sp);
 		for (i = 0, tmp_dpp = dpp;
-		     i <= sp->s_fullpath.fp_len && *tmp_dpp != DIR_NULL;
+		     i <= sp->s_last && *tmp_dpp != DIR_NULL;
 		     ++i, ++tmp_dpp)
-			if (sp->s_fullpath.fp_names[i] != *tmp_dpp)
+			if (sp->s_path[i] != *tmp_dpp)
 				goto end;
 
 		if (*tmp_dpp != DIR_NULL)
@@ -2950,41 +2651,6 @@ dgo_eraseobj(struct dg_obj		*dgop,
 			Tcl_AppendResult(interp, "dgo_eraseobj: db_dirdelete failed\n", (char *)NULL);
 		}
 	}
-#else
-	register struct directory **tmp_dpp;
-	register struct solid *sp;
-	register struct solid *nsp;
-	struct db_full_path	subpath;
-
-	if(dgop->dgo_wdbp->dbip == DBI_NULL)
-		return;
-
-	if (*dpp == DIR_NULL)
-		return;
-
-	db_full_path_init(&subpath);
-	for (tmp_dpp = dpp; *tmp_dpp != DIR_NULL; ++tmp_dpp)  {
-		RT_CK_DIR(*tmp_dpp);
-		db_add_node_to_full_path(&subpath, *tmp_dpp);
-	}
-
-	sp = BU_LIST_FIRST(solid, &dgop->dgo_headSolid);
-	while (BU_LIST_NOT_HEAD(sp, &dgop->dgo_headSolid)) {
-		nsp = BU_LIST_PNEXT(solid, sp);
-		if( db_full_path_subset( &sp->s_fullpath, &subpath ) )  {
-			BU_LIST_DEQUEUE(&sp->l);
-			FREE_SOLID(sp, &FreeSolid.l);
-		}
-		sp = nsp;
-	}
-
-	if ((*dpp)->d_addr == RT_DIR_PHONY_ADDR ) {
-		if (db_dirdelete(dgop->dgo_wdbp->dbip, *dpp) < 0) {
-			Tcl_AppendResult(interp, "dgo_eraseobj: db_dirdelete failed\n", (char *)NULL);
-		}
-	}
-	db_free_full_path(&subpath);
-#endif
 }
 
 /*
@@ -2993,8 +2659,9 @@ dgo_eraseobj(struct dg_obj		*dgop,
  *  Pass through the solid table and set pointer to appropriate
  *  mater structure.
  */
-void
-dgo_color_soltab(struct solid *hsp)
+static void
+dgo_color_soltab(hsp)
+     struct solid *hsp;
 {
 	register struct solid *sp;
 	register struct mater *mp;
@@ -3045,10 +2712,11 @@ done: ;
  *  Build a command line vector of the tops of all objects in view.
  */
 static int
-dgo_build_tops(Tcl_Interp	*interp,
-	       struct solid	*hsp,
-	       char		**start,
-	       register char	**end)
+dgo_build_tops(interp, hsp, start, end)
+     Tcl_Interp *interp;
+     struct solid *hsp;
+     char **start;
+     register char **end;
 {
 	register char **vp = start;
 	register struct solid *sp;
@@ -3061,22 +2729,21 @@ dgo_build_tops(Tcl_Interp	*interp,
 		sp->s_flag = DOWN;
 	FOR_ALL_SOLIDS(sp, &hsp->l)  {
 		register struct solid *forw;
-		struct directory *dp = FIRST_SOLID(sp);
 
 		if (sp->s_flag == UP)
 			continue;
-		if (dp->d_addr == RT_DIR_PHONY_ADDR)
+		if (sp->s_path[0]->d_addr == RT_DIR_PHONY_ADDR)
 			continue;	/* Ignore overlays, predictor, etc */
 		if (vp < end)
-			*vp++ = dp->d_namep;
+			*vp++ = sp->s_path[0]->d_namep;
 		else  {
 		  Tcl_AppendResult(interp, "mged: ran out of comand vector space at ",
-				   dp->d_namep, "\n", (char *)NULL);
+				   sp->s_path[0]->d_namep, "\n", (char *)NULL);
 		  break;
 		}
 		sp->s_flag = UP;
 		for (BU_LIST_PFOR(forw, sp, solid, &hsp->l)) {
-			if (FIRST_SOLID(forw) == dp)
+			if (forw->s_path[0] == sp->s_path[0])
 				forw->s_flag = UP;
 		}
 	}
@@ -3093,10 +2760,11 @@ dgo_build_tops(Tcl_Interp	*interp,
  *  as it can be computed in different ways.
  */
 static void
-dgo_rt_write(struct dg_obj	*dgop,
-	     struct view_obj	*vop,
-	     FILE		*fp,
-	     vect_t		eye_model)
+dgo_rt_write(dgop, vop, fp, eye_model)
+     struct dg_obj *dgop;
+     struct view_obj *vop;
+     FILE *fp;
+     vect_t eye_model;
 {
 	register int	i;
 	quat_t		quat;
@@ -3108,39 +2776,42 @@ dgo_rt_write(struct dg_obj	*dgop,
 	(void)fprintf(fp, "eye_pt %.15e %.15e %.15e;\n",
 		      eye_model[X], eye_model[Y], eye_model[Z] );
 
+#define DIR_USED	0x80	/* XXX move to raytrace.h */
 	(void)fprintf(fp, "start 0; clean;\n");
 	FOR_ALL_SOLIDS (sp, &dgop->dgo_headSolid) {
-		for (i=0;i<sp->s_fullpath.fp_len;i++) {
-			DB_FULL_PATH_GET(&sp->s_fullpath,i)->d_flags &= ~DIR_USED;
+		for (i=0;i<=sp->s_last;i++) {
+			sp->s_path[i]->d_flags &= ~DIR_USED;
 		}
 	}
 	FOR_ALL_SOLIDS(sp, &dgop->dgo_headSolid) {
-		for (i=0; i<sp->s_fullpath.fp_len; i++ ) {
-			if (!(DB_FULL_PATH_GET(&sp->s_fullpath,i)->d_flags & DIR_USED)) {
+		for (i=0; i<=sp->s_last; i++ ) {
+			if (!(sp->s_path[i]->d_flags & DIR_USED)) {
 				register struct animate *anp;
-				for (anp = DB_FULL_PATH_GET(&sp->s_fullpath,i)->d_animate; anp;
+				for (anp = sp->s_path[i]->d_animate; anp;
 				    anp=anp->an_forw) {
 					db_write_anim(fp, anp);
 				}
-				DB_FULL_PATH_GET(&sp->s_fullpath,i)->d_flags |= DIR_USED;
+				sp->s_path[i]->d_flags |= DIR_USED;
 			}
 		}
 	}
 
 	FOR_ALL_SOLIDS(sp, &dgop->dgo_headSolid) {
-		for (i=0;i< sp->s_fullpath.fp_len;i++) {
-			DB_FULL_PATH_GET(&sp->s_fullpath,i)->d_flags &= ~DIR_USED;
+		for (i=0;i<=sp->s_last;i++) {
+			sp->s_path[i]->d_flags &= ~DIR_USED;
 		}
 	}
+#undef DIR_USED
 	(void)fprintf(fp, "end;\n");
 }
 
-int
-dgo_rtabort_cmd(struct dg_obj	*dgop,
-		Tcl_Interp	*interp,
-		int		argc,
-		char 		**argv)
+static int
+dgo_rtabort_tcl(ClientData clientData,
+		 Tcl_Interp *interp,
+		 int argc,
+		 char **argv)
 {
+	struct dg_obj	*dgop = (struct dg_obj *)clientData;
 	struct run_rt	*rrp;
 
 	for (BU_LIST_FOR(rrp, run_rt, &dgop->dgo_headRunRt.l)) {
@@ -3151,20 +2822,10 @@ dgo_rtabort_cmd(struct dg_obj	*dgop,
 	return TCL_OK;
 }
 
-static int
-dgo_rtabort_tcl(ClientData clientData,
-		 Tcl_Interp *interp,
-		 int argc,
-		 char **argv)
-{
-	struct dg_obj	*dgop = (struct dg_obj *)clientData;
-
-	return dgo_rtabort_cmd(dgop, interp, argc-1, argv+1);
-}
-
 static void
-dgo_rt_output_handler(ClientData	clientData,
-		      int		mask)
+dgo_rt_output_handler(clientData, mask)
+     ClientData clientData;
+     int mask;
 {
 	struct run_rt *run_rtp = (struct run_rt *)clientData;
 	int count;
@@ -3209,65 +2870,67 @@ dgo_rt_output_handler(ClientData	clientData,
 }
 
 static void
-dgo_rt_set_eye_model(struct dg_obj *dgop,
-		     struct view_obj *vop,
-		     vect_t eye_model)
+dgo_rt_set_eye_model(dgop, vop, eye_model)
+     struct dg_obj *dgop;
+     struct view_obj *vop;
+     vect_t eye_model;
 {
-	if (vop->vo_zclip || vop->vo_perspective > 0) {
+#if 0
+	if (dmp->dm_zclip || mged_variables->mv_perspective_mode) {
 		vect_t temp;
 
-		VSET(temp, 0.0, 0.0, 1.0);
-		MAT4X3PNT(eye_model, vop->vo_view2model, temp);
-	} else {
-		/* not doing zclipping, so back out of geometry */
-		register struct solid *sp;
-		register int i;
-		double  t;
-		double  t_in;
-		vect_t  direction;
-		vect_t  extremum[2];
-		vect_t  minus, plus;    /* vers of this solid's bounding box */
+		VSET( temp, 0.0, 0.0, 1.0 );
+		MAT4X3PNT( eye_model, view_state->vs_view2model, temp );
+	}
+#endif
+	/* not doing zclipping, so back out of geometry */
+	register struct solid *sp;
+	register int i;
+	double  t;
+	double  t_in;
+	vect_t  direction;
+	vect_t  extremum[2];
+	vect_t  minus, plus;    /* vers of this solid's bounding box */
 
-		VSET(eye_model, -vop->vo_center[MDX],
-		     -vop->vo_center[MDY], -vop->vo_center[MDZ]);
+	VSET(eye_model, -vop->vo_center[MDX],
+	     -vop->vo_center[MDY], -vop->vo_center[MDZ]);
 
-		for (i = 0; i < 3; ++i) {
-			extremum[0][i] = INFINITY;
-			extremum[1][i] = -INFINITY;
-		}
+	for (i = 0; i < 3; ++i) {
+		extremum[0][i] = INFINITY;
+		extremum[1][i] = -INFINITY;
+	}
 
-		FOR_ALL_SOLIDS (sp, &dgop->dgo_headSolid) {
-			minus[X] = sp->s_center[X] - sp->s_size;
-			minus[Y] = sp->s_center[Y] - sp->s_size;
-			minus[Z] = sp->s_center[Z] - sp->s_size;
-			VMIN( extremum[0], minus );
-			plus[X] = sp->s_center[X] + sp->s_size;
-			plus[Y] = sp->s_center[Y] + sp->s_size;
-			plus[Z] = sp->s_center[Z] + sp->s_size;
-			VMAX( extremum[1], plus );
+	FOR_ALL_SOLIDS (sp, &dgop->dgo_headSolid) {
+		minus[X] = sp->s_center[X] - sp->s_size;
+		minus[Y] = sp->s_center[Y] - sp->s_size;
+		minus[Z] = sp->s_center[Z] - sp->s_size;
+		VMIN( extremum[0], minus );
+		plus[X] = sp->s_center[X] + sp->s_size;
+		plus[Y] = sp->s_center[Y] + sp->s_size;
+		plus[Z] = sp->s_center[Z] + sp->s_size;
+		VMAX( extremum[1], plus );
+	}
+	VMOVEN(direction, vop->vo_rotation + 8, 3);
+	VSCALE(direction, direction, -1.0);
+	for (i = 0; i < 3; ++i)
+		if (NEAR_ZERO(direction[i], 1e-10))
+			direction[i] = 0.0;
+	if ((eye_model[X] >= extremum[0][X]) &&
+	    (eye_model[X] <= extremum[1][X]) &&
+	    (eye_model[Y] >= extremum[0][Y]) &&
+	    (eye_model[Y] <= extremum[1][Y]) &&
+	    (eye_model[Z] >= extremum[0][Z]) &&
+	    (eye_model[Z] <= extremum[1][Z])) {
+		t_in = -INFINITY;
+		for (i = 0; i < 6; ++i) {
+			if (direction[i%3] == 0)
+				continue;
+			t = (extremum[i/3][i%3] - eye_model[i%3]) /
+				direction[i%3];
+			if ((t < 0) && (t > t_in))
+				t_in = t;
 		}
-		VMOVEN(direction, vop->vo_rotation + 8, 3);
-		VSCALE(direction, direction, -1.0);
-		for (i = 0; i < 3; ++i)
-			if (NEAR_ZERO(direction[i], 1e-10))
-				direction[i] = 0.0;
-		if ((eye_model[X] >= extremum[0][X]) &&
-		    (eye_model[X] <= extremum[1][X]) &&
-		    (eye_model[Y] >= extremum[0][Y]) &&
-		    (eye_model[Y] <= extremum[1][Y]) &&
-		    (eye_model[Z] >= extremum[0][Z]) &&
-		    (eye_model[Z] <= extremum[1][Z])) {
-			t_in = -INFINITY;
-			for (i = 0; i < 6; ++i) {
-				if (direction[i%3] == 0)
-					continue;
-				t = (extremum[i/3][i%3] - eye_model[i%3]) /
-					direction[i%3];
-				if ((t < 0) && (t > t_in))
-					t_in = t;
-			}
-			VJOIN1(eye_model, eye_model, t_in, direction);
-		}
+		VJOIN1(eye_model, eye_model, t_in, direction);
 	}
 }
 
@@ -3275,8 +2938,9 @@ dgo_rt_set_eye_model(struct dg_obj *dgop,
  *                  D G O _ R U N _ R T
  */
 static int
-dgo_run_rt(struct dg_obj *dgop,
-	   struct view_obj *vop) 
+dgo_run_rt(dgop, vop)
+     struct dg_obj *dgop;
+     struct view_obj *vop; 
 {
 	register int	i;
 	FILE		*fp_in;
@@ -3335,21 +2999,23 @@ dgo_run_rt(struct dg_obj *dgop,
 }
 
 void
-dgo_notify(struct dg_obj	*dgop,
-	   Tcl_Interp		*interp)
+dgo_notify(dgop, interp)
+     struct dg_obj *dgop;
+     Tcl_Interp *interp;
 {
 	bu_observer_notify(interp, &dgop->dgo_observers, bu_vls_addr(&dgop->dgo_name));
 }
 
 void
-dgo_impending_wdb_close(struct rt_wdb	*wdbp,
-			Tcl_Interp	*interp)
+dgo_impending_wdb_close(wdbp, interp)
+     struct rt_wdb *wdbp;
+     Tcl_Interp *interp;
 {
 	struct dg_obj *dgop;
 
 	for (BU_LIST_FOR(dgop, dg_obj, &HeadDGObj.l))
 		if (dgop->dgo_wdbp == wdbp) {
-			dgo_zap_cmd(dgop, interp);
+			dgo_zap(dgop, interp);
 			dgop->dgo_wdbp = RT_WDB_NULL;
 			dgo_notify(dgop, interp);
 		}
@@ -3364,7 +3030,7 @@ dgo_zapall(wdbp, interp)
 
 	for (BU_LIST_FOR(dgop, dg_obj, &HeadDGObj.l))
 		if (dgop->dgo_wdbp == wdbp) {
-			dgo_zap_cmd(dgop, interp);
+			dgo_zap(dgop, interp);
 			dgo_notify(dgop, interp);
 		}
 }
@@ -3383,6 +3049,7 @@ dgo_print_schain(dgop, interp, lvl)
      int		lvl;			/* debug level */
 {
 	register struct solid		*sp;
+	register int			i;
 	register struct bn_vlist	*vp;
 	int				nvlist;
 	int				npts;
@@ -3396,11 +3063,12 @@ dgo_print_schain(dgop, interp, lvl)
 	FOR_ALL_SOLIDS(sp, &dgop->dgo_headSolid) {
 		if (lvl <= -2) {
 			/* print only leaves */
-			bu_vls_printf(&vls, "%s ", LAST_SOLID(sp)->d_namep);
+			bu_vls_printf(&vls, "%s ", sp->s_path[sp->s_last]->d_namep);
 			continue;
 		}
 
-		db_path_to_vls(&vls, &sp->s_fullpath);
+		for (i=0; i <= sp->s_last; i++)
+			bu_vls_printf(&vls, "/%s", sp->s_path[i]->d_namep);
 
 		if ((lvl != -1) && (sp->s_iflag == UP))
 			bu_vls_printf(&vls, " ILLUM");
@@ -3475,6 +3143,7 @@ dgo_print_schain_vlcmds(dgop, interp)
      Tcl_Interp		*interp;
 {
 	register struct solid		*sp;
+	register int			i;
 	register struct bn_vlist	*vp;
 	struct bu_vls 		vls;
 

@@ -27,7 +27,6 @@
 #include "vmath.h"
 #include "raytrace.h"
 #include "nurb.h"
-#include "plot3.h"
 
 /*
  *			R T _ N U R B _ P L O T _ S N U R B
@@ -35,10 +34,10 @@
 void
 rt_nurb_plot_snurb( fp, srf )
 FILE	*fp;
-const struct face_g_snurb	*srf;
+CONST struct face_g_snurb	*srf;
 {
 	int i,j;
-	const fastf_t * m_ptr = srf->ctl_points;
+	CONST fastf_t * m_ptr = srf->ctl_points;
 	int evp = RT_NURB_EXTRACT_COORDS( srf->pt_type);
 	int rat = RT_NURB_IS_PT_RATIONAL( srf->pt_type);
 	point_t pt;
@@ -109,10 +108,10 @@ const struct face_g_snurb	*srf;
 void
 rt_nurb_plot_cnurb( fp, crv )
 FILE	*fp;
-const struct edge_g_cnurb	*crv;
+CONST struct edge_g_cnurb	*crv;
 {
 	register int	i, k;
-	const fastf_t * m_ptr = crv->ctl_points;
+	CONST fastf_t * m_ptr = crv->ctl_points;
 	int evp = RT_NURB_EXTRACT_COORDS( crv->pt_type);
 	int rat = RT_NURB_IS_PT_RATIONAL( crv->pt_type);
 	point_t ptr;
@@ -150,7 +149,7 @@ rt_nurb_closefile()
 }
 
 void rt_nurb_s_plot( srf )
-const struct face_g_snurb * srf;
+CONST struct face_g_snurb * srf;
 {
 	rt_nurb_plot_snurb( stdout, srf );
 }

@@ -16,7 +16,6 @@
 #include "./iges_struct.h"
 #include "./iges_extern.h"
 
-int
 extrude( entityno )
 int entityno;
 { 

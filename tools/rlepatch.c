@@ -32,12 +32,6 @@
 
 #include <stdio.h>
 
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include "machine.h"
 #include "externs.h"		/* For malloc, calloc and free */
 #include "rle.h"
@@ -47,14 +41,14 @@
 				 cmd_name( argv ) ); exit(-2);}}
 #define IN_WINDOW(y,wind) ((y >= wind.ymin) && (y <= wind.ymax))
 
-int
+void
 main( argc, argv )
 int argc;
 char **argv;
 {
     rle_hdr im_hdr, *patch_hdr, out_hdr;
-    const char *imfilename = NULL, *outfilename = NULL;
-    const char **patchnames;
+    CONST char *imfilename = NULL, *outfilename = NULL;
+    CONST char **patchnames;
     FILE *outfile = stdout;
     rle_pixel ** im_rows, **patch_rows, ** outrows;
     int stdin_used = 0;

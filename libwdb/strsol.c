@@ -32,18 +32,13 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include "machine.h"
 #include "bu.h"
 #include "vmath.h"
@@ -55,26 +50,22 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 int
 mk_dsp( fp, name, file, xdim, ydim, mat )
-struct rt_wdb		*fp;
-const char	*name;
-const char	*file;		/* name of file containing elevation data */
+FILE		*fp;
+CONST char	*name;
+CONST char	*file;		/* name of file containing elevation data */
 int		xdim;		/* X dimension of file (w cells) */
 int		ydim;		/* Y dimension of file (n cells) */
-const matp_t	mat;		/* convert solid coords to model space */
+CONST matp_t	mat;		/* convert solid coords to model space */
 {
-	struct rt_dsp_internal *dsp;
+	struct rt_dsp_internal dsp;
 	
-	BU_GETSTRUCT( dsp, rt_dsp_internal );
-	dsp->magic = RT_DSP_INTERNAL_MAGIC;
-	bu_vls_init( &dsp->dsp_name );
-	bu_vls_strcpy( &dsp->dsp_name, "file:");
-	bu_vls_strcat( &dsp->dsp_name, file);
+	dsp.magic = RT_DSP_INTERNAL_MAGIC;
+	strncpy( dsp.dsp_file, file, DSP_NAME_LEN );
+	dsp.dsp_xcnt = xdim;
+	dsp.dsp_ycnt = ydim;
+	mat_copy( dsp.dsp_stom, mat );
 
-	dsp->dsp_xcnt = xdim;
-	dsp->dsp_ycnt = ydim;
-	MAT_COPY( dsp->dsp_stom, mat );
-
-	return wdb_export( fp, name, (genptr_t)dsp, ID_DSP, mk_conv2mm );
+	return( mk_export_fwrite( fp, name, (genptr_t)&dsp, ID_DSP ) );
 }
 
 /*
@@ -82,25 +73,24 @@ const matp_t	mat;		/* convert solid coords to model space */
  */
 int
 mk_ebm( fp, name, file, xdim, ydim, tallness, mat )
-struct rt_wdb		*fp;
-const char	*name;
-const char	*file;		/* name of file containing bitmap */
+FILE		*fp;
+CONST char	*name;
+CONST char	*file;		/* name of file containing bitmap */
 int		xdim;		/* X dimansion of file (w cells) */
 int		ydim;		/* Y dimension of file (n cells) */
 fastf_t		tallness;	/* Z extrusion height (mm) */
-const matp_t	mat;		/* convert local coords to model space */
+CONST matp_t	mat;		/* convert local coords to model space */
 {
-	struct rt_ebm_internal	*ebm;
+	struct rt_ebm_internal	ebm;
 
-	BU_GETSTRUCT( ebm, rt_ebm_internal );
-	ebm->magic = RT_EBM_INTERNAL_MAGIC;
-	strncpy( ebm->file, file, RT_EBM_NAME_LEN );
-	ebm->xdim = xdim;
-	ebm->ydim = ydim;
-	ebm->tallness = tallness;
-	MAT_COPY( ebm->mat , mat );
+	ebm.magic = RT_EBM_INTERNAL_MAGIC;
+	strncpy( ebm.file, file, RT_EBM_NAME_LEN );
+	ebm.xdim = xdim;
+	ebm.ydim = ydim;
+	ebm.tallness = tallness;
+	mat_copy( ebm.mat , mat );
 
-	return wdb_export( fp, name, (genptr_t)ebm, ID_EBM, mk_conv2mm );
+	return( mk_export_fwrite( fp, name, (genptr_t)&ebm, ID_EBM ) );
 }
 
 /*
@@ -108,34 +98,32 @@ const matp_t	mat;		/* convert local coords to model space */
  */
 int
 mk_vol( fp, name, file, xdim, ydim, zdim, lo, hi, cellsize, mat )
-struct rt_wdb		*fp;
-const char	*name;
-const char	*file;		/* name of file containing bitmap */
+FILE		*fp;
+CONST char	*name;
+CONST char	*file;		/* name of file containing bitmap */
 int		xdim;		/* X dimansion of file (w cells) */
 int		ydim;		/* Y dimension of file (n cells) */
 int		zdim;		/* Z dimension of file (d cells) */
 int		lo;		/* Low threshold */
 int		hi;		/* High threshold */
-const vect_t	cellsize;	/* ideal coords: size of each cell */
-const matp_t	mat;		/* convert local coords to model space */
+CONST vect_t	cellsize;	/* ideal coords: size of each cell */
+CONST matp_t	mat;		/* convert local coords to model space */
 {
-	struct rt_vol_internal	*vol;
+	struct rt_vol_internal	vol;
 
-	BU_GETSTRUCT( vol, rt_vol_internal );
-	vol->magic = RT_VOL_INTERNAL_MAGIC;
-	strncpy( vol->file, file, RT_VOL_NAME_LEN );
-	vol->xdim = xdim;
-	vol->ydim = ydim;
-	vol->zdim = zdim;
-	vol->lo = lo;
-	vol->hi = hi;
-	VMOVE( vol->cellsize , cellsize );
-	MAT_COPY( vol->mat , mat );
+	vol.magic = RT_VOL_INTERNAL_MAGIC;
+	strncpy( vol.file, file, RT_VOL_NAME_LEN );
+	vol.xdim = xdim;
+	vol.ydim = ydim;
+	vol.zdim = zdim;
+	vol.lo = lo;
+	vol.hi = hi;
+	VMOVE( vol.cellsize , cellsize );
+	mat_copy( vol.mat , mat );
 
-	return wdb_export( fp, name, (genptr_t)vol, ID_VOL, mk_conv2mm );
+	return( mk_export_fwrite( fp, name, (genptr_t)&vol, ID_VOL ) );
 }
 
-#if 0
 /*
  *			M K _ S T R S O L
  *
@@ -146,13 +134,11 @@ const matp_t	mat;		/* convert local coords to model space */
 int
 mk_strsol( fp, name, string_solid, string_arg )
 FILE		*fp;
-const char	*name;
-const char	*string_solid;
-const char	*string_arg;
+CONST char	*name;
+CONST char	*string_solid;
+CONST char	*string_arg;
 {
 	union record	rec[DB_SS_NGRAN];
-
-	BU_ASSERT_LONG( mk_version, <=, 4 );
 
 	bzero( (char *)rec, sizeof(rec) );
 	rec[0].ss.ss_id = DBID_STRSOL;
@@ -164,7 +150,6 @@ const char	*string_arg;
 		return -1;
 	return 0;
 }
-#endif
 
 /*
  *			M K _ S U B M O D E L
@@ -177,21 +162,19 @@ const char	*string_arg;
  */
 int
 mk_submodel( fp, name, file, treetop, meth )
-struct rt_wdb		*fp;
-const char	*name;
-const char	*file;
-const char	*treetop;
+FILE		*fp;
+CONST char	*name;
+CONST char	*file;
+CONST char	*treetop;
 int		meth;
 {
-	struct rt_submodel_internal *in;
+	struct rt_submodel_internal in;
 
-	BU_GETSTRUCT( in, rt_submodel_internal );
-	in->magic = RT_SUBMODEL_INTERNAL_MAGIC;
-	bu_vls_init( &in->file );
-	if( file )  bu_vls_strcpy( &in->file, file );
-	bu_vls_init( &in->treetop );
-	bu_vls_strcpy( &in->treetop, treetop );
-	in->meth = meth;
+	bzero( (char *)&in, sizeof(in) );
+	in.magic = RT_SUBMODEL_INTERNAL_MAGIC;
+	if( file )  strncpy( in.file, file, sizeof(in.file)-1 );
+	strncpy( in.treetop, treetop, sizeof(in.treetop)-1 );
+	in.meth = meth;
 
-	return wdb_export( fp, name, (genptr_t)in, ID_SUBMODEL, mk_conv2mm );
+	return mk_export_fwrite( fp, name, (genptr_t)&in, ID_SUBMODEL );
 }

@@ -13,17 +13,13 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
-
 #include "machine.h"
 #include "vmath.h"
 #include "bu.h"
@@ -41,9 +37,9 @@ void
 bn_vlist_3string( vhead, free_hd, string, origin, rot, scale )
 struct bu_list	*vhead;
 struct bu_list	*free_hd;	/* source of free vlists */
-const char	*string;	/* string of chars to be plotted */
-const point_t	origin;		/* lower left corner of 1st char */
-const mat_t	rot;		/* Transform matrix (WARNING: may xlate) */
+CONST char	*string;	/* string of chars to be plotted */
+CONST point_t	origin;		/* lower left corner of 1st char */
+CONST mat_t	rot;		/* Transform matrix (WARNING: may xlate) */
 double		scale;		/* scale factor to change 1x1 char sz */
 {
 	register unsigned char *cp;
@@ -67,7 +63,7 @@ double		scale;		/* scale factor to change 1x1 char sz */
 	 *  If the user provided translation or
 	 *  scaling in his matrix, it will *also* be applied.
 	 */
-	MAT_IDN( xlate_to_origin );
+	bn_mat_idn( xlate_to_origin );
 	MAT_DELTAS( xlate_to_origin,	origin[X], origin[Y], origin[Z] );
 	bn_mat_mul( mat, xlate_to_origin, rot );
 
@@ -124,7 +120,7 @@ void
 bn_vlist_2string( vhead, free_hd, string, x, y, scale, theta )
 struct bu_list	*vhead;
 struct bu_list	*free_hd;	/* source of free vlists */
-const char	*string;	/* string of chars to be plotted */
+CONST char	*string;	/* string of chars to be plotted */
 double	x;			/* x,y of lower left corner of 1st char */
 double	y;
 double	scale;			/* scale factor to change 1x1 char sz */

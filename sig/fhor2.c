@@ -6,12 +6,6 @@
  */
 #include "conf.h"
 
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include <stdio.h>
 #include <math.h>		/* XXX - temp debug */
 #include "machine.h"
@@ -212,7 +206,7 @@ main()
 static char usage[] = "\
 Usage: fhor [width] < doubles\n";
 
-int main( argc, argv )
+main( argc, argv )
 int	argc;
 char	**argv;
 {
@@ -255,6 +249,4 @@ char	**argv;
 		fhnewz( f, 512 );
 		z++;
 	}
-
-	return 0;
 }

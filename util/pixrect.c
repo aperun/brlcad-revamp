@@ -19,7 +19,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -50,7 +50,6 @@ Usage: pixrect -w in_width -n in_height -W out_width -N out_height\n\
   or   pixrect [-# bytes] infile outfile (I prompt!)\n";
 
 
-int
 get_args(argc,argv)
 register char **argv;
 register int 	argc;
@@ -181,7 +180,6 @@ register int 	argc;
 char	*buf;			/* output scanline buffer, malloc'd */
 int	outbytes;
 
-int
 main(argc, argv)
 register char **argv;
 register int 	argc;

@@ -1,7 +1,7 @@
 /*
  *				C M D . C
  *
- * This is the place where BWISH/BTCLSH's commands live.
+ * This is the place where BWISH's commands live.
  * The history routines were borrowed from mged/history.c
  * and modified for use in this application.
  *
@@ -28,65 +28,45 @@
  */
 
 #include "conf.h"
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
-#ifdef BWISH
-#include "tk.h"
-#else
 #include "tcl.h"
-#endif
 
 #include "machine.h"
 #include "externs.h"
 #include "cmd.h"
-#include "libtermio.h"
 
-/* defined in tcl.c */
-extern void Cad_Exit();
+extern Tcl_Interp *interp;
 
 HIDDEN void historyInit();
 HIDDEN int cmd_history();
 HIDDEN int cmd_hist();
 HIDDEN int cmd_quit();
+void quit();
 
 HIDDEN struct bu_cmdhist histHead;
 HIDDEN struct bu_cmdhist *currHist;
 
 HIDDEN struct bu_cmdtab bwish_cmds[] =
 {
-	{"exit",		cmd_quit},
-	{"history",		cmd_history},
-	{"hist",		cmd_hist},
-	{"q",			cmd_quit},
-	{(char *)NULL,		CMD_NULL}
+	"exit",		cmd_quit,
+	"history",	cmd_history,
+	"hist",		cmd_hist,
+	"q",		cmd_quit,
+	(char *)NULL,	CMD_NULL
 };
-
-#ifdef BWISH
-extern Tk_PhotoImageFormat tkImgFmtPIX;
-#endif
 
 int
 cmdInit(interp)
      Tcl_Interp *interp;
 {
-	/* Register bwish/btclsh commands */
+	/* Register bwish commands */
 	bu_register_cmds(interp, bwish_cmds);
-
-#ifdef BWISH
-	/* Add pix format for images */
-	Tk_CreatePhotoImageFormat(&tkImgFmtPIX);
-#endif
 
 	/* initialize command history */
 	historyInit();
 	return TCL_OK;
 }
 
-/***************************** BWISH/BTCLSH COMMANDS *****************************/
+/***************************** BWISH COMMANDS *****************************/
 
 HIDDEN int
 cmd_quit(clientData, interp, argc, argv)
@@ -95,12 +75,23 @@ cmd_quit(clientData, interp, argc, argv)
      int argc;
      char **argv;
 {
-	Cad_Exit(TCL_OK);
+	quit(0);
 	/* NOTREACHED */
 	return TCL_OK;
 }
 
-/***************************** BWISH/BTCLSH COMMAND HISTORY *****************************/
+void
+quit(status)
+     int status;
+{
+	reset_Tty(fileno(stdin)); 
+#if 0
+	Tcl_DeleteInterp(interp);
+#endif
+	Tcl_Exit(status);
+}
+
+/***************************** BWISH COMMAND HISTORY *****************************/
 
 HIDDEN void
 historyInit()

@@ -12,7 +12,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char libbu_printb_RCSid[] = "@(#)$Header$ (ARL)";
+static char libbu_printb_RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 
@@ -44,9 +44,9 @@ static const char libbu_printb_RCSid[] = "@(#)$Header$ (ARL)";
 void
 bu_vls_printb( vls, s, v, bits)
 struct bu_vls		*vls;
-const char		*s;
+CONST char		*s;
 register unsigned long	v;
-register const char	*bits;
+register CONST char	*bits;
 {
 	register int i, any = 0;
 	register char c;
@@ -55,7 +55,7 @@ register const char	*bits;
 		bu_vls_printf( vls, "%s=0%o <", s, v);
 	else
 		bu_vls_printf( vls, "%s=x%x <", s, v);
-	while ((i = *bits++)) {
+	while (i = *bits++) {
 		if (v & (1L << (i-1))) {
 			if (any)
 				bu_vls_strcat( vls, ",");
@@ -76,9 +76,9 @@ register const char	*bits;
  */
 void
 bu_printb(s, v, bits)
-const char		*s;
+CONST char		*s;
 register unsigned long	v;
-register const char	*bits;
+register CONST char	*bits;
 {
 	struct bu_vls	str;
 

@@ -198,7 +198,7 @@ proc font_scheme_init { id } {
     }
 
     ################## buttons along bottom ##################
-    button $top.okB -relief raised -text "OK"\
+    button $top.okB -relief raised -text "Ok"\
 	    -command "font_scheme_ok $id $top $gui_top"
     button $top.applyB -relief raised -text "Apply"\
 	    -command "font_scheme_apply $id"
@@ -372,7 +372,7 @@ proc font_gui_init { id top fname title callback } {
 
     ################# buttons along bottom ################
     frame $top.gridF3
-    button $top.okB -relief raised -text "OK"\
+    button $top.okB -relief raised -text "Ok"\
 	    -command "font_ok $id $top"
     button $top.applyB -relief raised -text "Apply"\
 	    -command "font_apply $id"

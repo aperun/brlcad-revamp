@@ -21,16 +21,10 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 # include <stdio.h>
-#include <stdlib.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #ifdef vax
 # include <vaxuba/opio.h>
 # include <sys/ioctl.h>
@@ -101,7 +95,6 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main( argc, argv )
 int	argc;
 char	**argv;
@@ -187,7 +180,6 @@ doit()
 	return 0;
 }
 #else
-int
 main()
 {
 	fprintf( stderr, "op-bw: this is a vax specific program\n" );

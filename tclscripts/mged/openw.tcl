@@ -1493,7 +1493,7 @@ data." }
           { see_also "rset, vars" } }
 .$id.menubar.modes add separator
 .$id.menubar.modes add checkbutton -offvalue 0 -onvalue 1 -variable mged_gui($id,rubber_band)\
-	-label "Persistent Sweep Rectangle" -underline 0\
+	-label "Persistent sweep rectangle" -underline 0\
 	-command "mged_apply $id \"rset rb draw \$mged_gui($id,rubber_band)\""
 hoc_register_menu_data "Modes" "Persistent sweep rectangle" "Persistent Rubber Band"\
 	{ { summary "Toggle drawing the rectangle while idle." }
@@ -2513,12 +2513,11 @@ proc view_ring_add { id } {
     global view_ring
     global mged_collaborators
 
+#    if {$mged_gui($id,dm_loc) != "lv"} {
+#	winset $mged_gui($id,active_dm)
+#    }
     winset $mged_gui($id,active_dm)
 
-    # already more than 9 views in the view ring, ignore add
-    if {9 < [llength [_mged_view_ring get -a]]} {
-	return
-    }
     _mged_view_ring add
 
     set i [lsearch -exact $mged_collaborators $id]

@@ -20,7 +20,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -37,21 +37,8 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "machine.h"
 #include "externs.h"
 #include "vmath.h"
-#include "raytrace.h"
+#include "rtlist.h"
 #include "wdb.h"
-
-/* defined in region.c */
-extern void group_init();
-extern int getregion();
-extern void region_register();
-extern void group_write();
-
-/* defined in read.c */
-extern int getline();
-
-/* defined in solid.c */
-extern void trim_trail_spaces();
-extern int getsolid();
 
 struct wmember	*wmp;	/* array indexed by region number */
 
@@ -63,8 +50,8 @@ char name_it[16];	/* stores argv if it exists and appends it
 
 int	cur_col = 0;
 
-FILE		*infp;
-struct rt_wdb	*outfp;		/* Output file descriptor */
+FILE	*infp;
+FILE	*outfp;		/* Output file descriptor */
 
 int	sol_total, sol_work;	/* total num solids, num solids processed */
 int	reg_total;
@@ -110,7 +97,10 @@ register char **argv;
 
 	/* Input File */
 	if( optind >= argc )  {
-		return(0);		/* FAIL */
+		if( isatty(fileno(stdin)) )
+			return(0);
+		infp = stdin;
+		optind++;
 	} else {
 		file_name = argv[optind++];
 		if( (infp = fopen(file_name, "r")) == NULL )  {
@@ -121,10 +111,13 @@ register char **argv;
 
 	/* Output File */
 	if( optind >= argc )  {
-		return(0);		/* FAIL */
+		if( isatty(fileno(stdout)) )
+			return(0);
+		outfp = stdout;
+		optind++;
 	} else {
 		file_name = argv[optind++];
-		if( (outfp = wdb_fopen(file_name)) == NULL )  {
+		if( (outfp = fopen(file_name, "w")) == NULL )  {
 			perror(file_name);
 			return(0);
 		}
@@ -202,7 +195,6 @@ char **argv;
 		exit(10);
 	}
 
-	title = NULL;
 	switch( version )  {
 	case 1:
 		title = ctitle;

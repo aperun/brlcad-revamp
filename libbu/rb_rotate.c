@@ -19,7 +19,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char libbu_rb_rotate_RCSid[] = "@(#) $Header$";
+static char libbu_rb_rotate_RCSid[] = "@(#) $Header$";
 #endif
 
 #include "conf.h"

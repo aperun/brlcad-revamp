@@ -14,19 +14,17 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 
 unsigned char pix[3];		/* RGB of one pixel */
 
 char map[18] = "0123456789ABCDEFx";
 
-int
 main()
 {
 	while( !feof(stdin) &&

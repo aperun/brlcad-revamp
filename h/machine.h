@@ -25,7 +25,7 @@
  *
  *  General Symbols and Types Defined -
  *
- *	CONST  - deprecated - (use const)
+ *	CONST -
  *		A portable way of indicating that the ANSI C "const"
  *		keyword is desired, when compiling on an ANSI compiler.
  *
@@ -37,7 +37,7 @@
  *		pointers to data bytes, so a declaration of "char *"
  *		isn't generic enough.
  *
- *	SIGNED - deprecated - (use signed)
+ *	SIGNED -
  *		A portable way of declaring a signed variable, since
  *		the "signed" keyword is not known in K&R compilers.  e.g.:
  *			register SIGNED int twoway;
@@ -204,11 +204,6 @@
  *  Choose for maximum speed      *
  *				  *
  **********************************/
-
-#if defined(_WIN32) && defined(_MSC_VER) && defined(_M_IX86)
-#define const const
-#endif
-
 
 #ifdef HEP
 /********************************
@@ -394,7 +389,7 @@ typedef long	bitv_t;		/* largest integer type */
 #else
 #define BITV_SHIFT	5	/* log2( bits_wide(bitv_t) ) */
 #endif
-#define const	const
+#define CONST	const
 
 #define MAX_PSW		256
 #define DEFAULT_PSW	MAX_PSW
@@ -411,7 +406,7 @@ typedef long	bitv_t;		/* largest integer type */
  ********************************/
 #if __STDC__
 #define const	/**/		/* Does not support const keyword */
-#define const	/**/		/* Does not support const keyword */
+#define CONST	/**/		/* Does not support const keyword */
 #endif
 
 typedef double	fastf_t;	/* double|float, "Fastest" float type */
@@ -425,7 +420,6 @@ typedef long	bitv_t;		/* largest integer type */
 #define MALLOC_NOT_MP_SAFE 1
 
 #endif
-
 
 #ifdef n16
 /********************************
@@ -454,7 +448,7 @@ typedef long	bitv_t;		/* largest integer type */
  *				*
  ********************************/
 /* icc compiler gets confused on const typedefs */
-#define	const	/**/
+#define	CONST	/**/
 #define	const	/**/
 #define MALLOC_NOT_MP_SAFE 1
 #endif
@@ -496,7 +490,7 @@ typedef long	bitv_t;		/* largest integer type */
 #define BITV_SHIFT	5	/* log2( bits_wide(bitv_t) ) */
 
 #define const   /**/            /* Does not support const keyword */
-#define const   /**/            /* Does not support const keyword */
+#define CONST   /**/            /* Does not support const keyword */
 
 #define MAX_PSW		1	/* only one processor, max */
 #define DEFAULT_PSW	1
@@ -577,34 +571,34 @@ typedef long	bitv_t;		/* largest integer type */
 #  define GENPTR_NULL	((genptr_t)0)
 #endif
 
-/* A portable way of handling pre-ANSI C: remove const keyword */
-#if !defined(__STDC__)
-#  define	const	/**/
+/* A portable way of handling the ANSI C const keyword: use CONST */
+#if !defined(CONST)
+# if __STDC__
+#	define	CONST	const
+# else
+#	define	CONST	/**/
+# endif
 #endif
-#if defined(CONST)
-#  undef  CONST
-#endif
-#define CONST deprecated
 
 /* Even in C++ not all compilers know the "bool" keyword yet */
 #if !defined(BOOL_T)
 # define BOOL_T	int
 #endif
 
-/* A portable way of handling pre-ANSI C: remove signed keyword */
-#if !defined(__STDC__)
-#  define	signed	/**/
+/* A portable way of dealing with pre-ANSI C.  Assume signed variables */
+#if !defined(SIGNED)
+# if __STDC__
+#	define SIGNED	signed
+# else
+#	define SIGNED	/**/
+# endif
 #endif
-#if defined(SIGNED)
-#  undef SIGNED
-#endif
-#define SIGNED deprecated
 
 /*
  *  Some very common BSD --> SYSV conversion aids
  */
 #if defined(SYSV) && !defined(bzero) && !defined(HAVE_BZERO)
-#	define bzero(str,n)		memset( str, 0, n )
+#	define bzero(str,n)		memset( str, '\0', n )
 #	define bcopy(from,to,count)	memcpy( to, from, count )
 #endif
 

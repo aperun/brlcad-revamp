@@ -48,7 +48,7 @@
 /*		hit another region.  */
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -85,7 +85,7 @@ extern int overlap();	/*  User supplied overlap function.  */
 /*  Define structure to hold all information needed.  */
 struct table
 {
-   const char *name;	/*  Region name.  */
+   CONST char *name;	/*  Region name.  */
    int regnum;		/*  Region number that matches firpass &  */
 			/*  secpass.  */
    int numchar;		/*  Number of char each region name has.  */
@@ -112,7 +112,7 @@ char **argv;
    char idbuf[32];	/*  Contains database name.  */
    struct region *pr;	/*  Used in finding region names.  */
    double rho,phi,theta;/*  Spherical coordinates for starting point.  */
-   double areabs=0.0;	/*  Area of bounding sphere (mm**2).  */
+   double areabs;	/*  Area of bounding sphere (mm**2).  */
    int ians;		/*  Answer of question.  */
    double strtpt[3];	/*  Starting point of ray.  */
    double strtdir[3];	/*  Starting direction.  */
@@ -763,7 +763,6 @@ char **argv;
 /*		Hit, miss, and overlap functions.                            */
 /*****************************************************************************/
 
-int
 hit(ap_p,PartHeadp)
 /*  User supplied hit function.  */
 register struct application *ap_p;
@@ -774,7 +773,7 @@ struct partition *PartHeadp;
    register struct partition *pp;
    register struct hit *hitp;
    register struct soltab *stp;
-   int icur=0;			/*  Current region hit.  */
+   int icur;			/*  Current region hit.  */
    int iprev;			/*  Previous region hit.  */
    int iair;			/*  Type of air or region came from,  */
 				/*  0=>region, 1=>exterior air, 2=>crew  */
@@ -987,7 +986,7 @@ struct partition *PartHeadp;
    }
 }						/*  END # 0H  */
 
-int
+
 miss()
 /*  User supplied miss function.  */
 {
@@ -1001,7 +1000,7 @@ miss()
    return(1);
 }
 
-int
+
 overlap()
 /*  User supplied overlap function.  */
 {

@@ -33,17 +33,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 
 #include "machine.h"
 #include "externs.h"			/* For malloc and getopt */
@@ -53,6 +48,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #define CHUNK		(32*1024)	/* # elements per I/O */
 
 static int		width = 3;
+static unsigned char	pconst[EL_WIDTH];	/* XXX */
 
 static char		*file_name[NFILES];
 static FILE		*fp[NFILES];	/* NULL => use f_const */
@@ -174,7 +170,7 @@ register char	**argv;
 			break;
 		case 'w':
 			c = atoi(optarg);
-			if( c >= 1 && c < EL_WIDTH )
+			if( c >= 1 && c < sizeof(pconst) )
 				width = c;
 			else
 				usage("Illegal width specified\n", 1);

@@ -1573,4 +1573,3 @@ FILE *f;
  ^ #endif
  */
 #endif				/* ifdef REG_DEBUG */
-

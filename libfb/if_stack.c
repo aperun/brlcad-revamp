@@ -16,17 +16,13 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
+
 #include "machine.h"
 #include "externs.h"
 #include "fb.h"
@@ -225,7 +221,7 @@ _LOCAL_ int
 stk_write( ifp, x, y, pixelp, count )
 FBIO	*ifp;
 int	x, y;
-const unsigned char	*pixelp;
+CONST unsigned char	*pixelp;
 int	count;
 {
 	register FBIO **ip = SI(ifp)->if_list;
@@ -269,7 +265,7 @@ stk_writerect( ifp, xmin, ymin, width, height, pp )
 FBIO	*ifp;
 int	xmin, ymin;
 int	width, height;
-const unsigned char	*pp;
+CONST unsigned char	*pp;
 {
 	register FBIO **ip = SI(ifp)->if_list;
 
@@ -312,7 +308,7 @@ stk_bwwriterect( ifp, xmin, ymin, width, height, pp )
 FBIO	*ifp;
 int	xmin, ymin;
 int	width, height;
-const unsigned char	*pp;
+CONST unsigned char	*pp;
 {
 	register FBIO **ip = SI(ifp)->if_list;
 
@@ -341,7 +337,7 @@ ColorMap	*cmp;
 _LOCAL_ int
 stk_wmap( ifp, cmp )
 FBIO	*ifp;
-const ColorMap	*cmp;
+CONST ColorMap	*cmp;
 {
 	register FBIO **ip = SI(ifp)->if_list;
 
@@ -387,7 +383,7 @@ int	*xzoom, *yzoom;
 _LOCAL_ int
 stk_setcursor( ifp, bits, xbits, ybits, xorig, yorig )
 FBIO	*ifp;
-const unsigned char *bits;
+CONST unsigned char *bits;
 int	xbits, ybits;
 int	xorig, yorig;
 {

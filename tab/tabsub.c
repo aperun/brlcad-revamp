@@ -26,16 +26,10 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
-
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 
 #include <stdio.h>
 #include <ctype.h>
@@ -58,15 +52,11 @@ char	*prototype;		/* Contains full text of prototype document */
 void	get_proto();
 void	do_lines();
 void	out_mat();
-int	str2chan_index( char *s );
-int	multi_words( char *words[], int	nwords );
-
 
 /*
  *			M A I N
  *
  */
-int
 main( argc, argv )
 int	argc;
 char	**argv;
@@ -90,7 +80,6 @@ char	**argv;
 		}
 	}
 	do_lines( table );
-	return 0;
 }
 
 void
@@ -259,7 +248,9 @@ FILE	*fp;
  *	 0	OK
  */
 int
-multi_words( char *words[], int	nwords )
+multi_words( words, nwords )
+char	*words[];
+int	nwords;
 {
 
 	if( strcmp( words[0], "rot" ) == 0 )  {
@@ -267,7 +258,7 @@ multi_words( char *words[], int	nwords )
 
 		/* Expects rotations rx, ry, rz, in degrees */
 		if( nwords < 4 )  return(-1);
-		MAT_IDN( mat );
+		bn_mat_idn( mat );
 		bn_mat_angles( mat, 
 		    atof( words[1] ),
 		    atof( words[2] ),
@@ -280,7 +271,7 @@ multi_words( char *words[], int	nwords )
 
 		if( nwords < 4 )  return(-1);
 		/* Expects translations tx, ty, tz */
-		MAT_IDN( mat );
+		bn_mat_idn( mat );
 		MAT_DELTAS( mat, 
 		    atof( words[1] ),
 		    atof( words[2] ),
@@ -301,9 +292,9 @@ multi_words( char *words[], int	nwords )
 
 		if( nwords < 7 )  return(-1);
 
-		MAT_IDN( mat1 );
-		MAT_IDN( mat2 );
-		MAT_IDN( mat3 );
+		bn_mat_idn( mat1 );
+		bn_mat_idn( mat2 );
+		bn_mat_idn( mat3 );
 
 		MAT_DELTAS( mat1, 
 		    -atof( words[1] ),
@@ -340,10 +331,10 @@ multi_words( char *words[], int	nwords )
 		args[7] = 1.0;	/* optional arg, default to 1 */
 		for( i=1; i<nwords; i++ )
 			args[i] = atof( words[i] );
-		MAT_IDN( mat );
+		bn_mat_idn( mat );
 		bn_mat_angles( mat, args[4], args[5], args[6] );
 		MAT_DELTAS( mat, args[1], args[2], args[3] );
-		if( NEAR_ZERO( args[7], VDIVIDE_TOL ) )  {
+		if( args[7] > -1e-17 && args[7] < 1e-17 )  {
 			/* Nearly zero, signal error */
 			fprintf(stderr,"Orient scale arg is near zero ('%s')\n",
 				words[7] );
@@ -368,7 +359,7 @@ multi_words( char *words[], int	nwords )
 		else
 			twist = atof(words[3]);
 #endif
-		MAT_IDN( mat );
+		bn_mat_idn( mat );
 		/* XXX does not take twist, for now XXX */
 		bn_mat_ae( mat, az, el );
 		out_mat( mat, stdout );
@@ -387,7 +378,7 @@ multi_words( char *words[], int	nwords )
 		ang = atof(words[7]) * bn_degtorad;
 		VSUB2( dir, pt2, pt2 );
 		VUNITIZE(dir);
-		MAT_IDN( mat );
+		bn_mat_idn( mat );
 		bn_mat_arb_rot( mat, pt1, dir, ang );
 		out_mat( mat, stdout );
 		return(0);
@@ -404,7 +395,7 @@ multi_words( char *words[], int	nwords )
 		VSET( dir, atof(words[4]), atof(words[5]), atof(words[6]) );
 		ang = atof(words[7]) * bn_degtorad;
 		VUNITIZE(dir);
-		MAT_IDN( mat );
+		bn_mat_idn( mat );
 		bn_mat_arb_rot( mat, pt1, dir, ang );
 		out_mat( mat, stdout );
 		return(0);
@@ -482,7 +473,8 @@ multi_words( char *words[], int	nwords )
  *  To signal an error, 0 is returned;  this will index the time column.
  */
 int
-str2chan_index( char *s )
+str2chan_index( s )
+char	*s;
 {
 	int	chan;
 

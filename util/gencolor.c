@@ -18,19 +18,10 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
-
-#include "conf.h"
 
 #include <stdio.h>
-#include <ctype.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-#include "externs.h"
 
 #define	MAX_BYTES	(128*1024)
 
@@ -40,7 +31,6 @@ int	bytes_in_buf, copies_per_buf;
 
 unsigned char	buf[MAX_BYTES];
 
-int
 main( argc, argv )
 int argc; char **argv;
 {

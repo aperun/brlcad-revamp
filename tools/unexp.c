@@ -13,13 +13,6 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <stdlib.h>
-
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 
 #include "machine.h"
 #include "rle.h"
@@ -37,7 +30,7 @@ int truncations = 0;
 rle_hdr in_hdr, out_hdr;
 rle_pixel r_in, g_in, b_in;
 
-int
+void
 main(argc,argv)
 int argc;
 char *argv[];

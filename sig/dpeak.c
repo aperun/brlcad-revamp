@@ -6,12 +6,6 @@
  */
 #include "conf.h"
 
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include <stdio.h>
 #include <math.h>
 #include "machine.h"
@@ -30,7 +24,7 @@ Usage: dpeak [window_size (512)] < doubles\n";
 
 void	dumpmax();
 
-int main( argc, argv )
+main( argc, argv )
 int	argc;
 char	**argv;
 {
@@ -68,8 +62,6 @@ char	**argv;
 		}
 		dumpmax();
 	}
-
-	return 0;
 }
 
 #define	NUMPEAKS 1

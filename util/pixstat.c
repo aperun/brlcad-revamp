@@ -27,19 +27,10 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
-
-#include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-#include <unistd.h>
-#include <stdlib.h>
 #include <math.h>
 
 #define	IBUFSIZE 3*1024		/* Max read size in rgb pixels */
@@ -59,7 +50,6 @@ void	show_hist();
 
 static char *Usage = "usage: pixstat [-v] [file.pix]\n";
 
-int
 main( argc, argv )
 int argc;
 char **argv;
@@ -200,7 +190,6 @@ char **argv;
 
 	if( verbose )
 		show_hist();
-	return 0;
 }
 
 /*

@@ -33,7 +33,7 @@
 
 
 #ifndef lint
-static const char RCSrayhide[] = "@(#)$Header$ (BRL)";
+static char RCSrayhide[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -45,8 +45,7 @@ static const char RCSrayhide[] = "@(#)$Header$ (BRL)";
 #include "vmath.h"
 #include "raytrace.h"
 #include "./ext.h"
-#include "rtprivate.h"
-#include "plot3.h"
+#include "rdebug.h"
 
 #define SEEKING_START_PT 0
 #define FOUND_START_PT 1

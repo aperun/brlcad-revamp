@@ -31,7 +31,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "tk.h"
 #include <X11/Xutil.h>
 
-#define USE_DIALS_AND_BUTTONS 1
+#define USE_DIALS_AND_BUTTONS 0
 
 #ifdef HAVE_XOSDEFS_H
 #include <X11/Xfuncproto.h>
@@ -178,6 +178,7 @@ get_color(Display *dpy, Colormap cmap, XColor *color)
 #undef CSCK
 
 }
+
 
 /*
  *			X _ O P E N
@@ -371,6 +372,9 @@ X_open(interp, argc, argv)
 		 Tk_Depth(((struct dm_xvars *)dmp->dm_vars.pub_vars)->xtkwin));
 
   if(((struct x_vars *)dmp->dm_vars.priv_vars)->is_trueColor){
+    int r = 255;
+    int g = 0;
+    int b = 0;
     XColor fg, bg;
 
     fg.red = 65535;
@@ -382,6 +386,7 @@ X_open(interp, argc, argv)
 
     ((struct x_vars *)dmp->dm_vars.priv_vars)->fg = fg.pixel;
 
+    r = g = b = 0;
     bg.red = bg.green = bg.blue = 0;
     get_color(((struct dm_xvars *)dmp->dm_vars.pub_vars)->dpy,
 		((struct dm_xvars *)dmp->dm_vars.pub_vars)->cmap,
@@ -485,7 +490,7 @@ Skip_dials:
 			 ((struct x_vars *)dmp->dm_vars.priv_vars)->bg);
   Tk_MapWindow(((struct dm_xvars *)dmp->dm_vars.pub_vars)->xtkwin);
 
-  MAT_IDN(((struct x_vars *)dmp->dm_vars.priv_vars)->xmat);
+  bn_mat_idn(((struct x_vars *)dmp->dm_vars.priv_vars)->xmat);
 
   return dmp;
 }
@@ -617,7 +622,7 @@ int which_eye;
 #endif
   }
 
-  MAT_COPY(((struct x_vars *)dmp->dm_vars.priv_vars)->xmat, mat);
+  bn_mat_copy(((struct x_vars *)dmp->dm_vars.priv_vars)->xmat, mat);
   return TCL_OK;
 }
 

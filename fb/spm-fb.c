@@ -14,7 +14,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -45,7 +45,6 @@ Usage: spm-fb [-h -s] [-F framebuffer]\n\
 	[-S squarescrsize] [-W scr_width] [-N scr_height]\n\
 	vsize [filename]\n";
 
-int
 get_args( argc, argv )
 register char **argv;
 {
@@ -99,7 +98,6 @@ register char **argv;
 /*
  *			M A I N
  */
-int
 main( argc, argv )
 int	argc;
 char	**argv;

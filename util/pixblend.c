@@ -30,11 +30,6 @@
 
 #include <sys/time.h>
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <stdlib.h>
 
 #include "machine.h"
@@ -148,7 +143,6 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main(argc, argv)
 int argc;
 char **argv;

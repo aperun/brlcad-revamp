@@ -41,8 +41,7 @@
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
-#include "plot3.h"
+#include "../rt/rdebug.h"
 #include "../rt/light.h"
 
 /* Sky onditions for luminance calculations. */
@@ -1528,22 +1527,22 @@ fastf_t	lambda;	/* Wavelength of light.  Units: nm. */
 
 	if (lambda < 200. || lambda > 750.) {
 		rt_bomb("ozone absorption: bad wavelength.");
+	} else {
+		/* Find index of lower lambda in table. */
+		lo = 0;
+		hi = NABSORP - 1;
+		j = (NABSORP - 1) >> 1;
+		while (hi - lo > 1) {
+			if (table[j][0] <= lambda)
+				lo = j;
+			else if (table[j][0] > lambda)
+				hi = j;
+			j = lo + ((hi - lo) >> 1);
+		}
+		/* Do linear interpolation to find approximate values. */
+		ratio = (lambda - table[j][0]) / (table[j+1][0] - table[j][0]);
+		coeff = ratio*(table[j+1][1] - table[j][1]) + table[j][1];
 	}
-	/* Find index of lower lambda in table. */
-	lo = 0;
-	hi = NABSORP - 1;
-	j = (NABSORP - 1) >> 1;
-	while (hi - lo > 1) {
-		if (table[j][0] <= lambda)
-			lo = j;
-		else if (table[j][0] > lambda)
-			hi = j;
-		j = lo + ((hi - lo) >> 1);
-	}
-	/* Do linear interpolation to find approximate values. */
-	ratio = (lambda - table[j][0]) / (table[j+1][0] - table[j][0]);
-	coeff = ratio*(table[j+1][1] - table[j][1]) + table[j][1];
-
 	/* Convert units from 1/cm to 1/m */
 	return(/* 100. * */ coeff);
 }
@@ -1678,8 +1677,7 @@ fastf_t	t_vl;		/* Turbidity factor. */
 	case MEDIUM_SKY:
 		lum = homogenous_sky_lum(Sky_elmt, Sun, t_vl);
 		break;
-	case OVERCAST_SKY: /* fallthrough */
-	default:
+	case OVERCAST_SKY:
 		lum = overcast_sky_lum(lz, Zenith, Sky_elmt);
 		break;
 	}
@@ -2014,7 +2012,7 @@ fastf_t	*rgb;	/* Output, RGB approximation of input. */
 
 	fastf_t	krx, kry, krz, kgx, kgy, kgz, kbz;
 	fastf_t	ratio, r, g, b, x, y, z;
-	static const fastf_t	table[NCOLOR][4] = {
+	static CONST fastf_t	table[NCOLOR][4] = {
 		{380,	0.26899e-2,	0.20000e-3,	0.12260e-1},
 		{385,	0.53105e-2,	0.39556e-3,	0.24222e-1},
 		{390,	0.10781e-1,	0.80000e-3,	0.49250e-1},
@@ -2122,25 +2120,25 @@ fastf_t	*rgb;	/* Output, RGB approximation of input. */
 	/* Interpolate values of x, y, z. */
 	if (lambda < 380. || lambda > 825.) {
 		bu_log("lambda_to_rgb: bad wavelength, %g nm.", lambda);
-		bu_bomb("");
+		rt_bomb("");
+	} else {
+		/* Find index of lower lambda in table. */
+		lo = 0;
+		hi = NCOLOR - 1;
+		j = (NCOLOR - 1) >> 1;
+		while (hi - lo > 1) {
+			if (table[j][0] <= lambda)
+				lo = j;
+			else if (table[j][0] > lambda)
+				hi = j;
+			j = lo + ((hi - lo) >> 1);
+		}
+		/* Do linear interpolation to find approximate values. */
+		ratio = (lambda - table[j][0]) / (table[j+1][0] - table[j][0]);
+		x = ratio*(table[j+1][1] - table[j][1]) + table[j][1];
+		y = ratio*(table[j+1][2] - table[j][2]) + table[j][2];
+		z = ratio*(table[j+1][3] - table[j][3]) + table[j][3];
 	}
-	/* Find index of lower lambda in table. */
-	lo = 0;
-	hi = NCOLOR - 1;
-	j = (NCOLOR - 1) >> 1;
-	while (hi - lo > 1) {
-		if (table[j][0] <= lambda)
-			lo = j;
-		else if (table[j][0] > lambda)
-			hi = j;
-		j = lo + ((hi - lo) >> 1);
-	}
-	/* Do linear interpolation to find approximate values. */
-	ratio = (lambda - table[j][0]) / (table[j+1][0] - table[j][0]);
-	x = ratio*(table[j+1][1] - table[j][1]) + table[j][1];
-	y = ratio*(table[j+1][2] - table[j][2]) + table[j][2];
-	z = ratio*(table[j+1][3] - table[j][3]) + table[j][3];
-
 
 	/* Convert xyz to rgb. */
 	r = krx*x + kry*y + krz*z;
@@ -2178,12 +2176,12 @@ struct shadework	*swp;	/* Holds surface normal. */
 		ang,
 		bg_radiance,
 		del_omega,
+		i_dot_n,
 		irradiance,
 		phi,
 		r,
 		refl,
 		x, y;
-	fastf_t i_dot_n  = .9999;
 	vect_t	Ctr,
 		Horiz,
 		Sky_elmnt,

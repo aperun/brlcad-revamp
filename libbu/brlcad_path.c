@@ -14,7 +14,7 @@
  *  Distribution Status -
  *      Public Domain, Distribution Unlimitied.
  */
-static const char RCSbrlcad_path[] = "@(#)$Header$ (BRL)";
+static char RCSbrlcad_path[] = "@(#)$Header$ (BRL)";
 
 #include "conf.h"
 
@@ -39,7 +39,7 @@ static const char RCSbrlcad_path[] = "@(#)$Header$ (BRL)";
  */
 int
 bu_file_exists( path )
-const char *path;
+CONST char *path;
 {
 	struct	stat	sbuf;
 
@@ -67,7 +67,7 @@ const char *path;
  */
 char *
 bu_brlcad_path( rhs )
-const char *rhs;
+CONST char *rhs;
 {
 	static char	result[256];
 	char		*lhs;

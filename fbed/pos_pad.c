@@ -12,7 +12,8 @@
 			(301)278-6651 or DSN 298-6651
 */
 #if ! defined( lint )
-static const char RCSid[] = "@(#) pos_pad.c 2.1, modified 12/9/86 at 15:54:52, archive /vld/moss/src/fbed/s.pos_pad.c";
+static
+char sccsTag[] = "@(#) pos_pad.c 2.1, modified 12/9/86 at 15:54:52, archive /vld/moss/src/fbed/s.pos_pad.c";
 #endif
 
 #include "conf.h"
@@ -42,7 +43,6 @@ static	int pfd;
 static	char *padfile = "/dev/pad";
 static	int npoints;
 
-int
 pad_open(n)
 int n;
 	{
@@ -66,7 +66,6 @@ pad_close()
 	return;
 	}
 
-int
 getpos( pos )
 Point *pos;
 	{	static char str[1024];
@@ -92,7 +91,7 @@ Point *pos;
 		if (!(cp[0] & P_FLAG))
 			continue;
 		last = cp;
-		if ( (buttons = ((cp[0]&P_BUTTONS) >> 2)))
+		if (buttons = (cp[0]&P_BUTTONS) >> 2)
 			break;
 		}
 	if( last == NULL )

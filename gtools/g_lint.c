@@ -283,7 +283,7 @@ void	*v;
 int	show_origin;
 
 {
-    const char		*r1name, *r2name;
+    CONST char		*r1name, *r2name;
     struct g_lint_ovlp	*op = (struct g_lint_ovlp *) v;
     struct g_lint_seg	*sp;
 
@@ -1103,7 +1103,7 @@ char	**argv;
      *	(N.B. I use VMOVEN() here instead of VMOVE() to emphasize that
      *	 each call copies exactly three elements of the array).
      */
-    MAT_IDN(view2model);
+    mat_idn(view2model);
     mat_ae(view2model, azimuth, elevation);
     mat_inv(model2view, view2model);
     VMOVEN(unit_D, model2view, 3);

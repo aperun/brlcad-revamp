@@ -2,7 +2,7 @@
  *			G _ C L I N E . C
  *
  *  Purpose -
- *	Intersect a ray with a FASTGEN4 CLINE element
+ *	Intersect a ray with a FSTGEN4 CLINE element
  *
  *  Authors -
  *  	John Anderson
@@ -17,7 +17,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCScline[] = "@(#)$Header$ (BRL)";
+static char RCSxxx[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -44,13 +44,12 @@ struct cline_specific {
 
 #define	RT_CLINE_O(m)	offsetof( struct rt_cline_internal, m )
 
-const struct bu_structparse rt_cline_parse[] = {
+CONST struct bu_structparse rt_cline_parse[] = {
 	{ "%f", 3, "V", RT_CLINE_O( v ),  BU_STRUCTPARSE_FUNC_NULL },
 	{ "%f", 3, "H", RT_CLINE_O( h ),  BU_STRUCTPARSE_FUNC_NULL },
 	{ "%f", 1, "r", RT_CLINE_O( radius ), BU_STRUCTPARSE_FUNC_NULL },
 	{ "%f", 1, "t", RT_CLINE_O( thickness ), BU_STRUCTPARSE_FUNC_NULL },
-	{ {'\0','\0','\0','\0'}, 0, (char *)NULL, 0, BU_STRUCTPARSE_FUNC_NULL }
-	};
+	{0} };
 
 /* shared with do.c */
 fastf_t rt_cline_radius=-1.0;
@@ -126,9 +125,9 @@ struct rt_i		*rtip;
  */
 void
 rt_cline_print( stp )
-register const struct soltab *stp;
+register CONST struct soltab *stp;
 {
-	register const struct cline_specific *cline =
+	register CONST struct cline_specific *cline =
 		(struct cline_specific *)stp->st_specific;
 
 	VPRINT( "V", cline->V );
@@ -188,26 +187,16 @@ struct seg		*seghead;
 	}
 
 	cosa = VDOT( rp->r_dir, cline->h );
+        if( cosa > 0.0 )
+               tmp = cosa - 1.0;
+        else
+               tmp = cosa + 1.0;
 
-	if( cosa > 0.0 )
-		tmp = cosa - 1.0;
-	else
-		tmp = cosa + 1.0;
-
-	(void)bn_distsq_line3_line3( dist, cline->V, cline->height,
-				     rp->r_pt, rp->r_dir, pt1, pt2 );
+	(void) bn_distsq_line3_line3( dist, cline->V, cline->height, rp->r_pt, rp->r_dir, pt1, pt2 );
 
 	if( NEAR_ZERO( tmp, RT_DOT_TOL ) )
 	{
 		/* ray is parallel to CLINE */
-#if 1
-		/* FASTGEN developers claim they report hits on volume mode
-		 * when ray is parallel to CLINE axis, but their code drops
-		 * this case from consideration before their intersection code
-		 * is even called (see SUBROUTINE BULK)
-		 */
-		return( 0 );
-#else
 
 		if( cline->thickness > 0.0 )
 			return( 0 );	/* No end-on hits for plate mode cline */
@@ -243,14 +232,11 @@ struct seg		*seghead;
 			VMOVE( segp->seg_out.hit_normal, cline->h );
 		BU_LIST_INSERT( &(seghead->l), &(segp->l) );
 		return( 1 );
-#endif
 	}
 
 	if( dist[2] > reff*reff )
 		return( 0 );	/* missed */
 
-
-	/* Exactly ==0 and ==1 are hits, not misses */
 	if( dist[0] < 0.0 || dist[0] > 1.0 )
 		return( 0 );	/* missed */
 
@@ -379,12 +365,6 @@ register struct xray	*rp;
 		VREVERSE( hitp->hit_normal, hitp->hit_normal )
 	else if( dot >  0.0 && hitp->hit_surfno > 0 )
 		VREVERSE( hitp->hit_normal, hitp->hit_normal )
-
-	if( MAGNITUDE( hitp->hit_normal ) < 0.9 ) {
-		bu_log( "BAD normal for solid %s for ray -p %g %g %g -d %g %g %g\n",
-			stp->st_name, V3ARGS( rp->r_pt ), V3ARGS( rp->r_dir ) );
-		bu_bomb( "BAD normal\n" );
-	}
 }
 
 /*
@@ -443,9 +423,9 @@ register struct soltab *stp;
  */
 int
 rt_cline_class( stp, min, max, tol )
-const struct soltab    *stp;
-const vect_t		min, max;
-const struct bn_tol    *tol;
+CONST struct soltab    *stp;
+CONST vect_t		min, max;
+CONST struct bn_tol    *tol;
 {
 
 	return( 0 );
@@ -458,8 +438,8 @@ int
 rt_cline_plot( vhead, ip, ttol, tol )
 struct bu_list		*vhead;
 struct rt_db_internal	*ip;
-const struct rt_tess_tol *ttol;
-const struct bn_tol	*tol;
+CONST struct rt_tess_tol *ttol;
+CONST struct bn_tol	*tol;
 {
 	LOCAL struct rt_cline_internal	*cline_ip;
         LOCAL fastf_t           top[16*3];
@@ -554,8 +534,8 @@ rt_cline_tess( r, m, ip, ttol, tol )
 struct nmgregion	**r;
 struct model		*m;
 struct rt_db_internal	*ip;
-const struct rt_tess_tol *ttol;
-const struct bn_tol	*tol;
+CONST struct rt_tess_tol *ttol;
+CONST struct bn_tol	*tol;
 {
 	struct shell			*s;
 	struct rt_cline_internal	*cline_ip;
@@ -619,9 +599,6 @@ const struct bn_tol	*tol;
 	{
 		base_inner = (struct cline_vert *)bu_calloc( nsegs, sizeof( struct cline_vert ), "base inner vertices" );
 		top_inner = (struct cline_vert *)bu_calloc( nsegs, sizeof( struct cline_vert ), "top inner vertices" );
-	} else {
-		base_inner = NULL;
-		top_inner = NULL;
 	}
 
 	/* calculate geometry for each vertex */
@@ -642,8 +619,6 @@ const struct bn_tol	*tol;
 		{
 			c = a * (cline_ip->radius - cline_ip->thickness);
 			d = b * (cline_ip->radius - cline_ip->thickness);
-		} else {
-			c = d = 0;
 		}
 
 		a *= cline_ip->radius;
@@ -849,9 +824,9 @@ const struct bn_tol	*tol;
 int
 rt_cline_import( ip, ep, mat, dbip )
 struct rt_db_internal		*ip;
-const struct bu_external	*ep;
-register const mat_t		mat;
-const struct db_i		*dbip;
+CONST struct bu_external	*ep;
+register CONST mat_t		mat;
+CONST struct db_i		*dbip;
 {
 	LOCAL struct rt_cline_internal	*cline_ip;
 	union record			*rp;
@@ -866,7 +841,7 @@ const struct db_i		*dbip;
 		return(-1);
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_CLINE;
 	ip->idb_meth = &rt_functab[ID_CLINE];
 	ip->idb_ptr = bu_malloc( sizeof(struct rt_cline_internal), "rt_cline_internal");
@@ -892,9 +867,9 @@ const struct db_i		*dbip;
 int
 rt_cline_export( ep, ip, local2mm, dbip )
 struct bu_external		*ep;
-const struct rt_db_internal	*ip;
+CONST struct rt_db_internal	*ip;
 double				local2mm;
-const struct db_i		*dbip;
+CONST struct db_i		*dbip;
 {
 	struct rt_cline_internal	*cline_ip;
 	union record			*rec;
@@ -906,7 +881,7 @@ const struct db_i		*dbip;
 	cline_ip = (struct rt_cline_internal *)ip->idb_ptr;
 	RT_CLINE_CK_MAGIC(cline_ip);
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 	ep->ext_nbytes = sizeof(union record);
 	ep->ext_buf = (genptr_t)bu_calloc( 1, ep->ext_nbytes, "cline external");
 	rec = (union record *)ep->ext_buf;
@@ -927,80 +902,6 @@ const struct db_i		*dbip;
 }
 
 /*
- *			R T _ C L I N E _ I M P O R T 5
- *
- *  Import an cline from the database format to the internal format.
- *  Apply modeling transformations as well.
- */
-int
-rt_cline_import5( ip, ep, mat, dbip )
-struct rt_db_internal		*ip;
-const struct bu_external	*ep;
-register const mat_t		mat;
-const struct db_i		*dbip;
-{
-	struct rt_cline_internal	*cline_ip;
-	fastf_t				vec[8];
-
-	BU_CK_EXTERNAL( ep );
-
-	BU_ASSERT_LONG( ep->ext_nbytes, ==, SIZEOF_NETWORK_DOUBLE * 8 );
-
-	RT_CK_DB_INTERNAL( ip );
-	ip->idb_type = ID_CLINE;
-	ip->idb_meth = &rt_functab[ID_CLINE];
-	ip->idb_ptr = bu_malloc( sizeof(struct rt_cline_internal), "rt_cline_internal");
-
-	cline_ip = (struct rt_cline_internal *)ip->idb_ptr;
-	cline_ip->magic = RT_CLINE_INTERNAL_MAGIC;
-
-	/* Convert from database (network) to internal (host) format */
-	ntohd( (unsigned char *)vec, ep->ext_buf, 8 );
-
-	cline_ip->thickness = vec[0] / mat[15];
-	cline_ip->radius = vec[1] / mat[15];
-	MAT4X3PNT(cline_ip->v, mat, &vec[2]);
-	MAT4X3VEC(cline_ip->h, mat, &vec[5]);
-
-	return(0);			/* OK */
-}
-
-/*
- *			R T _ C L I N E _ E X P O R T 5
- *
- *  The name is added by the caller, in the usual place.
- */
-int
-rt_cline_export5( ep, ip, local2mm, dbip )
-struct bu_external		*ep;
-const struct rt_db_internal	*ip;
-double				local2mm;
-const struct db_i		*dbip;
-{
-	struct rt_cline_internal	*cline_ip;
-	fastf_t				vec[8];
-
-	RT_CK_DB_INTERNAL(ip);
-	if (ip->idb_type != ID_CLINE)  return(-1);
-	cline_ip = (struct rt_cline_internal *)ip->idb_ptr;
-	RT_CLINE_CK_MAGIC(cline_ip);
-
-	BU_CK_EXTERNAL(ep);
-	ep->ext_nbytes = SIZEOF_NETWORK_DOUBLE * 8;
-	ep->ext_buf = (genptr_t)bu_malloc(ep->ext_nbytes, "cline external");
-
-	vec[0] = cline_ip->thickness * local2mm;
-	vec[1] = cline_ip->radius * local2mm;
-	VSCALE(&vec[2], cline_ip->v, local2mm);
-	VSCALE(&vec[5], cline_ip->h, local2mm);
-
-	/* Convert from internal (host) to database (network) format */
-	htond(ep->ext_buf, (unsigned char *)vec, 8);
-
-	return(0);
-}
-
-/*
  *			R T _ C L I N E _ D E S C R I B E
  *
  *  Make human-readable formatted presentation of this solid.
@@ -1010,7 +911,7 @@ const struct db_i		*dbip;
 int
 rt_cline_describe( str, ip, verbose, mm2local )
 struct bu_vls		*str;
-const struct rt_db_internal	*ip;
+CONST struct rt_db_internal	*ip;
 int			verbose;
 double			mm2local;
 {
@@ -1066,7 +967,7 @@ rt_cline_tnurb( r, m, ip, tol )
 struct nmgregion	**r;
 struct model		*m;
 struct rt_db_internal	*ip;
-const struct bn_tol		*tol;
+CONST struct bn_tol		*tol;
 {
 	return( 1 );
 }
@@ -1074,8 +975,8 @@ const struct bn_tol		*tol;
 int
 rt_cline_tclget( interp, intern, attr )
 Tcl_Interp                      *interp;
-const struct rt_db_internal     *intern;
-const char                      *attr;
+CONST struct rt_db_internal     *intern;
+CONST char                      *attr;
 {
 	register struct rt_cline_internal *cli = 
 		(struct rt_cline_internal *)intern->idb_ptr;
@@ -1125,6 +1026,7 @@ char                    **argv;
 {
 	struct rt_cline_internal *cli =
 		(struct rt_cline_internal *)intern->idb_ptr;
+	int ret;
 	fastf_t *new;
 
 	RT_CK_DB_INTERNAL( intern );
@@ -1137,24 +1039,14 @@ char                    **argv;
 		if( *argv[0] == 'V' )
 		{
 			new = cli->v;
-			if( tcl_list_to_fastf_array( interp, argv[1], &new, &array_len ) !=
-			    array_len ) {
-				Tcl_SetResult( interp,
-				      "ERROR: Incorrect number of coordinates for vector\n",
-				      TCL_STATIC );
-				return( TCL_ERROR );
-			}
+			if( (ret=tcl_list_to_fastf_array( interp, argv[1], &new, &array_len ) ) )
+				return( ret );
 		}
 		else if( *argv[0] == 'H' )
 		{
 			new = cli->h;
-			if( tcl_list_to_fastf_array( interp, argv[1], &new, &array_len ) !=
-			    array_len ) {
-				Tcl_SetResult( interp,
-				      "ERROR: Incorrect number of coordinates for point\n",
-				      TCL_STATIC );
-				return( TCL_ERROR );
-			}
+			if( (ret=tcl_list_to_fastf_array( interp, argv[1], &new, &array_len ) ) )
+				return( ret );
 		}
 		else if( *argv[0] == 'R' )
 			cli->radius = atof( argv[1] );
@@ -1166,16 +1058,4 @@ char                    **argv;
 	}
 
 	return( TCL_OK );
-}
-
-int
-rt_cline_tclform( const struct rt_functab *ftp, Tcl_Interp *interp )
-{
-        RT_CK_FUNCTAB(ftp);
-
-        Tcl_AppendResult( interp,
-			  "V {%f %f %f} H {%f %f %f} R %f T %f", (char *)NULL );
-
-        return TCL_OK;
-
 }

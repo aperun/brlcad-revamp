@@ -115,4 +115,3 @@ Tcl_InitStubs (interp, version, exact)
     
     return actualVersion;
 }
-

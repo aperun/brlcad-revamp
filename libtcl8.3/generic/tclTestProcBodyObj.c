@@ -45,11 +45,11 @@ typedef struct CmdTable
  */
 
 static int	ProcBodyTestProcObjCmd _ANSI_ARGS_((ClientData dummy,
-			Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]));
+			Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
 static int	ProcBodyTestInitInternal _ANSI_ARGS_((Tcl_Interp *interp,
 			int isSafe));
 static int	RegisterCommand _ANSI_ARGS_((Tcl_Interp* interp,
-			char *namespace, const CmdTable *cmdTablePtr));
+			char *namespace, CONST CmdTable *cmdTablePtr));
 int             Procbodytest_Init _ANSI_ARGS_((Tcl_Interp * interp));
 int             Procbodytest_SafeInit _ANSI_ARGS_((Tcl_Interp * interp));
 
@@ -58,14 +58,14 @@ int             Procbodytest_SafeInit _ANSI_ARGS_((Tcl_Interp * interp));
  * declarations of the enable command procedure.
  */
 
-static const CmdTable commands[] =
+static CONST CmdTable commands[] =
 {
     { procCommand,	ProcBodyTestProcObjCmd,	1 },
 
     { 0, 0, 0 }
 };
 
-static const CmdTable safeCommands[] =
+static CONST CmdTable safeCommands[] =
 {
     { procCommand,	ProcBodyTestProcObjCmd,	1 },
 
@@ -141,7 +141,7 @@ static int RegisterCommand(interp, namespace, cmdTablePtr)
                                          * operation is performed */
     char *namespace;			/* the namespace in which the command
                                          * is registered */
-    const CmdTable *cmdTablePtr;	/* the command to register */
+    CONST CmdTable *cmdTablePtr;	/* the command to register */
 {
     char buf[128];
 
@@ -181,7 +181,7 @@ ProcBodyTestInitInternal(interp, isSafe)
                                  * is initialized */
     int isSafe;			/* 1 if this is a safe interpreter */
 {
-    const CmdTable *cmdTablePtr;
+    CONST CmdTable *cmdTablePtr;
 
     cmdTablePtr = (isSafe) ? &safeCommands[0] : &commands[0];
     for ( ; cmdTablePtr->cmdName ; cmdTablePtr++) {
@@ -231,7 +231,7 @@ ProcBodyTestProcObjCmd (dummy, interp, objc, objv)
     ClientData dummy;		/* context; not used */
     Tcl_Interp *interp;		/* the current interpreter */
     int objc;			/* argument count */
-    Tcl_Obj *const objv[];	/* arguments */
+    Tcl_Obj *CONST objv[];	/* arguments */
 {
     char *fullName;
     Tcl_Command procCmd;
@@ -317,4 +317,3 @@ ProcBodyTestProcObjCmd (dummy, interp, objc, objv)
 
     return result;
 }
-

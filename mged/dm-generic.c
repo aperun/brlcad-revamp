@@ -23,12 +23,6 @@
 #include "tk.h"
 #include <X11/Xutil.h>
 
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include "machine.h"
 #include "externs.h"
 #include "bu.h"
@@ -178,11 +172,10 @@ end:
 	snap_to_grid(&fx, &fy);
 
       if( mged_variables->mv_perspective_mode )
-            VSET(view_pt, fx, fy, 0.0)
+	      VSET(view_pt, fx, fy, 0.0)
       else
-            VSET(view_pt, fx, fy, 1.0)
-
-      MAT4X3PNT(model_pt, view_state->vs_vop->vo_view2model, view_pt);
+	      VSET(view_pt, fx, fy, 1.0)
+      MAT4X3PNT(model_pt, view_state->vs_view2model, view_pt);
       VSCALE(model_pt, model_pt, base2local);
       if(dmp->dm_zclip)
 	bu_vls_printf(&vls, "qray_nirt %lf %lf %lf",
@@ -248,7 +241,7 @@ end:
 	snap_to_grid(&fx, &fy);
 
       VSET(view_pt, fx, fy, 1.0);
-      MAT4X3PNT(model_pt, view_state->vs_vop->vo_view2model, view_pt);
+      MAT4X3PNT(model_pt, view_state->vs_view2model, view_pt);
       VSCALE(model_pt, model_pt, base2local);
       bu_vls_printf(&vls, "adc xyz %lf %lf %lf\n", model_pt[X], model_pt[Y], model_pt[Z]);
     } else if (grid_state->gr_snap && !stolen &&
@@ -257,10 +250,10 @@ end:
 	    point_t model_pt;
 
 	    snap_to_grid(&fx, &fy);
-	    MAT4X3PNT(view_pt, view_state->vs_vop->vo_model2view, curr_e_axes_pos);
+	    MAT4X3PNT(view_pt, view_state->vs_model2view, curr_e_axes_pos);
 	    view_pt[X] = fx;
 	    view_pt[Y] = fy;
-	    MAT4X3PNT(model_pt, view_state->vs_vop->vo_view2model, view_pt);
+	    MAT4X3PNT(model_pt, view_state->vs_view2model, view_pt);
 	    VSCALE(model_pt, model_pt, base2local);
 	    bu_vls_printf(&vls, "p %lf %lf %lf", model_pt[X], model_pt[Y], model_pt[Z]);
     } else if (grid_state->gr_snap && !stolen &&
@@ -269,10 +262,10 @@ end:
 	    point_t model_pt;
 
 	    snap_to_grid(&fx, &fy);
-	    MAT4X3PNT(view_pt, view_state->vs_vop->vo_model2view, curr_e_axes_pos);
+	    MAT4X3PNT(view_pt, view_state->vs_model2view, curr_e_axes_pos);
 	    view_pt[X] = fx;
 	    view_pt[Y] = fy;
-	    MAT4X3PNT(model_pt, view_state->vs_vop->vo_view2model, view_pt);
+	    MAT4X3PNT(model_pt, view_state->vs_view2model, view_pt);
 	    VSCALE(model_pt, model_pt, base2local);
 	    bu_vls_printf(&vls, "translate %lf %lf %lf", model_pt[X], model_pt[Y], model_pt[Z]);
     } else if (grid_state->gr_snap && !stolen &&
@@ -283,11 +276,11 @@ end:
 	    point_t vcenter;
 
 	    snap_to_grid(&fx, &fy);
-	    MAT_DELTAS_GET_NEG(vcenter, view_state->vs_vop->vo_center);
-	    MAT4X3PNT(view_pt, view_state->vs_vop->vo_model2view, vcenter);
+	    MAT_DELTAS_GET_NEG(vcenter, view_state->vs_toViewcenter);
+	    MAT4X3PNT(view_pt, view_state->vs_model2view, vcenter);
 	    view_pt[X] = fx;
 	    view_pt[Y] = fy;
-	    MAT4X3PNT(model_pt, view_state->vs_vop->vo_view2model, view_pt);
+	    MAT4X3PNT(model_pt, view_state->vs_view2model, view_pt);
 	    VSCALE(model_pt, model_pt, base2local);
 	    bu_vls_printf(&vls, "center %lf %lf %lf", model_pt[X], model_pt[Y], model_pt[Z]);
     } else
@@ -411,7 +404,7 @@ end:
 	if(grid_state->gr_snap)
 	  snap_to_grid(&view_pt[X], &view_pt[Y]);
 
-	MAT4X3PNT(model_pt, view_state->vs_vop->vo_view2model, view_pt);
+	MAT4X3PNT(model_pt, view_state->vs_view2model, view_pt);
 	VSCALE(model_pt, model_pt, base2local);
 
 	bu_vls_printf(&vls, "adc xyz %lf %lf %lf\n", model_pt[X], model_pt[Y], model_pt[Z]);
@@ -424,9 +417,9 @@ end:
       break;
     case 'd':
       fx = (dm_Xx2Normal(dmp, dml_omx) * GED_MAX -
-	    adc_state->adc_dv_x) * view_state->vs_vop->vo_scale * base2local * INV_GED;
+	    adc_state->adc_dv_x) * view_state->vs_Viewscale * base2local * INV_GED;
       fy = (dm_Xy2Normal(dmp, dml_omy, 1) * GED_MAX -
-	    adc_state->adc_dv_y) * view_state->vs_vop->vo_scale * base2local * INV_GED;
+	    adc_state->adc_dv_y) * view_state->vs_Viewscale * base2local * INV_GED;
 
       td = sqrt(fx * fx + fy * fy);
       bu_vls_init(&vls);
@@ -602,15 +595,19 @@ end:
       struct bu_vls tmp_vls;
 
       bu_vls_init(&tmp_vls);
+      start_catching_output(&tmp_vls);
+
       /* Bare set command, print out current settings */
-      bu_vls_struct_print2(&tmp_vls, "dm internal X variables", dm_xvars_vparse,
-		      (const char *)dmp->dm_vars.pub_vars);
+      bu_struct_print("dm internal X variables", dm_xvars_vparse,
+		      (CONST char *)dmp->dm_vars.pub_vars);
+
+      stop_catching_output(&tmp_vls);
       Tcl_AppendResult(interp, bu_vls_addr(&tmp_vls), (char *)NULL);
       bu_vls_free(&tmp_vls);
     }else if(argc == 2){
       bu_vls_init(&vls);
       bu_vls_struct_item_named(&vls, dm_xvars_vparse, argv[1],
-			       (const char *)dmp->dm_vars.pub_vars, ',');
+			       (CONST char *)dmp->dm_vars.pub_vars, ',');
       Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
       bu_vls_free(&vls);
     }

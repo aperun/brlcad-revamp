@@ -21,14 +21,14 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#ifdef HAVE_STRING_H
+#ifdef USE_STRING_H
 #include <string.h>
 #else
 #include <strings.h>
@@ -61,7 +61,6 @@ static char usage[] = "Usage: %s [-v] [-xX lvl] < brlcad_db.g > new db.g\n\
 /*
  *			M A I N
  */
-int
 int
 main(argc, argv)
 int	argc;

@@ -60,8 +60,8 @@ int
 getopt(nargc,nargv,ostr)
 int	nargc;
 #if defined(linux)
-char	* const nargv[];
-const char *ostr;
+char	* CONST nargv[];
+CONST char *ostr;
 #else
 char	*nargv[];
 char	*ostr;

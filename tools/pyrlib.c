@@ -9,7 +9,7 @@
  * 
  */
 #ifndef lint
-static const char rcs_ident[] = "$Id$";
+static char rcs_ident[] = "$Id$";
 #endif
 
 #include "conf.h"

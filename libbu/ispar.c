@@ -18,14 +18,13 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char RCSispar[] = "@(#)$Header$ (ARL)";
+static char RCSispar[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#include <signal.h>
 #include "machine.h"
 #include "externs.h"
 #include "bu.h"

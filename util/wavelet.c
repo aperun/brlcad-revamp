@@ -42,7 +42,6 @@
 
 
 #include <stdio.h>
-#include <unistd.h>
 #include "machine.h"
 #include "bu.h"
 #include "vmath.h"

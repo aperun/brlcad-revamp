@@ -20,7 +20,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -34,13 +34,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 /* Shared with dunncomm.c */
 extern int	fd;
 extern char	cmd;
-extern void dunnopen();
-extern int ready(int nsecs);
-extern void getexposure(char *title);
-extern int dunnsend(char color, int val);
-extern int goodstatus();
-extern void hangten();
-
 
 static int	nframes = 1;
 static char	*framebuffer;
@@ -52,7 +45,6 @@ Usage: dunnsnap [-h] [-F framebuffer]\n\
 	[-{sS} squarescrsize] [-{wW} scr_width] [-{nN} scr_height]\n\
 	[num_frames]\n";
 
-int
 get_args( argc, argv )
 register char **argv;
 {
@@ -94,12 +86,11 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main(argc, argv)
 int argc;
 char **argv;
 {
-	register FBIO *fbp = FBIO_NULL;
+	register FBIO *fbp;
 
 	if ( !get_args( argc, argv ) )  {
 		(void)fputs(usage, stderr);

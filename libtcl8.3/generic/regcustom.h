@@ -58,8 +58,8 @@
 #ifdef __REG_VOID_T
 #undef __REG_VOID_T
 #endif
-#ifdef __REG_const
-#undef __REG_const
+#ifdef __REG_CONST
+#undef __REG_CONST
 #endif
 #ifdef __REG_NOFRONT
 #undef __REG_NOFRONT
@@ -71,7 +71,7 @@
 #define	__REG_WIDE_T	Tcl_UniChar
 #define	__REG_REGOFF_T	long	/* not really right, but good enough... */
 #define	__REG_VOID_T	VOID
-#define	__REG_const	const
+#define	__REG_CONST	CONST
 /* names and declarations */
 #define	__REG_WIDE_COMPILE	TclReComp
 #define	__REG_WIDE_EXEC		TclReExec
@@ -112,4 +112,3 @@ typedef int celt;		/* type to hold chr, MCCE number, or NOCELT */
 
 /* and pick up the standard header */
 #include "regex.h"
-

@@ -7,7 +7,7 @@
 	$Header$ (BRL)
 */
 #if ! defined( lint )
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 #include <stdio.h>
 #include "./burst.h"

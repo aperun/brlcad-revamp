@@ -267,19 +267,18 @@ extern "C" {
  */
 
 #undef _ANSI_ARGS_
-#undef const
+#undef CONST
 #ifndef INLINE
 #   define INLINE
 #endif
 
-  /* const is deprecated */
 #if ((defined(__STDC__) || defined(SABER)) && !defined(NO_PROTOTYPE)) || defined(__cplusplus) || defined(USE_PROTOTYPE)
 #   define _USING_PROTOTYPES_ 1
 #   define _ANSI_ARGS_(x)	x
-#   define const const
+#   define CONST const
 #else
 #   define _ANSI_ARGS_(x)	()
-#   define const
+#   define CONST
 #endif
 
 /*
@@ -563,7 +562,7 @@ typedef void (Tcl_CmdTraceProc) _ANSI_ARGS_((ClientData clientData,
 typedef void (Tcl_DupInternalRepProc) _ANSI_ARGS_((struct Tcl_Obj *srcPtr, 
         struct Tcl_Obj *dupPtr));
 typedef int (Tcl_EncodingConvertProc)_ANSI_ARGS_((ClientData clientData,
-	const char *src, int srcLen, int flags, Tcl_EncodingState *statePtr,
+	CONST char *src, int srcLen, int flags, Tcl_EncodingState *statePtr,
 	char *dst, int dstLen, int *srcReadPtr, int *dstWrotePtr,
 	int *dstCharsPtr));
 typedef void (Tcl_EncodingFreeProc)_ANSI_ARGS_((ClientData clientData));
@@ -586,7 +585,7 @@ typedef int (Tcl_MathProc) _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, Tcl_Value *args, Tcl_Value *resultPtr));
 typedef void (Tcl_NamespaceDeleteProc) _ANSI_ARGS_((ClientData clientData));
 typedef int (Tcl_ObjCmdProc) _ANSI_ARGS_((ClientData clientData,
-	Tcl_Interp *interp, int objc, struct Tcl_Obj *const objv[]));
+	Tcl_Interp *interp, int objc, struct Tcl_Obj *CONST objv[]));
 typedef int (Tcl_PackageInitProc) _ANSI_ARGS_((Tcl_Interp *interp));
 typedef void (Tcl_PanicProc) _ANSI_ARGS_(TCL_VARARGS(char *, format));
 typedef void (Tcl_TcpAcceptProc) _ANSI_ARGS_((ClientData callbackData,
@@ -1013,9 +1012,9 @@ typedef struct Tcl_HashTable {
                                          * is the size of the key.
 					 */
     Tcl_HashEntry *(*findProc) _ANSI_ARGS_((struct Tcl_HashTable *tablePtr,
-	    const char *key));
+	    CONST char *key));
     Tcl_HashEntry *(*createProc) _ANSI_ARGS_((struct Tcl_HashTable *tablePtr,
-	    const char *key, int *newPtr));
+	    CONST char *key, int *newPtr));
 } Tcl_HashTable;
 
 /*
@@ -1321,7 +1320,7 @@ typedef struct Tcl_NotifierProcs {
  */
 
 typedef struct Tcl_EncodingType {
-    const char *encodingName;	/* The name of the encoding, e.g.  "euc-jp".
+    CONST char *encodingName;	/* The name of the encoding, e.g.  "euc-jp".
 				 * This name is the unique key for this
 				 * encoding type. */
     Tcl_EncodingConvertProc *toUtfProc;

@@ -79,8 +79,8 @@ static TkTextTag *	FindTag _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkText *textPtr, char *tagName));
 static void		SortTags _ANSI_ARGS_((int numTags,
 			    TkTextTag **tagArrayPtr));
-static int		TagSortProc _ANSI_ARGS_((const VOID *first,
-			    const VOID *second));
+static int		TagSortProc _ANSI_ARGS_((CONST VOID *first,
+			    CONST VOID *second));
 
 /*
  *--------------------------------------------------------------
@@ -1022,7 +1022,7 @@ SortTags(numTags, tagArrayPtr)
 
 static int
 TagSortProc(first, second)
-    const VOID *first, *second;		/* Elements to be compared. */
+    CONST VOID *first, *second;		/* Elements to be compared. */
 {
     TkTextTag *tagPtr1, *tagPtr2;
 

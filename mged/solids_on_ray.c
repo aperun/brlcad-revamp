@@ -23,7 +23,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -33,6 +33,7 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include <signal.h>
 
 #include "tcl.h"
+#include "tk.h"
 #include "machine.h"
 #include "bu.h"
 #include "vmath.h"
@@ -63,7 +64,6 @@ struct sol_name_dist
 };
 #define	SOL_NAME_DIST_MAGIC	0x736c6e64
 
-#if OLD_RPT
 /*
  *		S O L _  C O M P _ N A M E
  *
@@ -164,8 +164,6 @@ int	depth;
     Tcl_AppendResult(interp, bu_vls_addr(&tmp_vls), (char *)NULL);
     bu_vls_free(&tmp_vls);
 }
-#endif /* OLD_RPT */
-
 
 /*
  *			    N O _ O P
@@ -192,11 +190,17 @@ build_path_name_of_solid(vp, sp)
 struct bu_vls	*vp;
 struct solid	*sp;
 {
+    int		i;
+
     bu_vls_trunc(vp, 0);
-    db_path_to_vls(vp, &sp->s_fullpath);
+    for (i = 0; i < sp -> s_last; ++i)
+    {
+	bu_vls_strcat(vp, sp -> s_path[i] -> d_namep);
+	bu_vls_strcat(vp, "/");
+    }
+    bu_vls_strcat(vp, sp -> s_path[sp -> s_last] -> d_namep);
 }
 
-#if OLD_RPT
 /*
  *			R P T _ S O L I D S
  *
@@ -270,8 +274,8 @@ struct seg		*finished_segs;
     {
 	BU_CKMAG(pp, PT_MAGIC, "partition");
 	BU_CKMAG(pp -> pt_regionp, RT_REGION_MAGIC, "region");
-	printf("    Partition <x%lx> is '%s' ",
-	    (long)pp, pp -> pt_regionp -> reg_name);
+	printf("    Partition <%lx> is '%s' ",
+	    pp, pp -> pt_regionp -> reg_name);
 	
 	printf("\n--- Solids hit on this partition ---\n");
 	for (i = 0; i < (pp -> pt_seglist).end; ++i)
@@ -455,7 +459,6 @@ struct seg		*finished_segs;
     return (1);
 #endif
 }
-#endif
 
 /*
  *			R P T _ H I T S _ M I K E
@@ -529,7 +532,7 @@ struct application	*ap;
 char **skewer_solids (argc, argv, ray_orig, ray_dir, full_path)
 
 int		argc;
-const char	**argv;
+CONST char	**argv;
 point_t		ray_orig;
 vect_t		ray_dir;
 int		full_path;
@@ -564,8 +567,6 @@ int		full_path;
     /*
      *	Initialize the application
      */
-    ap.a_magic = RT_AP_MAGIC;
-    ap.a_ray.magic = RT_RAY_MAGIC;
     ap.a_hit = rpt_hits_mike;
     ap.a_miss = rpt_miss;
     ap.a_resource = RESOURCE_NULL;

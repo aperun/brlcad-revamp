@@ -237,9 +237,9 @@ GUI interactions that affect panes."}}
 
     incr row
     frame $top.csF$row
-    button $top.okB -relief raised -text "OK"\
+    button $top.okB -relief raised -text "Ok"\
 	    -command "color_scheme_ok $id $top"
-    hoc_register_data $top.okB "OK"\
+    hoc_register_data $top.okB "Ok"\
 	    {{summary "Apply the colors and dismiss the
 \"Color Schemes\" control panel."}}
     button $top.applyB -relief raised -text "Apply"\

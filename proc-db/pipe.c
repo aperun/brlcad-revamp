@@ -29,7 +29,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -45,10 +45,8 @@ static const char RCSid[] = "$Header$";
 #include "machine.h"
 #include "externs.h"
 #include "vmath.h"
-#include "raytrace.h"
+#include "db.h"
 #include "wdb.h"
-
-#define NAMESIZE 80		/* in v5, they can be longer than 16 */
 
 #define	VERSION	3
 #define	RELEASE	1
@@ -99,7 +97,7 @@ char *arb="%02d.arb";
 
 void Usage();
 
-struct rt_wdb *fdout;	/* file for libwdb writes */
+FILE *fdout;	/* file for libwdb writes */
 
 void
 Make_name( ptr , form , base , number )
@@ -158,7 +156,7 @@ void
 Names()
 {
 	struct points *ptr;
-	char *inform=NULL,*outform=NULL,*cutform=NULL;
+	char *inform,*outform,*cutform;
 	int nummer=0;
 
 
@@ -187,7 +185,7 @@ Names()
 		if( !cable ) /* Inner RCC */
 			Make_name( ptr->tubflu , rcc_in , name , nummer );
 
-		if( (sphere || torus) && ptr != root )
+		if( sphere || torus && ptr != root )
 		{
 			/* Outer elbow */
 			Make_name( ptr->elbow , outform , name , nummer );
@@ -201,14 +199,14 @@ Names()
 		/* Make region names */
 		Make_name( ptr->tube_r , tub_reg , name , nummer ); /* tube region */
 
-		if( (torus || sphere) && ptr != root )	/* Make elbow region name */
+		if( torus || sphere && ptr != root )	/* Make elbow region name */
 			Make_name( ptr->elbow_r , elb_reg , name , nummer );
 
 		if( !cable )	/* Make fluid region names */
 		{
 			Make_name( ptr->tubflu_r , tub_flu , name , nummer );
 
-			if( (torus || sphere) && ptr != root )	/* Make elbow fluid region names */
+			if( torus || sphere && ptr != root )	/* Make elbow fluid region names */
 				Make_name( ptr->elbflu_r , elb_flu , name , nummer );
 		}
 
@@ -321,9 +319,6 @@ Pipes()
 	struct points *ptr;
 	fastf_t len;
 	int comblen;
-	struct wmember head;
-
-	BU_LIST_INIT(&head.l);
 
 	ptr = root;
 	if( ptr == NULL )
@@ -344,16 +339,17 @@ Pipes()
 		if( torus )
 		{
 			/* Make tubing region */
-			mk_addmember( ptr->tube , &head.l , WMOP_UNION );	/* make 'u' member record	   */
+			mk_fcomb( fdout , ptr->tube_r , 2-cable , REGION );	/* make REGION  comb record	   */
+			mk_memb( fdout , ptr->tube , identity , UNION );	/* make 'u' member record	   */
 			if( !cable )
 			{
 				/* Subtract inside solid */
-				mk_addmember( ptr->tubflu , &head.l , WMOP_SUBTRACT );	/* make '-' member record	   */
+				mk_memb( fdout , ptr->tubflu , identity , SUBTRACT );	/* make '-' member record	   */
 
 				/* Make fluid region */
-				mk_comb1( fdout, ptr->tubflu_r, ptr->tubflu, 1 );
+				mk_fcomb( fdout , ptr->tubflu_r , 1 , REGION );		/* make REGION comb record	*/
+				mk_memb( fdout , ptr->tubflu , identity , UNION );	/* make 'u' member record	*/
 			}
-			mk_lfcomb( fdout , ptr->tube_r , &head , 1 );
 		}
 		else if( mitre )
 		{
@@ -369,18 +365,17 @@ Pipes()
 			if( ptr->prev == NULL )
 				comblen--;
 
-			mk_addmember( ptr->tube , &head.l , WMOP_UNION );	/* make 'u' member record	   */
+			mk_fcomb( fdout , ptr->tube_r , comblen , REGION );		/* make REGION  comb record	   */
+			mk_memb( fdout , ptr->tube , identity , UNION );	/* make 'u' member record	   */
 
 			if( !cable )
-				mk_addmember( ptr->tubflu , &head.l , WMOP_SUBTRACT );	/* make '-' member record	   */
+				mk_memb( fdout , ptr->tubflu , identity , SUBTRACT );	/* make '-' member record	   */
 
 			if( ptr->next->next != NULL )
-				mk_addmember( ptr->next->cut , &head.l , WMOP_SUBTRACT );	/* make '+' member record	   */
+				mk_memb( fdout , ptr->next->cut , identity , SUBTRACT );	/* make '+' member record	   */
 
 			if( ptr->prev != NULL )
-				mk_addmember( ptr->cut , &head.l , WMOP_INTERSECT );	/* subtract HAF */
-
-			mk_lfcomb( fdout, ptr->tube_r, &head, 1 );
+				mk_memb( fdout , ptr->cut , identity , INTERSECT );	/* subtract HAF */
 
 			if( !cable )
 			{
@@ -392,15 +387,15 @@ Pipes()
 				if( ptr->prev == NULL )
 					comblen--;
 
-				mk_addmember( ptr->tubflu , &head.l , WMOP_UNION );	/* make 'u' member record	*/
+				mk_fcomb( fdout , ptr->tubflu_r , comblen , REGION );	/* make REGION comb record	*/
+
+				mk_memb( fdout , ptr->tubflu , identity , UNION );	/* make 'u' member record	*/
 
 				if( ptr->next->next != NULL )
-					mk_addmember( ptr->next->cut , &head.l , WMOP_SUBTRACT );	/* make '+' member record	   */
+					mk_memb( fdout , ptr->next->cut , identity , SUBTRACT );	/* make '+' member record	   */
 
 				if( ptr->prev != NULL )
-					mk_addmember( ptr->cut , &head.l , WMOP_INTERSECT );	/* subtract */
-
-				mk_lfcomb( fdout , ptr->tubflu_r , &head , 1 );	/* make REGION comb record	*/
+					mk_memb( fdout , ptr->cut , identity , INTERSECT );	/* subtract */
 			}
 		}
 		else if( sphere )
@@ -415,33 +410,36 @@ Pipes()
 			if( !cable && ptr->prev != NULL )
 				comblen++;
 			
+			mk_fcomb( fdout , ptr->tube_r , comblen , REGION );
+
 			/* make 'u' member record	   */
 
-			mk_addmember( ptr->tube , &head.l , WMOP_UNION );
+			mk_memb( fdout , ptr->tube , identity , UNION );
 
 			/* make '-' member record	   */
 			if( !cable )
-				mk_addmember( ptr->tubflu , &head.l , WMOP_SUBTRACT );
+				mk_memb( fdout , ptr->tubflu , identity , SUBTRACT );
 
 			if( ptr->next->tube[0] != '\0' )	/* subtract outside of next tube */
-				mk_addmember( ptr->next->tube , &head.l , WMOP_SUBTRACT );
+				mk_memb( fdout , ptr->next->tube , identity , SUBTRACT );
 			if( !cable && ptr->prev != NULL ) /* subtract inside of previous tube */
-				mk_addmember( ptr->prev->tubflu , &head.l , WMOP_SUBTRACT );
-
-			mk_lfcomb( fdout , ptr->tube_r , &head , REGION );
+				mk_memb( fdout , ptr->prev->tubflu , identity , SUBTRACT );
 
 			if( !cable )
 			{
 				/* make REGION for fluid */
 			
+				if( ptr->next->tubflu[0] != '\0' )	/* there will be 2 members */
+					mk_fcomb( fdout , ptr->tubflu_r , 2 , REGION );
+				else		/* only 1 member */
+					mk_fcomb( fdout , ptr->tubflu_r , 1 , REGION );
+
 				/* make 'u' member record	*/
 
-				mk_addmember( ptr->tubflu , &head.l , WMOP_UNION );
+				mk_memb( fdout , ptr->tubflu , identity , UNION );
 
 				if( ptr->next->tubflu[0] != '\0'  )	/* subtract inside of next tube */
-					mk_addmember( ptr->next->tubflu , &head.l , WMOP_SUBTRACT );
-
-				mk_lfcomb( fdout , ptr->tubflu_r , &head , REGION );
+					mk_memb( fdout , ptr->next->tubflu , identity , SUBTRACT );
 			}
 		}
 		else if( nothing )
@@ -455,34 +453,37 @@ Pipes()
 				comblen++;
 			if( !cable && ptr->prev != NULL )
 				comblen++;
+			
+			mk_fcomb( fdout , ptr->tube_r , comblen , REGION );
 
 			/* make 'u' member record	   */
 
-			mk_addmember( ptr->tube , &head.l , WMOP_UNION );
+			mk_memb( fdout , ptr->tube , identity , UNION );
 
 			/* make '-' member record	   */
 			if( !cable )
-				mk_addmember( ptr->tubflu , &head.l , WMOP_SUBTRACT );
+				mk_memb( fdout , ptr->tubflu , identity , SUBTRACT );
 
 			if( ptr->next->tube[0] != '\0' )	/* subtract outside of next tube */
-				mk_addmember( ptr->next->tube , &head.l , WMOP_SUBTRACT );
+				mk_memb( fdout , ptr->next->tube , identity , SUBTRACT );
 			if( !cable && ptr->prev != NULL ) /* subtract inside of previous tube */
-				mk_addmember( ptr->prev->tubflu , &head.l , WMOP_SUBTRACT );
-
-			mk_lfcomb( fdout , ptr->tube_r , &head , REGION );
+				mk_memb( fdout , ptr->prev->tubflu , identity , SUBTRACT );
 
 			if( !cable )
 			{
 				/* make REGION for fluid */
 			
+				if( ptr->next->tubflu[0] != '\0' )	/* there will be 2 members */
+					mk_fcomb( fdout , ptr->tubflu_r , 2 , REGION );
+				else		/* only 1 member */
+					mk_fcomb( fdout , ptr->tubflu_r , 1 , REGION );
+
 				/* make 'u' member record	*/
 
-				mk_addmember( ptr->tubflu , &head.l , WMOP_UNION );
+				mk_memb( fdout , ptr->tubflu , identity , UNION );
 
 				if( ptr->next->tubflu[0] != '\0'  )	/* subtract inside of next tube */
-					mk_addmember( ptr->next->tubflu , &head.l , WMOP_SUBTRACT );
-
-				mk_lfcomb( fdout , ptr->tubflu_r , &head , REGION );
+					mk_memb( fdout , ptr->next->tubflu , identity , SUBTRACT );
 			}
 		}
 		ptr = ptr->next;
@@ -496,15 +497,13 @@ Elbows()	/* make a tubing elbow and fluid elbow */
 	point_t pts[8];
 	fastf_t len;
 	struct points *ptr;
-	struct wmember head;
+	int comblen;
 
 	if( nothing || mitre )
 		return;
 
 	if( root == NULL )
 		return;
-
-	BU_LIST_INIT(&head.l);
 
 	ptr = root->next;
 	while( ptr->next != NULL )
@@ -550,35 +549,36 @@ Elbows()	/* make a tubing elbow and fluid elbow */
 
 		if( torus )
 		{
-			mk_addmember( ptr->elbow , &head.l , WMOP_UNION );	/* make 'u' member record	   */
+			mk_fcomb( fdout , ptr->elbow_r , 3-cable , REGION );	/* make REGION  comb record	   */
+			mk_memb( fdout , ptr->elbow , identity , UNION );	/* make 'u' member record	   */
 			if( !cable )
-				mk_addmember(  ptr->elbflu , &head.l , WMOP_SUBTRACT );	/* make '-' member record	   */
-			mk_addmember( ptr->cut , &head.l , WMOP_INTERSECT );
-			mk_lfcomb( fdout , ptr->elbow_r , &head , REGION );	/* make REGION  comb record	   */
+				mk_memb( fdout , ptr->elbflu , identity , SUBTRACT );	/* make '-' member record	   */
+			mk_memb( fdout , ptr->cut , identity , INTERSECT );
 
 			if( !cable )
 			{
-				mk_addmember( ptr->elbflu , &head.l , WMOP_UNION );	/* make 'u' member record	*/
-				mk_addmember( ptr->cut , &head.l , WMOP_INTERSECT );
-				mk_lfcomb( fdout , ptr->elbflu_r , &head , REGION );		/* make REGION comb record	*/
+				mk_fcomb( fdout , ptr->elbflu_r , 2 , REGION );		/* make REGION comb record	*/
+				mk_memb( fdout , ptr->elbflu , identity , UNION );	/* make 'u' member record	*/
+				mk_memb( fdout , ptr->cut , identity , INTERSECT );
 			}
 		}
 		else if( sphere )
 		{
-			mk_addmember( ptr->elbow , &head.l , WMOP_UNION );	/* make 'u' member record	   */
+			comblen = 4 - cable;
+			mk_fcomb( fdout , ptr->elbow_r , comblen , REGION );	/* make REGION  comb record	   */
+			mk_memb( fdout , ptr->elbow , identity , UNION );	/* make 'u' member record	   */
 			if( !cable )
-				mk_addmember( ptr->elbflu , &head.l , WMOP_SUBTRACT );	/* make '-' member record	   */
-			mk_addmember( ptr->tube , &head.l , WMOP_SUBTRACT );
-			mk_addmember( ptr->prev->tube , &head.l , WMOP_SUBTRACT );	
-
-			mk_lfcomb( fdout , ptr->elbow_r , &head , REGION );	/* make REGION  comb record	   */
+				mk_memb( fdout , ptr->elbflu , identity , SUBTRACT );	/* make '-' member record	   */
+			mk_memb( fdout , ptr->tube , identity , SUBTRACT );
+			mk_memb( fdout , ptr->prev->tube , identity , SUBTRACT );	
 
 			if( !cable )
 			{
-				mk_addmember( ptr->elbflu , &head.l , WMOP_UNION );	/* make 'u' member record	*/
-				mk_addmember( ptr->tube , &head.l , WMOP_SUBTRACT );
-				mk_addmember( ptr->prev->tube , &head.l , WMOP_SUBTRACT );	
-				mk_lfcomb( fdout , ptr->elbflu_r , &head , REGION );		/* make REGION comb record	*/
+				comblen = 3;
+				mk_fcomb( fdout , ptr->elbflu_r , 3 , REGION );		/* make REGION comb record	*/
+				mk_memb( fdout , ptr->elbflu , identity , UNION );	/* make 'u' member record	*/
+				mk_memb( fdout , ptr->tube , identity , SUBTRACT );
+				mk_memb( fdout , ptr->prev->tube , identity , SUBTRACT );	
 			}
 		}
 		ptr = ptr->next;
@@ -593,9 +593,6 @@ Groups()
 	char *pipe_group=".pipe";
 	char *fluid_group=".fluid";
 	int comblen=0;
-	struct wmember	head;
-
-	BU_LIST_INIT(&head.l);
 
 	ptr = root;
 	if( ptr == NULL )
@@ -617,17 +614,17 @@ Groups()
 		Make_name( tag , pipe_group , name , 0 );
 
 		/* Make group */
+		mk_fcomb( fdout , tag , comblen , 0 );
 		ptr = root;
 		while( ptr->next != NULL )
 		{
-			mk_addmember( ptr->tube_r , &head.l , WMOP_UNION );	/* tube regions */
+			mk_memb( fdout , ptr->tube_r , identity , UNION );	/* tube regions */
 
 			if( !nothing && !mitre && ptr != root )
-				mk_addmember( ptr->elbow_r , &head.l , WMOP_UNION );	/* elbows */
+				mk_memb( fdout , ptr->elbow_r , identity , UNION );	/* elbows */
 
 			ptr = ptr->next;
 		}
-		mk_lfcomb( fdout , tag , &head , 0 );
 
 		if( !cable )
 		{
@@ -635,22 +632,21 @@ Groups()
 			Make_name( tag , fluid_group , name , 0 );
 
 			/* Make group */
+			mk_fcomb( fdout , tag , comblen , 0 );
 			ptr = root;
 			while( ptr->next != NULL )
 			{
-				mk_addmember( ptr->tubflu_r , &head.l , WMOP_UNION );	/* fluid in tubes */
+				mk_memb( fdout , ptr->tubflu_r , identity , UNION );	/* fluid in tubes */
 				
 				if( !nothing && !mitre && ptr != root )
-					mk_addmember( ptr->elbflu_r , &head.l , WMOP_UNION ); /* fluid in elbows */
+					mk_memb( fdout , ptr->elbflu_r , identity , UNION ); /* fluid in elbows */
 				
-				ptr = ptr->next;
+					ptr = ptr->next;
 			}
-			mk_lfcomb( fdout , tag , &head , 0 );
 		}
 	}
 }
 
-int
 main(argc, argv)
 int argc;
 char *argv[];
@@ -705,7 +701,7 @@ char *argv[];
 
 	strcpy( name , argv[optind++] ); /* Base name for objects */
 
-	fdout = wdb_fopen( argv[optind] );
+	fdout = fopen( argv[optind] , "w" );
 	if( fdout == NULL )
 	{
 		fprintf( stderr , "Cannot open %s\n" , argv[optind] );
@@ -714,7 +710,7 @@ char *argv[];
 		exit( 1 );
 	}
 
-	MAT_IDN(identity);	/* Identity matrix for all objects */
+	bn_mat_idn(identity);	/* Identity matrix for all objects */
 	pi = atan2( 0.0 , -1.0 );	/* PI */
 
 	printf( "FLUID & PIPING V%d.%d 10 Mar 89\n\n" , VERSION , RELEASE );
@@ -809,7 +805,8 @@ char *argv[];
 
 	Groups();	/* Make some groups */
 
-	return 0;
+	exit( 0 );
+
 }
 
 void

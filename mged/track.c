@@ -21,7 +21,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -43,7 +43,6 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "wdb.h"
 #include "./ged.h"
 #include "./mged_dm.h"
-#include "./cmd.h"
 
 extern void aexists();
 
@@ -73,6 +72,7 @@ int argc;
 char **argv;
 {
 
+	register struct directory *dp;
 	fastf_t fw[3], lw[3], iw[3], dw[3], tr[3];
 	char solname[12], regname[12], grpname[9], oper[3];
 	int i, j, memb[4];
@@ -81,12 +81,9 @@ char **argv;
 	int item, mat, los;
 	int arg;
 	int edit_result;
-	struct bu_list head;
 
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
-
-	BU_LIST_INIT(&head);
 
 	if(argc < 1 || 27 < argc){
 	  struct bu_vls vls;
@@ -509,23 +506,12 @@ tryagain:	/* sent here to try next set of names */
 			continue;
 		regname[8] = '\0';
 		crname(regname, i);
-		if( db_lookup( dbip, regname, LOOKUP_QUIET) == DIR_NULL ) {
+		if( (dp = db_lookup( dbip, regname, LOOKUP_QUIET)) == DIR_NULL ) {
 		  Tcl_AppendResult(interp, "group: ", grpname, " will skip member: ",
 				   regname, "\n", (char *)NULL);
 		  continue;
 		}
-		mk_addmember( regname, &head, WMOP_UNION );
-	}
-
-	/* Add them all at once */
-	if( mk_comb( wdbp, grpname, &head,
-	    0, NULL, NULL, NULL,
-	    0, 0, 0, 0,
-	    0, 1, 1 ) < 0 )
-	{
-		Tcl_AppendResult(interp,
-			"An error has occured while adding '",
-			grpname, "' to the database.\n", (char *)NULL);
+		(void)combadd(dp, grpname, 0, WMOP_UNION, 0, 0);
 	}
 
 	/* draw this track */
@@ -536,7 +522,7 @@ tryagain:	/* sent here to try next set of names */
 		arglist[0] = "e";
 		arglist[1] = grpname;
 		arglist[2] = NULL;
-		edit_result = cmd_draw( clientData, interp, 2, arglist );
+		edit_result = f_edit( clientData, interp, 2, arglist );
 	}
 
 	Trackpos += 10;
@@ -569,8 +555,10 @@ int pos;
 	return;
 }
 
-int
-wrobj( char name[], int flags )
+
+wrobj( name, flags )
+char name[];
+int flags;
 {
 	struct directory *tdp;
 	struct rt_db_internal intern;
@@ -636,16 +624,16 @@ wrobj( char name[], int flags )
 			return( -1 );
 	}
 
-	if( (tdp = db_diradd( dbip, name, -1L, 0, flags, (genptr_t)&intern.idb_type)) == DIR_NULL )
+	if( (tdp = db_diradd( dbip, name, -1L, 0, flags, NULL)) == DIR_NULL )
 	{
-		rt_db_free_internal( &intern, &rt_uniresource );
+		rt_db_free_internal( &intern );
 		Tcl_AppendResult(interp, "Cannot add '", name, "' to directory, aborting\n", (char *)NULL );
 		return( -1 );
 	}
 
-	if( rt_db_put_internal( tdp, dbip, &intern, &rt_uniresource ) < 0 )
+	if( rt_db_put_internal( tdp, dbip, &intern ) < 0 )
 	{
-		rt_db_free_internal( &intern, &rt_uniresource );
+		rt_db_free_internal( &intern );
 		Tcl_AppendResult(interp, "wrobj(", name, "):  write error\n", (char *)NULL);
 		TCL_ERROR_RECOVERY_SUGGESTION;
 		return( -1 );
@@ -882,28 +870,22 @@ crregion( region, op, members, number, solidname )
 char region[], op[], solidname[];
 int members[], number;
 {
+  struct directory *dp;
   int i;
-  struct bu_list head;
 
   if(dbip == DBI_NULL)
     return;
 
-  BU_LIST_INIT(&head);
-
   for(i=0; i<number; i++) {
     solidname[8] = '\0';
     crname(solidname, members[i]);
-    if( db_lookup( dbip, solidname, LOOKUP_QUIET) == DIR_NULL ) {
+    if( (dp = db_lookup( dbip, solidname, LOOKUP_QUIET)) == DIR_NULL ) {
       Tcl_AppendResult(interp, "region: ", region, " will skip member: ",
 		       solidname, "\n", (char *)NULL);
       continue;
     }
-    mk_addmember( solidname, &head, op[i] );
+    (void)combadd(dp, region, 1, op[i], 500+Trackpos+i, 0);
   }
-  (void)mk_comb( wdbp, region, &head,
-	    1, NULL, NULL, NULL,
-	    500+Trackpos+i, 0, mat_default, los_default,
-	    0, 1, 1 );
 }
 
 

@@ -32,7 +32,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSrayg3[] = "@(#)$Header$ (BRL)";
+static char RCSrayg3[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -40,19 +40,13 @@ static const char RCSrayg3[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 #include <math.h>
 
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include "machine.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "./ext.h"
 #include "../librt/debug.h"
-#include "plot3.h"
-#include "rtprivate.h"
+
+#include "rdebug.h"
 
 #define	MM2IN	0.03937008		/* mm times MM2IN gives inches */
 #define TOL 0.01/MM2IN			/* GIFT has a 0.01 inch tolerance */
@@ -68,11 +62,10 @@ int		use_air = 1;		/* Handling of air in librt */
 
 extern int 	 rpt_overlap;
 
-extern fastf_t  rt_cline_radius;        /* from g_cline.c */
+extern fastf_t	rt_cline_radius;	/* from g_cline.c */
 
-extern struct bu_vls    ray_data_file;  /* file name for ray data output (declared in do.c) */
-FILE    *shot_fp;               /* FILE pointer for ray data output */
-static long     line_num;               /* count of lines output to shotline file */
+extern struct bu_vls	ray_data_file;	/* file name for ray data output (declared in do.c) */
+FILE	*shot_fp;		/* FILE pointer for ray data output */
 
 /* Viewing module specific "set" variables */
 struct bu_structparse view_parse[] = {
@@ -84,21 +77,21 @@ static mat_t	model2hv;		/* model coords to GIFT h,v in inches */
 static FILE	*plotfp;		/* optional plotting file */
 static long	line_num;		/* count of lines output to shotline file */
 
-const char usage[] = "\
+CONST char usage[] = "\
 Usage:  rtg3 [options] model.g objects... >file.ray\n\
 Options:\n\
  -s #		Grid size in pixels, default 512\n\
  -a Az		Azimuth in degrees	(conflicts with -M)\n\
  -e Elev	Elevation in degrees	(conflicts with -M)\n\
  -M		Read model2view matrix on stdin (conflicts with -a, -e)\n\
- -g #		Grid cell width in millimeters (conflicts with -s)\n\
- -G #		Grid cell height in millimeters (conflicts with -s)\n\
+ -g #		Grid cell width in millimeters (conflicts with -s\n\
+ -G #		Grid cell height in millimeters (conflicts with -s\n\
  -J #		Jitter.  Default is off.  Any non-zero number is on\n\
  -o model.g3	Specify output file, GIFT-3 format (default=stdout)\n\
  -U #		Set use_air boolean to # (default=1)\n\
- -c \"set ray_data_file=ray_file_name\"         Specify ray data output file (az el x_start y_start z_start x_dir y_dir z_dir line_number_in_shotline_file)\n\
- -c \"set save_overlaps=1\"     Reproduce FASTGEN behavior for regions flagged as FASTGEN regions\n\
- -c \"set rt_cline_radius=radius\"      Additional radius to be added to CLINE solids\n\
+ -c \"set ray_data_file=ray_file_name\"		Specify ray data output file (az el x_start y_start z_start x_dir y_dir z_dir line_number_in_shotline_file)\n\
+ -c \"set save_overlaps=1\"	Reproduce FASTGEN behavior for regions flagged as FASTGEN regions\n\
+ -c \"set rt_cline_radius=radius\"	Additional radius to be added to CLINE solids\n\
  -x #		Set librt debug flags\n\
 ";
 
@@ -217,7 +210,7 @@ struct application	*ap;
 	 *  a point in model space (with units of mm), and convert it
 	 *  to a point in HV space, with units of inches.
 	 */
-	MAT_COPY( model2hv, Viewrotscale );
+	bn_mat_copy( model2hv, Viewrotscale );
 	model2hv[15] = 1/MM2IN;
 
 	line_num += 2;
@@ -397,37 +390,27 @@ register struct partition *PartHeadp;
 	 *  411	format(2f7.1,2f9.3,i3,2f8.2,' A',f6.1,' E',f6.1)
 	 */
 
-#define	SHOT_FMT	"%7.1f%7.1f%9.3f%9.3f%3d%8.2f%8.2f A%6.1f E%6.1f"
+#define	SHOT_FMT	"%7.1f%7.1f%9.3f%9.3f%3d%8.2f%8.2f A%6.1f E%6.1f\n"
 
 	if( rt_perspective > 0 )  {
 		bn_ae_vec( &azimuth, &elevation, ap->a_ray.r_dir );
 	}
 
-	bu_vls_printf( &str, SHOT_FMT,
+#ifdef SPRINTF_NOT_PARALLEL
+	/* On some systems, sprintf() is not parallel! ^%@#&^@^&#% */
+	bu_semaphore_acquire( BU_SEM_SYSCALL );
+#endif
+
+	sprintf(buf, SHOT_FMT,
 		hvcen[0], hvcen[1],
 		hv[0], hv[1],
 		comp_count,
 		dfirst * MM2IN, dlast * MM2IN,
 		azimuth, elevation );
-
-	/*
-	 *  As an aid to debugging, take advantage of the fact that
-	 *  there are more than 80 columns on UNIX "cards", and
-	 *  add debugging information to the end of the line to
-	 *  allow this shotline to be reproduced offline.
-	 *   -b gives the shotline x,y coordinates when re-running RTG3,
-	 *   -p and -d are used with RTSHOT
-	 *  The easy way to activate this is with the harmless -!1 option
-	 *  when running RTG3.
-	 */
-	if( rdebug || bu_debug || RT_G_DEBUG )  {
-		bu_vls_printf( &str, "   -b%d,%d -p %26.20e %26.20e %26.20e -d %26.20e %26.20e %26.20e\n",
-			ap->a_x, ap->a_y,
-			V3ARGS(ap->a_ray.r_pt),
-			V3ARGS(ap->a_ray.r_dir) );
-	} else {
-		bu_vls_putc( &str, '\n' );
-	}
+#ifdef SPRINTF_NOT_PARALLEL
+	bu_semaphore_release( BU_SEM_SYSCALL );
+#endif
+	bu_vls_strcat( &str, buf );
 
 	/* loop here to deal with individual components */
 	card_count = 0;
@@ -480,7 +463,7 @@ register struct partition *PartHeadp;
 				comp_thickness, region_id, hv[0], hv[1], ap->a_x, ap->a_y , pp );
 			rt_pr_partitions(ap->a_rt_i, PartHeadp, "Defective partion:");
 			bu_log("Send this output to Sue Muuss (sue@brl.mil)\n");
-			if ( ! (RT_G_DEBUG & DEBUG_ARB8)) {
+			if ( ! (rt_g.debug & DEBUG_ARB8)) {
 				rt_g.debug |= DEBUG_ARB8;
 				rt_shootray(ap);
 				rt_g.debug &= ~DEBUG_ARB8;
@@ -683,7 +666,7 @@ out:
 
 	if( shot_fp )
 	{
-		fprintf( shot_fp, "%.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %ld\n",
+		fprintf( shot_fp, "%.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %d\n",
 			azimuth, elevation, V3ARGS( ap->a_ray.r_pt ), V3ARGS( ap->a_ray.r_dir ), line_num );
 
 		line_num +=  1 + (comp_count / 3 );

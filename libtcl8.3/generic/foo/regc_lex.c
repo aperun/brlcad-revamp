@@ -821,7 +821,7 @@ int maxlen;
 	int len;
 	chr c;
 	int d;
-	const uchr ub = (uchr) base;
+	CONST uchr ub = (uchr) base;
 
 	n = 0;
 	for (len = 0; len < maxlen && !ATEOS(); len++) {
@@ -1059,4 +1059,3 @@ pchr lastresort;		/* what to return if name lookup fails */
 		return (chr)lastresort;
 	return cv->chrs[0];
 }
-

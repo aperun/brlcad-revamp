@@ -15,7 +15,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -35,6 +35,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 extern void predictor_hook();		/* in ged.c */
 
 extern void set_port();
+extern void set_scroll();
 
 static void set_dirty_flag();
 static void nmg_eu_dist_set();
@@ -42,7 +43,6 @@ static void set_dlist();
 static void set_perspective();
 static void establish_perspective();
 static void toggle_perspective();
-static void set_coords();
 
 static char *read_var();
 static char *write_var();
@@ -110,7 +110,7 @@ struct bu_structparse mged_vparse[] = {
 	{"%d",  1, "fb_all",		MV_O(mv_fb_all),		set_dirty_flag },
 	{"%d",  1, "fb_overlay",	MV_O(mv_fb_overlay),	set_dirty_flag },
 	{"%c",  1, "mouse_behavior",	MV_O(mv_mouse_behavior),	BU_STRUCTPARSE_FUNC_NULL },
-	{"%c",  1, "coords",            MV_O(mv_coords),	set_coords },
+	{"%c",  1, "coords",            MV_O(mv_coords),           BU_STRUCTPARSE_FUNC_NULL },
 	{"%c",  1, "rotate_about",      MV_O(mv_rotate_about),     BU_STRUCTPARSE_FUNC_NULL },
 	{"%c",  1, "transform",         MV_O(mv_transform),        BU_STRUCTPARSE_FUNC_NULL },
 	{"%d",	1, "predictor",		MV_O(mv_predictor),	predictor_hook },
@@ -172,7 +172,7 @@ int flags;
     /* Ask the libbu structparser for the value of the variable */
 
     bu_vls_init( &str );
-    bu_vls_struct_item( &str, sp, (const char *)mged_variables, ' ');
+    bu_vls_struct_item( &str, sp, (CONST char *)mged_variables, ' ');
 
     /* Next, set the Tcl variable to this value */
     (void)Tcl_SetVar(interp, sp->sp_name, bu_vls_addr(&str),
@@ -256,7 +256,8 @@ int flags;
  **/
 
 void
-mged_variable_setup(Tcl_Interp *interp)
+mged_variable_setup(interp)
+Tcl_Interp *interp;    
 {
   register struct bu_structparse *sp;
 
@@ -291,7 +292,7 @@ char *argv[];
   }
 
   mged_vls_struct_parse_old(&vls, "mged variables", mged_vparse,
-			    (char *)&mged_variables, argc, argv);
+			    (CONST char *)mged_variables, argc, argv);
   Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
   bu_vls_free(&vls);
 
@@ -299,7 +300,7 @@ char *argv[];
 }
 
 void
-set_scroll_private(void)
+set_scroll_private()
 {
   struct dm_list *dmlp;
   struct dm_list *save_dmlp;
@@ -336,7 +337,7 @@ void
 set_absolute_view_tran()
 {
   /* calculate absolute_tran */
-  MAT4X3PNT(view_state->vs_absolute_tran, view_state->vs_vop->vo_model2view, view_state->vs_orig_pos);
+  MAT4X3PNT(view_state->vs_absolute_tran, view_state->vs_model2view, view_state->vs_orig_pos);
   /* This is used in f_knob()  ---- needed in case absolute_tran is set from Tcl */
   VMOVE(view_state->vs_last_absolute_tran, view_state->vs_absolute_tran);
 }
@@ -348,9 +349,9 @@ set_absolute_model_tran()
   point_t diff;
 
   /* calculate absolute_model_tran */
-  MAT_DELTAS_GET_NEG(new_pos, view_state->vs_vop->vo_center);
+  MAT_DELTAS_GET_NEG(new_pos, view_state->vs_toViewcenter);
   VSUB2(diff, view_state->vs_orig_pos, new_pos);
-  VSCALE(view_state->vs_absolute_model_tran, diff, 1/view_state->vs_vop->vo_scale);
+  VSCALE(view_state->vs_absolute_model_tran, diff, 1/view_state->vs_Viewscale);
   /* This is used in f_knob()  ---- needed in case absolute_model_tran is set from Tcl */
   VMOVE(view_state->vs_last_absolute_model_tran, view_state->vs_absolute_model_tran);
 }
@@ -377,7 +378,7 @@ set_dlist()
       if (dlp1->dml_dmp->dm_displaylist &&
 	  dlp1->dml_dlist_state->dl_active == 0) {
 	curr_dm_list = dlp1;
-	createDLists(&dgop->dgo_headSolid);
+	createDLists(&HeadSolid);
 	dlp1->dml_dlist_state->dl_active = 1;
 	dlp1->dml_dirty = 1;
       }
@@ -408,9 +409,8 @@ set_dlist()
 	if (BU_LIST_IS_HEAD(dlp2, &head_dm_list.l)) {
 	  dlp1->dml_dlist_state->dl_active = 0;
 	  DM_FREEDLISTS(dlp1->dml_dmp,
-			BU_LIST_FIRST(solid, &dgop->dgo_headSolid)->s_dlist,
-			BU_LIST_LAST(solid, &dgop->dgo_headSolid)->s_dlist -
-			BU_LIST_FIRST(solid, &dgop->dgo_headSolid)->s_dlist + 1);
+			HeadSolid.s_dlist,
+			BU_LIST_LAST(solid, &HeadSolid.l)->s_dlist - HeadSolid.s_dlist + 1);
 	}
       }
     }
@@ -423,31 +423,24 @@ set_dlist()
 static void
 set_perspective()
 {
-	/* if perspective is set to something greater than 0, turn perspective mode on */
-	if (mged_variables->mv_perspective > 0)
-		mged_variables->mv_perspective_mode = 1;
-	else
-		mged_variables->mv_perspective_mode = 0;
+  if(mged_variables->mv_perspective > 0)
+    mged_variables->mv_perspective_mode = 1;
+  else
+    mged_variables->mv_perspective_mode = 0;
 
-	/* keep view object in sync */
-	view_state->vs_vop->vo_perspective = mged_variables->mv_perspective;
-
-	set_dirty_flag();
+  set_dirty_flag();
 }
 
 static void
 establish_perspective()
 {
-	mged_variables->mv_perspective = mged_variables->mv_perspective_mode ?
-		perspective_table[perspective_angle] : -1;
+  mged_variables->mv_perspective = mged_variables->mv_perspective_mode ?
+    perspective_table[perspective_angle] : -1;
 
-	/* keep view object in sync */
-	view_state->vs_vop->vo_perspective = mged_variables->mv_perspective;
+  /* keep display manager in sync */
+  dmp->dm_perspective = mged_variables->mv_perspective_mode;
 
-	/* keep display manager in sync */
-	dmp->dm_perspective = mged_variables->mv_perspective_mode;
-
-	set_dirty_flag();
+  set_dirty_flag();
 }
 
 /*
@@ -476,14 +469,5 @@ toggle_perspective()
 
   mged_variables->mv_perspective = perspective_table[perspective_angle];
 
-  /* keep view object in sync */
-  view_state->vs_vop->vo_perspective = mged_variables->mv_perspective;
-
   set_dirty_flag();
-}
-
-static void
-set_coords()
-{
-	view_state->vs_vop->vo_coord = mged_variables->mv_coords;
 }

@@ -22,7 +22,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSparse[] = "@(#)$Header$ (BRL)";
+static char RCSparse[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -51,13 +51,13 @@ static const char RCSparse[] = "@(#)$Header$ (BRL)";
  */
 HIDDEN int
 bu_parse_double(str, count, loc)
-const char	*str;
+CONST char	*str;
 long		count;
 double		*loc;
 {
 	long	i;
 	int	dot_seen;
-	const char	*numstart;
+	CONST char	*numstart;
 	double	tmp_double;
 	char	buf[128];	
 	int	len;
@@ -120,10 +120,10 @@ double		*loc;
  */
 HIDDEN int
 bu_struct_lookup( sdp, name, base, value )
-register const struct bu_structparse	*sdp;	/* structure description */
-register const char			*name;	/* struct member name */
+register CONST struct bu_structparse	*sdp;	/* structure description */
+register CONST char			*name;	/* struct member name */
 char					*base;	/* begining of structure */
-const char				*value;	/* string containing value */
+CONST char				*value;	/* string containing value */
 {
 	register char *loc;
 	int i, retval = 0;
@@ -189,7 +189,7 @@ const char				*value;	/* string containing value */
 		case 'i':
 			{	register short *ip = (short *)loc;
 				register short tmpi;
-				register const char *cp;
+				register CONST char *cp;
 				for (i=0 ; i < sdp->sp_count && *value ; ++i){
 					tmpi = atoi( value );
 
@@ -220,7 +220,7 @@ const char				*value;	/* string containing value */
 		case 'd':
 			{	register int *ip = (int *)loc;
 				register int tmpi;
-				register char const *cp;
+				register char CONST *cp;
 				/* Special case:  '=!' toggles a boolean */
 				if( *value == '!' )  {
 					*ip = *ip ? 0 : 1;
@@ -284,8 +284,8 @@ const char				*value;	/* string containing value */
  */
 int
 bu_structparse( in_vls, desc, base )
-const struct bu_vls		*in_vls;	/* string to parse through */
-const struct bu_structparse	*desc;		/* structure description */
+CONST struct bu_vls		*in_vls;	/* string to parse through */
+CONST struct bu_structparse	*desc;		/* structure description */
 char				*base;		/* base addr of users struct */
 {
 	struct bu_vls	vls;
@@ -381,8 +381,8 @@ char				*base;		/* base addr of users struct */
  */
 HIDDEN void
 bu_matprint(name, mat)
-const char		*name;
-register const matp_t	mat;
+CONST char		*name;
+register CONST matp_t	mat;
 {
 	int	delta = strlen(name)+2;
 
@@ -408,8 +408,8 @@ register const matp_t	mat;
 HIDDEN void
 bu_vls_item_print_core( vp, sdp, base, sep_char )
 struct bu_vls *vp;
-const struct bu_structparse *sdp;    /* item description */
-const char *base;                 /* base address of users structure */
+CONST struct bu_structparse *sdp;    /* item description */
+CONST char *base;                 /* base address of users structure */
 char sep_char;                    /* value separator */
 {
     register char *loc;
@@ -496,8 +496,8 @@ char sep_char;                    /* value separator */
 void
 bu_vls_item_print( vp, sdp, base )
 struct bu_vls *vp;
-const struct bu_structparse *sdp;     /* item description */
-const char *base;                 /* base address of users structure */
+CONST struct bu_structparse *sdp;     /* item description */
+CONST char *base;                 /* base address of users structure */
 {
     bu_vls_item_print_core( vp, sdp, base, ',' );
 }
@@ -511,8 +511,8 @@ const char *base;                 /* base address of users structure */
 void
 bu_vls_item_print_nc( vp, sdp, base )
 struct bu_vls *vp;
-const struct bu_structparse *sdp;     /* item description */
-const char *base;                 /* base address of users structure */
+CONST struct bu_structparse *sdp;     /* item description */
+CONST char *base;                 /* base address of users structure */
 {
     bu_vls_item_print_core( vp, sdp, base, ' ' );
 }
@@ -525,11 +525,11 @@ const char *base;                 /* base address of users structure */
 int
 bu_vls_name_print( vp, parsetab, name, base )
 struct bu_vls *vp;
-const struct bu_structparse *parsetab;
-const char *name;
-const char *base;
+CONST struct bu_structparse *parsetab;
+CONST char *name;
+CONST char *base;
 {
-    register const struct bu_structparse *sdp;
+    register CONST struct bu_structparse *sdp;
 
     for( sdp = parsetab; sdp->sp_name != NULL; sdp++ )
 	if( strcmp(sdp->sp_name, name) == 0 ) {
@@ -548,11 +548,11 @@ const char *base;
 int
 bu_vls_name_print_nc( vp, parsetab, name, base )
 struct bu_vls *vp;
-const struct bu_structparse *parsetab;
-const char *name;
-const char *base;
+CONST struct bu_structparse *parsetab;
+CONST char *name;
+CONST char *base;
 {
-    register const struct bu_structparse *sdp;
+    register CONST struct bu_structparse *sdp;
 
     for( sdp = parsetab; sdp->sp_name != NULL; sdp++ )
 	if( strcmp(sdp->sp_name, name) == 0 ) {
@@ -571,11 +571,11 @@ const char *base;
  */
 void
 bu_structprint( title, parsetab, base )
-const char			*title;
-const struct bu_structparse	*parsetab;/* structure description */
-const char			*base;	  /* base address of users structure */
+CONST char			*title;
+CONST struct bu_structparse	*parsetab;/* structure description */
+CONST char			*base;	  /* base address of users structure */
 {
-	register const struct bu_structparse	*sdp;
+	register CONST struct bu_structparse	*sdp;
 	register char			*loc;
 	register int			lastoff = -1;
 	struct bu_vls vls;
@@ -719,9 +719,9 @@ const char			*base;	  /* base address of users structure */
 HIDDEN void
 bu_vls_print_double(vls, name, count, dp)
 struct bu_vls		*vls;
-const char		*name;
+CONST char		*name;
 register long		count;
-register const double	*dp;
+register CONST double	*dp;
 {
 	register int tmpi;
 	register char *cp;
@@ -750,8 +750,8 @@ register const double	*dp;
 void
 bu_vls_structprint( vls, sdp, base)
 struct	bu_vls				*vls;	/* vls to print into */
-register const struct bu_structparse	*sdp;	/* structure description */
-const char				*base;	/* structure ponter */
+register CONST struct bu_structparse	*sdp;	/* structure description */
+CONST char				*base;	/* structure ponter */
 {
 	register char			*loc;
 	register int			lastoff = -1;

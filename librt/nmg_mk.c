@@ -51,14 +51,13 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
 #include "machine.h"
 #include "vmath.h"
 #include "nmg.h"
@@ -510,8 +509,7 @@ int		orientation;
 {
 	struct loop	*l;
 	struct loopuse	*lu1, *lu2;
-	struct vertexuse *vu1 = NULL;
-	struct vertexuse *vu2;
+	struct vertexuse *vu1, *vu2;
 	struct model	*m;
 	/* XXX - why the new union? ctj */
 	union {
@@ -559,7 +557,7 @@ int		orientation;
 
 		/* Second, build the vertices */
 		/* This "if" degenerates to the "else" clause if no stealing */
-		if ( (vu1 = s->vu_p) ) {
+		if ( vu1 = s->vu_p ) {
 			/* Use shell's lone vertex */
 			s->vu_p = (struct vertexuse *)NULL;
 			vu1->up.lu_p = lu1;
@@ -1645,14 +1643,14 @@ struct model *m;
 void
 nmg_vertex_gv(v, pt)
 struct vertex	*v;
-const point_t	pt;
+CONST point_t	pt;
 {
 	struct vertex_g *vg;
 	struct model	*m;
 
 	NMG_CK_VERTEX(v);
 
-	if ( (vg = v->vg_p) ) {
+	if (vg = v->vg_p) {
 		NMG_CK_VERTEX_G(v->vg_p);
 	}
 	else {
@@ -1701,7 +1699,7 @@ fastf_t x, y, z;
 void
 nmg_vertexuse_nv( vu , norm )
 struct vertexuse *vu;
-const vect_t norm;
+CONST vect_t norm;
 {
 	struct model *m;
 
@@ -1742,7 +1740,7 @@ const vect_t norm;
 void
 nmg_vertexuse_a_cnurb( vu, uvw )
 struct vertexuse	*vu;
-const fastf_t		*uvw;
+CONST fastf_t		*uvw;
 {
 	struct vertexuse_a_cnurb	*vua;
 	struct model	*m;
@@ -1799,7 +1797,7 @@ struct edgeuse *eu;
 	if(eu->vu_p->v_p == eu->eumate_p->vu_p->v_p )
 		rt_bomb("nmg_edge_g(): Warning - edge runs from+to same vertex, 0 len!\n");
 
-	if ( (eg_p = eu->g.lseg_p) ) {
+	if (eg_p = eu->g.lseg_p) {
 		NMG_CK_EDGE_G_LSEG(eg_p);
 		rt_bomb("nmg_edge_g() geometry already assigned\n");
 	}
@@ -2185,7 +2183,7 @@ long		*magic_p;
 void
 nmg_loop_g(l, tol)
 struct loop		*l;
-const struct bn_tol	*tol;
+CONST struct bn_tol	*tol;
 {
 	struct edgeuse	*eu;
 	struct vertex_g	*vg;
@@ -2200,7 +2198,7 @@ const struct bn_tol	*tol;
 	lu = l->lu_p;
 	NMG_CK_LOOPUSE(lu);
 
-	if ( (lg = l->lg_p) ) {
+	if (lg = l->lg_p) {
 		NMG_CK_LOOP_G(lg);
 	} else {
 		m = nmg_find_model( lu->up.magic_p );
@@ -2267,7 +2265,7 @@ const struct bn_tol	*tol;
 void
 nmg_face_g(fu, p)
 struct faceuse *fu;
-const plane_t p;
+CONST plane_t p;
 {
 	int i;
 	struct face_g_plane	*fg;
@@ -2316,7 +2314,7 @@ const plane_t p;
 void
 nmg_face_new_g( fu, pl )
 struct faceuse *fu;
-const plane_t pl;
+CONST plane_t pl;
 {
 	struct face *f;
 	struct face *f_tmp;
@@ -2472,7 +2470,7 @@ fastf_t		*mesh;
 void
 nmg_face_bb(f, tol)
 struct face		*f;
-const struct bn_tol	*tol;
+CONST struct bn_tol	*tol;
 {
 	struct loopuse	*lu;
 	struct faceuse	*fu;
@@ -2527,7 +2525,7 @@ const struct bn_tol	*tol;
 void
 nmg_shell_a(s, tol)
 struct shell		*s;
-const struct bn_tol	*tol;
+CONST struct bn_tol	*tol;
 {
 	struct shell_a *sa;
 	struct vertex_g *vg;
@@ -2613,7 +2611,7 @@ const struct bn_tol	*tol;
 void
 nmg_region_a(r, tol)
 struct nmgregion	*r;
-const struct bn_tol	*tol;
+CONST struct bn_tol	*tol;
 {
 	register struct shell	*s;
 	struct nmgregion_a	*ra;

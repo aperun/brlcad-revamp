@@ -13,17 +13,12 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include <math.h>
 #include "machine.h"
 #include "externs.h"
@@ -193,7 +188,7 @@ static bool	log_flag = false;	/* Make a log file? */
 
 static int	compute_fb_height;	/* User supplied height?  Else what? */
 static int	compute_fb_width;	/* User supplied width?  Else what? */
-static unsigned int	debug_flag = 0;	/* Control diagnostic prints */
+static int	debug_flag = 0;		/* Control diagnostic prints */
 static int	fb_height = -1;		/* Height of frame buffer in pixels */
 static int	fb_width = -1;		/* Width of frame buffer in pixels */
 static int	field = 1;		/* The field that is of interest */
@@ -224,7 +219,7 @@ static RGBpixel	colortbl[12] =		/* The map: value --> R, G, B */
 };			
 
 #if 0
-static const char   *mon_nam[] =
+static CONST char   *mon_nam[] =
                         { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
                           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 #endif
@@ -241,7 +236,6 @@ STATIC void	log_Run();
 STATIC bool	display_Cells();
 STATIC void	fill_colortbl();
 
-int
 main (argc, argv)
 
 int	argc;
@@ -293,8 +287,6 @@ char	**argv;
 		log_Run();
 	}
     } while ((view_flag == 0) && ! feof(filep) && get_OK());
-
-    return(0);
 }
 
 #define	STATE_VIEW_TOP		0
@@ -942,7 +934,7 @@ register char	**argv;
 		    log_flag = false;
 		break;
             case 'x':
-		if (sscanf(optarg, "%x", (unsigned int *)&bu_debug) < 1)
+		if (sscanf(optarg, "%x", &bu_debug) < 1)
 		{
 		    bu_log("Invalid debug flag: '%s'\n", optarg);
 		    return (false);
@@ -1016,8 +1008,8 @@ STATIC void log_Run()
 	 * matrix and use that to find the orientation.
 	 */
 
-	MAT_IDN( model2hv );
-	MAT_IDN( hv2model );
+	mat_idn( model2hv );
+	mat_idn( hv2model );
 
 	/* Print out the "view" just to keep rtregis from belly-aching */
 

@@ -23,19 +23,10 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
-
-#include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-#include <stdlib.h>
-#include <unistd.h>
 #include <math.h>
 
 unsigned char	ibuf[3*1024], obuf[1024];
@@ -51,7 +42,6 @@ double	bweight = 0.0;
 static char usage[] = "\
 Usage: pix-bw [-ntsc -crt -R[#] -G[#] -B[#]] [in.pix] > out.bw\n";
 
-int
 main( argc, argv )
 int argc; char **argv;
 {
@@ -167,6 +157,4 @@ int argc; char **argv;
 		fprintf( stderr, "pix-bw: clipped %d high, %d, low\n",
 			clip_high, clip_low );
 	}
-
-	return 0;
 }

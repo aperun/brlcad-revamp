@@ -17,26 +17,15 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
-
-#include "conf.h"
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <unistd.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 
 unsigned char	ibuf[1024], obuf[3*1024];
 
 static char usage[] = "Usage: bw-pix [in.bw] [out.pix]\n";
 
-int
 main( argc, argv )
 int argc; char **argv;
 {
@@ -74,5 +63,4 @@ int argc; char **argv;
 		}
 		fwrite( obuf, sizeof( char ), 3*num, foutp );
 	}
-	return 0;
 }

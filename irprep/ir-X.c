@@ -52,7 +52,6 @@ struct colstr
 				/*  pixels are in.  */
 };
 
-int
 main()
 {
    /*  Variables used for XWindow.  */
@@ -69,7 +68,7 @@ main()
 				/*  be responed to.  */
    unsigned long black;		/*  Black pixel value.  */
    unsigned long white;		/*  White pixel value.  */
-   int screen=0;		/*  Used for getting colors.  */
+   int screen;			/*  Used for getting colors.  */
    XColor colval[MAXCOL];	/*  Color values.  */
    XRectangle rect[MAXARR];	/*  Array for drawing rectangles.  */
    char **a=(char **)NULL;	/*  Place holder for XSetStandard  */
@@ -86,7 +85,7 @@ main()
    unsigned int main_w,main_h;	/*  Width & height of main window.  */
    unsigned int wide,high;	/*  Width and height of picture window.  */
    double pixval[MAXPIX][MAXPIX];/*  Pixel value (width,height).  */
-   double min=0.0,max=0.0;	/*  Minimum & maximum pixel values.  */
+   double min,max;		/*  Minimum & maximum pixel values.  */
    int i,j,k,m;			/*  Loop counters.  */
    double r;			/*  Temporary variable.  */
    double dcol;			/*  Color step.  */
@@ -96,7 +95,7 @@ main()
    int icol;			/*  Indicates color shading.  */
    double check;		/*  Used for finding colors.  */
    char string[11];		/*  Used to write a label.  */
-   int flag=0;			/*  Color flag.  */
+   int flag;			/*  Color flag.  */
    int lstarr;			/*  Last color array.  */
    int flag_pix;		/*  0=>no pix file written, 1=>pix file  */
 				/*  written.  */

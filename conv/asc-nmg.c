@@ -16,19 +16,18 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 #include "machine.h"
-#include "bu.h"
 #include "vmath.h"
 #include "nmg.h"
 #include "raytrace.h"
 #include "rtgeom.h"
-#include "wdb.h"
+#include "rtlist.h"
 
 static int ascii_to_brlcad();
 static void descr_to_nmg();
@@ -42,14 +41,12 @@ extern int	optind;
  *
  *	Get ascii input file and output file names.
  */
-int
 main(argc, argv)
 int	argc;
 char	*argv[];
 {
-	char		*afile, *bfile = "nmg.g";
-	FILE		*fpin;
-	struct rt_wdb	*fpout;
+	char		*afile, *bfile;
+	FILE		*fpin, *fpout;
 
 	/* Get ascii NMG input file name. */
 	if (optind >= argc) {
@@ -68,20 +65,20 @@ char	*argv[];
 	/* Get BRL-CAD output data base name. */
 	optind++;
 	if (optind >= argc) {
-		bfile = "nmg.g";
+		bfile = "-";
+		fpout = stdout;
 	} else {
 		bfile = argv[optind];
-	}
-	if ((fpout = wdb_fopen(bfile)) == NULL) {
-		fprintf(stderr, "%s: cannot open %s for writing\n",
-			argv[0], bfile);
-		exit(1);
+		if ((fpout = fopen(bfile, "w")) == NULL) {
+			fprintf(stderr, "%s: cannot open %s for writing\n",
+				argv[0], bfile);
+			exit(1);
+		}
 	}
 
 	ascii_to_brlcad(fpin, fpout, "nmg", NULL);
 	fclose(fpin);
-	wdb_close(fpout);
-	return 0;
+	fclose(fpout);
 }
 
 /*
@@ -91,7 +88,7 @@ char	*argv[];
  */
 void
 create_brlcad_db(fpout, m, reg_name, grp_name)
-struct rt_wdb	*fpout;
+FILE		*fpout;
 char		*grp_name, *reg_name;
 struct model	*m;
 {
@@ -118,8 +115,7 @@ struct model	*m;
  */
 static int
 ascii_to_brlcad(fpin, fpout, reg_name, grp_name)
-FILE	*fpin;
-struct rt_wdb *fpout;
+FILE	*fpin, *fpout;
 char	*reg_name, *grp_name;
 {
 	struct model	*m;
@@ -181,8 +177,8 @@ vect_t		Ext;	/* Extrusion vector. */
 
 	char	token[80];	/* Token read from ascii nmg file. */
 	fastf_t	x, y, z;	/* Coordinates of a vertex. */
-	int	dir = OT_NONE;	/* Direction of face. */
-	int	i,
+	int	dir,		/* Direction of face. */
+		i,
 		lu_verts[MAXV],	/* Vertex names making up loop. */
 		n,		/* Number of vertices so far in loop. */
 		stat,		/* Set to EOF when finished ascii file. */

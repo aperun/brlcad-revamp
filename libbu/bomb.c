@@ -18,36 +18,19 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char RCSbomb[] = "@(#)$Header$ (ARL)";
+static char RCSbomb[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <ctype.h>
-#include <unistd.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include "machine.h"
 #include "externs.h"
 #include "bu.h"
 
 #ifdef HAVE_UNIX_IO
 #include <fcntl.h>
-#endif
-
-#if 1
-struct bu_hook_list bu_bomb_hook_list = {
-	{	BU_LIST_HEAD_MAGIC, 
-		&bu_bomb_hook_list.l, 
-		&bu_bomb_hook_list.l
-	}, 
-	BUHOOK_NULL,
-	GENPTR_NULL
-};
-#else
-struct bu_hook_list bu_bomb_hook_list;
 #endif
 
 /*
@@ -66,17 +49,10 @@ jmp_buf		bu_jmpbuf;		/* for BU_SETJMP() */
  */
 void
 bu_bomb(str)
-const char *str;
+CONST char *str;
 {
-
-	/* First thing, always always always try to print the string */
 	fprintf(stderr,"\n%s\n", str);
 	fflush(stderr);
-
-	/* MGED would like to be able to additional logging, do callbacks. */
-	if (BU_LIST_NON_EMPTY(&bu_bomb_hook_list.l)) {
-		bu_call_hook(&bu_bomb_hook_list, (genptr_t)str);
-	}
 
 	if( bu_setjmp_valid )  {
 		/* Application is catching fatal errors */

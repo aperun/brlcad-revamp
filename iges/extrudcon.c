@@ -19,7 +19,6 @@
 #include "./iges_struct.h"
 #include "./iges_extern.h"
 
-int
 Extrudcon( entityno , curve , evect )
 int entityno;	/* extrusion entity number */
 int curve;	/* elliptical arc entity number */

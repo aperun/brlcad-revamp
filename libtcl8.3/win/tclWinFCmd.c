@@ -28,19 +28,19 @@
  */
 
 static int		GetWinFileAttributes _ANSI_ARGS_((Tcl_Interp *interp,
-			    int objIndex, const char *fileName,
+			    int objIndex, CONST char *fileName,
 			    Tcl_Obj **attributePtrPtr));
 static int		GetWinFileLongName _ANSI_ARGS_((Tcl_Interp *interp,
-			    int objIndex, const char *fileName,
+			    int objIndex, CONST char *fileName,
 			    Tcl_Obj **attributePtrPtr));
 static int		GetWinFileShortName _ANSI_ARGS_((Tcl_Interp *interp,
-			    int objIndex, const char *fileName,
+			    int objIndex, CONST char *fileName,
 			    Tcl_Obj **attributePtrPtr));
 static int		SetWinFileAttributes _ANSI_ARGS_((Tcl_Interp *interp,
-			    int objIndex, const char *fileName,
+			    int objIndex, CONST char *fileName,
 			    Tcl_Obj *attributePtr));
 static int		CannotSetAttribute _ANSI_ARGS_((Tcl_Interp *interp,
-			    int objIndex, const char *fileName,
+			    int objIndex, CONST char *fileName,
 			    Tcl_Obj *attributePtr));
 
 /*
@@ -84,9 +84,9 @@ typedef int (TraversalProc)(Tcl_DString *srcPtr, Tcl_DString *dstPtr,
  * Declarations for local procedures defined in this file:
  */
 
-static void		StatError(Tcl_Interp *interp, const char *fileName);
+static void		StatError(Tcl_Interp *interp, CONST char *fileName);
 static int		ConvertFileNameFormat(Tcl_Interp *interp, 
-			    int objIndex, const char *fileName, int longShort,
+			    int objIndex, CONST char *fileName, int longShort,
 			    Tcl_Obj **attributePtrPtr);
 static int		DoCopyFile(Tcl_DString *srcPtr, Tcl_DString *dstPtr);
 static int		DoCreateDirectory(Tcl_DString *pathPtr);
@@ -147,9 +147,9 @@ static int		TraverseWinTree(TraversalProc *traverseProc,
 
 int
 TclpRenameFile(
-    const char *src,		/* Pathname of file or dir to be renamed
+    CONST char *src,		/* Pathname of file or dir to be renamed
 				 * (UTF-8). */
-    const char *dst)		/* New pathname of file or directory
+    CONST char *dst)		/* New pathname of file or directory
 				 * (UTF-8). */
 {
     int result;
@@ -167,7 +167,7 @@ TclpRenameFile(
 
 static int
 DoRenameFile(
-    const TCHAR *nativeSrc,	/* Pathname of file or dir to be renamed
+    CONST TCHAR *nativeSrc,	/* Pathname of file or dir to be renamed
 				 * (native). */ 
     Tcl_DString *dstPtr)	/* New pathname for file or directory
 				 * (native). */
@@ -220,7 +220,7 @@ DoRenameFile(
 	    WCHAR nativeSrcPath[MAX_PATH];
 	    WCHAR nativeDstPath[MAX_PATH];
 	    Tcl_DString srcString, dstString;
-	    const char *src, *dst;
+	    CONST char *src, *dst;
 
 	    size = (*tclWinProcs->getFullPathNameProc)(nativeSrc, MAX_PATH, 
 		    nativeSrcPath, &nativeSrcRest);
@@ -432,8 +432,8 @@ DoRenameFile(
 
 int 
 TclpCopyFile(
-    const char *src,		/* Pathname of file to be copied (UTF-8). */
-    const char *dst)		/* Pathname of file to copy to (UTF-8). */
+    CONST char *src,		/* Pathname of file to be copied (UTF-8). */
+    CONST char *dst)		/* Pathname of file to copy to (UTF-8). */
 {
     int result;
     Tcl_DString srcString, dstString;
@@ -451,7 +451,7 @@ DoCopyFile(
     Tcl_DString *srcPtr,	/* Pathname of file to be copied (native). */
     Tcl_DString *dstPtr)	/* Pathname of file to copy to (native). */
 {
-    const TCHAR *nativeSrc, *nativeDst;
+    CONST TCHAR *nativeSrc, *nativeDst;
 
     nativeSrc = (TCHAR *) Tcl_DStringValue(srcPtr);
     nativeDst = (TCHAR *) Tcl_DStringValue(dstPtr);
@@ -531,7 +531,7 @@ DoCopyFile(
 
 int
 TclpDeleteFile(
-    const char *path)		/* Pathname of file to be removed (UTF-8). */
+    CONST char *path)		/* Pathname of file to be removed (UTF-8). */
 {
     int result;
     Tcl_DString pathString;
@@ -547,7 +547,7 @@ DoDeleteFile(
     Tcl_DString *pathPtr)	/* Pathname of file to be removed (native). */
 {
     DWORD attr;
-    const TCHAR *nativePath;
+    CONST TCHAR *nativePath;
 
     nativePath = (TCHAR *) Tcl_DStringValue(pathPtr);
     
@@ -643,7 +643,7 @@ DoDeleteFile(
 
 int
 TclpCreateDirectory(
-    const char *path)		/* Pathname of directory to create (UTF-8). */
+    CONST char *path)		/* Pathname of directory to create (UTF-8). */
 {
     int result;
     Tcl_DString pathString;
@@ -659,7 +659,7 @@ DoCreateDirectory(
     Tcl_DString *pathPtr)	/* Pathname of directory to create (native). */
 {
     DWORD error;
-    const TCHAR *nativePath;
+    CONST TCHAR *nativePath;
 
     nativePath = (TCHAR *) Tcl_DStringValue(pathPtr);
     if ((*tclWinProcs->createDirectoryProc)(nativePath, NULL) == 0) {
@@ -698,9 +698,9 @@ DoCreateDirectory(
 
 int
 TclpCopyDirectory(
-    const char *src,		/* Pathname of directory to be copied
+    CONST char *src,		/* Pathname of directory to be copied
 				 * (UTF-8). */
-    const char *dst,		/* Pathname of target directory (UTF-8). */
+    CONST char *dst,		/* Pathname of target directory (UTF-8). */
     Tcl_DString *errorPtr)	/* If non-NULL, uninitialized or free
 				 * DString filled with UTF-8 name of file
 				 * causing error. */
@@ -749,7 +749,7 @@ TclpCopyDirectory(
 
 int
 TclpRemoveDirectory(
-    const char *path,		/* Pathname of directory to be removed
+    CONST char *path,		/* Pathname of directory to be removed
 				 * (UTF-8). */
     int recursive,		/* If non-zero, removes directories that
 				 * are nonempty.  Otherwise, will only remove
@@ -779,7 +779,7 @@ DoRemoveDirectory(
 				 * DString filled with UTF-8 name of file
 				 * causing error. */
 {
-    const TCHAR *nativePath;
+    CONST TCHAR *nativePath;
     DWORD attr;
 
     nativePath = (TCHAR *) Tcl_DStringValue(pathPtr);
@@ -1236,7 +1236,7 @@ TraversalDelete(
 static void
 StatError(
     Tcl_Interp *interp,		/* The interp that has the error */
-    const char *fileName)	/* The name of the file which caused the 
+    CONST char *fileName)	/* The name of the file which caused the 
 				 * error. */
 {
     TclWinConvertError(GetLastError());
@@ -1268,7 +1268,7 @@ static int
 GetWinFileAttributes(
     Tcl_Interp *interp,		/* The interp we are using for errors. */
     int objIndex,		/* The index of the attribute. */
-    const char *fileName,	/* The name of the file. */
+    CONST char *fileName,	/* The name of the file. */
     Tcl_Obj **attributePtrPtr)	/* A pointer to return the object with. */
 {
     DWORD result;
@@ -1311,7 +1311,7 @@ static int
 ConvertFileNameFormat(
     Tcl_Interp *interp,		/* The interp we are using for errors. */
     int objIndex,		/* The index of the attribute. */
-    const char *fileName,	/* The name of the file. */
+    CONST char *fileName,	/* The name of the file. */
     int longShort,		/* 0 to short name, 1 to long name. */
     Tcl_Obj **attributePtrPtr)	/* A pointer to return the object with. */
 {
@@ -1467,7 +1467,7 @@ static int
 GetWinFileLongName(
     Tcl_Interp *interp,		/* The interp we are using for errors. */
     int objIndex,		/* The index of the attribute. */
-    const char *fileName,	/* The name of the file. */
+    CONST char *fileName,	/* The name of the file. */
     Tcl_Obj **attributePtrPtr)	/* A pointer to return the object with. */
 {
     return ConvertFileNameFormat(interp, objIndex, fileName, 1, attributePtrPtr);
@@ -1496,7 +1496,7 @@ static int
 GetWinFileShortName(
     Tcl_Interp *interp,		/* The interp we are using for errors. */
     int objIndex,		/* The index of the attribute. */
-    const char *fileName,	/* The name of the file. */
+    CONST char *fileName,	/* The name of the file. */
     Tcl_Obj **attributePtrPtr)	/* A pointer to return the object with. */
 {
     return ConvertFileNameFormat(interp, objIndex, fileName, 0, attributePtrPtr);
@@ -1523,7 +1523,7 @@ static int
 SetWinFileAttributes(
     Tcl_Interp *interp,		/* The interp we are using for errors. */
     int objIndex,		/* The index of the attribute. */
-    const char *fileName,	/* The name of the file. */
+    CONST char *fileName,	/* The name of the file. */
     Tcl_Obj *attributePtr)	/* The new value of the attribute. */
 {
     DWORD fileAttributes;
@@ -1585,7 +1585,7 @@ static int
 CannotSetAttribute(
     Tcl_Interp *interp,		/* The interp we are using for errors. */
     int objIndex,		/* The index of the attribute. */
-    const char *fileName,	/* The name of the file. */
+    CONST char *fileName,	/* The name of the file. */
     Tcl_Obj *attributePtr)	/* The new value of the attribute. */
 {
     Tcl_AppendStringsToObj(Tcl_GetObjResult(interp), 

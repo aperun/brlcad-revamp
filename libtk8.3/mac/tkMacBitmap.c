@@ -202,7 +202,7 @@ TkpCreateNativeBitmap(
 Pixmap
 TkpGetNativeAppBitmap(
     Display *display,	/* The display. */
-    const char *name,	/* The name of the bitmap. */
+    CONST char *name,	/* The name of the bitmap. */
     int *width,		/* The width & height of the bitmap. */
     int *height)
 {

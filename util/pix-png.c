@@ -20,7 +20,7 @@
 
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -104,7 +104,6 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main(argc, argv)
 int	argc;
 char	**argv;
@@ -181,6 +180,4 @@ char	**argv;
 	png_write_info( png_p, info_p );
 	png_write_image( png_p, rows );
 	png_write_end( png_p, NULL );
-
-	return 0;
 }

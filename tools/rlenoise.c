@@ -23,7 +23,6 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <time.h>
 
 #include "machine.h"
 #include "externs.h"		/* For malloc and free */
@@ -35,7 +34,7 @@
 #define MALLOC_ERR {fprintf(stderr, "%s: ran out of heap space\n",\
 			    cmd_name(argv));exit(-2);}
 
-int
+void
 main( argc, argv )
 int argc;
 char ** argv;

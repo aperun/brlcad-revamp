@@ -16,13 +16,12 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "./iges_struct.h"
 #include "./iges_extern.h"
 
-int
 brep( entityno )
 int entityno;
 { 
@@ -55,7 +54,6 @@ int entityno;
 	Readint( &shell_de , "" );
 	Readint( &orient , "" );
 	Readint( &num_of_voids , "" );
-
 	if( num_of_voids )
 	{
 		void_shell_de = (int *)bu_calloc( num_of_voids , sizeof( int ) , "BREP: void shell DE's" );
@@ -66,11 +64,6 @@ int entityno;
 			Readint( &void_shell_de[i] , "" );
 			Readint( &void_orient[i] , "" );
 		}
-	}
-	else {
-		void_shell_de = NULL;
-		void_orient = NULL;
-		void_shells = NULL;
 	}
 
 	/* start building */
@@ -100,15 +93,14 @@ int entityno;
 		nmg_invert_shell( void_shells[i] , &tol );
 	}
 
-	if( do_bots )
+	if( do_polysolids )
 	{
 		/* Merge all shells into one */
 		for( i=0 ; i<num_of_voids ; i++ )
 			nmg_js( s_outer, void_shells[i], &tol );
 
-		/* write out BOT */
-		if( mk_bot_from_nmg( fdout, dir[entityno]->name, s_outer ) )
-			goto err;
+		/* write out polysolid */
+		write_shell_as_polysolid( fdout, dir[entityno]->name, s_outer );
 	}
 	else
 	{
@@ -126,6 +118,7 @@ int entityno;
 		bu_free( (char *)void_orient , "BREP: void shell orients" );
 		bu_free( (char *)void_shells , "brep: void shell list" );
 	}
+	nmg_km( m );
 
 	v_list = vertex_root;
 	while( v_list != NULL )

@@ -52,21 +52,14 @@ static char RCSid[] = "@(#)$Header$ (ARL)";
 #include "shadefuncs.h"
 #include "shadework.h"
 #include "../rt/ext.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 #include "../rt/light.h"
-#include "plot3.h"
-
-extern int viewshade(struct application *ap, 
-		     register const struct partition *pp,
-		     register struct shadework *swp);
-
-extern void multispectral_shader_init(struct mfuncs **headp);
 
 /* XXX Move to raytrace.h when routine goes into LIBRT */
-BU_EXTERN( double	rt_pixel_footprint, (const struct application *ap,
-				const struct hit *hitp,
-				const struct seg *segp,
-				const vect_t normal));
+BU_EXTERN( double	rt_pixel_footprint, (CONST struct application *ap,
+				CONST struct hit *hitp,
+				CONST struct seg *segp,
+				CONST vect_t normal));
 
 
 /* XXX move to h/tabdata.h when function moves out of spectrum.c */
@@ -135,7 +128,7 @@ struct bu_structparse view_parse[] = {
 };
 
 /********* spectral parameters *************/
-const struct bn_table		*spectrum;	/* definition of spectrum */
+CONST struct bn_table		*spectrum;	/* definition of spectrum */
 struct bn_tabdata		*background;		/* radiant emittance of bg */
 /********* spectral parameters *************/
 
@@ -315,11 +308,11 @@ register struct application *ap;
 /*
  *			V I E W _ E N D
  */
-void
 view_end(ap)
 struct application *ap;
 {
 	free_scanlines();
+	return(0);		/* OK */
 }
 
 /*
@@ -355,7 +348,7 @@ struct rt_i	*rtip;
 			{
 				struct region *r = BU_LIST_NEXT( region, &regp->l );
 				/* zap reg_udata? beware of light structs */
-				rt_del_regtree( rtip, regp, &rt_uniresource );
+				rt_del_regtree( rtip, regp );
 				regp = r;
 				continue;
 			}
@@ -405,8 +398,7 @@ struct rt_i	*rtip;
  *  Background texture mapping could be done here.
  *  For now, return a pleasant dark blue.
  */
-static int 
-hit_nothing( ap )
+static hit_nothing( ap )
 register struct application *ap;
 {
 	if( rdebug&RDEBUG_MISSPLOT )  {
@@ -426,8 +418,7 @@ register struct application *ap;
 			struct shadework sw;
 		} u;
 
-		memset((char *)&u, 0, sizeof(u) );
-
+		bzero( (char *)&u, sizeof(u) );
 		/* Make "miss" hit the environment map */
 		/* Build up the fakery */
 		u.part.pt_inhit = u.part.pt_outhit = &u.hit;
@@ -602,7 +593,7 @@ struct seg *finished_segs;
 
 	if( !ap->a_spectrum )  curve_attach(ap);
 /* XXX This is the right way to do this, but isn't quite ready yet. */
-	memset( (char *)&sw, 0, sizeof(sw) );
+	bzero( (char *)&sw, sizeof(sw) );
 	sw.sw_transmit = sw.sw_reflect = 0.0;
 	sw.sw_refrac_index = 1.0;
 	sw.sw_extinction = 0;
@@ -671,7 +662,6 @@ free_scanlines()
  *
  *  Called once, early on in RT setup, before view size is set.
  */
-int
 view_init( ap, file, obj, minus_o )
 register struct application *ap;
 char *file, *obj;
@@ -759,7 +749,7 @@ char	*framename;
 	default:
 		rt_bomb("bad lighting model #");
 	}
-	ap->a_rt_i->rti_nlights = light_init(ap);
+	ap->a_rt_i->rti_nlights = light_init();
 
 	/* Compute radiant emittance of background */
 	/* XXX This is wrong, need actual power (radiant flux) emitted */
@@ -790,10 +780,10 @@ void application_init ()
  */
 double
 rt_pixel_footprint(ap, hitp, segp, normal)
-const struct application *ap;
-const struct hit	*hitp;
-const struct seg	*segp;
-const vect_t		normal;
+CONST struct application *ap;
+CONST struct hit	*hitp;
+CONST struct seg	*segp;
+CONST vect_t		normal;
 {
 	plane_t	perp;
 	plane_t	surf_tan;

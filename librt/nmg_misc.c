@@ -24,7 +24,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -50,7 +50,7 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
  */
 int
 nmg_snurb_calc_lu_uv_orient( lu )
-const struct loopuse *lu;
+CONST struct loopuse *lu;
 {
 	struct edgeuse *eu;
 	int edge_count=0;
@@ -172,9 +172,9 @@ const struct loopuse *lu;
 
 void
 nmg_snurb_fu_eval( fu, u, v, pt_on_srf )
-const struct faceuse *fu;
-const fastf_t u;
-const fastf_t v;
+CONST struct faceuse *fu;
+CONST fastf_t u;
+CONST fastf_t v;
 point_t pt_on_srf;
 {
 	struct face *f;
@@ -211,9 +211,9 @@ point_t pt_on_srf;
 
 void
 nmg_snurb_fu_get_norm( fu, u, v, norm )
-const struct faceuse *fu;
-const fastf_t u;
-const fastf_t v;
+CONST struct faceuse *fu;
+CONST fastf_t u;
+CONST fastf_t v;
 vect_t norm;
 {
 	struct face *f;
@@ -241,8 +241,8 @@ vect_t norm;
 
 void
 nmg_snurb_fu_get_norm_at_vu( fu, vu, norm )
-const struct faceuse *fu;
-const struct vertexuse *vu;
+CONST struct faceuse *fu;
+CONST struct vertexuse *vu;
 vect_t norm;
 {
 	struct vertexuse_a_cnurb *va;
@@ -271,7 +271,7 @@ vect_t norm;
 
 void
 nmg_find_zero_length_edges( m )
-const struct model *m;
+CONST struct model *m;
 {
 	struct bu_ptbl eu_tab;
 	struct edgeuse *eu;
@@ -320,7 +320,7 @@ const struct model *m;
  */
 struct face *
 nmg_find_top_face_in_dir( s, dir , flags )
-const struct shell *s;
+CONST struct shell *s;
 int dir;
 long *flags;
 {
@@ -625,7 +625,7 @@ long *flags;
 
 struct face *
 nmg_find_top_face( s, dir , flags )
-const struct shell *s;
+CONST struct shell *s;
 int *dir;
 long *flags;
 {
@@ -663,9 +663,9 @@ struct top_face
 
 static void
 nmg_assoc_void_shells( r , shells , ttol )
-const struct nmgregion *r;
+CONST struct nmgregion *r;
 struct bu_ptbl *shells;
-const struct bn_tol *ttol;
+CONST struct bn_tol *ttol;
 {
 	struct shell *outer_shell,*void_s,*s;
 	struct faceuse *fu;
@@ -810,7 +810,7 @@ const struct bn_tol *ttol;
 			{
 				vect_t test_norm;
 				struct face *test_f;
-				int test_dir = 0;
+				int test_dir;
 
 				/* don't check against the outer shell or the candidate void shell */
 				if( test_s == void_s || test_s == outer_shell )
@@ -876,7 +876,7 @@ int
 nmg_find_outer_and_void_shells( r , shells , tol )
 struct nmgregion *r;
 struct bu_ptbl ***shells;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct bu_ptbl *outer_shells;
 	struct shell *s;
@@ -963,7 +963,7 @@ const struct bn_tol *tol;
  */
 int
 nmg_mark_edges_real( magic_p )
-const long *magic_p;
+CONST long *magic_p;
 {
 	struct bu_ptbl edges;
 	int i,count;
@@ -994,7 +994,7 @@ const long *magic_p;
 void
 nmg_tabulate_face_g_verts( tab , fg )
 struct bu_ptbl *tab;
-const struct face_g_plane *fg;
+CONST struct face_g_plane *fg;
 {
 	struct face *f;
 
@@ -1066,7 +1066,7 @@ const struct face_g_plane *fg;
 void
 nmg_isect_shell_self( s , tol )
 struct shell *s;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct model *m;
 	struct nmgregion *r;
@@ -1175,9 +1175,9 @@ const struct bn_tol *tol;
 
 struct edgeuse *
 nmg_next_radial_eu( eu , s , wires )
-const struct edgeuse *eu;
-const struct shell *s;
-const int wires;
+CONST struct edgeuse *eu;
+CONST struct shell *s;
+CONST int wires;
 {
 	struct edgeuse *ret_eu;
 
@@ -1192,12 +1192,8 @@ const int wires;
 		rt_bomb( "nmg_find_radial_eu: wire edges not specified, but eu is a wire!!\n" );
 
 	ret_eu = eu->eumate_p->radial_p;
-	while(
-	      (!wires & (nmg_find_fu_of_eu(ret_eu) == (struct faceuse *)NULL))
-	      ||
-	      ( (s != (struct shell *)NULL) &&
-		nmg_find_s_of_eu(ret_eu) != s  )
-	      )
+	while( ( !wires & (nmg_find_fu_of_eu( ret_eu ) == (struct faceuse *)NULL)) ||
+		( (s != (struct shell *)NULL) & nmg_find_s_of_eu( ret_eu ) != s  ) )
 			ret_eu = ret_eu->eumate_p->radial_p;
 
 	return( ret_eu );
@@ -1218,9 +1214,9 @@ const int wires;
 
 struct edgeuse *
 nmg_prev_radial_eu( eu , s , wires )
-const struct edgeuse *eu;
-const struct shell *s;
-const int wires;
+CONST struct edgeuse *eu;
+CONST struct shell *s;
+CONST int wires;
 {
 	struct edgeuse *ret_eu;
 
@@ -1253,8 +1249,8 @@ const int wires;
  */
 int
 nmg_radial_face_count( eu , s )
-const struct edgeuse *eu;
-const struct shell *s;
+CONST struct edgeuse *eu;
+CONST struct shell *s;
 {
 	int face_count=1;
 	struct edgeuse *eu1;
@@ -1289,8 +1285,8 @@ const struct shell *s;
  */
 int
 nmg_check_closed_shell( s , tol )
-const struct shell *s;
-const struct bn_tol *tol;
+CONST struct shell *s;
+CONST struct bn_tol *tol;
 {
 	struct faceuse *fu;
 
@@ -1404,7 +1400,7 @@ struct loopuse *lu;
  */
 void
 nmg_loop_plane_newell( lu, pl )
-const struct loopuse *lu;
+CONST struct loopuse *lu;
 plane_t pl;
 {
 	struct edgeuse *eu;
@@ -1483,7 +1479,7 @@ plane_t pl;
 
 fastf_t
 nmg_loop_plane_area( lu , pl )
-const struct loopuse *lu;
+CONST struct loopuse *lu;
 plane_t pl;
 {
 	fastf_t area;
@@ -1693,7 +1689,7 @@ plane_t pl;
 	}
 
 	/* build matrix */
-	MAT_ZERO( matrix );
+	bn_mat_zero( matrix );
 	VSET( vsum , 0.0 , 0.0 , 0.0 );
 
 	one_over_vertex_count = 1.0/(double)(BU_PTBL_END( &verts ));
@@ -1866,7 +1862,7 @@ struct faceuse *fu;
 
 fastf_t
 nmg_faceuse_area( fu )
-const struct faceuse *fu;
+CONST struct faceuse *fu;
 {
 	struct loopuse *lu;
 	plane_t plane;
@@ -1901,7 +1897,7 @@ const struct faceuse *fu;
 
 fastf_t
 nmg_shell_area( s )
-const struct shell *s;
+CONST struct shell *s;
 {
 	fastf_t area=0.0;
 	fastf_t tmp_area;
@@ -1926,7 +1922,7 @@ const struct shell *s;
 
 fastf_t
 nmg_region_area( r )
-const struct nmgregion *r;
+CONST struct nmgregion *r;
 {
 	struct shell *s;
 	fastf_t area=0.0;
@@ -1941,7 +1937,7 @@ const struct nmgregion *r;
 
 fastf_t
 nmg_model_area( m )
-const struct model *m;
+CONST struct model *m;
 {
 	struct nmgregion *r;
 	fastf_t area=0.0;
@@ -1977,9 +1973,9 @@ XXX If not, can we document how they differ?
 int
 rt_dist_line3_line3( dist , p1 , d1 , p2 , d2 , tol )
 fastf_t dist[2];
-const point_t p1,p2;
-const vect_t d1,d2;
-const struct bn_tol *tol;
+CONST point_t p1,p2;
+CONST vect_t d1,d2;
+CONST struct bn_tol *tol;
 {
 	fastf_t d1_d2;
 	point_t a1,a2;
@@ -2065,10 +2061,10 @@ XXX probably renamed as bn_dist_line3_line3().
 int
 rt_dist_line3_lseg3( dist , p , d , a , b , tol )
 fastf_t dist[2];
-const point_t p;
-const vect_t d;
-const point_t a,b;
-const struct bn_tol *tol;
+CONST point_t p;
+CONST vect_t d;
+CONST point_t a,b;
+CONST struct bn_tol *tol;
 {
 	vect_t a_to_b;
 	vect_t a_dir;
@@ -2142,16 +2138,16 @@ void
 nmg_purge_unwanted_intersection_points(vert_list, mag_list, fu, tol)
 struct bu_ptbl		*vert_list;
 fastf_t			*mag_list;
-const struct faceuse	*fu;
-const struct bn_tol	*tol;
+CONST struct faceuse	*fu;
+CONST struct bn_tol	*tol;
 {
 	int			i;
 	int			j;
 	struct vertexuse	*vu;
 	struct loopuse		*lu;
-	const struct loop_g	*lg;
-	const struct loopuse	*fu2lu;
-	const struct loop_g	*fu2lg = (const struct loop_g *)NULL;
+	CONST struct loop_g	*lg;
+	CONST struct loopuse	*fu2lu;
+	CONST struct loop_g	*fu2lg = (CONST struct loop_g *)NULL;
 	int			overlap = 0;
 
 	NMG_CK_FACEUSE(fu);
@@ -2321,7 +2317,7 @@ struct bu_ptbl *b;
 void
 nmg_rebound( m, tol )
 struct model		*m;
-const struct bn_tol	*tol;
+CONST struct bn_tol	*tol;
 {
 	struct nmgregion	*r;
 	struct shell		*s;
@@ -2393,18 +2389,18 @@ const struct bn_tol	*tol;
  */
 void
 nmg_count_shell_kids(m, total_faces, total_wires, total_points)
-const struct model *m;
+CONST struct model *m;
 unsigned long *total_wires;
 unsigned long *total_faces;
 unsigned long *total_points;
 {
 	short *tbl;
 
-	const struct nmgregion *r;
-	const struct shell *s;
-	const struct faceuse *fu;
-	const struct loopuse *lu;
-	const struct edgeuse *eu;
+	CONST struct nmgregion *r;
+	CONST struct shell *s;
+	CONST struct faceuse *fu;
+	CONST struct loopuse *lu;
+	CONST struct edgeuse *eu;
 
 	NMG_CK_MODEL(m);
 
@@ -2526,7 +2522,7 @@ int *loop_size;
 void
 nmg_close_shell( s , tol )
 struct shell *s;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct bu_ptbl eu_tbl;		/* table of free edgeuses from shell */
 	struct bu_ptbl vert_tbl;	/* table of vertices for use in nmg_cface */
@@ -2534,7 +2530,7 @@ const struct bn_tol *tol;
 	int loop_size;			/* number of edgeueses in loop */
 	struct faceuse *fu;
 	struct loopuse *lu;
-	struct edgeuse *eu;
+	struct edgeuse *eu,*eu1,*eu2,*eu3,*eu_new;
 	int start_loop;
 	int i;
 	int found;
@@ -2605,9 +2601,8 @@ const struct bn_tol *tol;
 		/* Create new faces to close the shell */
 		while( loop_size > 3 )
 		{
-			struct edgeuse *eu1, *eu2=NULL, *eu_new = NULL;
 			struct edgeuse **eu_used;	/* array of edgueses used, for deletion */
-			int edges_used=0;			/* number of edges used in making a face */
+			int edges_used;			/* number of edges used in making a face */
 			int found_face=0;		/* flag - indicates that a face with the correct normal will be created */
 			int start_index,end_index;	/* start and stop index for loop */
 			int coplanar;			/* flag - indicates entire loop is coplanar */
@@ -2973,16 +2968,12 @@ const struct bn_tol *tol;
 			bu_log( "Not makeing face, edges are collinear!\n" );
 
 		/* remove the last three edges from the table */
-		{
-			struct edgeuse *eu1,*eu2,*eu3;
-
-			eu1 = (struct edgeuse *)BU_PTBL_GET( &eu_tbl , index[0] );
-			eu2 = (struct edgeuse *)BU_PTBL_GET( &eu_tbl , index[1] );
-			eu3 = (struct edgeuse *)BU_PTBL_GET( &eu_tbl , index[2] );
-			bu_ptbl_rm( &eu_tbl , (long *)eu1 );
-			bu_ptbl_rm( &eu_tbl , (long *)eu2 );
-			bu_ptbl_rm( &eu_tbl , (long *)eu3 );
-		}
+		eu1 = (struct edgeuse *)BU_PTBL_GET( &eu_tbl , index[0] );
+		eu2 = (struct edgeuse *)BU_PTBL_GET( &eu_tbl , index[1] );
+		eu3 = (struct edgeuse *)BU_PTBL_GET( &eu_tbl , index[2] );
+		bu_ptbl_rm( &eu_tbl , (long *)eu1 );
+		bu_ptbl_rm( &eu_tbl , (long *)eu2 );
+		bu_ptbl_rm( &eu_tbl , (long *)eu3 );
 	}
 
 	/* Free up all the memory */
@@ -3012,7 +3003,7 @@ struct shell *
 nmg_dup_shell( s , trans_tbl, tol )
 struct shell *s;
 long ***trans_tbl;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 
 	struct model *m;
@@ -3255,7 +3246,7 @@ struct bu_ptbl *stack;
 void
 nmg_reverse_radials( fu, tol )
 struct faceuse *fu;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct loopuse *lu;
 
@@ -3311,7 +3302,7 @@ const struct bn_tol *tol;
 void
 nmg_reverse_face_and_radials( fu , tol )
 struct faceuse *fu;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct loopuse *lu;
 
@@ -3374,7 +3365,7 @@ const struct bn_tol *tol;
  */
 int
 nmg_shell_is_void( s )
-const struct shell *s;
+CONST struct shell *s;
 {
 	struct model *m;
 	struct face *f;
@@ -3431,7 +3422,7 @@ void
 nmg_propagate_normals( fu_in , flags , tol )
 struct faceuse *fu_in;
 long *flags;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct bu_ptbl stack;
 	struct loopuse *lu;
@@ -3738,7 +3729,7 @@ struct shell *s;
 void
 nmg_fix_decomposed_shell_normals( s, tol )
 struct shell *s;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct model *m;
 	struct face *f_top;
@@ -3958,7 +3949,7 @@ int reindex;
 void
 nmg_fix_normals(s_orig, tol)
 struct shell *s_orig;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct model *tmp_m;
 	struct model *m;
@@ -4149,7 +4140,7 @@ const struct bn_tol *tol;
 int
 nmg_break_long_edges( s , tol )
 struct shell *s;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct faceuse *fu;
 	struct loopuse *lu;
@@ -4323,7 +4314,7 @@ struct loopuse *lu;
 struct nmg_split_loops_state
 {
 	long		*flags;		/* index based array of flags for model */
-	const struct bn_tol	*tol;
+	CONST struct bn_tol	*tol;
 	int		split;		/* count of faces split */
 };
 
@@ -4336,7 +4327,7 @@ int after;
 	struct faceuse *fu;
 	struct nmg_split_loops_state *state;
 	struct loopuse *lu;
-	const struct bn_tol *tol;
+	CONST struct bn_tol *tol;
 	int otsame_loops=0;
 	int otopp_loops=0;
 
@@ -4526,7 +4517,7 @@ int after;
 int
 nmg_split_loops_into_faces( magic_p , tol )
 long		*magic_p;
-const struct bn_tol	*tol;
+CONST struct bn_tol	*tol;
 {
 	struct model *m;
 	struct nmg_visit_handlers htab;
@@ -4573,7 +4564,7 @@ const struct bn_tol	*tol;
 int
 nmg_decompose_shell( s , tol )
 struct shell *s;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	int missed_faces;
 	int no_of_shells=1;
@@ -4586,7 +4577,7 @@ const struct bn_tol *tol;
 	struct loopuse *lu;
 	struct edgeuse *eu;
 	struct edgeuse *eu1;
-	struct faceuse *missed_fu = NULL;
+	struct faceuse *missed_fu;
 	struct bu_ptbl stack;
 	struct bu_ptbl shared_edges;
 	long *flags;
@@ -4713,7 +4704,7 @@ const struct bn_tol *tol;
 
 	while( missed_faces )
 	{
-		struct edgeuse *unassigned_eu = NULL;
+		struct edgeuse *unassigned_eu;
 		int *shells_at_edge;
 		int new_shell_no=0;
 
@@ -5031,24 +5022,24 @@ const struct bn_tol *tol;
  *
  *  Store an NMG model as a separate .g file, for later examination.
  *  Don't free the model, as the caller may still have uses for it.
- *
- *  NON-PARALLEL because of rt_uniresource.
  */
 void
 nmg_stash_model_to_file( filename, m, title )
-const char		*filename;
-const struct model	*m;
-const char		*title;
+CONST char		*filename;
+CONST struct model	*m;
+CONST char		*title;
 {
-	struct rt_wdb		*fp;
+	FILE	*fp;
+	struct bu_external	ext;
 	struct rt_db_internal	intern;
+	union record		rec;
 
 	bu_log("nmg_stash_model_to_file('%s', x%x, %s)\n", filename, m, title);
 
 	NMG_CK_MODEL(m);
 	nmg_vmodel(m);
 
-	if( (fp = wdb_fopen(filename)) == NULL )  {
+	if( (fp = fopen(filename, "w")) == NULL )  {
 		perror(filename);
 		return;
 	}
@@ -5057,15 +5048,25 @@ const char		*title;
 	intern.idb_type = ID_NMG;
 	intern.idb_meth = &rt_functab[ID_NMG];
 	intern.idb_ptr = (genptr_t)m;
+	BU_INIT_EXTERNAL( &ext );
 
 	/* Scale change on export is 1.0 -- no change */
-	if( wdb_put_internal( fp, "error.s", &intern, 1.0 ) < 0 )  {
-		bu_bomb("nmg_stash_model_to_file() wdb_put_internal failure\n");
+	if( rt_functab[ID_NMG].ft_export( &ext, &intern, 1.0, DBI_NULL ) < 0 )  {
+		bu_log("nmg_stash_model_to_file: solid export failure\n");
+		db_free_external( &ext );
+		rt_bomb("nmg_stash_model_to_file() ft_export() error\n");
 	}
-	/* intern has been freed */
+	NAMEMOVE( "error", ((union record *)ext.ext_buf)->s.s_name );
 
-	bu_log("nmg_stash_model_to_file(): wrote error.s to '%s'\n",
-		filename);
+	bzero( (char *)&rec, sizeof(rec) );
+	rec.u_id = ID_IDENT;
+	strcpy( rec.i.i_version, ID_VERSION );
+	strncpy( rec.i.i_title, title, sizeof(rec.i.i_title)-1 );
+	fwrite( (char *)&rec, sizeof(rec), 1, fp );
+	fwrite( ext.ext_buf, ext.ext_nbytes, 1, fp );
+	fclose(fp);
+	db_free_external( &ext );
+	bu_log("nmg_stash_model_to_file(): wrote '%s' in %d bytes\n", filename, ext.ext_nbytes);
 }
 
 /* state for nmg_unbreak_edge */
@@ -5230,9 +5231,9 @@ int
 rt_dist_pt3_line3( dist, pca, a, dir, p, tol )
 fastf_t		*dist;
 point_t		pca;
-const point_t	a, p;
-const vect_t	dir;
-const struct bn_tol *tol;
+CONST point_t	a, p;
+CONST vect_t	dir;
+CONST struct bn_tol *tol;
 {
 	vect_t	AtoP;		/* P-A */
 	vect_t	unit_dir;	/* unitized dir vector */
@@ -5337,10 +5338,10 @@ struct nmgregion *r;
  */
 int
 nmg_find_isect_faces( new_v , faces , free_edges , tol )
-const struct vertex *new_v;
+CONST struct vertex *new_v;
 struct bu_ptbl *faces;
 int *free_edges;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct faceuse *fu;
 	struct face_g_plane *fg;
@@ -5420,8 +5421,8 @@ const struct bn_tol *tol;
 int
 nmg_simple_vertex_solve( new_v , faces, tol )
 struct vertex *new_v;
-const struct bu_ptbl *faces;
-const struct bn_tol *tol;
+CONST struct bu_ptbl *faces;
+CONST struct bn_tol *tol;
 {
 	struct vertex_g *vg;
 	int failed=0;
@@ -5551,8 +5552,8 @@ const struct bn_tol *tol;
  */
 int
 nmg_ck_vert_on_fus( v , tol )
-const struct vertex *v;
-const struct bn_tol *tol;
+CONST struct vertex *v;
+CONST struct bn_tol *tol;
 {
 	struct vertexuse *vu;
 	fastf_t max_dist=0.0;
@@ -5617,8 +5618,8 @@ struct intersect_fus
 
 static void
 nmg_pr_inter( new_v , int_faces )
-const struct vertex *new_v;
-const struct bu_ptbl *int_faces;
+CONST struct vertex *new_v;
+CONST struct bu_ptbl *int_faces;
 {
 	int i;
 	struct bn_tol tol;
@@ -5722,7 +5723,7 @@ static int
 nmg_get_edge_lines( new_v , int_faces , tol )
 struct vertex *new_v;
 struct bu_ptbl *int_faces;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct vertex_g *vg;
 	struct vertexuse *vu;
@@ -5897,12 +5898,7 @@ const struct bn_tol *tol;
 			/* find the new edge line at the intersection of these two faces
 			 * the line is defined by start and dir */
 
-			ret_val = bn_isect_2planes( start, dir, 
-						    fu1->f_p->g.plane_p->N,
-						    fu2->f_p->g.plane_p->N,
-						    new_v->vg_p->coord,
-						    &tol_tmp );
-			if( ret_val )
+			if( ret_val=bn_isect_2planes( start , dir , fu1->f_p->g.plane_p->N , fu2->f_p->g.plane_p->N , new_v->vg_p->coord , &tol_tmp ) )
 			{
 				/* Cannot find line for this edge */
 				bu_log( "nmg_inside_vert: Cannot find new edge between two planes\n" );
@@ -5971,10 +5967,10 @@ const struct bn_tol *tol;
  */
 static int
 nmg_get_max_edge_inters( new_v , int_faces , faces , tol )
-const struct vertex *new_v;
+CONST struct vertex *new_v;
 struct bu_ptbl *int_faces;
-const struct bu_ptbl *faces;
-const struct bn_tol *tol;
+CONST struct bu_ptbl *faces;
+CONST struct bn_tol *tol;
 {
 	struct model *m;
 	struct nmgregion *r;
@@ -6155,7 +6151,7 @@ nmg_fuse_inters( i_fus , j_fus , int_faces , tol )
 struct intersect_fus *i_fus;
 struct intersect_fus *j_fus;
 struct bu_ptbl *int_faces;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct edgeuse *radial_eu;
 	struct edgeuse *prev_eu;
@@ -6224,9 +6220,9 @@ const struct bn_tol *tol;
  */
 static void
 nmg_split_edges_at_pts( new_v , int_faces , tol )
-const struct vertex *new_v;
+CONST struct vertex *new_v;
 struct bu_ptbl *int_faces;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	int edge_no;
 
@@ -6337,7 +6333,7 @@ static void
 nmg_remove_short_eus_inter( new_v , int_faces , tol )
 struct vertex *new_v;
 struct bu_ptbl *int_faces;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	int edge_no;
 	struct vertexuse *vu;
@@ -6489,9 +6485,9 @@ const struct bn_tol *tol;
  */
 static void
 nmg_simplify_inter( new_v , int_faces , tol )
-const struct vertex *new_v;
+CONST struct vertex *new_v;
 struct bu_ptbl *int_faces;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	int edge_no=0;
 	int next_edge_no;
@@ -6644,7 +6640,7 @@ void
 nmg_make_faces_at_vert( new_v , int_faces , tol )
 struct vertex *new_v;
 struct bu_ptbl *int_faces;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct loopuse *old_lu;
 	int edge_no=0,next_edge_no;
@@ -6880,7 +6876,7 @@ const struct bn_tol *tol;
  */
 void
 nmg_kill_cracks_at_vertex( vp )
-const struct vertex *vp;
+CONST struct vertex *vp;
 {
 	struct bu_ptbl fus_at_vert;
 	struct vertexuse *vu;
@@ -6994,10 +6990,10 @@ const struct vertex *vp;
  */
 static fastf_t
 nmg_dist_to_cross( i_fus , j_fus , new_pt , tol )
-const struct intersect_fus *i_fus;
-const struct intersect_fus *j_fus;
+CONST struct intersect_fus *i_fus;
+CONST struct intersect_fus *j_fus;
 point_t new_pt;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	plane_t pl;
 	struct edgeuse *i_next_eu,*j_next_eu;
@@ -7187,7 +7183,7 @@ static void
 nmg_fix_crossed_loops( new_v , int_faces , tol )
 struct vertex *new_v;
 struct bu_ptbl *int_faces;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	int edge_no;
 
@@ -7367,8 +7363,8 @@ const struct bn_tol *tol;
 static int
 nmg_calc_new_v( new_v , int_faces , tol )
 struct vertex *new_v;
-const struct bu_ptbl *int_faces;
-const struct bn_tol *tol;
+CONST struct bu_ptbl *int_faces;
+CONST struct bn_tol *tol;
 {
 	plane_t *planes;
 	int pl_count;
@@ -7423,7 +7419,7 @@ const struct bn_tol *tol;
 
 	if( pl_count > 2 )
 	{
-		if( bn_isect_planes( new_v->vg_p->coord , (const plane_t *)planes , pl_count ) )
+		if( bn_isect_planes( new_v->vg_p->coord , (CONST plane_t *)planes , pl_count ) )
 		{
 			bu_log( "nmg_cacl_new_v: Cannot solve for new geometry at ( %f %f %f )\n",
 				V3ARGS( new_v->vg_p->coord ) );
@@ -7503,10 +7499,10 @@ const struct bn_tol *tol;
 int
 nmg_complex_vertex_solve( new_v , faces , free_edges , approximate , tol )
 struct vertex *new_v;
-const struct bu_ptbl *faces;
-const int free_edges;
-const int approximate;
-const struct bn_tol *tol;
+CONST struct bu_ptbl *faces;
+CONST int free_edges;
+CONST int approximate;
+CONST struct bn_tol *tol;
 {
 	struct faceuse *fu;
 	struct face *fp1;
@@ -7608,7 +7604,7 @@ const struct bn_tol *tol;
 			}
 		}
 
-		if( bn_isect_planes( new_v->vg_p->coord , (const plane_t *)planes , plane_count ) )
+		if( bn_isect_planes( new_v->vg_p->coord , (CONST plane_t *)planes , plane_count ) )
 		{
 			bu_log( "nmg_complex_vertex_solve: Could not calculate new geometry at ( %f %f %f )\n",
 				V3ARGS( new_v->vg_p->coord ) );
@@ -7696,8 +7692,8 @@ const struct bn_tol *tol;
  */
 int
 nmg_bad_face_normals( s , tol )
-const struct shell *s;
-const struct bn_tol *tol;
+CONST struct shell *s;
+CONST struct bn_tol *tol;
 {
 	struct faceuse *fu;
 	struct loopuse *lu;
@@ -7709,7 +7705,7 @@ const struct bn_tol *tol;
 
 	for( BU_LIST_FOR( fu , faceuse , &s->fu_hd ) )
 	{
-		fastf_t area = -1;
+		fastf_t area;
 
 		NMG_CK_FACEUSE( fu );
 
@@ -7756,8 +7752,8 @@ const struct bn_tol *tol;
  */
 int
 nmg_faces_are_radial( fu1 , fu2 )
-const struct faceuse *fu1;
-const struct faceuse *fu2;
+CONST struct faceuse *fu1;
+CONST struct faceuse *fu2;
 {
 	struct edgeuse *eu,*eu_tmp;
 	struct loopuse *lu;
@@ -7814,8 +7810,8 @@ const struct faceuse *fu2;
 int
 nmg_move_edge_thru_pt( mv_eu , pt , tol )
 struct edgeuse *mv_eu;
-const point_t pt;
-const struct bn_tol *tol;
+CONST point_t pt;
+CONST struct bn_tol *tol;
 {
 	struct faceuse *fu,*fu1;
 	struct edgeuse *eu,*eu1;
@@ -8173,9 +8169,9 @@ const struct bn_tol *tol;
 void
 nmg_vlist_to_wire_edges( s , vhead )
 struct shell *s;
-const struct bu_list *vhead;
+CONST struct bu_list *vhead;
 {
-	const struct bn_vlist *vp;
+	CONST struct bn_vlist *vp;
 	struct edgeuse *eu;
 	struct vertex *v1,*v2;
 	point_t pt1,pt2;
@@ -8233,10 +8229,10 @@ const struct bu_list *vhead;
 
 void
 nmg_follow_free_edges_to_vertex( vpa, vpb, bad_verts, s, eu, verts, found )
-const struct vertex *vpa,*vpb;
+CONST struct vertex *vpa,*vpb;
 struct bu_ptbl *bad_verts;
-const struct shell *s;
-const struct edgeuse *eu;
+CONST struct shell *s;
+CONST struct edgeuse *eu;
 struct bu_ptbl *verts;
 int *found;
 {
@@ -8352,9 +8348,9 @@ int *found;
 
 static struct bu_ptbl *
 nmg_find_path( vpa, vpb, bad_verts, s )
-const struct vertex *vpa,*vpb;
+CONST struct vertex *vpa,*vpb;
 struct bu_ptbl *bad_verts;
-const struct shell *s;
+CONST struct shell *s;
 {
 	int done;
 	static struct bu_ptbl verts;
@@ -8447,9 +8443,9 @@ const struct shell *s;
 
 void
 nmg_glue_face_in_shell( fu , s , tol )
-const struct faceuse *fu;
+CONST struct faceuse *fu;
 struct shell *s;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct loopuse *lu;
 
@@ -8481,7 +8477,6 @@ const struct bn_tol *tol;
 	}
 }
 
-#if 0
 static int
 nmg_vert_is_normalward( v, vbase, norm )
 struct vertex *v;
@@ -8500,12 +8495,11 @@ vect_t norm;
 		return( 0 );
 }
 
-
 /* Join EU's running from v1 to v2 and from v2 to v3 */
 static void
 Join_eus( v1, v2, v3, tol )
 struct vertex *v1,*v2,*v3;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct edgeuse *eu1;
 	struct edgeuse *eu2;
@@ -8563,14 +8557,13 @@ const struct bn_tol *tol;
 		}
 	}
 }
-#endif
 
 static int
 nmg_make_connect_faces( dst , vpa , vpb , verts , tol )
 struct shell *dst;
 struct vertex *vpa,*vpb;
 struct bu_ptbl *verts;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	int done=0;
 	int i,j;
@@ -8941,8 +8934,8 @@ int
 nmg_open_shells_connect( dst , src , copy_tbl , tol )
 struct shell *dst;
 struct shell *src;
-const long **copy_tbl;
-const struct bn_tol *tol;
+CONST long **copy_tbl;
+CONST struct bn_tol *tol;
 {
 	struct faceuse *fu;
 	struct loopuse *lu;
@@ -9217,8 +9210,8 @@ const struct bn_tol *tol;
 int
 nmg_in_vert( new_v , approximate , tol )
 struct vertex *new_v;
-const int approximate;
-const struct bn_tol *tol;
+CONST int approximate;
+CONST struct bn_tol *tol;
 {
 	struct bu_ptbl faces;
 	int failed=0;
@@ -9637,7 +9630,7 @@ struct model *m;
 void
 nmg_make_faces_within_tol( s, tol )
 struct shell *s;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct bu_ptbl faceuses;
 	struct faceuse *fu;
@@ -9707,7 +9700,7 @@ const struct bn_tol *tol;
 void
 nmg_intersect_loops_self( s, tol )
 struct shell *s;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct faceuse *fu;
 	struct bu_ptbl edgeuses;
@@ -9832,7 +9825,7 @@ struct bu_list	*crv_head;
 	struct edge_g_cnurb *crv,*next_crv;
 	struct edge_g_cnurb *new_crv=(struct edge_g_cnurb *)NULL;
 	fastf_t knot_delta=0.0;
-	fastf_t last_knot=0.0;
+	fastf_t last_knot;
 	int ncoords;
 	int knot_index=(-1);
 	int max_order=0;
@@ -10013,7 +10006,7 @@ point_t i_center;
 point_t i_start;
 point_t i_end;
 int point_type;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct edge_g_cnurb *crv;
 	struct bu_list crv_head;
@@ -10031,7 +10024,7 @@ const struct bn_tol *tol;
 	point_t end1;
 	int nsegs;
 	int pt_type;
-	int ncoords = 0;
+	int ncoords;
 	int i;
 
 	BN_CK_TOL( tol );
@@ -10215,7 +10208,7 @@ int
 nmg_break_edge_at_verts( e, verts, tol )
 struct edge *e;
 struct bu_ptbl *verts;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	int break_count=0;
 	int j;
@@ -10280,7 +10273,7 @@ start:
 int
 nmg_break_edges( magic_p, tol )
 long *magic_p;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct bu_ptbl edges;
 	struct bu_ptbl verts;
@@ -10504,7 +10497,9 @@ not_arb:
  *	The newly constructed arb is in "arb_int"
  */
 int
-nmg_to_arb( const struct model *m, struct rt_arb_internal *arb_int )
+nmg_to_arb( m, arb_int )
+CONST struct model *m;
+struct rt_arb_internal *arb_int;
 {
 	struct nmgregion *r;
 	struct shell *s;
@@ -10518,7 +10513,7 @@ nmg_to_arb( const struct model *m, struct rt_arb_internal *arb_int )
 	int face_verts;
 	int i,j;
 	int found;
-	int ret_val = 0;
+	int ret_val;
 
 	NMG_CK_MODEL( m );
 
@@ -10755,10 +10750,10 @@ nmg_to_arb( const struct model *m, struct rt_arb_internal *arb_int )
  *	Currently only supports RCC, and creates circumscribed RCC
  */
 int
-nmg_to_tgc(
-	const struct model *m,
-	struct rt_tgc_internal *tgc_int,
-	const struct bn_tol *tol )
+nmg_to_tgc( m, tgc_int,  tol )
+CONST struct model *m;
+struct rt_tgc_internal *tgc_int;
+CONST struct bn_tol *tol;
 {
 	struct nmgregion *r;
 	struct shell *s;
@@ -11013,7 +11008,7 @@ nmg_to_tgc(
 int
 nmg_lu_is_convex( lu, tol )
 struct loopuse *lu;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct edgeuse *eu1,*eu2,*eu3,*eu_start;
 
@@ -11064,16 +11059,11 @@ const struct bn_tol *tol;
 	return( 1 );
 }
 
-/*
- *			N M G _ T O _ P O L Y
- *
- * XXX This routine is deprecated in favor of BoTs
- */
 int
 nmg_to_poly( m, poly_int, tol )
-const struct model *m;
+CONST struct model *m;
 struct rt_pg_internal *poly_int;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct nmgregion *r;
 	struct shell  *s;
@@ -11247,7 +11237,7 @@ const struct bn_tol *tol;
 int
 nmg_simplify_shell_edges( s, tol )
 struct shell *s;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct faceuse *fu;
 	int count=0;
@@ -11436,8 +11426,8 @@ const struct bn_tol *tol;
 
 int
 nmg_select_collapse( max_dist1, max_dot1, flip1, max_dist2, max_dot2, flip2, max_dot, tol_dist )
-const fastf_t max_dist1, max_dot1, max_dist2, max_dot2, max_dot, tol_dist;
-const int flip1, flip2;
+CONST fastf_t max_dist1, max_dot1, max_dist2, max_dot2, max_dot, tol_dist;
+CONST int flip1, flip2;
 {
 	unsigned int ret;
 
@@ -11494,9 +11484,9 @@ bu_log( "choice = %d\n", ret );
 int
 nmg_edge_collapse( m, tol, tol_coll, min_angle )
 struct model *m;
-const struct bn_tol *tol;
-const fastf_t tol_coll;
-const fastf_t min_angle;
+CONST struct bn_tol *tol;
+CONST fastf_t tol_coll;
+CONST fastf_t min_angle;
 {
 	fastf_t max_dot;
 	struct bu_ptbl edge_table;
@@ -12171,7 +12161,7 @@ const fastf_t min_angle;
 struct rt_bot_internal *
 nmg_bot( s, tol )
 struct shell *s;
-const struct bn_tol *tol;
+CONST struct bn_tol *tol;
 {
 	struct rt_bot_internal	*bot;
 	struct bu_ptbl		nmg_vertices;

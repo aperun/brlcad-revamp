@@ -17,7 +17,6 @@
 #include "./iges_struct.h"
 #include "./iges_extern.h"
 
-int
 sphere( entityno )
 int entityno;
 {

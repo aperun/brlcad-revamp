@@ -17,7 +17,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSregionfix[] = "@(#)$Header$ (BRL)";
+static char RCSregionfix[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -59,6 +59,7 @@ struct rt_i	*rtip;
 	char	*line;
 	char	*tabp;
 	int	linenum = 0;
+	char	*err;
 	register struct region	*rp;
 	int	ret;
 	int	oldid;
@@ -111,12 +112,9 @@ struct rt_i	*rtip;
 			continue;		/* just ignore it */
 		}
 #else
-		{
-			char	*err;
-			if( (err = re_comp(line)) != (char *)0 )  {
-				bu_log("%s: line %d, re_comp error '%s'\n", file, line, err );
-				continue;		/* just ignore it */
-			}
+		if( (err = re_comp(line)) != (char *)0 )  {
+			bu_log("%s: line %d, re_comp error '%s'\n", file, line, err );
+			continue;		/* just ignore it */
 		}
 #endif
 		
@@ -126,7 +124,7 @@ struct rt_i	*rtip;
 #else				      
 			ret = re_exec((char *)rp->reg_name);
 #endif
-			if(RT_G_DEBUG&DEBUG_INSTANCE)  {
+			if(rt_g.debug&DEBUG_INSTANCE)  {
 				bu_log("'%s' %s '%s'\n", line,
 					ret==1 ? "==" : "!=",
 					rp->reg_name);
@@ -156,7 +154,7 @@ struct rt_i	*rtip;
 				newid = atoi( tabp );
 				if( newid == 0 )  bu_log("%s, line %d Warning:  new id = 0\n", file, linenum );
 			}
-			if(RT_G_DEBUG&DEBUG_INSTANCE)  {
+			if(rt_g.debug&DEBUG_INSTANCE)  {
 				bu_log("%s instance %d:  region id changed from %d to %d\n",
 					rp->reg_name, rp->reg_instnum,
 					oldid, newid );

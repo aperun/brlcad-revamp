@@ -18,14 +18,12 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
-#include "conf.h"
 #include <stdio.h>
 #include <math.h>
 #include "machine.h"
-#include "bu.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "rtlist.h"
@@ -92,7 +90,7 @@ int		normalize;
 struct bu_vls	*tail;
 
 {
-    char		*cp = NULL;
+    char		*cp;
     fastf_t		sum;
     int			i;
     int			return_code = 1;
@@ -151,7 +149,6 @@ struct bu_vls	*tail;
 	return (return_code);
 }
 
-int
 main (argc, argv)
 
 int	argc;
@@ -170,17 +167,20 @@ char	*argv[];
     struct bu_vls	*tail_buf = 0;
     struct site		*sp;
 
+    extern int	optind;			/* index from getopt(3C) */
+    extern char	*optarg;		/* index from getopt(3C) */
+
     BU_LIST_INIT(&site_list);
-    while ((ch = bu_getopt(argc, argv, OPT_STRING)) != EOF)
+    while ((ch = getopt(argc, argv, OPT_STRING)) != EOF)
 	switch (ch)
 	{
 	    case 'n':
 		normalize = 1;
 		break;
 	    case 's':
-		if (sscanf(bu_optarg, "%lf %lf %lf", &x, &y, &z) != 3)
+		if (sscanf(optarg, "%lf %lf %lf", &x, &y, &z) != 3)
 		{
-		    bu_log("Illegal site: '%s'\n", bu_optarg);
+		    bu_log("Illegal site: '%s'\n", optarg);
 		    print_usage();
 		    exit (1);
 		}
@@ -196,14 +196,14 @@ char	*argv[];
 		exit (ch != '?');
 	}
 
-    switch (argc - bu_optind)
+    switch (argc - optind)
     {
 	case 0:
 	    inf_name = "stdin";
 	    infp = stdin;
 	    break;
 	case 1:
-	    inf_name = argv[bu_optind++];
+	    inf_name = argv[optind++];
 	    if ((infp = fopen(inf_name, "r")) == NULL)
 	    {
 		bu_log ("Cannot open file '%s'\n", inf_name);
@@ -245,5 +245,4 @@ char	*argv[];
 	    bu_flog(stdout, "%s", bu_vls_addr(tail_buf));
 	bu_flog(stdout, "\n");
     }
-    return 0;
 }

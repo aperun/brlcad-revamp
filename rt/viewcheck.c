@@ -30,19 +30,15 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCScheckview[] = "@(#)$Header$ (BRL)";
+static char RCScheckview[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include "machine.h"
 #include "vmath.h"
 #include "raytrace.h"
-#include "plot3.h"
 
 #define OVLP_TOL	0.1
 
@@ -82,8 +78,8 @@ static int	overlap_count;		/* Number of overlap pairs seen */
  */
 struct overlap_list {
 	struct overlap_list *next;	/* next one */
-	const char 	*reg1;		/* overlapping region 1 */
-	const char	*reg2;		/* overlapping region 2 */
+	CONST char 	*reg1;		/* overlapping region 1 */
+	CONST char	*reg2;		/* overlapping region 2 */
 	long	count;			/* number of time reported */
 	double	maxdepth;		/* maximum overlap depth */
 };

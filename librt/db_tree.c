@@ -19,7 +19,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -41,21 +41,21 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "./debug.h"
 
-BU_EXTERN(void db_ck_tree, (const union tree *tp));
+BU_EXTERN(void db_ck_tree, (CONST union tree *tp));
 
 /*
  *			D B _ D U P _ D B _ T R E E _ S T A T E
  *
  *  Duplicate the contents of a db_tree_state structure,
- *  including a private copy of the ts_mater field(s) and the attribute/value set.
+ *  including a private copy of the ts_mater field(s).
  */
 void
-db_dup_db_tree_state(struct db_tree_state *otsp, const struct db_tree_state *itsp)
+db_dup_db_tree_state( otsp, itsp )
+register struct db_tree_state		*otsp;
+register CONST struct db_tree_state	*itsp;
 {
 	int		shader_len=0;
-	int		i;
 
-	RT_CK_DBTS(itsp);
 	RT_CK_DBI(itsp->ts_dbip);
 
 	*otsp = *itsp;			/* struct copy */
@@ -69,15 +69,6 @@ db_dup_db_tree_state(struct db_tree_state *otsp, const struct db_tree_state *its
 	}
 	else
 		otsp->ts_mater.ma_shader = (char *)NULL;
-
-	if( itsp->ts_attrs.count > 0 ) {
-		bu_avs_init( &otsp->ts_attrs, itsp->ts_attrs.count, "otsp->ts_attrs" );
-		for( i=0 ; i<itsp->ts_attrs.count ; i++ )
-			bu_avs_add( &otsp->ts_attrs, itsp->ts_attrs.avp[i].name,
-				    itsp->ts_attrs.avp[i].value );
-	} else {
-		bu_avs_init_empty( &otsp->ts_attrs );
-	}
 }
 
 /*
@@ -86,17 +77,13 @@ db_dup_db_tree_state(struct db_tree_state *otsp, const struct db_tree_state *its
  *  Release dynamic fields inside the structure, but not the structure itself.
  */
 void
-db_free_db_tree_state( struct db_tree_state *tsp )
+db_free_db_tree_state( tsp )
+register struct db_tree_state	*tsp;
 {
-	RT_CK_DBTS(tsp);
 	RT_CK_DBI(tsp->ts_dbip);
 	if( tsp->ts_mater.ma_shader )  {
 		bu_free( tsp->ts_mater.ma_shader, "db_free_combined_tree_state: ma_shader" );
 		tsp->ts_mater.ma_shader = (char *)NULL;		/* sanity */
-	}
-	if( tsp->ts_attrs.max > 0 ) {
-		bu_avs_free( &tsp->ts_attrs );
-		tsp->ts_attrs.avp = (struct bu_attribute_value_pair *)NULL;
 	}
 	tsp->ts_dbip = (struct db_i *)NULL;			/* sanity */
 }
@@ -109,17 +96,15 @@ db_free_db_tree_state( struct db_tree_state *tsp )
  *  and then set ts_dbip in your copy.
  */
 void
-db_init_db_tree_state( struct db_tree_state *tsp, struct db_i *dbip, struct resource *resp )
+db_init_db_tree_state( tsp, dbip )
+register struct db_tree_state	*tsp;
+struct db_i			*dbip;
 {
 	RT_CK_DBI(dbip);
-	RT_CK_RESOURCE(resp);
 
 	bzero( (char *)tsp, sizeof(*tsp) );
-	tsp->magic = RT_DBTS_MAGIC;
 	tsp->ts_dbip = dbip;
-	tsp->ts_resp = resp;
-	bu_avs_init_empty( &tsp->ts_attrs );
-	MAT_IDN( tsp->ts_mat );	/* XXX should use null pointer convention! */
+	bn_mat_idn( tsp->ts_mat );	/* XXX should use null pointer convention! */
 }
 
 /*
@@ -127,12 +112,11 @@ db_init_db_tree_state( struct db_tree_state *tsp, struct db_i *dbip, struct reso
  */
 struct combined_tree_state *
 db_new_combined_tree_state( tsp, pathp )
-register const struct db_tree_state	*tsp;
-register const struct db_full_path	*pathp;
+register CONST struct db_tree_state	*tsp;
+register CONST struct db_full_path	*pathp;
 {
 	struct combined_tree_state	*new;
 
-	RT_CK_DBTS(tsp);
 	RT_CK_FULL_PATH(pathp);
 	RT_CK_DBI(tsp->ts_dbip);
 
@@ -149,7 +133,7 @@ register const struct db_full_path	*pathp;
  */
 struct combined_tree_state *
 db_dup_combined_tree_state( old )
-const struct combined_tree_state	*old;
+CONST struct combined_tree_state	*old;
 {
 	struct combined_tree_state	*new;
 
@@ -181,12 +165,8 @@ register struct combined_tree_state	*ctsp;
  */
 void
 db_pr_tree_state( tsp )
-register const struct db_tree_state	*tsp;
+register CONST struct db_tree_state	*tsp;
 {
-	int i;
-
-	RT_CK_DBTS(tsp);
-
 	bu_log("db_pr_tree_state(x%x):\n", tsp);
 	bu_log(" ts_dbip=x%x\n", tsp->ts_dbip);
 	bu_printb(" ts_sofar", tsp->ts_sofar, "\020\3REGION\2INTER\1MINUS" );
@@ -201,11 +181,7 @@ register const struct db_tree_state	*tsp;
 		tsp->ts_mater.ma_color[2] );
 	bu_log(" ts_mater.ma_temperature=%g K\n", tsp->ts_mater.ma_temperature);
 	bu_log(" ts_mater.ma_shader=%s\n", tsp->ts_mater.ma_shader ? tsp->ts_mater.ma_shader : "" );
-	for( i=0 ; i<tsp->ts_attrs.count ; i++ ) {
-		bu_log( "\t%s = %s\n", tsp->ts_attrs.avp[i].name, tsp->ts_attrs.avp[i].value );
-	}
 	bn_mat_print("ts_mat", tsp->ts_mat );
-	bu_log(" ts_resp=x%x\n", tsp->ts_resp );
 }
 
 /*
@@ -213,7 +189,7 @@ register const struct db_tree_state	*tsp;
  */
 void
 db_pr_combined_tree_state( ctsp )
-register const struct combined_tree_state	*ctsp;
+register CONST struct combined_tree_state	*ctsp;
 {
 	char	*str;
 
@@ -239,10 +215,9 @@ register const struct combined_tree_state	*ctsp;
 int
 db_apply_state_from_comb( tsp, pathp, comb )
 struct db_tree_state		*tsp;
-const struct db_full_path	*pathp;
-register const struct rt_comb_internal	*comb;
+CONST struct db_full_path	*pathp;
+register CONST struct rt_comb_internal	*comb;
 {
-	RT_CK_DBTS(tsp);
 	RT_CK_COMB(comb);
 
 	if( comb->rgb_valid == 1 )  {
@@ -360,16 +335,14 @@ int
 db_apply_state_from_memb( tsp, pathp, tp )
 struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
-const union tree	*tp;
+CONST union tree	*tp;
 {
 	register struct directory *mdp;
 	mat_t			xmat;
 	mat_t			old_xlate;
 
-	RT_CK_DBTS(tsp);
 	RT_CK_FULL_PATH(pathp);
 	RT_CK_TREE(tp);
-
 	if( (mdp = db_lookup( tsp->ts_dbip, tp->tr_l.tl_name, LOOKUP_QUIET )) == DIR_NULL )  {
 		char	*sofar = db_path_to_string(pathp);
 		bu_log("db_lookup(%s) failed in %s\n", tp->tr_l.tl_name, sofar);
@@ -379,13 +352,11 @@ const union tree	*tp;
 
 	db_add_node_to_full_path( pathp, mdp );
 
-	MAT_COPY( old_xlate, tsp->ts_mat );
-	if( tp->tr_l.tl_mat ) {
-		MAT_COPY( xmat, tp->tr_l.tl_mat );
-	}
-	else {
-		MAT_IDN( xmat );
-	}
+	bn_mat_copy( old_xlate, tsp->ts_mat );
+	if( tp->tr_l.tl_mat )
+		bn_mat_copy( xmat, tp->tr_l.tl_mat );
+	else
+		bn_mat_idn( xmat );
 
 	/*  If the owning region it above this node in the tree,
 	 *  it is not possible to animation region-material properties
@@ -410,16 +381,15 @@ const union tree	*tp;
  *	 1	state applied OK
  */
 int
-db_apply_state_from_one_member(
-	struct db_tree_state *tsp,
-	struct db_full_path *pathp,
-	const char *cp,
-	int sofar,
-	const union tree *tp )
+db_apply_state_from_one_member( tsp, pathp, cp, sofar, tp )
+struct db_tree_state	*tsp;
+struct db_full_path	*pathp;
+CONST char		*cp;
+int			sofar;
+CONST union tree	*tp;
 {
 	int	ret;
 
-	RT_CK_DBTS(tsp);
 	RT_CHECK_DBI( tsp->ts_dbip );
 	RT_CK_FULL_PATH( pathp );
 	RT_CK_TREE(tp);
@@ -465,7 +435,9 @@ db_apply_state_from_one_member(
  *	TREE_NULL	if not found in this tree
  */
 union tree *
-db_find_named_leaf( union tree *tp, const char *cp )
+db_find_named_leaf( tp, cp )
+union tree		*tp;
+CONST char		*cp;
 {
 	union tree	*ret;
 
@@ -506,7 +478,10 @@ db_find_named_leaf( union tree *tp, const char *cp )
  *
  */
 union tree *
-db_find_named_leafs_parent( int *side, union tree *tp, const char *cp )
+db_find_named_leafs_parent( side, tp, cp )
+int			*side;
+union tree		*tp;
+CONST char		*cp;
 {
 	union tree	*ret;
 
@@ -551,7 +526,8 @@ db_find_named_leafs_parent( int *side, union tree *tp, const char *cp )
  *			D B _ T R E E _ D E L _ L H S
  */
 void
-db_tree_del_lhs( union tree *tp, struct resource *resp )
+db_tree_del_lhs( tp )
+union tree		*tp;
 {
 	union tree	*subtree;
 
@@ -573,7 +549,7 @@ db_tree_del_lhs( union tree *tp, struct resource *resp )
 		case OP_NMG_TESS:
 		case OP_DB_LEAF:
 			/* lhs is indeed a leaf node */
-			db_free_tree( tp->tr_b.tb_left, resp );
+			db_free_tree( tp->tr_b.tb_left );
 			tp->tr_b.tb_left = TREE_NULL;	/* sanity */
 			subtree = tp->tr_b.tb_right;
 			/*
@@ -583,7 +559,7 @@ db_tree_del_lhs( union tree *tp, struct resource *resp )
 			 *  (but not the actual subtree).
 			 */
 			*tp = *subtree;			/* struct copy */
-			RT_FREE_TREE( subtree, resp );
+			bu_free( (genptr_t)subtree, "union tree (subtree)" );
 			return;
 		default:
 			bu_bomb("db_tree_del_lhs()  lhs is not a leaf node\n");
@@ -595,7 +571,8 @@ db_tree_del_lhs( union tree *tp, struct resource *resp )
  *			D B _ T R E E _ D E L _ R H S
  */
 void
-db_tree_del_rhs( union tree *tp, struct resource *resp )
+db_tree_del_rhs( tp )
+union tree		*tp;
 {
 	union tree	*subtree;
 
@@ -617,7 +594,7 @@ db_tree_del_rhs( union tree *tp, struct resource *resp )
 		case OP_NMG_TESS:
 		case OP_DB_LEAF:
 			/* rhs is indeed a leaf node */
-			db_free_tree( tp->tr_b.tb_right, resp );
+			db_free_tree( tp->tr_b.tb_right );
 			tp->tr_b.tb_right = TREE_NULL;	/* sanity */
 			subtree = tp->tr_b.tb_left;
 			/*
@@ -627,7 +604,7 @@ db_tree_del_rhs( union tree *tp, struct resource *resp )
 			 *  (but not the actual subtree).
 			 */
 			*tp = *subtree;			/* struct copy */
-			RT_FREE_TREE( subtree, resp );
+			bu_free( (genptr_t)subtree, "union tree (subtree)" );
 			return;
 		default:
 			bu_bomb("db_tree_del_rhs()  rhs is not a leaf node\n");
@@ -658,8 +635,9 @@ db_tree_del_rhs( union tree *tp, struct resource *resp )
  *	-1	Unable to find OP_DB_LEAF node specified by 'cp'.
  *	 0	OK
  */
-int
-db_tree_del_dbleaf(union tree **tp, const char *cp, struct resource *resp)
+db_tree_del_dbleaf( tp, cp )
+union tree		**tp;
+CONST char		*cp;
 {
 	union tree	*parent;
 	int		side = 0;
@@ -667,13 +645,12 @@ db_tree_del_dbleaf(union tree **tp, const char *cp, struct resource *resp)
 	if( *tp == TREE_NULL )  return -1;
 
 	RT_CK_TREE(*tp);
-	RT_CK_RESOURCE(resp);
 
 	if( (parent = db_find_named_leafs_parent( &side, *tp, cp )) == TREE_NULL )  {
 		/* Perhaps the root of the tree is the named leaf? */
 		if( (*tp)->tr_op == OP_DB_LEAF &&
 		    strcmp( cp, (*tp)->tr_l.tl_name ) == 0 )  {
-		    	db_free_tree( *tp, resp );
+		    	db_free_tree( *tp );
 		    	*tp = TREE_NULL;
 		    	return 0;
 		}
@@ -682,12 +659,12 @@ db_tree_del_dbleaf(union tree **tp, const char *cp, struct resource *resp)
 
 	switch( side )  {
 	case 1:
-		db_tree_del_lhs( parent, resp );
-		(void)db_tree_del_dbleaf( tp, cp, resp );	/* recurse for extras */
+		db_tree_del_lhs( parent );
+		(void)db_tree_del_dbleaf( tp, cp );	/* recurse for extras */
 		return 0;
 	case 2:
-		db_tree_del_rhs( parent, resp );
-		(void)db_tree_del_dbleaf( tp, cp, resp );	/* recurse for extras */
+		db_tree_del_rhs( parent );
+		(void)db_tree_del_dbleaf( tp, cp );	/* recurse for extras */
 		return 0;
 	}
 	bu_log("db_tree_del_dbleaf() unknown side=%d?\n", side);
@@ -700,7 +677,9 @@ db_tree_del_dbleaf(union tree **tp, const char *cp, struct resource *resp)
  *  Multiply on the left every matrix found in a DB_LEAF node in a tree.
  */
 void
-db_tree_mul_dbleaf( union tree *tp, const mat_t mat )
+db_tree_mul_dbleaf( tp, mat )
+union tree	*tp;
+CONST mat_t	mat;
 {
 	mat_t	temp;
 
@@ -714,7 +693,7 @@ db_tree_mul_dbleaf( union tree *tp, const mat_t mat )
 			return;
 		}
 		bn_mat_mul( temp, mat, tp->tr_l.tl_mat );
-		MAT_COPY( tp->tr_l.tl_mat, temp );
+		bn_mat_copy( tp->tr_l.tl_mat, temp );
 		break;
 
 	case OP_UNION:
@@ -741,14 +720,12 @@ db_tree_mul_dbleaf( union tree *tp, const mat_t mat )
  *	was comb_functree().
  */
 void
-db_tree_funcleaf(
-	struct db_i		*dbip,
-	struct rt_comb_internal	*comb,
-	union tree		*comb_tree,
-	void			(*leaf_func)(),
-	genptr_t		user_ptr1,
-	genptr_t		user_ptr2,
-	genptr_t		user_ptr3 )
+db_tree_funcleaf( dbip, comb, comb_tree, leaf_func, user_ptr1, user_ptr2, user_ptr3 )
+struct db_i		*dbip;
+struct rt_comb_internal	*comb;
+union tree		*comb_tree;
+void			(*leaf_func)();
+genptr_t		user_ptr1,user_ptr2,user_ptr3;
 {
 	RT_CK_DBI( dbip );
 
@@ -797,12 +774,12 @@ db_tree_funcleaf(
  *	-1	error (*tsp values are not useful)
  */
 int
-db_follow_path(
-	struct db_tree_state		*tsp,
-	struct db_full_path		*total_path,
-	const struct db_full_path	*new_path,
-	int				noisy,
-	int				depth )		/* # arcs in new_path to use */
+db_follow_path( tsp, total_path, new_path, noisy, depth )
+struct db_tree_state		*tsp;
+struct db_full_path		*total_path;
+CONST struct db_full_path	*new_path;
+int				noisy;
+int				depth;		/* # arcs in new_path to use */
 {
 	struct rt_db_internal	intern;
 	struct rt_comb_internal	*comb;
@@ -810,13 +787,11 @@ db_follow_path(
 	struct directory	*dp;		/* element's dp */
 	int			j;
 
-	RT_CK_DBTS(tsp);
 	RT_CHECK_DBI( tsp->ts_dbip );
 	RT_CK_FULL_PATH( total_path );
 	RT_CK_FULL_PATH( new_path );
-	RT_CK_RESOURCE( tsp->ts_resp );
 
-	if(RT_G_DEBUG&DEBUG_TREEWALK)  {
+	if(rt_g.debug&DEBUG_TREEWALK)  {
 		char	*sofar = db_path_to_string(total_path);
 		char	*toofar = db_path_to_string(new_path);
 		bu_log("db_follow_path() total_path='%s', tsp=x%x, new_path='%s', noisy=%d, depth=%d\n",
@@ -855,8 +830,8 @@ db_follow_path(
 				RT_CK_ANIMATE(anp);
 				if( dp != anp->an_path.fp_names[0] )
 					continue;
-				MAT_COPY( old_xlate, tsp->ts_mat );
-				MAT_IDN( xmat );
+				bn_mat_copy( old_xlate, tsp->ts_mat );
+				bn_mat_idn( xmat );
 				db_do_anim( anp, old_xlate, xmat, &(tsp->ts_mater) );
 				bn_mat_mul( tsp->ts_mat, old_xlate, xmat );
 			}
@@ -887,12 +862,12 @@ db_follow_path(
 		}
 
 		/* At this point, comb_db is the comb, dp is the member */
-		if(RT_G_DEBUG&DEBUG_TREEWALK)  {
+		if(rt_g.debug&DEBUG_TREEWALK)  {
 			bu_log("db_follow_path() at %s/%s\n", comb_dp->d_namep, dp->d_namep );
 		}
 
 		/* Load the combination object into memory */
-		if( rt_db_get_internal( &intern, comb_dp, tsp->ts_dbip, NULL, tsp->ts_resp ) < 0 )
+		if( rt_db_get_internal( &intern, comb_dp, tsp->ts_dbip, NULL ) < 0 )
 			goto fail;
 		comb = (struct rt_comb_internal *)intern.idb_ptr;
 		RT_CK_COMB(comb);
@@ -907,7 +882,7 @@ db_follow_path(
 		/* Found it, state has been applied, sofar applied,
 		 * member's directory entry pushed onto total_path
 		 */
-		rt_db_free_internal( &intern, tsp->ts_resp );
+		intern.idb_meth->ft_ifree( &intern );
 
 		/* If member is a leaf, handle leaf processing too. */
 		if( (dp->d_flags & DIR_COMB) == 0 )  {
@@ -935,7 +910,7 @@ is_leaf:
 	} while( j <= depth );
 
 out:
-	if(RT_G_DEBUG&DEBUG_TREEWALK)  {
+	if(rt_g.debug&DEBUG_TREEWALK)  {
 		char	*sofar = db_path_to_string(total_path);
 		bu_log("db_follow_path() returns total_path='%s'\n",
 			sofar);
@@ -962,13 +937,11 @@ int
 db_follow_path_for_state( tsp, total_path, orig_str, noisy )
 struct db_tree_state	*tsp;
 struct db_full_path	*total_path;
-const char		*orig_str;
+CONST char		*orig_str;
 int			noisy;
 {
 	struct db_full_path	new_path;
 	int			ret;
-
-	RT_CK_DBTS(tsp);
 
 	if( *orig_str == '\0' )  return 0;		/* Null string */
 
@@ -989,7 +962,7 @@ int			noisy;
  *
  *  Helper routine for db_recurse()
  */
-HIDDEN void
+void
 db_recurse_subtree( tp, msp, pathp, region_start_statepp, client_data )
 union tree		*tp;
 struct db_tree_state	*msp;
@@ -1001,8 +974,6 @@ genptr_t	client_data;
 	union tree		*subtree;
 
 	RT_CK_TREE(tp);
-	RT_CK_DBTS(msp);
-	RT_CK_RESOURCE(msp->ts_resp);
 	db_dup_db_tree_state( &memb_state, msp );
 
 	switch( tp->tr_op )  {
@@ -1026,13 +997,13 @@ genptr_t	client_data;
 
 			/* graft subtree on in place of 'tp' leaf node */
 			/* exchange what subtree and tp point at */
-			RT_GET_TREE( tmp, msp->ts_resp );
+			BU_GETUNION(tmp, tree);
 			RT_CK_TREE(subtree);
 			*tmp = *tp;	/* struct copy */
 			*tp = *subtree;	/* struct copy */
-			RT_FREE_TREE( subtree, msp->ts_resp );
-
-			db_free_tree( tmp, msp->ts_resp );
+			bu_free( (char *)subtree, "subtree" );
+db_ck_tree(tmp);
+			db_free_tree( tmp );
 			RT_CK_TREE(tp);
 		} else {
 			/* Processing of this leaf failed, NOP it out. */
@@ -1086,13 +1057,11 @@ struct combined_tree_state	**region_start_statepp;
 genptr_t	client_data;
 {
 	struct directory	*dp;
+	struct bu_external	ext;
 	struct rt_db_internal	intern;
 	union tree		*curtree = TREE_NULL;
-	int			i;
 
-	RT_CK_DBTS(tsp);
 	RT_CHECK_DBI( tsp->ts_dbip );
-	RT_CK_RESOURCE(tsp->ts_resp);
 	RT_CK_FULL_PATH(pathp);
 	RT_INIT_DB_INTERNAL(&intern);
 
@@ -1102,7 +1071,7 @@ genptr_t	client_data;
 	}
 	dp = DB_FULL_PATH_CUR_DIR(pathp);
 
-	if(RT_G_DEBUG&DEBUG_TREEWALK)  {
+	if(rt_g.debug&DEBUG_TREEWALK)  {
 		char	*sofar = db_path_to_string(pathp);
 		bu_log("db_recurse() pathp='%s', tsp=x%x, *statepp=x%x, tsp->ts_sofar=%d\n",
 			sofar, tsp,
@@ -1113,25 +1082,27 @@ genptr_t	client_data;
 
 	/*
 	 * Load the entire object into contiguous memory.
-	 * Note that this code depends on the d_flags being set properly.
 	 */
 	if( dp->d_addr == RT_DIR_PHONY_ADDR )  return TREE_NULL;
+	if( db_get_external( &ext, dp, tsp->ts_dbip ) < 0 )  {
+		bu_log("db_recurse() db_get_external() FAIL\n");
+		return(TREE_NULL);		/* FAIL */
+	}
 
 	if( dp->d_flags & DIR_COMB )  {
 		struct rt_comb_internal	*comb;
 		struct db_tree_state	nts;
 		int			is_region;
 
-	    	RT_INIT_DB_INTERNAL(&intern);
-		if( rt_db_get_internal( &intern, dp, tsp->ts_dbip, NULL, tsp->ts_resp ) < 0 )  {
-			bu_log("db_recurse() rt_db_get_internal(%s) FAIL\n", dp->d_namep);
-			curtree = TREE_NULL;		/* FAIL */
-			goto out;
-		}
-
 		/*  Handle inheritance of material property. */
 		db_dup_db_tree_state( &nts, tsp );
 
+		if( rt_comb_v4_import( &intern , &ext , NULL ) < 0 )  {
+			bu_log("db_recurse() import of %s failed\n", dp->d_namep);
+			db_free_db_tree_state( &nts );
+			curtree = TREE_NULL;		/* FAIL */
+			goto out;
+		}
 		comb = (struct rt_comb_internal *)intern.idb_ptr;
 		RT_CK_COMB(comb);
 		if( (is_region = db_apply_state_from_comb( &nts, pathp, comb )) < 0 )  {
@@ -1142,21 +1113,6 @@ genptr_t	client_data;
 
 		if( is_region > 0 )  {
 			struct combined_tree_state	*ctsp;
-			const char *value;
-
-			/* get attribute/value structure */
-			for( i=0 ; i<nts.ts_attrs.count ; i++ ) {
-				if( nts.ts_attrs.avp[i].value ) {
-					if( AVS_IS_FREEABLE( &nts.ts_attrs, nts.ts_attrs.avp[i].value ) )
-						bu_free( (char *)nts.ts_attrs.avp[i].value, "tree state AVS value" );
-				}
-				value = bu_avs_get( &intern.idb_avs, nts.ts_attrs.avp[i].name );
-				if( value )
-					nts.ts_attrs.avp[i].value = bu_strdup( value );
-				else
-					nts.ts_attrs.avp[i].value = (char *)NULL;
-			}
-
 			/*
 			 *  This is the start of a new region.
 			 *  If handler rejects this region, skip on.
@@ -1164,7 +1120,7 @@ genptr_t	client_data;
 			 */
 			if( tsp->ts_region_start_func && 
 			    tsp->ts_region_start_func( &nts, pathp, comb, client_data ) < 0 )  {
-				if(RT_G_DEBUG&DEBUG_TREEWALK)  {
+				if(rt_g.debug&DEBUG_TREEWALK)  {
 					char	*sofar = db_path_to_string(pathp);
 					bu_log("db_recurse() ts_region_start_func deletes %s\n",
 						sofar);
@@ -1189,7 +1145,7 @@ genptr_t	client_data;
 			}
 			ctsp =  db_new_combined_tree_state( &nts, pathp );
 			*region_start_statepp = ctsp;
-			if(RT_G_DEBUG&DEBUG_TREEWALK)  {
+			if(rt_g.debug&DEBUG_TREEWALK)  {
 				bu_log("setting *region_start_statepp to x%x\n", ctsp );
 				db_pr_combined_tree_state(ctsp);
 			}
@@ -1200,16 +1156,11 @@ genptr_t	client_data;
 			curtree = comb->tree;
 			comb->tree = TREE_NULL;
 			if(curtree) RT_CK_TREE(curtree);
-
-			/* Release most of internal form before recursing */
-			rt_db_free_internal( &intern, tsp->ts_resp );
-			comb = NULL;
-
 			db_recurse_subtree( curtree, &nts, pathp, region_start_statepp, client_data );
 			if(curtree) RT_CK_TREE(curtree);
 		} else {
 			/* No subtrees in this combination, invent a NOP */
-			RT_GET_TREE( curtree, tsp->ts_resp );
+			BU_GETUNION( curtree, tree );
 			curtree->magic = RT_TREE_MAGIC;
 			curtree->tr_op = OP_NOP;
 			if(curtree) RT_CK_TREE(curtree);
@@ -1229,21 +1180,21 @@ region_end:
 		db_free_db_tree_state( &nts );
 		if(curtree) RT_CK_TREE(curtree);
 	} else if( dp->d_flags & DIR_SOLID )  {
+		int	id;
+
+		/* Get solid ID */
+		if( (id = rt_id_solid( &ext )) == ID_NULL )  {
+			bu_log("db_recurse(%s): defective database record, addr=x%x\n",
+				dp->d_namep,
+				dp->d_addr );
+			curtree = TREE_NULL;		/* FAIL */
+			goto out;
+		}
 
 		if( bn_mat_ck( dp->d_namep, tsp->ts_mat ) < 0 )  {
 			bu_log("db_recurse(%s):  matrix does not preserve axis perpendicularity.\n",
 				dp->d_namep );
 			bn_mat_print("bad matrix", tsp->ts_mat);
-			curtree = TREE_NULL;		/* FAIL */
-			goto out;
-		}
-
-		if(RT_G_DEBUG&DEBUG_TREEWALK)
-			bu_log("db_recurse() rt_db_get_internal(%s) solid\n", dp->d_namep);
-
-	    	RT_INIT_DB_INTERNAL(&intern);
-		if( rt_db_get_internal( &intern, dp, tsp->ts_dbip, tsp->ts_mat, tsp->ts_resp ) < 0 )  {
-			bu_log("db_recurse() rt_db_get_internal(%s) FAIL\n", dp->d_namep);
 			curtree = TREE_NULL;		/* FAIL */
 			goto out;
 		}
@@ -1263,7 +1214,7 @@ region_end:
 				curtree = TREE_NULL;		/* FAIL */
 				goto out;
 			}
-			if( RT_G_DEBUG & DEBUG_REGIONS )  {
+			if( rt_g.debug & DEBUG_REGIONS )  {
 			    	bu_log("NOTICE: db_recurse(): solid '%s' not contained in a region, creating a region for it of the same name.\n",
 			    		sofar );
 			}
@@ -1271,7 +1222,7 @@ region_end:
 		    	ctsp = db_new_combined_tree_state( tsp, pathp );
 		    	ctsp->cts_s.ts_sofar |= TS_SOFAR_REGION;
 			*region_start_statepp = ctsp;
-			if(RT_G_DEBUG&DEBUG_TREEWALK)  {
+			if(rt_g.debug&DEBUG_TREEWALK)  {
 				bu_log("db_recurse(%s): setting *region_start_statepp to x%x (bare solid)\n",
 					sofar, ctsp );
 				db_pr_combined_tree_state(ctsp);
@@ -1284,17 +1235,17 @@ region_end:
 			curtree = TREE_NULL;		/* FAIL */
 			goto out;
 		}
-		curtree = tsp->ts_leaf_func( tsp, pathp, &intern, client_data );
+		curtree = tsp->ts_leaf_func( tsp, pathp, &ext, id, client_data );
 		if(curtree) RT_CK_TREE(curtree);
 	} else {
-		bu_log("db_recurse:  %s is neither a combination nor a solid and is not drawable\n",
+		bu_log("db_recurse:  %s is neither COMB nor SOLID?\n",
 			dp->d_namep );
 		curtree = TREE_NULL;
-		return(curtree);
 	}
 out:
-	rt_db_free_internal( &intern, tsp->ts_resp );
-	if(RT_G_DEBUG&DEBUG_TREEWALK)  {
+	if( intern.idb_ptr )  intern.idb_meth->ft_ifree( &intern );
+	db_free_external( &ext );
+	if(rt_g.debug&DEBUG_TREEWALK)  {
 		char	*sofar = db_path_to_string(pathp);
 		bu_log("db_recurse() return curtree=x%x, pathp='%s', *statepp=x%x\n",
 			curtree, sofar,
@@ -1309,28 +1260,21 @@ out:
  *			D B _ D U P _ S U B T R E E
  */
 union tree *
-db_dup_subtree( const union tree *tp, struct resource *resp )
+db_dup_subtree( tp )
+CONST union tree	*tp;
 {
 	union tree	*new;
 
 	RT_CK_TREE(tp);
-	RT_CK_RESOURCE(resp);
-
-	RT_GET_TREE( new, resp );
+	BU_GETUNION( new, tree );
 	*new = *tp;		/* struct copy */
 
 	switch( tp->tr_op )  {
 	case OP_NOP:
 	case OP_SOLID:
-		/* If this is a simple leaf, done */
-		return(new);
-
 	case OP_DB_LEAF:
-		if( tp->tr_l.tl_mat )
-			new->tr_l.tl_mat = bn_mat_dup( tp->tr_l.tl_mat );
-		new->tr_l.tl_name = bu_strdup( tp->tr_l.tl_name );
-		return new;
-
+		/* If this is a leaf, done */
+		return(new);
 	case OP_REGION:
 		/* If this is a REGION leaf, dup combined_tree_state & path */
 		new->tr_c.tc_ctsp = db_dup_combined_tree_state(
@@ -1340,7 +1284,7 @@ db_dup_subtree( const union tree *tp, struct resource *resp )
 	case OP_NOT:
 	case OP_GUARD:
 	case OP_XNOP:
-		new->tr_b.tb_left = db_dup_subtree( tp->tr_b.tb_left, resp );
+		new->tr_b.tb_left = db_dup_subtree( tp->tr_b.tb_left );
 		return(new);
 
 	case OP_UNION:
@@ -1348,8 +1292,8 @@ db_dup_subtree( const union tree *tp, struct resource *resp )
 	case OP_SUBTRACT:
 	case OP_XOR:
 		/* This node is known to be a binary op */
-		new->tr_b.tb_left = db_dup_subtree( tp->tr_b.tb_left, resp );
-		new->tr_b.tb_right = db_dup_subtree( tp->tr_b.tb_right, resp );
+		new->tr_b.tb_left = db_dup_subtree( tp->tr_b.tb_left );
+		new->tr_b.tb_right = db_dup_subtree( tp->tr_b.tb_right );
 		return(new);
 
 	default:
@@ -1363,16 +1307,15 @@ db_dup_subtree( const union tree *tp, struct resource *resp )
  *			D B _ C K _ T R E E
  */
 void
-db_ck_tree( const union tree *tp )
+db_ck_tree( tp )
+CONST union tree	*tp;
 {
 
 	RT_CK_TREE(tp);
 
 	switch( tp->tr_op )  {
 	case OP_NOP:
-		break;
 	case OP_DB_LEAF:
-		BU_ASSERT_PTR( tp->tr_l.tl_name, !=, NULL );
 		break;
 	case OP_SOLID:
 		if( tp->tr_a.tu_stp )
@@ -1410,10 +1353,10 @@ db_ck_tree( const union tree *tp )
  *  children nodes.
  */
 void
-db_free_tree( register union tree *tp, struct resource *resp )
+db_free_tree( tp )
+register union tree	*tp;
 {
 	RT_CK_TREE(tp);
-	RT_CK_RESOURCE(resp);
 
 	/*
 	 *  Before recursion, smash the magic number, so that if
@@ -1444,7 +1387,7 @@ db_free_tree( register union tree *tp, struct resource *resp )
 			struct nmgregion *r = tp->tr_d.td_r;
 			if( tp->tr_d.td_name )  {
 				bu_free( (char *)tp->tr_d.td_name, "region name" );
-				tp->tr_d.td_name = (const char *)NULL;
+				tp->tr_d.td_name = (CONST char *)NULL;
 			}
 			if( r == (struct nmgregion *)NULL )  {
 				break;
@@ -1484,7 +1427,7 @@ db_free_tree( register union tree *tp, struct resource *resp )
 	case OP_GUARD:
 	case OP_XNOP:
 		if( tp->tr_b.tb_left->magic == RT_TREE_MAGIC )
-			db_free_tree( tp->tr_b.tb_left, resp );
+			db_free_tree( tp->tr_b.tb_left );
 		tp->tr_b.tb_left = TREE_NULL;
 		break;
 
@@ -1499,12 +1442,12 @@ db_free_tree( register union tree *tp, struct resource *resp )
 			fp = tp->tr_b.tb_left;
 			tp->tr_b.tb_left = TREE_NULL;
 			RT_CK_TREE(fp);
-			db_free_tree( fp, resp );
+			db_free_tree( fp );
 
 			fp = tp->tr_b.tb_right;
 			tp->tr_b.tb_right = TREE_NULL;
 			RT_CK_TREE(fp);
-			db_free_tree( fp, resp );
+			db_free_tree( fp );
 		}
 		break;
 
@@ -1513,7 +1456,7 @@ db_free_tree( register union tree *tp, struct resource *resp )
 		rt_bomb("db_free_tree\n");
 	}
 	tp->tr_op = 0;		/* sanity */
-	RT_FREE_TREE( tp, resp );
+	bu_free( (char *)tp, "union tree" );
 }
 
 /*			D B _ L E F T _ H V Y _ N O D E
@@ -1524,7 +1467,8 @@ db_free_tree( register union tree *tp, struct resource *resp )
  *	od this subtree.
  */
 void
-db_left_hvy_node( union tree *tp )
+db_left_hvy_node( tp )
+register union tree *tp;
 {
 	union tree *lhs, *rhs;
 
@@ -1554,15 +1498,15 @@ db_left_hvy_node( union tree *tp )
  *  and any non-union operations are clustered down near the region nodes.
  */
 void
-db_non_union_push( register union tree *tp, struct resource *resp )
+db_non_union_push( tp )
+register union tree	*tp;
 {
 	union tree *A, *B, *C;
 	union tree *tmp;
 	int repush_child=0;
 
 	RT_CK_TREE(tp);
-	RT_CK_RESOURCE(resp);
-
+top:
 	switch( tp->tr_op )  {
 	case OP_REGION:
 	case OP_SOLID:
@@ -1575,8 +1519,8 @@ db_non_union_push( register union tree *tp, struct resource *resp )
 		return;
 
 	default:
-		db_non_union_push( tp->tr_b.tb_left, resp );
-		db_non_union_push( tp->tr_b.tb_right, resp );
+		db_non_union_push( tp->tr_b.tb_left );
+		db_non_union_push( tp->tr_b.tb_right );
 		break;
 	}
 	if( (tp->tr_op == OP_INTERSECT || tp->tr_op == OP_SUBTRACT) &&
@@ -1595,7 +1539,7 @@ db_non_union_push( register union tree *tp, struct resource *resp )
 		 *	 / \
 		 *	A   B
 		 */
-	    	RT_GET_TREE( rhs, resp );
+		BU_GETUNION( rhs, tree );
 
 		/* duplicate top node into rhs */
 		*rhs = *tp;		/* struct copy */
@@ -1630,7 +1574,7 @@ db_non_union_push( register union tree *tp, struct resource *resp )
 		 */
 
 		/* Make a duplicate of rhs->tr_b.tb_right */
-		lhs->tr_b.tb_right = db_dup_subtree( rhs->tr_b.tb_right, resp );
+		lhs->tr_b.tb_right = db_dup_subtree( rhs->tr_b.tb_right );
 		/*
 		 * tp->	     u
 		 *	   /   \
@@ -1652,7 +1596,7 @@ db_non_union_push( register union tree *tp, struct resource *resp )
 		A = tp->tr_b.tb_right->tr_b.tb_left;
 		B = tp->tr_b.tb_right->tr_b.tb_right;
 		tp->tr_op = OP_UNION;
-		RT_GET_TREE( tmp, resp );
+		BU_GETUNION( tmp, tree );
 		tmp->tr_regionp = tp->tr_regionp;
 		tmp->magic = RT_TREE_MAGIC;
 		tmp->tr_op = OP_INTERSECT;
@@ -1660,7 +1604,7 @@ db_non_union_push( register union tree *tp, struct resource *resp )
 		tmp->tr_b.tb_right = A;
 		tp->tr_b.tb_left = tmp;
 		tp->tr_b.tb_right->tr_op = OP_INTERSECT;
-		tp->tr_b.tb_right->tr_b.tb_left = db_dup_subtree( C, resp );
+		tp->tr_b.tb_right->tr_b.tb_left = db_dup_subtree( C );
 	}
 	else if( tp->tr_op == OP_SUBTRACT &&
 		tp->tr_b.tb_right->tr_op == OP_UNION )
@@ -1685,8 +1629,8 @@ db_non_union_push( register union tree *tp, struct resource *resp )
 	 */
 	if( repush_child )
 	{
-		db_non_union_push( tp->tr_b.tb_left, resp );
-		db_non_union_push( tp->tr_b.tb_right, resp );
+		db_non_union_push( tp->tr_b.tb_left );
+		db_non_union_push( tp->tr_b.tb_right );
 	}
 
 	/* rebalance this node (moves UNIONs to left side) */
@@ -1700,7 +1644,9 @@ db_non_union_push( register union tree *tp, struct resource *resp )
  *  including tp.
  */
 int
-db_count_tree_nodes( const union tree *tp, int count )
+db_count_tree_nodes( tp, count )
+register CONST union tree	*tp;
+register int			count;
 {
 	RT_CK_TREE(tp);
 	switch( tp->tr_op )  {
@@ -1742,7 +1688,8 @@ db_count_tree_nodes( const union tree *tp, int count )
  *	0	if at least one subtraction or intersection op exists.
  */
 int
-db_is_tree_all_unions( const union tree *tp )
+db_is_tree_all_unions( tp )
+register CONST union tree	*tp;
 {
 	RT_CK_TREE(tp);
 	switch( tp->tr_op )  {
@@ -1779,7 +1726,8 @@ db_is_tree_all_unions( const union tree *tp )
  *			D B _ C O U N T _ S U B T R E E _ R E G I O N S
  */
 int
-db_count_subtree_regions( const union tree *tp )
+db_count_subtree_regions( tp )
+CONST union tree	*tp;
 {
 	int	cnt;
 
@@ -1817,17 +1765,15 @@ db_count_subtree_regions( const union tree *tp )
  *			D B _ T A L L Y _ S U B T R E E _ R E G I O N S
  */
 int
-db_tally_subtree_regions(
-	union tree	*tp,
-	union tree	**reg_trees,
-	int		cur,
-	int		lim,
-	struct resource *resp)
+db_tally_subtree_regions( tp, reg_trees, cur, lim )
+union tree	*tp;
+union tree	**reg_trees;
+int		cur;
+int		lim;
 {
 	union tree	*new;
 
 	RT_CK_TREE(tp);
-	RT_CK_RESOURCE(resp);
 	if( cur >= lim )  rt_bomb("db_tally_subtree_regions: array overflow\n");
 
 	switch( tp->tr_op )  {
@@ -1837,7 +1783,7 @@ db_tally_subtree_regions(
 	case OP_SOLID:
 	case OP_REGION:
 	case OP_DB_LEAF:
-		RT_GET_TREE( new, resp );
+		BU_GETUNION( new, tree );
 		*new = *tp;		/* struct copy */
 		tp->tr_op = OP_NOP;	/* Zap original */
 		reg_trees[cur++] = new;
@@ -1845,8 +1791,8 @@ db_tally_subtree_regions(
 
 	case OP_UNION:
 		/* This node is known to be a binary op */
-		cur = db_tally_subtree_regions( tp->tr_b.tb_left, reg_trees, cur, lim, resp );
-		cur = db_tally_subtree_regions( tp->tr_b.tb_right, reg_trees, cur, lim, resp );
+		cur = db_tally_subtree_regions( tp->tr_b.tb_left, reg_trees, cur, lim );
+		cur = db_tally_subtree_regions( tp->tr_b.tb_right, reg_trees, cur, lim );
 		return(cur);
 
 	case OP_INTERSECT:
@@ -1856,7 +1802,7 @@ db_tally_subtree_regions(
 	case OP_GUARD:
 	case OP_XNOP:
 		/* This is as far down as we go -- this is a region top */
-		RT_GET_TREE( new, resp );
+		BU_GETUNION( new, tree );
 		*new = *tp;		/* struct copy */
 		tp->tr_op = OP_NOP;	/* Zap original */
 		reg_trees[cur++] = new;
@@ -1878,12 +1824,10 @@ union tree		*curtree;
 genptr_t		client_data;
 {
 
-	RT_CK_DBTS(tsp);
 	RT_CK_DBI(tsp->ts_dbip);
 	RT_CK_FULL_PATH(pathp);
-	RT_CK_RESOURCE(tsp->ts_resp);
 
-	RT_GET_TREE( curtree, tsp->ts_resp );
+	BU_GETUNION( curtree, tree );
 	curtree->magic = RT_TREE_MAGIC;
 	curtree->tr_op = OP_REGION;
 	curtree->tr_c.tc_ctsp = db_new_combined_tree_state( tsp, pathp );
@@ -1891,21 +1835,19 @@ genptr_t		client_data;
 	return(curtree);
 }
 
-HIDDEN union tree *db_gettree_leaf( tsp, pathp, ip, client_data )
+HIDDEN union tree *db_gettree_leaf( tsp, pathp, ext, id, client_data )
 struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
-struct rt_db_internal	*ip;
+struct bu_external	*ext;
+int			id;
 genptr_t		client_data;
 {
 	register union tree	*curtree;
 
-	RT_CK_DBTS(tsp);
 	RT_CK_DBI(tsp->ts_dbip);
 	RT_CK_FULL_PATH(pathp);
-	RT_CK_DB_INTERNAL(ip);
-	RT_CK_RESOURCE(tsp->ts_resp);
 
-	RT_GET_TREE( curtree, tsp->ts_resp );
+	BU_GETUNION( curtree, tree );
 	curtree->magic = RT_TREE_MAGIC;
 	curtree->tr_op = OP_REGION;
 	curtree->tr_c.tc_ctsp = db_new_combined_tree_state( tsp, pathp );
@@ -1920,7 +1862,6 @@ struct db_walk_parallel_state {
 	int		reg_current;		/* semaphored when parallel */
 	union tree *	(*reg_end_func)();
 	union tree *	(*reg_leaf_func)();
-	struct rt_i	*rtip;
 	genptr_t	client_data;
 };
 #define DB_WALK_PARALLEL_STATE_MAGIC	0x64777073	/* dwps */
@@ -1930,19 +1871,16 @@ struct db_walk_parallel_state {
  *			D B _ W A L K _ S U B T R E E
  */
 HIDDEN void
-db_walk_subtree(
-	register union tree	*tp,
-	struct combined_tree_state	**region_start_statepp,
-	union tree	 *(*leaf_func) BU_ARGS((struct db_tree_state *, struct db_full_path *, struct rt_db_internal *, void *)),
-	genptr_t	client_data,
-	struct resource	*resp )
+db_walk_subtree( tp, region_start_statepp, leaf_func, client_data )
+register union tree	*tp;
+struct combined_tree_state	**region_start_statepp;
+union tree		 *(*leaf_func) BU_ARGS((struct db_tree_state *, struct db_full_path *, struct bu_external *, int, void *));
+genptr_t	client_data;
 {
 	struct combined_tree_state	*ctsp;
 	union tree	*curtree;
 
 	RT_CK_TREE(tp);
-	RT_CK_RESOURCE(resp);
-
 	switch( tp->tr_op )  {
 	case OP_NOP:
 		return;
@@ -1968,7 +1906,6 @@ db_walk_subtree(
 		ctsp->cts_s.ts_region_end_func = 0;
 		/* Use user's leaf function */
 		ctsp->cts_s.ts_leaf_func = leaf_func;
-		ctsp->cts_s.ts_resp = resp;
 
 		/* If region already seen, force flag */
 		if( *region_start_statepp )
@@ -1992,14 +1929,13 @@ db_walk_subtree(
 		/* replace *tp with new subtree */
 		*tp = *curtree;		/* struct copy */
 		db_free_combined_tree_state( ctsp );
-		RT_FREE_TREE( curtree, resp );
+		bu_free( (char *)curtree, "replaced tree node" );
 		return;
 
 	case OP_NOT:
 	case OP_GUARD:
 	case OP_XNOP:
-		db_walk_subtree( tp->tr_b.tb_left, region_start_statepp,
-			leaf_func, client_data, resp );
+		db_walk_subtree( tp->tr_b.tb_left, region_start_statepp, leaf_func, client_data );
 		return;
 
 	case OP_UNION:
@@ -2007,10 +1943,8 @@ db_walk_subtree(
 	case OP_SUBTRACT:
 	case OP_XOR:
 		/* This node is known to be a binary op */
-		db_walk_subtree( tp->tr_b.tb_left, region_start_statepp,
-			leaf_func, client_data, resp );
-		db_walk_subtree( tp->tr_b.tb_right, region_start_statepp,
-			leaf_func, client_data, resp );
+		db_walk_subtree( tp->tr_b.tb_left, region_start_statepp, leaf_func, client_data );
+		db_walk_subtree( tp->tr_b.tb_right, region_start_statepp, leaf_func, client_data );
 		return;
 
 	case OP_DB_LEAF:
@@ -2019,21 +1953,20 @@ db_walk_subtree(
 
 	default:
 		bu_log("db_walk_subtree: bad op %d\n", tp->tr_op);
-		bu_bomb("db_walk_subtree() bad op\n");
+		rt_bomb("db_walk_subtree() bad op\n");
 	}
 }
 
 /*
  *			D B _ W A L K _ D I S P A T C H E R
  *
- *  This routine handles the PARALLEL portion of db_walk_tree().
+ *  This routine handles parallel operation.
  *  There will be at least one, and possibly more, instances of
  *  this routine running simultaneously.
  *
- *  Uses the self-dispatcher pattern:
  *  Pick off the next region's tree, and walk it.
  */
-HIDDEN void
+void
 db_walk_dispatcher( cpu, arg )
 int		cpu;
 genptr_t	arg;
@@ -2042,19 +1975,8 @@ genptr_t	arg;
 	int		mine;
 	union tree	*curtree;
 	struct db_walk_parallel_state	*wps = (struct db_walk_parallel_state *)arg;
-	struct resource	*resp;
 
 	DB_CK_WPS(wps);
-
-	if( wps->rtip == NULL && cpu == 0 )  {
-		resp = &rt_uniresource;
-	} else {
-		RT_CK_RTI(wps->rtip);
-
-		resp = (struct resource *)BU_PTBL_GET( &wps->rtip->rti_resources, cpu );
-		if( resp == NULL && cpu == 0 )  resp = &rt_uniresource;
-	}
-	RT_CK_RESOURCE(resp);
 
 	while(1)  {
 		bu_semaphore_acquire( RT_SEM_WORKER );
@@ -2064,7 +1986,7 @@ genptr_t	arg;
 		if( mine >= wps->reg_count )
 			break;
 
-		if( RT_G_DEBUG&DEBUG_TREEWALK )
+		if( rt_g.debug&DEBUG_TREEWALK )
 			bu_log("\n\n***** db_walk_dispatcher() on item %d\n\n", mine );
 
 		if( (curtree = wps->reg_trees[mine]) == TREE_NULL )
@@ -2074,7 +1996,7 @@ genptr_t	arg;
 		/* Walk the full subtree now */
 		region_start_statep = (struct combined_tree_state *)0;
 		db_walk_subtree( curtree, &region_start_statep,
-			wps->reg_leaf_func, wps->client_data, resp );
+			wps->reg_leaf_func, wps->client_data );
 
 		/*  curtree->tr_op may be OP_NOP here.
 		 *  It is up to db_reg_end_func() to deal with this,
@@ -2083,14 +2005,14 @@ genptr_t	arg;
 		RT_CK_TREE(curtree);
 		if( !region_start_statep )  {
 			bu_log("ERROR: db_walk_dispatcher() region %d started with no state\n", mine);
-			if( RT_G_DEBUG&DEBUG_TREEWALK )			
+			if( rt_g.debug&DEBUG_TREEWALK )			
 				rt_pr_tree( curtree, 0 );
 			continue;
 		}
 		RT_CK_CTS( region_start_statep );
 
 		/* This is a new region */
-		if( RT_G_DEBUG&DEBUG_TREEWALK )
+		if( rt_g.debug&DEBUG_TREEWALK )
 			db_pr_combined_tree_state(region_start_statep);
 
 		/*
@@ -2151,11 +2073,8 @@ genptr_t	arg;
  *  When called from within an existing thread, ncpu must be 1.
  *
  *  If ncpu > 1, the caller is responsible for making sure that
- *	rt_g.rtg_parallel is non-zero, and that the
- *	bu_semaphore_init() functions has been performed, first.
- *
- *  Plucks per-cpu resources out of rtip->rti_resources[].
- *  They need to have been initialized first.
+ *	rt_g.rtg_parallel is non-zero, and that the various
+ *	bu_semaphore_init(5)functions have been performed, first.
  *
  *  Returns -
  *	-1	Failure to prepare even a single sub-tree
@@ -2165,13 +2084,13 @@ int
 db_walk_tree( dbip, argc, argv, ncpu, init_state, reg_start_func, reg_end_func, leaf_func, client_data )
 struct db_i	*dbip;
 int		argc;
-const char	**argv;
+CONST char	**argv;
 int		ncpu;
-const struct db_tree_state *init_state;
+CONST struct db_tree_state *init_state;
 int		(*reg_start_func) BU_ARGS((
 			struct db_tree_state * /*tsp*/,
 			struct db_full_path * /*pathp*/,
-			const struct rt_comb_internal * /* combp */,
+			CONST struct rt_comb_internal * /* combp */,
 			genptr_t client_data
 		));
 union tree *	(*reg_end_func) BU_ARGS((
@@ -2183,7 +2102,8 @@ union tree *	(*reg_end_func) BU_ARGS((
 union tree *	(*leaf_func) BU_ARGS((
 			struct db_tree_state * /*tsp*/,
 			struct db_full_path * /*pathp*/,
-			struct rt_db_internal * /*ip*/,
+			struct bu_external * /*ep*/,
+			int /*id*/,
 			genptr_t client_data
 		));
 genptr_t	client_data;
@@ -2193,21 +2113,8 @@ genptr_t	client_data;
 	int			i;
 	union tree		**reg_trees;	/* (*reg_trees)[] */
 	struct db_walk_parallel_state	wps;
-	struct resource		*resp;
 
-	RT_CK_DBTS(init_state);
 	RT_CHECK_DBI(dbip);
-
-	if( init_state->ts_rtip == NULL && ncpu == 1 )  {
-		resp = &rt_uniresource;
-	} else {
-		RT_CK_RTI(init_state->ts_rtip);
-		resp = (struct resource *)BU_PTBL_GET(&init_state->ts_rtip->rti_resources, 0);
-		if( resp == NULL && ncpu == 1 )  {
-			resp = &rt_uniresource;
-		}
-	}
-	RT_CK_RESOURCE(resp);
 
 	/* Walk each of the given path strings */
 	for( i=0; i < argc; i++ )  {
@@ -2218,7 +2125,6 @@ genptr_t	client_data;
 
 		ts = *init_state;	/* struct copy */
 		ts.ts_dbip = dbip;
-		ts.ts_resp = resp;
 		db_full_path_init( &path );
 
 		/* First, establish context from given path */
@@ -2249,7 +2155,7 @@ genptr_t	client_data;
 			continue;	/* ERROR */
 
 		RT_CK_TREE(curtree);
-		if( RT_G_DEBUG&DEBUG_TREEWALK )  {
+		if( rt_g.debug&DEBUG_TREEWALK )  {
 			bu_log("tree after db_recurse():\n");
 			rt_pr_tree( curtree, 0 );
 		}
@@ -2259,7 +2165,7 @@ genptr_t	client_data;
 		} else {
 			union tree	*new;
 
-			RT_GET_TREE( new, ts.ts_resp );
+			BU_GETUNION( new, tree );
 			new->magic = RT_TREE_MAGIC;
 			new->tr_op = OP_UNION;
 			new->tr_b.tb_left = whole_tree;
@@ -2275,8 +2181,8 @@ genptr_t	client_data;
 	/*
 	 *  Third, push all non-union booleans down.
 	 */
-	db_non_union_push( whole_tree, resp );
-	if( RT_G_DEBUG&DEBUG_TREEWALK )  {
+	db_non_union_push( whole_tree );
+	if( rt_g.debug&DEBUG_TREEWALK )  {
 		char *str;
 
 		bu_log("tree after db_non_union_push():\n");
@@ -2295,17 +2201,17 @@ genptr_t	client_data;
 	reg_trees = (union tree **)bu_calloc( sizeof(union tree *),
 		(new_reg_count+1), "*reg_trees[]" );
 	new_reg_count = db_tally_subtree_regions( whole_tree, reg_trees, 0,
-		new_reg_count, resp );
+		new_reg_count );
 
 	/*  Release storage for tree from whole_tree to leaves.
 	 *  db_tally_subtree_regions() duplicated and OP_NOP'ed the original
 	 *  top of any sub-trees that it wanted to keep, so whole_tree
 	 *  is just the left-over part now.
 	 */
-	db_free_tree( whole_tree, resp );
+	db_free_tree( whole_tree );
 
 	/* As a debugging aid, print out the waiting region names */
-	if( RT_G_DEBUG&DEBUG_TREEWALK )  {
+	if( rt_g.debug&DEBUG_TREEWALK )  {
 		bu_log("%d waiting regions:\n", new_reg_count);
 		for( i=0; i < new_reg_count; i++ )  {
 			union tree	*treep;
@@ -2348,7 +2254,6 @@ genptr_t	client_data;
 	wps.reg_end_func = reg_end_func;
 	wps.reg_leaf_func = leaf_func;
 	wps.client_data = client_data;
-	wps.rtip = init_state->ts_rtip;
 
 	if( ncpu <= 1 )  {
 		db_walk_dispatcher( 0, (genptr_t)&wps );
@@ -2359,7 +2264,7 @@ genptr_t	client_data;
 	/* Clean up any remaining sub-trees still in reg_trees[] */
 	for( i=0; i < new_reg_count; i++ )  {
 		if( reg_trees[i] != TREE_NULL )  {
-			db_free_tree( reg_trees[i], resp );
+			db_free_tree( reg_trees[i] );
 		}
 	}
 	bu_free( (char *)reg_trees, "*reg_trees[]" );
@@ -2377,12 +2282,11 @@ genptr_t	client_data;
  *  Called in librt/db_tree.c, mged/dodraw.c, and mged/animedit.c
  */
 int
-db_path_to_mat(
-	struct db_i		*dbip,
-	struct db_full_path	*pathp,
-	mat_t			mat,		/* result */
-	int			depth,		/* number of arcs */
-	struct resource		*resp)
+db_path_to_mat( dbip, pathp, mat, depth)
+struct db_i	*dbip;
+struct db_full_path *pathp;
+mat_t mat;
+int depth;			/* number of arcs */
 {
 	struct db_tree_state	ts;
 	struct db_full_path	null_path;
@@ -2393,11 +2297,11 @@ db_path_to_mat(
 	if( !mat ) rt_bomb("db_path_to_mat() NULL matrix pointer\n");
 
 	db_full_path_init( &null_path );
-	db_init_db_tree_state( &ts, dbip, resp );
+	db_init_db_tree_state( &ts, dbip );
 
 	ret = db_follow_path( &ts, &null_path, pathp, LOOKUP_NOISY, depth );
 	db_free_full_path( &null_path );
-	MAT_COPY( mat, ts.ts_mat );	/* implicit return */
+	bn_mat_copy( mat, ts.ts_mat );	/* implicit return */
 	db_free_db_tree_state( &ts );
 
 	if( ret < 0 )  {
@@ -2426,7 +2330,7 @@ struct mater_info *materp;
 
 	/* Check here for animation to apply */
 
-	if ((dp->d_animate != ANIM_NULL) && (RT_G_DEBUG & DEBUG_ANIM)) {
+	if ((dp->d_animate != ANIM_NULL) && (rt_g.debug & DEBUG_ANIM)) {
 		char	*sofar = db_path_to_string(pathp);
 		bu_log("Animate %s with...\n", sofar);
 		bu_free(sofar, "path string");
@@ -2448,7 +2352,7 @@ struct mater_info *materp;
 		i = anp->an_path.fp_len-1;
 		anim_flag = 1;
 
-		if (RT_G_DEBUG & DEBUG_ANIM) {
+		if (rt_g.debug & DEBUG_ANIM) {
 			char	*str;
 
 			str = db_path_to_string( &(anp->an_path) );
@@ -2460,7 +2364,7 @@ struct mater_info *materp;
 
 		for( ; i>=0 && j>=0; i--, j-- )  {
 			if( anp->an_path.fp_names[i] != pathp->fp_names[j] ) {
-				if (RT_G_DEBUG & DEBUG_ANIM) {
+				if (rt_g.debug & DEBUG_ANIM) {
 					bu_log("%s != %s\n",
 					     anp->an_path.fp_names[i]->d_namep,
 					     pathp->fp_names[j]->d_namep);
@@ -2488,11 +2392,10 @@ struct mater_info *materp;
  *	<0	Failure
  */
 int
-db_region_mat(
-	mat_t		m,		/* result */
-	struct db_i	*dbip,
-	const char	*name,
-	struct resource *resp)
+db_region_mat(m, dbip, name)
+mat_t m;
+CONST struct db_i *dbip;
+CONST char *name;
 {
 	struct db_full_path		full_path;
 	mat_t	region_to_model;
@@ -2503,7 +2406,7 @@ db_region_mat(
 		bu_log("db_region_mat: db_string_to_path(%s) error\n", name);
 		return -1;
 	}
-	if(! db_path_to_mat(dbip, &full_path, region_to_model, 0, resp)) {
+	if(! db_path_to_mat((struct db_i *)dbip, &full_path, region_to_model, 0)) {
 		/* bad thing */
 		bu_log("db_region_mat: db_path_to_mat(%s) error", name);
 		return -2;
@@ -2536,13 +2439,12 @@ db_region_mat(
  *	<0	Failure
  */
 int
-db_shader_mat(
-	mat_t			model_to_shader,	/* result */
-	const struct rt_i	*rtip,
-	const struct region	*rp,
-	point_t			p_min,	/* input/output: shader/region min point */
-	point_t			p_max,	/* input/output: shader/region max point */
-	struct resource		*resp)
+db_shader_mat(model_to_shader, rtip, rp, p_min, p_max)
+mat_t model_to_shader;
+CONST struct rt_i *rtip;
+CONST struct region *rp;
+point_t p_min;	/* shader/region min point */
+point_t p_max;	/* shader/region max point */
 {
 	mat_t	model_to_region;
 	mat_t	m_xlate;
@@ -2550,17 +2452,14 @@ db_shader_mat(
 	mat_t	m_tmp;
 	vect_t	v_tmp;
 	struct	rt_i *my_rtip;
-	const char	*reg_name;
-
-	RT_CK_RTI(rtip);
-	RT_CK_RESOURCE(resp);
+	CONST char	*reg_name;
 
 	reg_name = rt_basename(rp->reg_name);
 #ifdef DEBUG_SHADER_MAT
 	bu_log("db_shader_mat(%s)\n", rp->reg_name);
 #endif
 	/* get model-to-region space mapping */
-	if( db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name, resp) < 0 )
+	if( db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name) < 0 )
 		return -1;
 
 #ifdef DEBUG_SHADER_MAT
@@ -2593,7 +2492,7 @@ db_shader_mat(
 	/*
 	 * Translate bounding box to origin
 	 */
-	MAT_IDN(m_xlate);
+	bn_mat_idn(m_xlate);
 	VSCALE(v_tmp, p_min, -1);
 	MAT_DELTAS_VEC(m_xlate, v_tmp);
 	bn_mat_mul(m_tmp, m_xlate, model_to_region);
@@ -2604,7 +2503,7 @@ db_shader_mat(
 	 */
 	VSUB2(v_tmp, p_max, p_min);
 	VINVDIR(v_tmp, v_tmp);
-	MAT_IDN(m_scale);
+	bn_mat_idn(m_scale);
 	MAT_SCALE_VEC(m_scale, v_tmp);
 	bn_mat_mul(model_to_shader, m_scale, m_tmp);
 	return 0;

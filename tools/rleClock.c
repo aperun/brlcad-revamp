@@ -36,12 +36,6 @@
 #include <sys/types.h>
 #include <time.h>
 
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include "machine.h"
 #include "externs.h"
 #include "rle.h"
@@ -58,7 +52,6 @@ void	usageExit();
 void	drawText();
 void	areaFlood();
 void	stackPush();
-int	stackPop();
 
 /*
  * Program parameters defaults
@@ -161,8 +154,7 @@ char *formatInterp();
 bool argGiven();
 char **gargv;
 
-int
-main(argc, argv)
+main (argc, argv)
 int	argc;
 char	*argv[];
 {
@@ -283,7 +275,6 @@ char	*argv[];
      */
 
     rasterWrite(stdout);
-    return 0;
 }
 void
 ifImageSet(i, j, value, color)
@@ -630,8 +621,6 @@ char *argv[];
 	    color->blue = atoi(argv[arg+3]);
 	    arg += 3;
 	    break;
-	default:
-	    break;
 	}
     }
 }
@@ -673,8 +662,6 @@ char *pgm;
 	    case COLOR:
 		fprintf(stderr, " RED GREEN BLUE");
 		break;
-	    default:
-	        break;
 	    }
 	    fprintf(stderr, " ... %s\n", Args[i].description);
 	}
@@ -944,7 +931,6 @@ if(Debug)fprintf(stderr, "Stack growing to %d\n", Stack.allocked);
 	Stack.s[Stack.top].y = y;
 	Stack.s[Stack.top].dir = dir;
 }
-int
 stackPop()
 {
 	Stack.top -= 1;

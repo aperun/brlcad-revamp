@@ -24,7 +24,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -50,7 +50,6 @@ unsigned char	*oline;
 int	discard;
 int	wpad;
 
-int
 main(argc, argv)
 int	argc;
 char	*argv[];

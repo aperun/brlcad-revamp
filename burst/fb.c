@@ -5,7 +5,7 @@
 			Maryland 21005-5066
 */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 #include <stdio.h>
 #include <string.h>
@@ -99,17 +99,17 @@ char	*devname;
 			}
 
 		}
-	fbiop = fb_open( devname, devwid, devhgt );
-	if( fbiop == NULL )
+	if( (fbiop = fb_open( devname, devwid, devhgt )) == NULL )
 		{
 		ret = false;
 		goto	safe_exit;
 		}
-	else if( fb_clear( fbiop, pixblack ) == -1
-	    ||	(notify( "Zooming", NOTIFY_APPEND ),
-		 fb_zoom( fbiop, 1, 1 ) == -1)
-	    ||	(notify( "Windowing", NOTIFY_DELETE ),
-		 fb_window( fbiop, devwid/2, devhgt/2 ) == -1)
+	else
+	if(	fb_clear( fbiop, pixblack ) == -1
+	    ||	notify( "Zooming", NOTIFY_APPEND ),
+			fb_zoom( fbiop, 1, 1 ) == -1
+	    ||	notify( "Windowing", NOTIFY_DELETE ),
+			fb_window( fbiop, devwid/2, devhgt/2 ) == -1
 		)
 		{
 		ret = false;

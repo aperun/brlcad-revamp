@@ -11,7 +11,8 @@
 			(301)278-6651 or DSN 298-6651
 */
 #if ! defined( lint )
-static const char RCSid[] = "@(#) empty.c 2.3, modified 1/5/87 at 16:52:54, archive /vld/moss/src/fbed/s.empty.c";
+static
+char sccsTag[] = "@(#) empty.c 2.3, modified 1/5/87 at 16:52:54, archive /vld/moss/src/fbed/s.empty.c";
 #endif
 
 #include "conf.h"

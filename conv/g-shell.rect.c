@@ -8,7 +8,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -26,7 +26,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "nmg.h"
 #include "rtgeom.h"
 #include "raytrace.h"
-#include "wdb.h"
+#include "../librt/debug.h"
 
 #define MAKE_TRIANGLES	0
 
@@ -82,7 +82,7 @@ static struct xray *yz_rays;
 static struct rt_i *rtip;
 static struct bn_tol tol;
 static char *usage="Usage:\n\
-	%s [-d debug_level] [-b] [-n] [-v] [-i initial_ray_dir] [-g cell_size] [-d debug_level] -o brlcad_output_file database.g object1 object2...\n";
+	%s [-d debug_level] [-n] [-v] [-i initial_ray_dir] [-g cell_size] [-d debug_level] -o brlcad_output_file database.g object1 object2...\n";
 static char dir_ch[3]={ 'X', 'Y', 'Z' };
 
 static struct local_part *xy_parts=(struct local_part *)NULL;
@@ -95,8 +95,7 @@ static long	face_count=0;
 static fastf_t	cell_size=50.0;
 static fastf_t	cell_size_sq=2500.0;
 static fastf_t	edge_tol=0.0;
-static struct rt_wdb *fd_out=NULL;
-static FILE	*fd_plot=NULL;
+static FILE	*fd_out=NULL, *fd_plot=NULL;
 static char	*output_file=(char *)NULL;
 static char	*plotfile;
 static short	vert_ids[8]={1, 2, 4, 8, 16, 32, 64, 128};
@@ -106,7 +105,6 @@ static int	cur_dir=0;
 static int	cell_count[3];
 static fastf_t	decimation_tol=0.0;
 static fastf_t	min_angle=0.0;
-static int	bot=0;
 
 #define	XY_CELL( _i, _j )	((_i)*cell_count[Y] + (_j))
 #define	XZ_CELL( _i, _j )	((_i)*cell_count[Z] + (_j))
@@ -866,7 +864,7 @@ struct bu_ptbl *tab;
 		{
 			struct loopuse *new_lu;
 			struct vertexuse *vu_cut;
-			fastf_t cut_value = -1;
+			fastf_t cut_value;
 			struct vertexuse *vu1_cut, *vu2_cut;
 
 			switch( cur_dir )
@@ -1055,7 +1053,6 @@ struct shell *s;
 	ap.a_rt_i = rtip;
 	ap.a_miss = miss;
 	ap.a_overlap = a_overlap;
-	ap.a_logoverlap = rt_silent_logoverlap;
 	ap.a_onehit = 0;
 	ap.a_hit = shrink_hit;
 
@@ -1363,7 +1360,6 @@ struct shell *s;
 	ap.a_rt_i = rtip;
 	ap.a_miss = miss;
 	ap.a_overlap = a_overlap;
-	ap.a_logoverlap = rt_silent_logoverlap;
 	ap.a_onehit = 0;
 	ap.a_hit = refine_hit;
 
@@ -1686,10 +1682,7 @@ Make_shell()
 	bu_log( "Bounding box of output: (%g %g %g) <-> (%g %g %g)\n", V3ARGS( r->ra_p->min_pt ), V3ARGS( r->ra_p->max_pt ) );
 	bu_log( "%d facets\n", face_count );
 
-	if( bot )
-		mk_bot_from_nmg( fd_out, "shell", s );
-	else
-		mk_nmg( fd_out, "shell", m );
+	mk_nmg( fd_out, "shell", m );
 }
 
 static int
@@ -1758,7 +1751,6 @@ struct seg *segs;
 	return( 1 );
 }
 
-int
 main( argc, argv )
 int argc;
 char *argv[];
@@ -1796,7 +1788,7 @@ char *argv[];
 	BU_LIST_INIT( &subtract_rpp_head );
 
 	/* Get command line arguments. */
-	while( (c=getopt( argc, argv, "bi:a:s:nR:g:o:d:p:X:")) != EOF)
+	while( (c=getopt( argc, argv, "i:a:s:nR:g:o:d:p:X:")) != EOF)
 	{
 		switch( c )
 		{
@@ -1805,7 +1797,6 @@ char *argv[];
 					{
 						case 'x':
 						case 'X':
-
 							initial_ray_dir = X;
 							break;
 						case 'y':
@@ -1904,11 +1895,8 @@ char *argv[];
 			case 'o':	/* BRL-CAD output file */
 				output_file = optarg;
 				break;
-			case 'b':	/* Output a BOT rather than an NMG */
-				bot = 1;
-				break;
 			case 'X':	/* nmg debug flags */
-				sscanf( optarg, "%x", (unsigned int *)&rt_g.NMG_debug );
+				sscanf( optarg, "%x", &rt_g.NMG_debug );
 				bu_log( "%s: setting rt_g.NMG_debug to x%x\n", argv[0], rt_g.NMG_debug );
 				break;
 		}
@@ -1922,7 +1910,7 @@ char *argv[];
 
 	if( output_file )
 	{
-		if( (fd_out=wdb_fopen( output_file )) == NULL )
+		if( (fd_out=fopen( output_file, "w")) == NULL )
 		{
 			bu_log( "Cannot open output file (%s)\n", output_file );
 			perror( argv[0] );
@@ -1957,7 +1945,6 @@ char *argv[];
 	ap.a_hit = hit;
 	ap.a_miss = miss;
 	ap.a_overlap = a_overlap;
-	ap.a_logoverlap = rt_silent_logoverlap;
 	ap.a_onehit = 0;
 
 	while( ++optind < argc )
@@ -2106,6 +2093,4 @@ char *argv[];
 	}
 
 	Make_shell();
-	wdb_close(fd_out);
-	return 0;
 }

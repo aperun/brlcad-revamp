@@ -20,7 +20,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -41,11 +41,11 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
  */
 void
 rt_pr_soltab( stp )
-register const struct soltab	*stp;
+register CONST struct soltab	*stp;
 {
 	register int	id = stp->st_id;
 
-	if( id <= 0 || id > ID_MAX_SOLID )  {
+	if( id <= 0 || id > ID_MAXIMUM )  {
 		bu_log("stp=x%x, id=%d.\n", stp, id);
 		rt_bomb("rt_pr_soltab:  bad st_id");
 	}
@@ -66,7 +66,7 @@ register const struct soltab	*stp;
  */
 void
 rt_pr_region( rp )
-register const struct region *rp;
+register CONST struct region *rp;
 {
 	struct bu_vls	v;
 
@@ -105,11 +105,11 @@ register const struct region *rp;
  */
 void
 rt_pr_partitions( rtip, phead, title )
-const struct rt_i		*rtip;
-register const struct partition	*phead;
-const char			*title;
+CONST struct rt_i		*rtip;
+register CONST struct partition	*phead;
+CONST char			*title;
 {
-	register const struct partition *pp;
+	register CONST struct partition *pp;
 	struct bu_vls		v;
 
 	RT_CHECK_RTI(rtip);
@@ -139,10 +139,10 @@ const char			*title;
 void
 rt_pr_pt_vls( v, rtip, pp )
 struct bu_vls			*v;
-const struct rt_i		*rtip;
-register const struct partition *pp;
+CONST struct rt_i		*rtip;
+register CONST struct partition *pp;
 {
-	register const struct soltab	*stp;
+	register CONST struct soltab	*stp;
 	register struct seg		**segpp;
 
 	RT_CHECK_RTI(rtip);
@@ -203,8 +203,8 @@ register const struct partition *pp;
  */
 void
 rt_pr_pt( rtip, pp )
-const struct rt_i		*rtip;
-register const struct partition *pp;
+CONST struct rt_i		*rtip;
+register CONST struct partition *pp;
 {
 	struct bu_vls	v;
 
@@ -222,7 +222,7 @@ register const struct partition *pp;
 void
 rt_pr_seg_vls( v, segp )
 struct bu_vls			*v;
-register const struct seg	*segp;
+register CONST struct seg	*segp;
 {
 	BU_CK_VLS(v);
 	RT_CK_SEG(segp);
@@ -243,7 +243,7 @@ register const struct seg	*segp;
  */
 void
 rt_pr_seg(segp)
-register const struct seg *segp;
+register CONST struct seg *segp;
 {
 	struct bu_vls		v;
 
@@ -260,8 +260,8 @@ register const struct seg *segp;
  */
 void
 rt_pr_hit( str, hitp )
-const char			*str;
-register const struct hit	*hitp;
+CONST char			*str;
+register CONST struct hit	*hitp;
 {
 	struct bu_vls		v;
 
@@ -279,8 +279,8 @@ register const struct hit	*hitp;
 void
 rt_pr_hit_vls( v, str, hitp )
 struct bu_vls			*v;
-const char			*str;
-register const struct hit	*hitp;
+CONST char			*str;
+register CONST struct hit	*hitp;
 {
 	BU_CK_VLS( v );
 	RT_CK_HIT(hitp);
@@ -298,8 +298,8 @@ register const struct hit	*hitp;
 void
 rt_pr_hitarray_vls( v, str, hitp, count )
 struct bu_vls			*v;
-const char			*str;
-register const struct hit	*hitp;
+CONST char			*str;
+register CONST struct hit	*hitp;
 int				count;
 {
 	int	i;
@@ -326,12 +326,10 @@ int				count;
  */
 void
 rt_pr_tree( tp, lvl )
-register const union tree *tp;
+register CONST union tree *tp;
 int lvl;			/* recursion level */
 {
 	register int i;
-
-	RT_CK_TREE(tp);
 
 	bu_log("%.8x ", tp);
 	for( i=lvl; i>0; i-- )
@@ -415,7 +413,7 @@ int lvl;			/* recursion level */
 void
 rt_pr_tree_vls( vls, tp )
 struct bu_vls		*vls;
-register const union tree *tp;
+register CONST union tree *tp;
 {
 	char		*str;
 
@@ -510,11 +508,11 @@ register const union tree *tp;
  */
 char *
 rt_pr_tree_str( tree )
-const union tree *tree;
+CONST union tree *tree;
 {
 	char *left,*right;
 	char *return_str;
-	char op = OP_GUARD;
+	char op;
 	int return_length;
 
 	if( tree == NULL )
@@ -583,8 +581,8 @@ const union tree *tree;
  */
 void
 rt_pr_tree_val( tp, partp, pr_name, lvl )
-register const union tree *tp;		/* Tree to print */
-const struct partition	*partp;		/* Partition to evaluate */
+register CONST union tree *tp;		/* Tree to print */
+CONST struct partition	*partp;		/* Partition to evaluate */
 int			pr_name;	/* 1=print name, 0=print value */
 int			lvl;		/* Recursion level */
 {
@@ -687,8 +685,8 @@ out:
 void
 rt_pr_fallback_angle( str, prefix, angles )
 struct bu_vls	*str;
-const char	*prefix;
-const double	angles[5];
+CONST char	*prefix;
+CONST double	angles[5];
 {
 	BU_CK_VLS(str);
 
@@ -707,7 +705,7 @@ const double	angles[5];
 void
 rt_find_fallback_angle( angles, vec )
 double		angles[5];
-const vect_t	vec;
+CONST vect_t	vec;
 {
 	register double	f;
 	double		asinZ;
@@ -778,7 +776,7 @@ const vect_t	vec;
  */
 void
 rt_pr_tol(tol)
-const struct bn_tol	*tol;
+CONST struct bn_tol	*tol;
 {
 	BN_CK_TOL(tol);
 
@@ -792,7 +790,7 @@ const struct bn_tol	*tol;
  */
 void
 rt_pr_uvcoord( uvp )
-const struct uvcoord *uvp;
+CONST struct uvcoord *uvp;
 {
 	bu_log("%8.8x u,v=(%g, %g), du,dv=(%g, %g)\n",
 		uvp->uv_u, uvp->uv_v,

@@ -5,7 +5,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -26,18 +26,17 @@ static const char RCSid[] = "$Header$";
 #include "raytrace.h"
 #include "../librt/debug.h"
 
-int
 main()
 {
 	char str[1024];
-	point_t *pts=NULL;
+	point_t *pts;
 	int ident,face_type,npts,face_no;
 	plane_t pl;
 	int tmp_i;
 	float tmp_a;
 	float a,b,c,d;
 	int old_id=(-1);
-	int face_count=0;
+	int face_count;
 
 	if( scanf( "%s" , str ) == EOF )
 		rt_bomb( "Unexpected EOF\n" );

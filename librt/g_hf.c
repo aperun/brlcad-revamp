@@ -69,7 +69,7 @@ static char rt_hf_RcSid[] = "@(#)$Header$ (ARL)";
 #define HF_O(m)			offsetof(struct rt_hf_internal, m)
 
 /* All fields valid in string solid */
-const struct bu_structparse rt_hf_parse[] = {
+CONST struct bu_structparse rt_hf_parse[] = {
 	{"%s",	128,	"cfile",	bu_offsetofarray(struct rt_hf_internal, cfile), BU_STRUCTPARSE_FUNC_NULL},
 	{"%s",	128,	"dfile",	bu_offsetofarray(struct rt_hf_internal, dfile), BU_STRUCTPARSE_FUNC_NULL},
 	{"%s",	8,	"fmt",		bu_offsetofarray(struct rt_hf_internal, fmt), BU_STRUCTPARSE_FUNC_NULL},
@@ -86,7 +86,7 @@ const struct bu_structparse rt_hf_parse[] = {
 	{"",	0,	(char *)0,	0,			BU_STRUCTPARSE_FUNC_NULL }
 };
 /* Subset of fields found in cfile */
-const struct bu_structparse rt_hf_cparse[] = {
+CONST struct bu_structparse rt_hf_cparse[] = {
 	{"%s",	128,	"dfile",	bu_offsetofarray(struct rt_hf_internal, dfile), BU_STRUCTPARSE_FUNC_NULL},
 	{"%s",	8,	"fmt",		bu_offsetofarray(struct rt_hf_internal, fmt), BU_STRUCTPARSE_FUNC_NULL},
 	{"%d",	1,	"w",		HF_O(w),		BU_STRUCTPARSE_FUNC_NULL },
@@ -114,80 +114,6 @@ struct hf_specific {
 };
 
 /*
- *			R T _ H F _ T O _ D S P
- *
- *	Convert in-memory form of a height-field (HF) to a displacement-map
- *	solid (DSP) in internal representation.
- *	There is no record in the V5 database for an HF.
- */
-int
-rt_hf_to_dsp(struct rt_db_internal *db_intern, struct resource *resp)
-{
-	struct rt_hf_internal	*hip = (struct rt_hf_internal *)db_intern->idb_ptr;
-	struct rt_dsp_internal	*dsp;
-	vect_t			tmp;
-
-	RT_CK_DB_INTERNAL(db_intern);
-	RT_CK_RESOURCE(resp);
-	RT_HF_CK_MAGIC( hip );
-
-	if (! hip->shorts) {
-		bu_log("cannot convert float HF to DSP\n");
-		return -1;
-	}
-
-	BU_GETSTRUCT( dsp, rt_dsp_internal );
-	bu_vls_init( &dsp->dsp_name );
-	bu_vls_strcat( &dsp->dsp_name, hip->dfile );
-	dsp->dsp_xcnt = hip->w;
-	dsp->dsp_ycnt = hip->n;
-	dsp->dsp_smooth = 0;
-
-	MAT_IDN(dsp->dsp_stom);
-	MAT_DELTAS_VEC(dsp->dsp_stom, hip->v);	/* translate */
-
-	/* Apply modeling transformations */
-	VUNITIZE( hip->x );
-	VSCALE( tmp, hip->x, hip->xlen/(fastf_t)(hip->w - 1) );
-	dsp->dsp_stom[0] = tmp[0];
-	dsp->dsp_stom[4] = tmp[1];
-	dsp->dsp_stom[8] = tmp[2];
-	VUNITIZE( hip->y );
-	VSCALE( tmp, hip->y, hip->ylen/(fastf_t)(hip->n - 1) );
-	dsp->dsp_stom[1] = tmp[0];
-	dsp->dsp_stom[5] = tmp[1];
-	dsp->dsp_stom[9] = tmp[2];
-	VCROSS( tmp, hip->x, hip->y );
-	VUNITIZE( tmp );
-
-	/* The next line should be:
-	 * VSCALE( tmp, tmp, hip->zscale * hip->file2mm );
-	 * This will make the converted DSP plot in MGED agree with what he HF looks like,
-	 * but the HF ignores 'zscale' in the shot routine.
-	 * So we choose to duplicate the raytrace behavior (ignore zscale)
-	 */
-	VSCALE( tmp, tmp, hip->file2mm );
-
-	dsp->dsp_stom[2] = tmp[0];
-	dsp->dsp_stom[6] = tmp[1];
-	dsp->dsp_stom[10] = tmp[2];
-
-	bn_mat_inv( dsp->dsp_mtos, dsp->dsp_stom );
-
-	dsp->magic = RT_DSP_INTERNAL_MAGIC;
-
-	rt_db_free_internal( db_intern, resp );
-
-	db_intern->idb_ptr = (genptr_t)dsp;
-	db_intern->idb_type = ID_DSP;
-	db_intern->idb_meth = &rt_functab[ID_DSP];
-
-	return 0;
-
-}
-
-
-/*
  *  			R T _ H F _ P R E P
  *  
  *  Given a pointer to a GED database record, and a transformation matrix,
@@ -208,9 +134,9 @@ struct soltab		*stp;
 struct rt_db_internal	*ip;
 struct rt_i		*rtip;
 {
-	struct rt_hf_internal *hip;
+	struct rt_hf_internal		*hip;
 	register struct hf_specific	*hf;
-	const struct bn_tol		*tol = &rtip->rti_tol;
+	CONST struct bn_tol		*tol = &rtip->rti_tol;
 	double	dot;
 	vect_t	height, work;
 	static int first_time=1;
@@ -348,9 +274,9 @@ struct rt_i		*rtip;
  */
 void
 rt_hf_print( stp )
-register const struct soltab *stp;
+register CONST struct soltab *stp;
 {
-	register const struct hf_specific *hf =
+	register CONST struct hf_specific *hf =
 		(struct hf_specific *)stp->st_specific;
 	VPRINT("V", hf->hf_V);
 	VPRINT("X", hf->hf_X);
@@ -371,7 +297,7 @@ int			xCell, yCell;
 	register struct hf_specific *hfp =
 		(struct hf_specific *)stp->st_specific;
 
-	fastf_t dn, abs_dn, k1st=0, k2nd=0, alpha, beta;
+	fastf_t dn, abs_dn, k1st, k2nd , alpha, beta;
 	int dir1st, dir2nd;
 	vect_t wxb, xp;
 	vect_t tri_wn1st, tri_wn2nd, tri_BA1st, tri_BA2nd;
@@ -380,7 +306,7 @@ int			xCell, yCell;
 	int fnd1, fnd2;
 	register double hf2mm = hfp->hf_file2mm;
 
-	if (RT_G_DEBUG & DEBUG_HF) {
+	if (rt_g.debug & DEBUG_HF) {
 		bu_log("rt_hf_cell_shot(%s): %d, %d\n", stp->st_name,
 		    xCell, yCell);
 	}
@@ -543,7 +469,7 @@ int			xCell, yCell;
 
 
 
-
+other_half:
 
 	/* XXX This is really hard to read.  Need to fix this like above */
 	dn = VDOT(tri_wn2nd, rp->r_dir);
@@ -569,7 +495,7 @@ int			xCell, yCell;
 leave:
 	if (!fnd1 && !fnd2) return 0;
 
-	if (RT_G_DEBUG & DEBUG_HF) {
+	if (rt_g.debug & DEBUG_HF) {
 		bu_log("rt_hf_cell_shot: hit(%d).\n",fnd1+fnd2);
 	}
 
@@ -670,9 +596,9 @@ struct hit **hp;
 int *nhits;
 
 {
-	double left, right, xx=0, xright=0, answer;
+	double left, right, xx, xright, answer;
 	vect_t loc;
-	int CellX=0, CellY=0;
+	int CellX, CellY;
 
 	if (plane == -6) return;
 
@@ -791,7 +717,7 @@ struct seg		*seghead;
 	double	xWidth, yWidth;
 
 	vect_t  peqn;
-	fastf_t pdist=0;
+	fastf_t pdist;
 	fastf_t allDist[6];	/* The hit point for all rays. */
 	fastf_t cosine;
 
@@ -860,7 +786,7 @@ bzero(hits,sizeof(hits));
 		dxbdn = VDOT( peqn, rp->r_pt) - pdist;
 		dn = -VDOT( peqn, rp->r_dir);
 /*		allDist[allIndex] = s = dxbdn/dn; */
-		if (RT_G_DEBUG & DEBUG_HF) {
+		if (rt_g.debug & DEBUG_HF) {
 			VPRINT("hf: Plane Equation", peqn);
 			bu_log("hf: dn=%g, dxbdn=%g, ", dn, dxbdn);
 		}
@@ -871,7 +797,7 @@ bzero(hits,sizeof(hits));
 				out = s;
 				oplane = j;
 			}
-			if (RT_G_DEBUG & DEBUG_HF) {
+			if (rt_g.debug & DEBUG_HF) {
 				bu_log("s=%g out=%g\n", s, out);
 			}
 		} else if (dn > SQRT_SMALL_FASTF) {	/* entering */
@@ -880,7 +806,7 @@ bzero(hits,sizeof(hits));
 				in = s;
 				iplane = j;
 			}
-			if (RT_G_DEBUG & DEBUG_HF) {
+			if (rt_g.debug & DEBUG_HF) {
 				bu_log("s=%g in=%g\n", s, in);
 			}
 		} else {
@@ -888,7 +814,7 @@ bzero(hits,sizeof(hits));
 			 * if the ray is outside the solid, then this
 			 * is a miss.
 			 */
-			if (RT_G_DEBUG & DEBUG_HF) {
+			if (rt_g.debug & DEBUG_HF) {
 				bu_log("s=DIVIDE_BY_ZERO\n");
 			}
 			if ( dxbdn > SQRT_SMALL_FASTF) {
@@ -897,7 +823,7 @@ bzero(hits,sizeof(hits));
 			allDist[allIndex] = INFINITY;
 		}
 		if ( in > out) {
-			if (RT_G_DEBUG & DEBUG_HF) {
+			if (rt_g.debug & DEBUG_HF) {
 				bu_log("rt_hf_shoot(%s): in(%g) > out(%g)\n",
 				    stp->st_name, in, out);
 			}
@@ -912,7 +838,7 @@ bzero(hits,sizeof(hits));
 	}
 
 	if ( fabs(in-out) < SMALL_FASTF  || out >= INFINITY ) {
-		if (RT_G_DEBUG & DEBUG_HF) {
+		if (rt_g.debug & DEBUG_HF) {
 			bu_log("rt_hf_shoot(%s): in(%g) >= out(%g) || out >= INFINITY\n",
 			    stp->st_name, in, out);
 		}
@@ -929,7 +855,7 @@ bzero(hits,sizeof(hits));
 	xWidth = hf->hf_Xlen/((double)(hf->hf_w-1));
 	yWidth = hf->hf_Ylen/((double)(hf->hf_n-1));
 
-	if (RT_G_DEBUG & DEBUG_HF) {
+	if (rt_g.debug & DEBUG_HF) {
 		bu_log("hf: xWidth=%g, yWidth=%g, in=%g, out=%g\n", xWidth,
 		       yWidth, in, out);
 	}
@@ -965,13 +891,13 @@ bzero(hits,sizeof(hits));
 	if (fabs(cosine) < SMALL_FASTF) {	/* near enough to Z */
 		vect_t tmp;
 		int xCell, yCell, r;
-		if (RT_G_DEBUG & DEBUG_HF) {
+		if (rt_g.debug & DEBUG_HF) {
 			bu_log("hf: Vertical shoot\n");
 		}
 		VSUB2(tmp, rp->r_pt, hf->hf_V);
 		xCell = tmp[X]/hf->hf_Xlen*hf->hf_w;
 		yCell = tmp[Y]/hf->hf_Ylen*hf->hf_n;
-		if (  (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) ) {
+		if (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) {
 			if ((nhits+=r)>MAXHITS) rt_bomb("g_hf.c: too many hits.\n");
 			hp+=r;
 		}
@@ -1029,7 +955,7 @@ bu_log("hf: before VSCALE... aray=(%g,%g,%g)\n",
 		signX = (aray[X] < 0.0) ? -1 : 1;
 		signY = (aray[Y] < 0.0) ? -1 : 1;
 
-		if (RT_G_DEBUG & DEBUG_HF ) {
+		if (rt_g.debug & DEBUG_HF ) {
 			bu_log("hf: curloc=(%g, %g, %g) aray=(%g,%g,%g)\n", curloc[X], curloc[Y],
 			    curloc[Z], aray[X], aray[Y], aray[Z]);
 			bu_log("hf: from=(%g, %g) to=(%g, %g)\n",
@@ -1063,7 +989,7 @@ bu_log("aray[Y]/aray[X]=%g\n", delta);
 			xCell+=signX;
 			error += delta;
 		}
-		if (RT_G_DEBUG & DEBUG_HF) {
+		if (rt_g.debug & DEBUG_HF) {
 			bu_log("hf: delta=%g, error=%g, %d, %d\n", 
 			   delta, error, xCell, yCell);
 		}
@@ -1074,7 +1000,7 @@ bu_log("aray[Y]/aray[X]=%g\n", delta);
 			farZ = curloc[Z] + aray[Z];
 			maxZ = (curloc[Z] > farZ) ? curloc[Z] : farZ;
 			minZ = (curloc[Z] < farZ) ? curloc[Z] : farZ;
-			if (RT_G_DEBUG & DEBUG_HF) {
+			if (rt_g.debug & DEBUG_HF) {
 				bu_log("hf: cell %d,%d [%g -- %g]",
 				xCell, yCell, minZ, maxZ);
 			}
@@ -1143,7 +1069,7 @@ bu_log("aray[Y]/aray[X]=%g\n", delta);
 				highest *= hf->hf_file2mm;
 			}
 
-			if (RT_G_DEBUG & DEBUG_HF) {
+			if (rt_g.debug & DEBUG_HF) {
 				bu_log("lowest=%g, highest=%g\n", 
 				    lowest, highest);
 			}
@@ -1159,7 +1085,7 @@ bu_log("aray[Y]/aray[X]=%g\n", delta);
 			{
 #endif
 				int r;
-				if ( (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) ) {
+				if (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) {
 					if ((nhits+=r)>=MAXHITS) rt_bomb("g_hf.c: too many hits.\n");
 					hp+=r;
 				}
@@ -1171,7 +1097,7 @@ bu_log("aray[Y]/aray[X]=%g\n", delta);
 skip_first:
 			if (error > SQRT_SMALL_FASTF) {
 				yCell += signY;
-				if (RT_G_DEBUG & DEBUG_HF) {
+				if (rt_g.debug & DEBUG_HF) {
 					bu_log("hf: cell %d,%d ", xCell, yCell);
 				}
 				if ((yCell < 0) || yCell > hf->hf_n-2) {
@@ -1228,7 +1154,7 @@ skip_first:
 #endif /* 0 */
 					int r;
 					/* DO HIT */
-					if ( (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) ) {
+					if (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) {
 						if ((nhits+=r)>=MAXHITS) rt_bomb("g_hf.c: too many hits.\n");
 						hp+=r;
 					}
@@ -1242,7 +1168,7 @@ skip_first:
 			error += delta;
 			VADD2(curloc, curloc, aray);
 		} while (xCell >= 0 && xCell < hf->hf_w-1 );
-		if (RT_G_DEBUG & DEBUG_HF) {
+		if (rt_g.debug & DEBUG_HF) {
 			bu_log("htf: leaving loop, %d, %d, %g vs. 0--%d, 0--%d, 0.0--%g\n",
 			   xCell, yCell, curloc[Z], hf->hf_w-1, hf->hf_n-1, hf->hf_max);
 		}
@@ -1301,7 +1227,7 @@ bu_log("hf: before VSCALE... aray=(%g,%g,%g)\n",
 		signX = (aray[X] < 0.0) ? -1 : 1;
 		signY = (aray[Y] < 0.0) ? -1 : 1;
 
-		if (RT_G_DEBUG & DEBUG_HF ) {
+		if (rt_g.debug & DEBUG_HF ) {
 			bu_log("hf: curloc=(%g, %g, %g) aray=(%g,%g,%g)\n", curloc[X], curloc[Y],
 			    curloc[Z], aray[X], aray[Y], aray[Z]);
 			bu_log("hf: from=(%g, %g) to=(%g, %g)\n",
@@ -1335,7 +1261,7 @@ bu_log("aray[X]/aray[Y]=%g\n", delta);
 			yCell+=signY;
 			error += delta;
 		}
-		if (RT_G_DEBUG & DEBUG_HF) {
+		if (rt_g.debug & DEBUG_HF) {
 			bu_log("hf: delta=%g, error=%g, %d, %d\n", 
 			   delta, error, xCell, yCell);
 		}
@@ -1345,7 +1271,7 @@ bu_log("aray[X]/aray[Y]=%g\n", delta);
 			farZ = curloc[Z] + aray[Z];
 			maxZ = (curloc[Z] > farZ) ? curloc[Z] : farZ;
 			minZ = (curloc[Z] < farZ) ? curloc[Z] : farZ;
-			if (RT_G_DEBUG & DEBUG_HF) {
+			if (rt_g.debug & DEBUG_HF) {
 				bu_log("hf: cell %d,%d [%g -- %g] ",
 				xCell, yCell, minZ, maxZ);
 			}
@@ -1403,7 +1329,7 @@ bu_log("aray[X]/aray[Y]=%g\n", delta);
 			}
 
 
-			if (RT_G_DEBUG & DEBUG_HF) {
+			if (rt_g.debug & DEBUG_HF) {
 				bu_log("lowest=%g, highest=%g\n", 
 				    lowest, highest);
 			}
@@ -1419,7 +1345,7 @@ bu_log("aray[X]/aray[Y]=%g\n", delta);
 			{
 #endif
 				int r;
-				if ( (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) ) {
+				if (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) {
 					if ((nhits+=r)>=MAXHITS) rt_bomb("g_hf.c: too many hits.\n");
 					hp+=r;
 				}
@@ -1431,7 +1357,7 @@ bu_log("aray[X]/aray[Y]=%g\n", delta);
 skip_2nd:
 			if (error > SQRT_SMALL_FASTF) {
 				xCell += signX;
-				if (RT_G_DEBUG & DEBUG_HF) {
+				if (rt_g.debug & DEBUG_HF) {
 					bu_log("hf: cell %d,%d\n", xCell, yCell);
 				}
 				if ((xCell < 0) || xCell > hf->hf_w-2) {
@@ -1488,7 +1414,7 @@ skip_2nd:
 #endif
 					int r;
 					/* DO HIT */
-					if ( (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) ) {
+					if (r=rt_hf_cell_shot(stp, rp, ap, hp, xCell, yCell)) {
 						if ((nhits+=r)>=MAXHITS) rt_bomb("g_hf.c: too many hits.\n");
 						hp+=r;
 					}
@@ -1502,7 +1428,7 @@ skip_2nd:
 			error += delta;
 			VADD2(curloc, curloc, aray);
 		} while (yCell >= 0 && yCell < hf->hf_n-1 );
-		if (RT_G_DEBUG & DEBUG_HF) {
+		if (rt_g.debug & DEBUG_HF) {
 			bu_log("htf: leaving loop, %d, %d, %g vs. 0--%d, 0--%d, 0.0--%g\n",
 			   xCell, yCell, curloc[Z], hf->hf_w-1, hf->hf_n-1, hf->hf_max);
 		}
@@ -1689,11 +1615,11 @@ int
 rt_hf_plot( vhead, ip, ttol, tol )
 struct bu_list		*vhead;
 struct rt_db_internal	*ip;
-const struct rt_tess_tol *ttol;
-const struct bn_tol		*tol;
+CONST struct rt_tess_tol *ttol;
+CONST struct bn_tol		*tol;
 {
 	LOCAL struct rt_hf_internal	*xip;
-	register unsigned short		*sp = (unsigned short *)NULL;
+	register unsigned short		*sp;
 	register double *dp;
 	vect_t		xbasis;
 	vect_t		ybasis;
@@ -1945,8 +1871,8 @@ rt_hf_tess( r, m, ip, ttol, tol )
 struct nmgregion	**r;
 struct model		*m;
 struct rt_db_internal	*ip;
-const struct rt_tess_tol *ttol;
-const struct bn_tol		*tol;
+CONST struct rt_tess_tol *ttol;
+CONST struct bn_tol		*tol;
 {
 	LOCAL struct rt_hf_internal	*xip;
 
@@ -1966,9 +1892,9 @@ const struct bn_tol		*tol;
 int
 rt_hf_import( ip, ep, mat, dbip )
 struct rt_db_internal		*ip;
-const struct bu_external	*ep;
-register const mat_t		mat;
-const struct db_i		*dbip;
+CONST struct bu_external	*ep;
+register CONST mat_t		mat;
+CONST struct db_i		*dbip;
 {
 	LOCAL struct rt_hf_internal	*xip;
 	union record			*rp;
@@ -1989,7 +1915,7 @@ const struct db_i		*dbip;
 		return(-1);
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_HF;
 	ip->idb_meth = &rt_functab[ID_HF];
 	ip->idb_ptr = bu_calloc( 1, sizeof(struct rt_hf_internal), "rt_hf_internal");
@@ -2138,9 +2064,9 @@ err1:
 int
 rt_hf_export( ep, ip, local2mm, dbip )
 struct bu_external		*ep;
-const struct rt_db_internal	*ip;
+CONST struct rt_db_internal	*ip;
 double				local2mm;
-const struct db_i		*dbip;
+CONST struct db_i		*dbip;
 {
 	struct rt_hf_internal	*xip;
 	union record		*rec;
@@ -2156,7 +2082,7 @@ const struct db_i		*dbip;
 	xip->ylen /= local2mm;
 	xip->zscale /= local2mm;
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 	ep->ext_nbytes = sizeof(union record) * DB_SS_NGRAN;
 	ep->ext_buf = (genptr_t)bu_calloc( 1, ep->ext_nbytes, "hf external");
 	rec = (union record *)ep->ext_buf;
@@ -2176,30 +2102,6 @@ const struct db_i		*dbip;
 	return(0);
 }
 
-int
-rt_hf_import5( ip, ep, mat, dbip )
-struct rt_db_internal		*ip;
-const struct bu_external	*ep;
-const mat_t			mat;
-const struct db_i		*dbip;
-{
-	bu_log( "Import of HF solids from a version 5 database is not allowed.\n" );
-	bu_log( "\tHF solids should be converted to DSP solids using the rt_hf_to_dsp() routine or g4-g5 utility.\n" );
-	return -1;
-}
-
-int
-rt_hf_export5( ep, ip, local2mm, dbip )
-struct bu_external		*ep;
-const struct rt_db_internal	*ip;
-double				local2mm;
-const struct db_i		*dbip;
-{
-	bu_log( "Export of HF solids from a version 5 database is not allowed.\n" );
-	bu_log( "\tHF solids should be converted to DSP solids using the rt_hf_to_dsp() routine or g4-g5 utility.\n" );
-	return -1;
-}
-
 /*
  *			R T _ H F _ D E S C R I B E
  *
@@ -2210,17 +2112,15 @@ const struct db_i		*dbip;
 int
 rt_hf_describe( str, ip, verbose, mm2local )
 struct bu_vls		*str;
-const struct rt_db_internal	*ip;
+CONST struct rt_db_internal	*ip;
 int			verbose;
 double			mm2local;
 {
-#ifndef NO_MAGIC_CHECKING
 	register struct rt_hf_internal	*xip =
 		(struct rt_hf_internal *)ip->idb_ptr;
 
 	BU_CK_VLS(str);
 	RT_HF_CK_MAGIC(xip);
-#endif
 	bu_vls_printf( str, "Height Field (HF)  mm2local=%g\n", mm2local);
 	bu_vls_struct_print( str, rt_hf_parse, ip->idb_ptr );
 	bu_vls_strcat( str, "\n" );

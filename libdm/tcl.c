@@ -21,11 +21,9 @@
 #include "dm.h"
 #include "cmd.h"
 
-#ifdef DM_X
 /* from libdm/query.c */
 extern int dm_validXType();
 extern char *dm_bestXType();
-#endif
 
 /* from libdm/dm_obj.c */
 extern int Dmo_Init();
@@ -36,10 +34,8 @@ HIDDEN int dm_bestXType_tcl();
 int vectorThreshold = 100000;
 
 HIDDEN struct bu_cmdtab cmdtab[] = {
-#ifdef DM_X
 	{"dm_validXType",	dm_validXType_tcl},
 	{"dm_bestXType",	dm_bestXType_tcl},
-#endif
 	{(char *)0,		(int (*)())0}
 };
 
@@ -70,7 +66,6 @@ Dm_Init(interp)
 	return TCL_OK;
 }
 
-#ifdef DM_X
 HIDDEN int
 dm_validXType_tcl(clientData, interp, argc, argv)
      ClientData clientData;
@@ -128,4 +123,3 @@ char    **argv;
 	Tcl_SetObjResult(interp, obj);
 	return TCL_OK;
 }
-#endif

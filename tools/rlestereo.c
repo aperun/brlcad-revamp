@@ -30,12 +30,6 @@
 
 #include <stdio.h>
 
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include "machine.h"
 #include "externs.h"
 #include "rle.h"
@@ -63,7 +57,6 @@ int	rchan1, rchan2;			/* Channel indices for right image. */
 rle_pixel **lmap, **rmap;		/* Colormap for left/right images. */
 
 void convert_line();
-int get_rle_setup();
 
 /*
  * Read two named RLE files and produces a single image suitable for viewing
@@ -80,7 +73,7 @@ int get_rle_setup();
  *	-r scale	Scale factor for right-eye image (default 1.0).
  */
 
-int
+void
 main(argc, argv)
 int argc;
 char **argv;
@@ -239,7 +232,6 @@ char **argv;
 	exit(0);
 }
 
-int
 get_rle_setup(the_hdr, xres, yres, prog, file)
 int *xres, *yres;
 rle_hdr *the_hdr;

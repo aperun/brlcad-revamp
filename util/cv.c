@@ -14,15 +14,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
-#include "conf.h"
 #include <stdio.h>
 #include <math.h>
 #include "machine.h"
-#include "externs.h"
-#include "bu.h"
 #include "vmath.h"
 #include "raytrace.h"
 
@@ -48,7 +45,6 @@ FILE	*outfp;
 genptr_t	ibuf;
 genptr_t	obuf;
 
-int
 main( argc, argv )
 int	argc;
 char	**argv;

@@ -21,7 +21,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -179,7 +179,7 @@ struct edge_g_cnurb * crv;
 
 void
 rt_nurb_c_print( crv)
-const struct edge_g_cnurb * crv;
+CONST struct edge_g_cnurb * crv;
 {
 	register fastf_t * ptr;
 	int i,j;
@@ -213,7 +213,7 @@ const struct edge_g_cnurb * crv;
 void
 rt_nurb_s_print( c, srf )
 char * c;
-const struct face_g_snurb * srf;
+CONST struct face_g_snurb * srf;
 {
 
     bu_log("%s\n", c );
@@ -234,7 +234,7 @@ const struct face_g_snurb * srf;
 
 void
 rt_nurb_pr_kv( kv )
-const struct knot_vector * kv;
+CONST struct knot_vector * kv;
 {
     register fastf_t * ptr = kv->knots;
     int i;
@@ -251,7 +251,7 @@ const struct knot_vector * kv;
 
 void
 rt_nurb_pr_mesh( m )
-const struct face_g_snurb * m;
+CONST struct face_g_snurb * m;
 {
 	int i,j,k;
 	fastf_t * m_ptr = m->ctl_points;

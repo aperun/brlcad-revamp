@@ -99,13 +99,7 @@ struct trail {
   point_t	t_pt[MAX_TRAIL];
 };
 
-#ifdef MAX_CLIENTS
-#	undef MAX_CLIENTS
-#	define MAX_CLIENTS 32
-#else
-#	define MAX_CLIENTS 32
-#endif
-
+#define MAX_CLIENTS 32
 struct client {
   int			c_fd;
   struct pkg_conn	*c_pkg;
@@ -130,7 +124,7 @@ struct _mged_variables {
   int		mv_fb;				/* toggle image on/off */
   int		mv_fb_all;			/* 0 - use part of image as defined by the rectangle
 						   1 - use the entire image */
-  int		mv_fb_overlay;			/* 0 - underlay    1 - interlay    2 - overlay */
+  int		mv_fb_overlay;			/* 0 - underlay     1 - overlay */
   char		mv_mouse_behavior;
   char		mv_coords;
   char		mv_rotate_about;
@@ -223,8 +217,15 @@ struct _view_state {
   int		vs_rc;
   int		vs_flag;
 
-  struct view_obj	*vs_vop;
+  fastf_t	vs_Viewscale;
   fastf_t	vs_i_Viewscale;
+  fastf_t	vs_azimuth;
+  fastf_t	vs_elevation;
+  fastf_t	vs_twist;
+  mat_t		vs_Viewrot;
+  mat_t		vs_toViewcenter;
+  mat_t		vs_model2view;
+  mat_t		vs_view2model;
   mat_t		vs_model2objview;
   mat_t		vs_objview2model;
   mat_t		vs_ModelDelta;		/* changes to Viewrot this frame */
@@ -514,6 +515,7 @@ struct dm_list {
 #define BE_ACCEPT	1+16
 #define BE_REJECT	0+16
 
+#define BV_SLICEMODE	15
 #define BE_S_EDIT	14
 #define BE_S_ROTATE	13
 #define BE_S_TRANS	12

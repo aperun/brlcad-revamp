@@ -21,7 +21,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -81,7 +81,7 @@ fb_sim_writerect( ifp, xmin, ymin, width, height, pp )
 FBIO	*ifp;
 int	xmin, ymin;
 int	width, height;
-const unsigned char	*pp;
+CONST unsigned char	*pp;
 {
 	register int	y;
 	register int	tot;
@@ -147,7 +147,7 @@ fb_sim_bwwriterect( ifp, xmin, ymin, width, height, pp )
 FBIO	*ifp;
 int	xmin, ymin;
 int	width, height;
-const unsigned char	*pp;
+CONST unsigned char	*pp;
 {
 	register int	y;
 	register int	tot;

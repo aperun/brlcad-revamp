@@ -18,16 +18,13 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char libbu_association_RCSid[] = "@(#)$Header$ (ARL)";
+static char libbu_association_RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#if HAVE_STRING_H
-#include <string.h>
-#endif
 #include "machine.h"
 #include "externs.h"
 #include "bu.h"
@@ -46,8 +43,8 @@ static const char libbu_association_RCSid[] = "@(#)$Header$ (ARL)";
  */
 struct bu_vls *bu_association (fname, value, field_sep)
 
-const char	*fname;
-const char	*value;
+CONST char	*fname;
+CONST char	*value;
 int	field_sep;
 
 {

@@ -21,13 +21,12 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <string.h>
 
 #include "machine.h"
 #include "vmath.h"
@@ -38,7 +37,7 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 void
 rt_nurb_nodes( nodes, knots, order)
 fastf_t * nodes;
-const struct knot_vector * knots;
+CONST struct knot_vector * knots;
 int order;
 {
 	int i, j;
@@ -90,7 +89,7 @@ void
 rt_nurb_cinterp( crv, order, data, n)
 struct edge_g_cnurb	* crv;
 int		order;
-const fastf_t	* data;
+CONST fastf_t	* data;
 int		n;
 {
 	fastf_t * interp_mat;
@@ -164,7 +163,7 @@ void
 rt_nurb_sinterp( srf, order, data, ymax, xmax)
 struct face_g_snurb	*srf;
 int		order;
-const fastf_t	*data;		/* data[x,y] */
+CONST fastf_t	*data;		/* data[x,y] */
 int		ymax;		/* nrow = max Y */
 int		xmax;		/* ncol = max X */
 {

@@ -20,7 +20,7 @@
  *
  */
 #ifndef lint
-static const char libbu_rb_create_RCSid[] = "@(#) $Header$";
+static char libbu_rb_create_RCSid[] = "@(#) $Header$";
 #endif
 
 #include "conf.h"

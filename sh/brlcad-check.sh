@@ -1,5 +1,5 @@
 #!/bin/sh
-#			B R L C A D - C H E C K . S H
+#			V E R I F Y . S H
 #
 # This shell script is used to verify the configuration of the compile-time
 # environment for the BRL CAD Package.
@@ -38,7 +38,7 @@ BINDIR=$BASEDIR/bin
 #
 ############################################################################
 if [ X${SILENT} = X ] ; then
-	echo brlcad-check.sh: Verifying that ${BINDIR} is in your search path.
+	echo verify.sh: Verifying that ${BINDIR} is in your search path.
 fi
 PATH_ELEMENTS=`echo $PATH | sed 's/^://
 				s/:://g
@@ -94,7 +94,7 @@ fi
 #
 ############################################################################
 if [ X${SILENT} = X ] ; then
-	echo brlcad-check.sh: Comparing machinetype.sh and Cakefile.defs
+	echo verify.sh: Comparing machinetype.sh and Cakefile.defs
 fi
 if test ! -f Cakefile.defs
 then

@@ -1,1 +1,0 @@
-0 5 * * * /vld/regress/brlcad_scripts/master.sh -d /c/regress -r /c/CVS -l /dev/tty | /bin/mail morrison -s regression_master

@@ -359,31 +359,21 @@ struct rt_eto_internal {
 #define DSP_NAME_LEN 128
 struct rt_dsp_internal{
 	long		magic;
-#define dsp_file dsp_name /* for backwards compatibility */
-	struct bu_vls	dsp_name;		/* name of data file */
-	unsigned int	dsp_xcnt;		/* # samples in row of data */
-	unsigned int	dsp_ycnt;		/* # of columns in data */
-	unsigned char	dsp_smooth;		/* bool: surf normal interp */
-    unsigned char   dsp_cuttype;		/* type of cut to make */
-#define DSP_CUT_DIR_ADAPT	0
-#define DSP_CUT_DIR_llUR	1
-#define DSP_CUT_DIR_ULlr	2
-        
+	char		dsp_file[DSP_NAME_LEN];	/* name of data file */
+	unsigned	dsp_xcnt;		/* # samples in row of data */
+	unsigned	dsp_ycnt;		/* # of columns in data */
+	int		dsp_smooth;		/* bool: surf normal interp */
+	double		dsp_xs;			/* pirated for pieces */
+	double		dsp_ys;			/* not used */
+	double		dsp_zs;			/* not used */
 	mat_t		dsp_mtos;		/* model to solid space */
 	/* END OF USER SETABLE VARIABLES, BEGIN INTERNAL STUFF */
-	mat_t		dsp_stom;		/* solid to model space 
-						 * computed from dsp_mtos */
-	unsigned short	*dsp_buf;		/* actual data */
-	struct bu_mapped_file *dsp_mp;		/* mapped file for data */
-	struct rt_db_internal *dsp_bip;		/* db object for data */
-	char		dsp_datasrc;		/* which type of data source */
+	mat_t		dsp_stom;		/* solid to model space */
+	unsigned short	*dsp_buf;		/* set to dsp_mp buffer addr */
+	struct bu_mapped_file *dsp_mp;	/* actual data */
 };
 #define RT_DSP_INTERNAL_MAGIC	0xde6
 #define RT_DSP_CK_MAGIC(_p)	BU_CKMAG(_p,RT_DSP_INTERNAL_MAGIC,"rt_dsp_internal")
-
-#define RT_DSP_SRC_V4_FILE	'4'
-#define RT_DSP_SRC_FILE	'f'
-#define RT_DSP_SRC_OBJ	'o'
 
 /*
  *	ID_SKETCH
@@ -398,7 +388,7 @@ struct rt_sketch_internal
 	vect_t		v_vec;		/* the sketch */
 	int		vert_count;	/* number of vertices in this sketch */
 	point2d_t	*verts;		/* array of 2D vertices that may be used as
-					 * endpoints, centers, or spline control points */
+					 * endpoints, centers, or NURB control points */
 /* XXX this should have a distinctive name, like rt_curve */
 	struct curve {
 		int		seg_count;	/* number of segments in this curve */
@@ -414,13 +404,13 @@ struct rt_sketch_internal
  */
 struct rt_submodel_internal {
 	long		magic;
-	struct bu_vls	file;	/* .g filename, 0-len --> this database. */
-	struct bu_vls	treetop;	/* one treetop only */
+	char		file[128];	/* .g filename, 0-len --> this database. */
+	char		treetop[128];	/* one treetop only */
 	int		meth;		/* space partitioning method */
 	/* other option flags (lazy prep, etc.)?? */
 	/* REMAINING ELEMENTS PROVIDED BY IMPORT, UNUSED BY EXPORT */
 	mat_t		root2leaf;
-	const struct db_i *dbip;
+	CONST struct db_i *dbip;
 };
 #define RT_SUBMODEL_INTERNAL_MAGIC	0x7375626d	/* subm */
 #define RT_SUBMODEL_CK_MAGIC(_p)	BU_CKMAG(_p,RT_SUBMODEL_INTERNAL_MAGIC,"rt_submodel_internal")
@@ -437,7 +427,7 @@ struct rt_extrude_internal
 	vect_t		u_vec;	/* vector in U parameter direction */
 	vect_t		v_vec;	/* vector in V parameter direction */
 	int		keypoint;	/* index of keypoint vertex */
-	char		*sketch_name;	/* name of sketch object that defines
+	char		sketch_name[SKETCH_NAME_LEN];	/* name of sketch object that defines
 						 * the curve to be extruded */
 	struct rt_sketch_internal	*skt;	/* pointer to referenced sketch */
 };

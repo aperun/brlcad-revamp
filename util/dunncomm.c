@@ -17,7 +17,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -25,12 +25,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 #include <fcntl.h>
 #include <signal.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include <sys/time.h>
 #ifdef __NetBSD__
 #	define USE_OLD_TTY
@@ -230,7 +224,7 @@ unsigned	n;
  *	and 0 for bad status.
  *
  */
-int
+
 goodstatus()
 {
 	struct timeval waittime, *timeout;
@@ -294,7 +288,6 @@ hangten()
  *	number of seconds specified by the argument.
  *
  */
-int
 ready(nsecs)
 int nsecs;
 {

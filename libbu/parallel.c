@@ -15,7 +15,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char RCSparallel[] = "@(#)$Header$ (ARL)";
+static char RCSparallel[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -23,31 +23,9 @@ static const char RCSparallel[] = "@(#)$Header$ (ARL)";
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include "machine.h"
 #include "externs.h"
 #include "bu.h"
-
-#ifdef linux
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/resource.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#endif
-
-#ifdef __FreeBSD__
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <signal.h>
-#endif
 
 #ifdef CRAY
 # include <sys/category.h>
@@ -143,18 +121,15 @@ void
 bu_nice_set(newnice)
 int	newnice;
 {
-	int opri, npri;
+	int opri, npri, chg;
+	int bias;
 
 #ifdef BSD
-#ifndef PRIO_PROCESS	/* necessary for linux */
 #define	PRIO_PROCESS	0	/* From /usr/include/sys/resource.h */
-#endif
 	opri = getpriority( PRIO_PROCESS, 0 );
 	setpriority( PRIO_PROCESS, 0, newnice );
 	npri = getpriority( PRIO_PROCESS, 0 );
 #else
-	int bias, chg;
-
 	/* " nice adds the value of incr to the nice value of the process" */
 	/* "The default nice value is 20" */
 	/* "Upon completion, nice returns the new nice value minus 20" */
@@ -400,7 +375,6 @@ bu_set_realtime()
 #	define	CHECK_PIDS	1
 #endif
 
-#if defined(PARALLEL)
 /*
  *			B U _ W O R K E R _ T B L _ N O T _ E M P T Y
  */
@@ -435,6 +409,7 @@ int tbl[MAX_PSW];
 
 	bzero( (char *)tbl, sizeof(tbl) );
 }
+
 extern int	bu_pid_of_initiating_thread;	/* From ispar.c */
 
 static int	bu_nthreads_started = 0;	/* # threads started */
@@ -490,7 +465,6 @@ bu_parallel_interface()
 	if(cpu) _exit(0);
 #	endif /* SGI */
 }
-#endif /* PARALLEL */
 
 #ifdef SGI_4D
 /*
@@ -680,16 +654,13 @@ genptr_t	arg;
 		 * RAM is allocated only to those pages used.
 		 * On the other hand, don't be too generous, because each
 		 * proc needs this much space on, e.g. a 64 processor system.
-		 * Don't go quite for an even number of megabytes,
-		 * in the hopes of creating a small 32k "buffer zone"
-		 * to catch stack overflows.
 		 */
 		new = sprocsp( (void (*)(void *, size_t))bu_parallel_interface,
 			PR_SALL, 0, NULL,
 #			if IRIX64
-				64*1024*1024 - 32*1024
+				8*1024*1024
 #			else
-				4*1024*1024 - 32*1024
+				4*1024*1024
 #			endif
 			);
 #endif

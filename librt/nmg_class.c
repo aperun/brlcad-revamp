@@ -35,7 +35,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -47,7 +47,6 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "nmg.h"
 #include "raytrace.h"
 #include "./debug.h"
-#include "plot3.h"
 
 extern int nmg_class_nothing_broken;
 
@@ -61,8 +60,8 @@ extern int nmg_class_nothing_broken;
  */
 struct neighbor {
 	union {
-		const struct vertexuse *vu;
-		const struct edgeuse *eu;
+		CONST struct vertexuse *vu;
+		CONST struct edgeuse *eu;
 	} p;
 	/* XXX For efficiency, this should have been dist_sq */
 	fastf_t	dist;	/* distance from point to neighbor */
@@ -70,29 +69,29 @@ struct neighbor {
 };
 
 static void	joint_hitmiss2 RT_ARGS( (struct neighbor *closest,
-			const struct edgeuse *eu, const point_t pt,
+			CONST struct edgeuse *eu, CONST point_t pt,
 			int code) );
 static void	nmg_class_pt_e RT_ARGS( (struct neighbor *closest,
-			const point_t pt, const struct edgeuse *eu,
-			const struct bn_tol *tol) );
+			CONST point_t pt, CONST struct edgeuse *eu,
+			CONST struct bn_tol *tol) );
 static void	nmg_class_pt_l RT_ARGS( (struct neighbor *closest, 
-			const point_t pt, const struct loopuse *lu,
-			const struct bn_tol *tol) );
+			CONST point_t pt, CONST struct loopuse *lu,
+			CONST struct bn_tol *tol) );
 static int	class_vu_vs_s RT_ARGS( (struct vertexuse *vu, struct shell *sB,
-			long *classlist[4], const struct bn_tol	*tol) );
+			long *classlist[4], CONST struct bn_tol	*tol) );
 static int	class_eu_vs_s RT_ARGS( (struct edgeuse *eu, struct shell *s,
-			long *classlist[4], const struct bn_tol	*tol) );
+			long *classlist[4], CONST struct bn_tol	*tol) );
 static int	class_lu_vs_s RT_ARGS( (struct loopuse *lu, struct shell *s,
-			long *classlist[4], const struct bn_tol	*tol) );
+			long *classlist[4], CONST struct bn_tol	*tol) );
 static void	class_fu_vs_s RT_ARGS( (struct faceuse *fu, struct shell *s,
-			long *classlist[4], const struct bn_tol	*tol) );
+			long *classlist[4], CONST struct bn_tol	*tol) );
 
 /*
  *			N M G _ C L A S S _ S T A T U S
  *
  *  Convert classification status to string.
  */
-const char *
+CONST char *
 nmg_class_status(status)
 int	status;
 {
@@ -133,11 +132,11 @@ int	status;
 static void 
 joint_hitmiss2(closest, eu, pt, code)
 struct neighbor		*closest;
-const struct edgeuse	*eu;
-const point_t		pt;
+CONST struct edgeuse	*eu;
+CONST point_t		pt;
 int			code;
 {
-	const struct edgeuse *eu_rinf;
+	CONST struct edgeuse *eu_rinf;
 
 	eu_rinf = nmg_faceradial(eu);
 
@@ -214,14 +213,14 @@ int			code;
 static void
 nmg_class_pt_e(closest, pt, eu, tol)
 struct neighbor		*closest;
-const point_t		pt;
-const struct edgeuse	*eu;
-const struct bn_tol	*tol;
+CONST point_t		pt;
+CONST struct edgeuse	*eu;
+CONST struct bn_tol	*tol;
 {
 	vect_t	ptvec;	/* vector from lseg to pt */
 	vect_t	left;	/* vector left of edge -- into inside of loop */
-	const fastf_t	*eupt;
-	const fastf_t	*matept;
+	CONST fastf_t	*eupt;
+	CONST fastf_t	*matept;
 	point_t pca;	/* point of closest approach from pt to edge lseg */
 	fastf_t dist;	/* distance from pca to pt */
 	fastf_t dot;
@@ -420,9 +419,9 @@ out:
 static void
 nmg_class_pt_l(closest, pt, lu, tol)
 struct neighbor		*closest;
-const point_t		pt;
-const struct loopuse	*lu;
-const struct bn_tol	*tol;
+CONST point_t		pt;
+CONST struct loopuse	*lu;
+CONST struct bn_tol	*tol;
 {
 	vect_t		delta;
 	pointp_t	lu_pt;
@@ -514,12 +513,12 @@ const struct bn_tol	*tol;
  */
 int
 nmg_class_lu_fu(lu, tol)
-const struct loopuse	*lu;
-const struct bn_tol	*tol;
+CONST struct loopuse	*lu;
+CONST struct bn_tol	*tol;
 {
-	const struct faceuse	*fu;
+	CONST struct faceuse	*fu;
 	struct vertexuse	*vu;
-	const struct vertex_g	*vg;
+	CONST struct vertex_g	*vg;
 	struct edgeuse		*eu;
 	struct edgeuse		*eu_first;
 	fastf_t			dist;
@@ -591,21 +590,21 @@ again:
 }
 
 /* Ray direction vectors for Jordan curve algorithm */
-static const point_t nmg_good_dirs[10] = {
+static CONST point_t nmg_good_dirs[10] = {
 #if 1
-	{3, 2, 1},	/* Normally the first dir */
+	3, 2, 1,	/* Normally the first dir */
 #else
-	{1, 0, 0},	/* Make this first dir to wring out ray-tracer XXX */
+	1, 0, 0,	/* Make this first dir to wring out ray-tracer XXX */
 #endif
-	{1, 0, 0},
-	{0, 1, 0},
-	{0, 0, 1},
-	{1, 1, 1},
-	{-3,-2,-1},
-	{-1,0, 0},
-	{0,-1, 0},
-	{0, 0,-1},
-	{-1,-1,-1}
+	1, 0, 0,
+	0, 1, 0,
+	0, 0, 1,
+	1, 1, 1,
+	-3,-2,-1,
+	-1,0, 0,
+	0,-1, 0,
+	0, 0,-1,
+	-1,-1,-1
 };
 
 /*
@@ -631,14 +630,14 @@ static const point_t nmg_good_dirs[10] = {
  */
 int
 nmg_class_pt_s(pt, s, in_or_out_only, tol)
-const point_t		pt;
-const struct shell	*s;
-const int		in_or_out_only;
-const struct bn_tol	*tol;
+CONST point_t		pt;
+CONST struct shell	*s;
+CONST int		in_or_out_only;
+CONST struct bn_tol	*tol;
 {
-	const struct faceuse	*fu;
+	CONST struct faceuse	*fu;
 	struct model	*m;
-	long		*faces_seen = NULL;
+	long		*faces_seen;
 	vect_t		region_diagonal;
 	fastf_t		region_diameter;
 	int		class;
@@ -758,12 +757,12 @@ class_vu_vs_s(vu, sB, classlist, tol)
 struct vertexuse	*vu;
 struct shell		*sB;
 long			*classlist[4];
-const struct bn_tol	*tol;
+CONST struct bn_tol	*tol;
 {
 	struct vertexuse *vup;
 	pointp_t pt;
 	char	*reason;
-	int	status = 0;
+	int	status;
 	int	class;
 
 	NMG_CK_VERTEXUSE(vu);
@@ -881,10 +880,10 @@ class_eu_vs_s(eu, s, classlist, tol)
 struct edgeuse	*eu;
 struct shell	*s;
 long		*classlist[4];
-const struct bn_tol	*tol;
+CONST struct bn_tol	*tol;
 {
 	int euv_cl, matev_cl;
-	int	status = 0;
+	int	status;
 	struct edgeuse *eup;
 	point_t pt;
 	pointp_t eupt, matept;
@@ -941,7 +940,7 @@ const struct bn_tol	*tol;
 
 	    	nmg_pr_class_status("eu vu", euv_cl);
 	    	nmg_pr_class_status("eumate vu", matev_cl);
-	    	if( RT_G_DEBUG || rt_g.NMG_debug )  {
+	    	if( rt_g.debug || rt_g.NMG_debug )  {
 		    	/* Do them over, so we can watch */
 	    		bu_log("Edge not cut, doing it over\n");
 	    		NMG_INDEX_CLEAR( classlist[NMG_CLASS_AinB], eu->vu_p);
@@ -1301,14 +1300,14 @@ out:
  */
 int
 nmg_2lu_identical( eu1, eu2 )
-const struct edgeuse	*eu1;
-const struct edgeuse	*eu2;
+CONST struct edgeuse	*eu1;
+CONST struct edgeuse	*eu2;
 {
-	const struct loopuse	*lu1;
-	const struct loopuse	*lu2;
-	const struct edgeuse	*eu1_first;
-	const struct faceuse	*fu1;
-	const struct faceuse	*fu2;
+	CONST struct loopuse	*lu1;
+	CONST struct loopuse	*lu2;
+	CONST struct edgeuse	*eu1_first;
+	CONST struct faceuse	*fu1;
+	CONST struct faceuse	*fu2;
 	int			ret;
 
 	NMG_CK_EDGEUSE(eu1);
@@ -1516,9 +1515,9 @@ int		newclass;
  */
 static int
 class_shared_lu( lu, lu_ref, tol )
-const struct loopuse *lu;
-const struct loopuse *lu_ref;
-const struct bn_tol *tol;
+CONST struct loopuse *lu;
+CONST struct loopuse *lu_ref;
+CONST struct bn_tol *tol;
 {
 	struct shell *s_ref;
 	struct edgeuse *eu;
@@ -1683,7 +1682,7 @@ class_lu_vs_s(lu, s, classlist, tol)
 struct loopuse		*lu;
 struct shell		*s;
 long			*classlist[4];
-const struct bn_tol	*tol;
+CONST struct bn_tol	*tol;
 {
 	int class;
 	unsigned int	in, outside, on;
@@ -2024,7 +2023,7 @@ retry:
 
 		if( found_match )
 		{
-			int test_class = NMG_CLASS_Unknown;
+			int test_class;
 
 			if (rt_g.NMG_debug & DEBUG_CLASSIFY)
 				bu_log( "\tFound a matching LU's x%x and x%x\n", lu, q_lu );
@@ -2151,7 +2150,7 @@ class_fu_vs_s(fu, s, classlist, tol)
 struct faceuse		*fu;
 struct shell		*s;
 long			*classlist[4];
-const struct bn_tol	*tol;
+CONST struct bn_tol	*tol;
 {
 	struct loopuse *lu;
 	plane_t		n;
@@ -2188,7 +2187,7 @@ nmg_class_shells(sA, sB, classlist, tol)
 struct shell	*sA;
 struct shell	*sB;
 long		*classlist[4];
-const struct bn_tol	*tol;
+CONST struct bn_tol	*tol;
 {
 	struct faceuse *fu;
 	struct loopuse *lu;
@@ -2263,9 +2262,10 @@ const struct bn_tol	*tol;
  *  XXX DANGER:  Calls nmg_class_pt_l(), which does not work well.
  */
 int
-nmg_classify_pt_loop(const point_t pt,
-		     const struct loopuse *lu,
-		     const struct bn_tol *tol)
+nmg_classify_pt_loop( pt , lu , tol )
+CONST point_t pt;
+CONST struct loopuse *lu;
+CONST struct bn_tol *tol;
 {
 	struct neighbor	closest;
 	struct faceuse *fu;
@@ -2317,8 +2317,8 @@ bu_log("DANGER: nmg_classify_pt_loop() is calling nmg_class_pt_l(), which does n
 int
 nmg_get_interior_pt( pt, lu, tol )
 point_t pt;
-const struct loopuse *lu;
-const struct bn_tol *tol;
+CONST struct loopuse *lu;
+CONST struct bn_tol *tol;
 {
 	struct edgeuse *eu;
 	fastf_t point_count=0.0;
@@ -2357,7 +2357,7 @@ const struct bn_tol *tol;
 	VSCALE( average_pt, average_pt, one_over_count );
 	VMOVE( test_pt, average_pt );
 
-	if (nmg_class_pt_lu_except( test_pt, lu, (struct edge *)NULL, tol ) == NMG_CLASS_AinB )
+	if( nmg_class_pt_lu_except( test_pt, lu, (struct edge *)NULL, tol ) == NMG_CLASS_AinB )
 	{
 		VMOVE( pt, test_pt );
 		return( 0 );
@@ -2379,9 +2379,6 @@ const struct bn_tol *tol;
 				break;
 			case 2:
 				tol_mult = 1.005 * tol->dist;
-				break;
-			default:			/* sanity / lint */
-				tol_mult = 1;
 				break;
 		}
 		for( BU_LIST_FOR( eu, edgeuse, &lu->down_hd ) )
@@ -2429,8 +2426,8 @@ const struct bn_tol *tol;
  */
 int
 nmg_classify_lu_lu( lu1 , lu2 , tol )
-const struct loopuse *lu1,*lu2;
-const struct bn_tol *tol;
+CONST struct loopuse *lu1,*lu2;
+CONST struct bn_tol *tol;
 {
 	struct faceuse *fu1,*fu2;
 	struct edgeuse *eu;
@@ -2561,7 +2558,7 @@ const struct bn_tol *tol;
 					if( nmg_find_vertex_in_lu( eu->vu_p->v_p, lu2 ) != NULL )
 						continue;
 
-					class = nmg_class_pt_lu_except( vg->coord, lu2, (struct edge *)NULL, tol);
+					class = nmg_class_pt_lu_except( vg->coord, lu2, (struct edgeuse *)NULL, tol);
 					if( class != NMG_CLASS_AonBshared && class != NMG_CLASS_AonBanti )
 					{
 						if( lu2->orientation == OT_SAME )
@@ -2622,7 +2619,7 @@ const struct bn_tol *tol;
 				if( nmg_find_vertex_in_lu( eu->vu_p->v_p, lu2 ) != NULL )
 					continue;
 
-				class = nmg_class_pt_lu_except( vg->coord, lu2, (struct edge *)NULL, tol);
+				class = nmg_class_pt_lu_except( vg->coord, lu2, (struct edgeuse *)NULL, tol);
 				if( class != NMG_CLASS_AonBshared && class != NMG_CLASS_AonBanti )
 				{
 					if( lu2->orientation == OT_SAME )
@@ -2664,7 +2661,7 @@ const struct bn_tol *tol;
 				VADD2( mid_pt, vg1->coord, vg2->coord );
 				VSCALE( mid_pt, mid_pt, 0.5 );
 
-				class = nmg_class_pt_lu_except( mid_pt, lu2, (struct edge *)NULL, tol);
+				class = nmg_class_pt_lu_except( mid_pt, lu2, (struct edgeuse *)NULL, tol);
 				if( class != NMG_CLASS_AonBshared && class != NMG_CLASS_AonBanti )
 				{
 					if( lu2->orientation == OT_SAME )
@@ -2730,8 +2727,7 @@ const struct bn_tol *tol;
 		vg = vu->v_p->vg_p;
 		NMG_CK_VERTEX_G( vg );
 
-		class = nmg_class_pt_lu_except( vg->coord, lu2,
-						(struct edge *)NULL, tol );
+		class = nmg_class_pt_lu_except( vg->coord, lu2, (struct edgeuse *)NULL, tol );
 
 		if( lu2->orientation == OT_OPPOSITE )
 		{
@@ -2770,7 +2766,7 @@ int
 nmg_classify_s_vs_s( s2, s, tol )
 struct shell *s;
 struct shell *s2;
-const struct bn_tol *tol;
+struct bn_tol *tol;
 {
 	int i;
 	int class;

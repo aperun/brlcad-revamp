@@ -14,13 +14,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCStimer[] = "@(#)$Header$ (BRL)";
+static char RCStimer[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <string.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>

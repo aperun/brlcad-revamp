@@ -25,7 +25,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -33,9 +33,6 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include <stdio.h>
 
 #include "machine.h"
-#include <bu.h>
-#include <vmath.h>
-#include <bn.h>
 #include "externs.h"		/* For getopt, etc */
 
 static char	*file_name;
@@ -52,7 +49,6 @@ Usage: pixhalve [-h] [-a]\n\
 
 void separate(), combine(), ripple(), filter5(), filter3();
 
-int
 get_args( argc, argv )
 register char **argv;
 {
@@ -116,7 +112,6 @@ int	*blines[5];
 /*
  *			M A I N
  */
-int
 main( argc, argv )
 int	argc;
 char	**argv;

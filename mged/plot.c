@@ -18,7 +18,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -63,7 +63,7 @@ char	**argv;
 	int floating;			/* 3-D floating point plot */
 	int	is_pipe = 0;
 
-	if(argc < 2){
+	if(argc < 2 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -140,15 +140,15 @@ char	**argv;
 
 	if( floating )  {
 		pd_3space( fp,
-			-view_state->vs_vop->vo_center[MDX] - view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDY] - view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDZ] - view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDX] + view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDY] + view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDZ] + view_state->vs_vop->vo_scale );
+			-view_state->vs_toViewcenter[MDX] - view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDY] - view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDZ] - view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDX] + view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDY] + view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDZ] + view_state->vs_Viewscale );
 		Dashing = 0;
 		pl_linmod( fp, "solid" );
-		FOR_ALL_SOLIDS(sp, &dgop->dgo_headSolid)  {
+		FOR_ALL_SOLIDS(sp, &HeadSolid.l)  {
 			/* Could check for differences from last color */
 			pl_color( fp,
 				sp->s_color[0],
@@ -191,7 +191,7 @@ char	**argv;
 	pl_erase( fp );
 	Dashing = 0;
 	pl_linmod( fp, "solid");
-	FOR_ALL_SOLIDS(sp, &dgop->dgo_headSolid)  {
+	FOR_ALL_SOLIDS(sp, &HeadSolid.l)  {
 		if( Dashing != sp->s_soldash )  {
 			if( sp->s_soldash )
 				pl_linmod( fp, "dotdashed");
@@ -212,13 +212,13 @@ char	**argv;
 				case RT_VLIST_POLY_MOVE:
 				case RT_VLIST_LINE_MOVE:
 					/* Move, not draw */
-					MAT4X3PNT( last, view_state->vs_vop->vo_model2view, *pt );
+					MAT4X3PNT( last, view_state->vs_model2view, *pt );
 					continue;
 				case RT_VLIST_POLY_DRAW:
 				case RT_VLIST_POLY_END:
 				case RT_VLIST_LINE_DRAW:
 					/* draw */
-					MAT4X3PNT(fin, view_state->vs_vop->vo_model2view, *pt);
+					MAT4X3PNT( fin, view_state->vs_model2view, *pt );
 					VMOVE( start, last );
 					VMOVE( last, fin );
 					break;
@@ -298,7 +298,7 @@ char	**argv;
 	if( not_state( ST_VIEW, "Presented Area Calculation" ) == TCL_ERROR )
 		return TCL_ERROR;
 
-	FOR_ALL_SOLIDS(sp, &dgop->dgo_headSolid)  {
+	FOR_ALL_SOLIDS(sp, &HeadSolid.l)  {
 	  if( !sp->s_Eflag && sp->s_soldash != 0 )  {
 	    struct bu_vls vls;
 
@@ -380,7 +380,7 @@ char	**argv;
 	 * Write out rotated but unclipped, untranslated,
 	 * and unscaled vectors
 	 */
-	FOR_ALL_SOLIDS(sp, &dgop->dgo_headSolid)  {
+	FOR_ALL_SOLIDS(sp, &HeadSolid.l)  {
 	  for( BU_LIST_FOR( vp, rt_vlist, &(sp->s_vlist) ) )  {
 	    register int	i;
 	    register int	nused = vp->nused;
@@ -394,13 +394,13 @@ char	**argv;
 	      case RT_VLIST_POLY_MOVE:
 	      case RT_VLIST_LINE_MOVE:
 		/* Move, not draw */
-		MAT4X3VEC(last, view_state->vs_vop->vo_rotation, *pt);
+		MAT4X3VEC( last, view_state->vs_Viewrot, *pt );
 		continue;
 	      case RT_VLIST_POLY_DRAW:
 	      case RT_VLIST_POLY_END:
 	      case RT_VLIST_LINE_DRAW:
 		/* draw.  */
-		MAT4X3VEC(fin, view_state->vs_vop->vo_rotation, *pt);
+		MAT4X3VEC( fin, view_state->vs_Viewrot, *pt );
 		break;
 	      }
 

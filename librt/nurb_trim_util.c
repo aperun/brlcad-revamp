@@ -17,7 +17,7 @@
  * 
  */
 #ifndef lint
-static const char rcs_ident[] = "$Header$";
+static char	rcs_ident[] = "$Header$";
 #endif
 
 #include "conf.h"

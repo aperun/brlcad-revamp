@@ -20,7 +20,7 @@
 /*	22 February 1993 - Original copy.  */
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -53,7 +53,7 @@ extern int overlap();   /*  User supplied overlap function.  */
 
 struct table
 {
-   const char *name;	/*  Region name.  */
+   CONST char *name;	/*  Region name.  */
    double lvrays;	/*  Number of rays that leave a region &  */
 			/*  hit air or nothing.  */
    double *intrays;	/*  Number of rays that leave a region &  */
@@ -515,14 +515,13 @@ char **argv;
 	(void)fclose(fpw1);
 	(void)fclose(fpw2);
    }							/*  END # 100  */
-   return 0;
 }							/*  END # 99  */
 
 
 /***************************************************************************/
 /*		Hit, miss, & overlap functions.                            */
 /***************************************************************************/
-int
+
 hit(ap_p,PartHeadp)
 
 /*  User supplied hit function.  */
@@ -659,7 +658,7 @@ struct partition *PartHeadp;
 }							/*  END # 1000  */
 
 /***************************************************************************/
-int
+
 miss()
 
 /*  User supplied hit function.  */
@@ -670,7 +669,7 @@ miss()
 }							/*  END # 2000  */
 
 /***************************************************************************/
-int
+
 overlap()
 
 /*  User supplied overlap function.  */

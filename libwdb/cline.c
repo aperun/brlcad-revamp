@@ -20,7 +20,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char part_RCSid[] = "@(#)$Header$ (BRL)";
+static char part_RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -35,23 +35,21 @@ static const char part_RCSid[] = "@(#)$Header$ (BRL)";
 #include "raytrace.h"
 #include "wdb.h"
 
-int
-mk_cline(
-	struct rt_wdb *fp,
-	const char *name,
-	const point_t V,
-	const vect_t height,
-	fastf_t radius,
-	fastf_t thickness )
+mk_cline( fp, name, V, height, radius, thickness )
+FILE *fp;
+char *name;
+point_t V;
+vect_t height;
+fastf_t radius;
+fastf_t thickness;
 {
-	struct rt_cline_internal *cli;
+	struct rt_cline_internal cli;
 
-	BU_GETSTRUCT( cli, rt_cline_internal );
-	cli->magic = RT_CLINE_INTERNAL_MAGIC;
-	VMOVE( cli->v, V );
-	VMOVE( cli->h, height );
-	cli->thickness = thickness;
-	cli->radius = radius;
+	cli.magic = RT_CLINE_INTERNAL_MAGIC;
+	VMOVE( cli.v, V );
+	VMOVE( cli.h, height );
+	cli.thickness = thickness;
+	cli.radius = radius;
 
-	return wdb_export( fp, name, (genptr_t)cli, ID_CLINE, mk_conv2mm );
+	return mk_export_fwrite( fp, name, (genptr_t)&cli, ID_CLINE );
 }

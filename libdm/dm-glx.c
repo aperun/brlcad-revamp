@@ -766,7 +766,7 @@ int which_eye;
   if( ! ((struct glx_vars *)dmp->dm_vars)->mvars.zclipping_on ) {
     mat_t	nozclip;
 
-    MAT_IDN( nozclip );
+    bn_mat_idn( nozclip );
     nozclip[10] = 1.0e-20;
     bn_mat_mul( newm, nozclip, mat );
     mptr = newm;

@@ -206,6 +206,7 @@ plane_t pl;
 int entno;
 {
 	int entity_type;
+	float tmp;
 	int i;
 
 	Readrec( dir[entno]->param );
@@ -217,7 +218,10 @@ int entno;
 	}
 
 	for( i=0 ; i<4 ; i++ )
-		Readflt( &pl[i] , "" );
+	{
+		Readflt( &tmp , "" );
+		pl[i] = tmp;
+	}
 }
 
 void
@@ -699,7 +703,7 @@ struct bu_ptbl *view_vis_list;
 	int no_of_views;
 	int *view_entno;
 	int i;
-	fastf_t *x,*y,*ang;
+	float *x,*y,*ang;
 	struct wmember headp;
 
 	BU_LIST_INIT( &headp.l );
@@ -713,9 +717,9 @@ struct bu_ptbl *view_vis_list;
 	}
 	Readint( &no_of_views , "" );
 	view_entno = (int *)bu_calloc( no_of_views , sizeof( int ) , "Get_drawing: view_entno" );
-	x = (fastf_t *)bu_calloc( no_of_views , sizeof( fastf_t ) , "Get_drawing: x" );
-	y = (fastf_t *)bu_calloc( no_of_views , sizeof( fastf_t ) , "Get_drawing: y" );
-	ang = (fastf_t *)bu_calloc( no_of_views , sizeof( fastf_t ) , "Get_drawing: ang" );
+	x = (float *)bu_calloc( no_of_views , sizeof( float ) , "Get_drawing: x" );
+	y = (float *)bu_calloc( no_of_views , sizeof( float ) , "Get_drawing: y" );
+	ang = (float *)bu_calloc( no_of_views , sizeof( float ) , "Get_drawing: ang" );
 	for( i=0 ; i<no_of_views ; i++ )
 	{
 		Readint( &view_entno[i] , "" );
@@ -751,10 +755,13 @@ struct bu_ptbl *view_vis_list;
 				{
 					nmg_rebound( m , &tol );
 					mk_nmg( fdout , dir[view_entno[i]]->name , m );
-					(void)mk_addmember( dir[view_entno[i]]->name , &headp.l , WMOP_UNION );
+					(void)mk_addmember( dir[view_entno[i]]->name , &headp , WMOP_UNION );
 				}
 			}
 		}
+
+		/* Get rid of the model */
+		nmg_km( m );
 	}
 
 	(void)mk_lfcomb( fdout , dir[entno]->name , &headp , 0 )
@@ -859,10 +866,13 @@ Conv_drawings()
 						{
 							nmg_rebound( m , &tol );
 							mk_nmg( fdout , dir[i]->name , m );
-							(void)mk_addmember( dir[i]->name , &headp.l , WMOP_UNION );
+							(void)mk_addmember( dir[i]->name , &headp , WMOP_UNION );
 						}
 					}
 				}
+
+				/* Get rid of the model */
+				nmg_km( m );
 			}
 		}
 		(void)mk_lfcomb( fdout , default_drawing_name , &headp , 0 )
@@ -900,6 +910,9 @@ Conv_drawings()
 			}
 		}
 	}
+
+	/* Get rid of the model */
+	nmg_km( m );
 
 	/* free views visible list */
 	for( i=0 ; i<BU_PTBL_END( &view_vis_list ) ; i++ )

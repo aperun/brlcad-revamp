@@ -5092,4 +5092,3 @@ StringForResultCode(result)
     return buf;
 }
 #endif /* TCL_COMPILE_DEBUG */
-

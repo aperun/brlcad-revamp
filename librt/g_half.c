@@ -15,9 +15,8 @@
  *
  *  The inside of the halfspace bounded by the plane
  *  consists of all points P such that
- *	VDOT(P,N) - N[3] <= 0,
+ *	VDOT(P,N) - N[3] <= 0
  *
- *  where N[3] stores the value d.
  *  See the remarks in h/vmath.h for more details.
  *  
  *  Authors -
@@ -34,7 +33,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCShalf[] = "@(#)$Header$ (BRL)";
+static char RCShalf[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -57,11 +56,10 @@ struct half_specific  {
 };
 #define HALF_NULL	((struct half_specific *)0)
 
-const struct bu_structparse rt_hlf_parse[] = {
+CONST struct bu_structparse rt_hlf_parse[] = {
     { "%f", 3, "N", offsetof(struct rt_half_internal, eqn[X]), BU_STRUCTPARSE_FUNC_NULL },
     { "%f", 1, "d", offsetof(struct rt_half_internal, eqn[3]), BU_STRUCTPARSE_FUNC_NULL },
-    { {'\0','\0','\0','\0'}, 0, (char *)NULL, 0, BU_STRUCTPARSE_FUNC_NULL }
-};
+    {0} };
 /*
  *  			R T _ H L F _ P R E P
  */
@@ -91,7 +89,7 @@ struct rt_i		*rtip;
 	VSCALE( stp->st_center, halfp->half_eqn, halfp->half_eqn[3] );
 
 	/* X and Y basis for uv map */
-	bn_vec_perp( halfp->half_Xbase, halfp->half_eqn );
+	bn_vec_perp( halfp->half_Xbase, stp->st_center );
 	VCROSS( halfp->half_Ybase, halfp->half_Xbase, halfp->half_eqn );
 	VUNITIZE( halfp->half_Xbase );
 	VUNITIZE( halfp->half_Ybase );
@@ -110,9 +108,9 @@ struct rt_i		*rtip;
  */
 void
 rt_hlf_print( stp )
-register const struct soltab *stp;
+register CONST struct soltab *stp;
 {
-	register const struct half_specific *halfp =
+	register CONST struct half_specific *halfp =
 		(struct half_specific *)stp->st_specific;
 
 	if( halfp == HALF_NULL )  {
@@ -174,7 +172,7 @@ struct seg		*seghead;
 				return(0);	/* MISS */
 		}
 	}
-	if( RT_G_DEBUG & DEBUG_ARB8 )
+	if( rt_g.debug & DEBUG_ARB8 )
 		bu_log("half: in=%f, out=%f\n", in, out);
 
 	{
@@ -367,7 +365,7 @@ register struct uvcoord *uvp;
 		uvp->uv_v = 2 * (1 - f);	/* 1..0 */
 
 	if( uvp->uv_u < 0 || uvp->uv_v < 0 )  {
-		if( RT_G_DEBUG )
+		if( rt_g.debug )
 			bu_log("half_uv: bad uv=%f,%f\n", uvp->uv_u, uvp->uv_v);
 		/* Fix it up */
 		if( uvp->uv_u < 0 )  uvp->uv_u = (-uvp->uv_u);
@@ -409,11 +407,11 @@ struct soltab *stp;
  */
 int
 rt_hlf_class( stp, min, max, tol )
-register const struct soltab	*stp;
-const vect_t			 min, max;
-const struct bn_tol		*tol;
+register CONST struct soltab	*stp;
+CONST vect_t			 min, max;
+CONST struct bn_tol		*tol;
 {
-	register const struct half_specific *halfp =
+	register CONST struct half_specific *halfp =
 		(struct half_specific *)stp->st_specific;
 
 	if( halfp == HALF_NULL ) {
@@ -439,8 +437,8 @@ int
 rt_hlf_plot( vhead, ip, ttol, tol )
 struct bu_list		*vhead;
 struct rt_db_internal 	*ip;
-const struct rt_tess_tol *ttol;
-const struct bn_tol		*tol;
+CONST struct rt_tess_tol *ttol;
+CONST struct bn_tol		*tol;
 {
 	struct rt_half_internal	*hip;
 	vect_t cent;		/* some point on the plane */
@@ -457,7 +455,7 @@ const struct bn_tol		*tol;
 	VSCALE( cent, hip->eqn, hip->eqn[3] );
 
 	/* The use of "x" and "y" here is not related to the axis */
-	bn_vec_perp( xbase, &hip->eqn[0] );
+	bn_vec_perp( xbase, cent );
 	VCROSS( ybase, xbase, hip->eqn );
 
 	/* Arrange for the cross to be 2 meters across */
@@ -494,13 +492,12 @@ const struct bn_tol		*tol;
  *	 0	success
  */
 int
-rt_hlf_xform(
-	struct rt_db_internal	*op,
-	const mat_t		mat,
-	struct rt_db_internal *ip,
-	int		free,
-	struct db_i	*dbip,
-	struct resource	*resp)
+rt_hlf_xform(op, mat, ip, free, dbip)
+struct rt_db_internal	*op;
+CONST mat_t		mat;
+struct rt_db_internal *ip;
+int	free;
+struct db_i	*dbip;
 {
 	struct rt_half_internal *hip, *hop;
 	point_t			orig_pt, pt;
@@ -523,9 +520,10 @@ rt_hlf_xform(
 	/*
 	 * We are done with the input solid so free it if required.
 	 */
-	if (free && ip != op)
-		rt_db_free_internal( ip, resp );
-
+	if (free && ip != op) {
+		rt_functab[ip->idb_type].ft_ifree( ip );
+		ip->idb_ptr = (genptr_t) 0;
+	}
 	/*
 	 * The transformed normal is all that is required.
 	 * The new distance is found from the transforemd point on the plane.
@@ -557,9 +555,9 @@ rt_hlf_xform(
 int
 rt_hlf_import( ip, ep, mat, dbip )
 struct rt_db_internal		*ip;
-const struct bu_external	*ep;
-const mat_t			mat;
-const struct db_i		*dbip;
+CONST struct bu_external	*ep;
+CONST mat_t			mat;
+CONST struct db_i		*dbip;
 {
 	struct rt_half_internal	*hip;
 	union record	*rp;
@@ -575,7 +573,7 @@ const struct db_i		*dbip;
 		return(-1);
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_HALF;
 	ip->idb_meth = &rt_functab[ID_HALF];
 	ip->idb_ptr = bu_malloc( sizeof(struct rt_half_internal), "rt_half_internal");
@@ -619,9 +617,9 @@ const struct db_i		*dbip;
 int
 rt_hlf_export( ep, ip, local2mm, dbip )
 struct bu_external		*ep;
-const struct rt_db_internal	*ip;
+CONST struct rt_db_internal	*ip;
 double				local2mm;
-const struct db_i		*dbip;
+CONST struct db_i		*dbip;
 {
 	struct rt_half_internal	*hip;
 	union record		*rec;
@@ -631,7 +629,7 @@ const struct db_i		*dbip;
 	hip = (struct rt_half_internal *)ip->idb_ptr;
 	RT_HALF_CK_MAGIC(hip);
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 	ep->ext_nbytes = sizeof(union record);
 	ep->ext_buf = (genptr_t)bu_calloc( 1, ep->ext_nbytes, "half external");
 	rec = (union record *)ep->ext_buf;
@@ -645,99 +643,6 @@ const struct db_i		*dbip;
 }
 
 /*
- *			R T _ H L F _ I M P O R T 5
- */
-int
-rt_hlf_import5( ip, ep, mat, dbip )
-struct rt_db_internal           *ip;
-const struct bu_external        *ep;
-register const mat_t            mat;
-const struct db_i               *dbip;
-{
-	struct rt_half_internal	*hip;
-	point_t			tmp_pt, new_pt;
-	plane_t			tmp_plane;
-	register double		f,t;
-
-	BU_CK_EXTERNAL( ep );
-
-	BU_ASSERT_LONG( ep->ext_nbytes, ==, SIZEOF_NETWORK_DOUBLE * 4 );
-
-	RT_CK_DB_INTERNAL( ip );
-	ip->idb_type = ID_HALF;
-	ip->idb_meth = &rt_functab[ID_HALF];
-	ip->idb_ptr = bu_malloc( sizeof(struct rt_half_internal), "rt_half_internal");
-
-	hip = (struct rt_half_internal *)ip->idb_ptr;
-	hip->magic = RT_HALF_INTERNAL_MAGIC;
-
-	/* Convert from database (network) to internal (host) format */
-	ntohd( (unsigned char *)tmp_plane, ep->ext_buf, 4 );
-
-	/* to apply modeling transformations, create a temporary
-	 * normal vector and point on the plane
-	 */
-	VSCALE( tmp_pt, tmp_plane, tmp_plane[3] );
-
-	/* transform both the point and the vector */
-	MAT4X3VEC( hip->eqn, mat, tmp_plane );
-	MAT4X3PNT( new_pt, mat, tmp_pt );
-
-	/* and calculate the new distance */
-	hip->eqn[3] = VDOT( hip->eqn, new_pt );
-
-	/* Verify that normal has unit length */
-	f = MAGNITUDE( hip->eqn );
-	if( f < SMALL )  {
-		bu_log("rt_hlf_import:  bad normal, len=%g\n", f );
-		return(-1);		/* BAD */
-	}
-	t = f - 1.0;
-	if( !NEAR_ZERO( t, 0.001 ) )  {
-		/* Restore normal to unit length */
-		f = 1/f;
-		VSCALE( hip->eqn, hip->eqn, f );
-		hip->eqn[3] *= f;
-	}
-	return(0);			/* OK */
-}
-
-/*
- *		R T _ H A L F _ E X P O R T 5
- */
-int
-rt_hlf_export5( ep, ip, local2mm, dbip )
-struct bu_external              *ep;
-const struct rt_db_internal     *ip;
-double                          local2mm;
-const struct db_i               *dbip;
-{
-	struct rt_half_internal		*hip;
-	fastf_t				scaled_dist;
-
-	RT_CK_DB_INTERNAL( ip );
-	if( ip->idb_type != ID_HALF ) return -1;
-	hip = (struct rt_half_internal *)ip->idb_ptr;
-	RT_HALF_CK_MAGIC( hip );
-
-	BU_CK_EXTERNAL( ep );
-	ep->ext_nbytes = SIZEOF_NETWORK_DOUBLE * 4;
-	ep->ext_buf = (genptr_t)bu_malloc( ep->ext_nbytes, "half external" );
-
-	/* only the distance needs to be scaled */
-	scaled_dist = hip->eqn[3] * local2mm;
-
-	/* Convert from internal (host) to database (network) format */
-	/* the normal */
-	htond( (unsigned char *)ep->ext_buf, (unsigned char *)hip->eqn, 3 );
-	/* the distance */
-	htond( ((unsigned char *)(ep->ext_buf)) + SIZEOF_NETWORK_DOUBLE*3,
-		(unsigned char *)&scaled_dist, 1);
-
-	return 0;
-}
-
-/*
  *			R T _ H L F _ D E S C R I B E
  *
  *  Make human-readable formatted presentation of this solid.
@@ -747,7 +652,7 @@ const struct db_i               *dbip;
 int
 rt_hlf_describe( str, ip, verbose, mm2local )
 struct bu_vls		*str;
-const struct rt_db_internal	*ip;
+CONST struct rt_db_internal	*ip;
 int			verbose;
 double			mm2local;
 {
@@ -788,8 +693,8 @@ rt_hlf_tess( r, m, ip, ttol, tol )
 struct nmgregion	**r;
 struct model		*m;
 struct rt_db_internal	*ip;
-const struct rt_tess_tol *ttol;
-const struct bn_tol		*tol;
+CONST struct rt_tess_tol *ttol;
+CONST struct bn_tol		*tol;
 {
 	struct rt_half_internal	*vip;
 #if 0

@@ -22,7 +22,7 @@
 
 
 #ifndef lint
-static const char RCSraydir[] = "@(#)$Header$";
+static char RCSraydir[] = "@(#)$Header$";
 #endif
 
 #include "conf.h"
@@ -34,7 +34,7 @@ static const char RCSraydir[] = "@(#)$Header$";
 #include "vmath.h"
 #include "raytrace.h"
 #include "./ext.h"
-#include "rtprivate.h"
+#include "./rdebug.h"
 
 
 extern	int	width;			/* # of pixels in X; picture width */

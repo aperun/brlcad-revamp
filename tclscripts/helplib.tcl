@@ -31,15 +31,12 @@ set helplib_data(dm_observer)		{{cmd [args]} {Attach/detach observer to/from lis
 set helplib_data(wdb_close)		{{} {close/destroy this database object}}
 set helplib_data(wdb_reopen)		{{[filename]} {open a database}}
 set helplib_data(wdb_dbip)		{{} {get dbip}}
-set helplib_data(wdb_hide)              {{[objects]} {set the "hidden" flag for the specified objects so they do not appear in a "t" or "ls" command output}}
-set helplib_data(wdb_unhide)            {{[objects]} {unset the "hidden" flag for the specified objects so they will appear in a "t" or "ls" command output}}
 set helplib_data(wdb_ls)		{{[args]} {list objects in this database object}}
 set helplib_data(wdb_list)		{{[-r] arg(s)} {list object information, verbose}}
 set helplib_data(wdb_kill)		{{object(s)} {kill/delete database object(s)}}
 set helplib_data(wdb_killall)		{{object(s)} {kill/delete database object(s), removing all references}}
 set helplib_data(wdb_killtree)		{{object(s)} {kill all paths belonging to object(s)}}
 set helplib_data(wdb_copy)		{{from to} {copy a database object}}
-set helplib_data(wdb_copyeval)		{{new_solid path_to_old_solid}	{copy an 'evaluated' path solid}}
 set helplib_data(wdb_move)		{{from to} {rename a database object}}
 set helplib_data(wdb_moveall)		{{from to} {rename all occurences of object}}
 set helplib_data(wdb_concat)		{{file.g prefix} {concatenate another GED file into the current database}}
@@ -64,11 +61,6 @@ set helplib_data(wdb_instance)		{{obj comb [op]} {add instance of obj to comb}}
 set helplib_data(wdb_observer)		{{cmd [args]} {Attach/detach observer to/from list}}
 set helplib_data(wdb_make_bb)		{{bbname object(s)} {make a bounding box (rpp) around the specified objects}}
 set helplib_data(wdb_make_name)		{{template | -s [num]}	{make an object name not occuring in the database}}
-set helplib_data(wdb_xpush)		{{object} {push object path transformations to solids, creating solids if necessary}}
-set helplib_data(wdb_shells)		{{nmg_model}	{breaks model into seperate shells}}
-set helplib_data(wdb_showmats)		{{path}	{show xform matrices along path}}
-set helplib_data(wdb_nmg_collapse)	{{nmg_solid new_solid maximum_error_distance [minimum_allowed_angle]}	{decimate NMG solid via edge collapse}}
-set helplib_data(wdb_nmg_simplify)	{{[arb|tgc|ell|poly] new_solid nmg_solid}	{simplify nmg_solid, if possible}}
 set helplib_data(vo_close)		{{} {close/destroy this view object}}
 set helplib_data(vo_size)		{{vsize} {set/get the view size}}
 set helplib_data(vo_invSize)		{{} {get the inverse view size}}
@@ -93,17 +85,11 @@ set helplib_data(vo_rot)		{{"x y z"} {rotate the view}}
 set helplib_data(vo_tra)		{{"x y z"} {translate the view}}
 set helplib_data(vo_slew)		{{"x y"} {slew the view}}
 set helplib_data(vo_observer)		{{cmd [args]} {Attach/detach observer to/from list}}
-set helplib_data(vo_coord)		{{[m|v]} {set/get the coodinate system}}
-set helplib_data(vo_keypoint)		{{[point]} {set/get the keypoint}}
-set helplib_data(vo_rotate_about)	{{[e|k|m|v]} {set/get the rotate about point}}
 set helplib_data(dgo_close)		{{} {close/destroy this drawable geometry object}}
 set helplib_data(dgo_open)		{{name wdb_obj} {open/create a new drawable geometry object}}
 set helplib_data(dgo_headSolid)		{{} {return pointer to solid list}}
 set helplib_data(dgo_illum)		{{[-n] obj} {illuminate/highlight obj}}
 set helplib_data(dgo_draw)		{{args} {prepare object(s) for display}}
-set helplib_data(dgo_E)			{{[-s] <objects>} {evaluated edit of objects. Option 's' provides a slower,
-        but better fidelity evaluation}}
-set helplib_data(dgo_ev)		{{[-dfnqstuvwT] [-P #] <objects>}	{evaluate objects via NMG tessellation}}
 set helplib_data(dgo_erase)		{{object(s)} {erase object(s) from display}}
 set helplib_data(dgo_zap)		{{} {erase all objects from the display}}
 set helplib_data(dgo_clear)		{{} {erase all objects from the display}}
@@ -112,7 +98,6 @@ set helplib_data(dgo_rtcheck)		{{view_obj [args]} {}}
 set helplib_data(dgo_assoc)		{{[wdb_obj]} {set/get the associated database object}}
 set helplib_data(dgo_observer)		{{cmd [args]} {Attach/detach observer to/from list}}
 set helplib_data(dgo_report)		{{[lvl]} {print solid table & vector list}}
-set helplib_data(dgo_who)		{{[r(eal)|p(hony)|b(oth)]}	{list the top-level objects currently being displayed}}
 set helplib_data(cho_close)		{{} {close/destroy this command history object}}
 set helplib_data(cho_open)		{{name} {open/create a new command history object}}
 
@@ -162,7 +147,7 @@ set helplib_data(quat_make_nearest)	{{quatA quatB}	{set quaternion quatA to the 
 set helplib_data(quat_exp)		{{quat}	{exponentiate a quaternion}}
 set helplib_data(quat_log)		{{quat}	{take the natural logarithm of a unit quaternion}}
 
-proc helplib {args} {
+proc helplib args {
 	global helplib_data
 
 	if {[llength $args] > 0} {
@@ -179,26 +164,8 @@ proc ?lib {} {
 }
 
 
-proc aproposlib {key} {
+proc aproposlib key {
 	global helplib_data
 
 	return [apropos_comm helplib_data $key]
-}
-
-## - helplib_alias
-#
-# This routine replaces the command name in the string
-# returned by helplib with the alias. Each of the
-# tcl_object's methods in the libraries should use
-# this instead of helplib. That way applications and/or
-# widgets that use these methods can get the same
-# help using their respective names.
-#
-proc helplib_alias {libcmd alias} {
-    set info [helplib $libcmd]
-
-    set pattern "Usage: $libcmd"
-    regsub $pattern $info "Usage: $alias" info
-
-    return $info
 }

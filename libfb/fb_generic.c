@@ -16,7 +16,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -59,7 +59,7 @@ FBIO *ifp;
  */
 int fb_null_setcursor(ifp, bits, xbits, ybits, xorig, yorig )
 FBIO		*ifp;
-const unsigned char	*bits;
+CONST unsigned char	*bits;
 int		xbits, ybits;
 int		xorig, yorig;
 {
@@ -326,7 +326,7 @@ register char *s;
  */
 int
 fb_is_linear_cmap(cmap)
-register const ColorMap	*cmap;
+register CONST ColorMap	*cmap;
 {
 	register int i;
 

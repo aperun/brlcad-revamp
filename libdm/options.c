@@ -22,8 +22,7 @@
  */
 #include "conf.h"
 
-#include "tcl.h"
-
+#include "tk.h"
 #include "machine.h"
 #include "externs.h"
 #include "bu.h"

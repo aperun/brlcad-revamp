@@ -39,7 +39,8 @@
 	out_fb_file	same as -F out_fb_file, for convenience
 */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char	RCSid[] =		/* for "what" utility */
+	"@(#)$Header$ (BRL)";
 #endif
 
 #define	USAGE1 "fbfade [ -s size ] [ -w width ] [ -n height ] [ -f in_fb_file ]"
@@ -314,7 +315,7 @@ main( argc, argv )
 	if ( src_height == 0 )
 		src_height = hires ? 1024 : 512;	/* starting default */
 
-	if ( in_fb_file != NULL ) {
+	if ( in_fb_file != NULL )
 		if ( (fbp = fb_open( in_fb_file, src_width, src_height ))
 		  == FBIO_NULL
 		   )
@@ -361,7 +362,6 @@ main( argc, argv )
 				Fatal( "Error closing input frame buffer" );
 				}
 			}
-	}
 
 	/* Open frame buffer for unbuffered output. */
 

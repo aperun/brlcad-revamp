@@ -196,9 +196,9 @@ its anchor point." } }
     grid $top.drawB -in $top.gridF4
 
     frame $top.gridF5
-    button $top.okB -relief raised -text "OK"\
+    button $top.okB -relief raised -text "Ok"\
 	    -command "adc_ok $id $top"
-    hoc_register_data $top.okB "OK"\
+    hoc_register_data $top.okB "Ok"\
 	    { { summary "Apply the values in the ADC control panel
 to the angle distance cursor then close
 the control panel."} }

@@ -48,11 +48,11 @@ char **environ = NULL;
 static char *		EnvTraceProc _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, char *name1, char *name2,
 			    int flags));
-static void		ReplaceString _ANSI_ARGS_((const char *oldStr,
+static void		ReplaceString _ANSI_ARGS_((CONST char *oldStr,
 			    char *newStr));
-void			TclSetEnv _ANSI_ARGS_((const char *name,
-			    const char *value));
-void			TclUnsetEnv _ANSI_ARGS_((const char *name));
+void			TclSetEnv _ANSI_ARGS_((CONST char *name,
+			    CONST char *value));
+void			TclUnsetEnv _ANSI_ARGS_((CONST char *name));
 
 
 /*
@@ -168,9 +168,9 @@ TclSetupEnv(interp)
 
 void
 TclSetEnv(name, value)
-    const char *name;		/* Name of variable whose value is to be
+    CONST char *name;		/* Name of variable whose value is to be
 				 * set (UTF-8). */
-    const char *value;		/* New value for variable (UTF-8). */
+    CONST char *value;		/* New value for variable (UTF-8). */
 {
     Tcl_DString envString;
     int index, length, nameLength;
@@ -298,7 +298,7 @@ TclSetEnv(name, value)
 
 int
 Tcl_PutEnv(string)
-    const char *string;		/* Info about environment variable in the
+    CONST char *string;		/* Info about environment variable in the
 				 * form NAME=value. (native) */
 {
     Tcl_DString nameString;   
@@ -353,7 +353,7 @@ Tcl_PutEnv(string)
 
 void
 TclUnsetEnv(name)
-    const char *name;		/* Name of variable to remove (UTF-8). */
+    CONST char *name;		/* Name of variable to remove (UTF-8). */
 {
     char *oldValue;
     unsigned int length;
@@ -445,7 +445,7 @@ TclUnsetEnv(name)
 
 char *
 TclGetEnv(name, valuePtr)
-    const char *name;		/* Name of environment variable to find
+    CONST char *name;		/* Name of environment variable to find
 				 * (UTF-8). */
     Tcl_DString *valuePtr;	/* Uninitialized or free DString in which
 				 * the value of the environment variable is
@@ -582,7 +582,7 @@ EnvTraceProc(clientData, interp, name1, name2, flags)
 
 static void
 ReplaceString(oldStr, newStr)
-    const char *oldStr;		/* Old environment string. */
+    CONST char *oldStr;		/* Old environment string. */
     char *newStr;		/* New environment string. */
 {
     int i;
@@ -677,4 +677,3 @@ TclFinalizeEnvironment()
 #endif
     }
 }
-

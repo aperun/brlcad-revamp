@@ -19,12 +19,6 @@
  */
 #include "conf.h"
 
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include <stdio.h>
 #include <math.h>
 
@@ -36,7 +30,7 @@ int	verbose = 0;
 static char usage[] = "\
 Usage: dstat [-v] [file.doubles]\n";
 
-int main( argc, argv )
+main( argc, argv )
 int argc;
 char **argv;
 {
@@ -110,6 +104,4 @@ char **argv;
 	printf( "Mean    %14.6g\n", mean );
 	printf( "s.d.    %14.6g\n", sqrt( var ) );
 	printf( "Var     %14.6g\n", var );
-
-	return 0;
 }

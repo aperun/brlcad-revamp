@@ -32,14 +32,13 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <signal.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
 #ifdef USE_STRING_H
 #include <string.h>
@@ -61,10 +60,11 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "./mged_solid.h"
 #include "./mged_dm.h"
 #include "./sedit.h"
-#include "./cmd.h"
 
 extern struct bn_tol mged_tol;
 
+extern void update_grids();
+void set_localunit_TclVar();
 void set_tran();
 void	aexists();
 
@@ -83,7 +83,7 @@ int	argc;
 char	**argv;
 {
 	register struct directory *dp;
-	int			ident, air, GIFTmater=0, los=0;
+	int			ident, air, GIFTmater, los;
 	int			GIFTmater_set, los_set;
 	struct rt_db_internal	intern;
 	struct rt_comb_internal	*comb;
@@ -133,7 +133,7 @@ char	**argv;
 		los_set = 1;
 	}
 
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR_return;
 	}
 	comb = (struct rt_comb_internal *)intern.idb_ptr;
@@ -146,7 +146,7 @@ char	**argv;
 	if ( los_set )  {
 		comb->los = los;
 	}
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 	return TCL_OK;
@@ -188,7 +188,7 @@ char	**argv;
 	  return TCL_ERROR;
 	}
 
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR_return;
 	}
 	comb = (struct rt_comb_internal *)intern.idb_ptr;
@@ -320,13 +320,13 @@ color_prompt:
 	  Tcl_AppendResult(interp, "Unknown response ignored\n", (char *)NULL);
 	  break;
 	}		
-
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+out:
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 	return TCL_OK;
 fail:
-	rt_db_free_internal( &intern, &rt_uniresource );
+	rt_db_free_internal( &intern );
 	return TCL_ERROR;
 }
 
@@ -345,7 +345,7 @@ char    *argv[];
   CHECK_DBI_NULL;
   CHECK_READ_ONLY;
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -356,12 +356,8 @@ char    *argv[];
   }
 
   strcpy(tmpfil, tmpfil_init);
-#if 0
   (void)mktemp(tmpfil);
   i=creat(tmpfil, 0600);
-#else
-  i = mkstemp(tmpfil);
-#endif
   if( i < 0 ){
     perror(tmpfil);
     return TCL_ERROR;
@@ -397,11 +393,11 @@ char    *argv[];
 
 
 int
-f_wmater(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int     argc,
-	char    *argv[])
+f_wmater(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int     argc;
+char    *argv[];
 {
   int i;
   int status = TCL_OK;
@@ -412,7 +408,7 @@ f_wmater(
 
   CHECK_DBI_NULL;
 
-  if(argc < 3){
+  if(argc < 3 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -438,7 +434,7 @@ f_wmater(
       status = TCL_ERROR;
       continue;
     }
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR;
 		status = TCL_ERROR;
 		continue;
@@ -451,7 +447,7 @@ f_wmater(
 			bu_vls_addr(&comb->shader) : "-",
 	  	comb->rgb[0], comb->rgb[1], comb->rgb[2],
 	  	comb->rgb_valid, comb->inherit);
-	rt_db_free_internal( &intern, &rt_uniresource );
+	rt_db_free_internal( &intern );
   }
 
   (void)fclose(fp);
@@ -460,11 +456,11 @@ f_wmater(
 
 
 int
-f_rmater(
-	ClientData clientData,
-	Tcl_Interp *interp,
-	int     argc,
-	char    *argv[])
+f_rmater(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int     argc;
+char    *argv[];
 {
 #ifndef LINELEN
 #define LINELEN 256
@@ -510,7 +506,7 @@ f_rmater(
 		continue;
 	}
 
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR;
 		status = TCL_ERROR;
 	}
@@ -530,7 +526,7 @@ f_rmater(
   	comb->inherit = inherit;
 
 	/* Write new values to database */
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 		TCL_WRITE_ERR;
 		status = TCL_ERROR;
 	}
@@ -541,13 +537,14 @@ f_rmater(
 }
 
 int
-extract_mater_from_line(
-	char *line,
-	char *name,
-	char *shader,
-	int *r, int *g, int *b,
-	int *override,
-	int *inherit)
+extract_mater_from_line(line, name, shader, r, g, b, override, inherit)
+char *line;
+char *name;
+char *shader;
+int *r, *g, *b;
+int *override;
+
+int *inherit;
 {
   int i,j,k;
   char *str[3];
@@ -627,7 +624,7 @@ char	**argv;
       return TCL_ERROR;
     }
 
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR_return;
 	}
 	comb = (struct rt_comb_internal *)intern.idb_ptr;
@@ -638,7 +635,7 @@ char	**argv;
 	{
 	  Tcl_AppendResult(interp, "RGB value out of range: ", argv[i + 2],
 			   "\n", (char *)NULL);
-	  rt_db_free_internal( &intern, &rt_uniresource );
+	  rt_db_free_internal( &intern );
 	  return TCL_ERROR;
 	}
 	else
@@ -646,7 +643,7 @@ char	**argv;
     }
 
 	comb->rgb_valid = 1;
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 	return TCL_OK;
@@ -671,7 +668,7 @@ char	**argv;
 
 	CHECK_DBI_NULL;
 
-	if(argc < 2){
+	if(argc < 2 || MAXARGS < argc){
 	  struct bu_vls vls;
 
 	  bu_vls_init(&vls);
@@ -688,7 +685,7 @@ char	**argv;
 	  return TCL_ERROR;
 	}
 
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR_return;
 	}
 	comb = (struct rt_comb_internal *)intern.idb_ptr;
@@ -697,7 +694,7 @@ char	**argv;
 	if(argc == 2)  {
 		/* Return the current shader string */
 		Tcl_AppendResult( interp, bu_vls_addr(&comb->shader), (char *)NULL);
-		rt_db_free_internal( &intern, &rt_uniresource );
+		rt_db_free_internal( &intern );
 	} else {
 		CHECK_READ_ONLY;
 
@@ -707,7 +704,7 @@ char	**argv;
 		/* Bunch up the rest of the args, space separated */
 		bu_vls_from_argv( &comb->shader, argc-2, argv+2 );
 
-		if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+		if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 			TCL_WRITE_ERR_return;
 		}
 		/* Internal representation has been freed by rt_db_put_internal */
@@ -766,7 +763,7 @@ char	**argv;
 	  return TCL_ERROR;
 	}
 
-	id = rt_db_get_internal( &internal, proto, dbip, NULL, &rt_uniresource );
+	id = rt_db_get_internal( &internal, proto, dbip, NULL );
 	if( id < 0 )  {
 	  Tcl_AppendResult(interp, "f_mirror(", argv[1], argv[2],
 		   "):  solid import failure\n", (char *)NULL);
@@ -775,7 +772,7 @@ char	**argv;
 	RT_CK_DB_INTERNAL( &internal );
 
 	/* Build mirror transform matrix, for those who need it. */
-	MAT_IDN( mirmat );
+	bn_mat_idn( mirmat );
 	mirmat[k*5] = -1.0;
 
 	switch( id )
@@ -1090,7 +1087,7 @@ char	**argv;
 				{
 					Tcl_AppendResult(interp, "Sorry, Can only mirror NMG solids with planar faces", (char *)0 );
 					bu_ptbl_free( &table );
-					rt_db_free_internal( &internal, &rt_uniresource );
+					rt_functab[internal.idb_type].ft_ifree( &internal );   /* free internal rep */
 					return TCL_ERROR;
 				}
 
@@ -1117,7 +1114,7 @@ char	**argv;
 				{
 					Tcl_AppendResult(interp, "nmg_calc_face_g() failed", (char *)0 );
 					bu_ptbl_free( &table );
-					rt_db_free_internal( &internal, &rt_uniresource );
+					rt_functab[internal.idb_type].ft_ifree( &internal );   /* free internal rep */
 					return TCL_ERROR;
 				}
 
@@ -1125,7 +1122,7 @@ char	**argv;
 				{
 					Tcl_AppendResult(interp, "nmg_calc_face_g() failed", (char *)0 );
 					bu_ptbl_free( &table );
-					rt_db_free_internal( &internal, &rt_uniresource );
+					rt_functab[internal.idb_type].ft_ifree( &internal );   /* free internal rep */
 					return TCL_ERROR;
 				}
 			}
@@ -1174,7 +1171,7 @@ char	**argv;
 			RT_EBM_CK_MAGIC( ebm );
 
 			bn_mat_mul( temp, mirmat, ebm->mat );
-			MAT_COPY( ebm->mat, temp );
+			bn_mat_copy( ebm->mat, temp );
 
 			break;
 		}
@@ -1186,7 +1183,7 @@ char	**argv;
 			RT_DSP_CK_MAGIC( dsp );
 			
 			bn_mat_mul( temp, mirmat, dsp->dsp_mtos);
-			MAT_COPY( dsp->dsp_mtos, temp);
+			bn_mat_copy( dsp->dsp_mtos, temp);
 			
 			break;
 		}
@@ -1198,7 +1195,7 @@ char	**argv;
 			RT_VOL_CK_MAGIC( vol );
 
 			bn_mat_mul( temp, mirmat, vol->mat );
-			MAT_COPY( vol->mat, temp );
+			bn_mat_copy( vol->mat, temp );
 
 			break;
 		}
@@ -1215,7 +1212,7 @@ char	**argv;
 		}
 		default:
 		{
-			rt_db_free_internal( &internal, &rt_uniresource );
+			rt_functab[internal.idb_type].ft_ifree( &internal );   /* free internal rep */
 			Tcl_AppendResult(interp, "Cannot mirror this solid type\n", (char *)NULL);
 			return TCL_ERROR;
 		}
@@ -1224,10 +1221,10 @@ char	**argv;
 	/* no interuprts */
 	(void)signal( SIGINT, SIG_IGN );
 
-	if( (dp = db_diradd( dbip, argv[2], -1L, 0, proto->d_flags, (genptr_t)&internal.idb_type)) == DIR_NULL )  {
+	if( (dp = db_diradd( dbip, argv[2], -1L, 0, proto->d_flags, NULL)) == DIR_NULL )  {
 	    	TCL_ALLOC_ERR_return;
 	}
-	if( rt_db_put_internal( dp, dbip, &internal, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &internal ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 
@@ -1238,7 +1235,7 @@ char	**argv;
 	  av[1] = argv[2]; /* depends on solid name being in argv[2] */
 	  av[2] = NULL;
 
-	  return cmd_draw( clientData, interp, 2, av );
+	  return f_edit( clientData, interp, 2, av );
 	}
 }
 
@@ -1281,7 +1278,7 @@ char	**argv;
 	los = atoi( argv[5] );
 	mat = atoi( argv[6] );
 
-	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )  {
 		TCL_READ_ERR_return;
 	}
 	comb = (struct rt_comb_internal *)intern.idb_ptr;
@@ -1295,10 +1292,156 @@ char	**argv;
 	comb->aircode = air;
 	comb->los = los;
 	comb->GIFTmater = mat;
-	if( rt_db_put_internal( dp, dbip, &intern, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &intern ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 	return TCL_OK;
+}
+
+/*
+ *			F _ U N I T S
+ *
+ * Change the local units of the description.
+ * Base unit is fixed in mm, so this just changes the current local unit
+ * that the user works in.
+ */
+int
+f_units(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
+{
+	double	loc2mm;
+	int	new_unit = 0;
+	struct bu_vls vls;
+	CONST char	*str;
+	fastf_t sf;
+	int sflag = 0;
+
+	CHECK_DBI_NULL;
+
+	bu_vls_init(&vls);
+	if(argc < 1 || 2 < argc){
+	  bu_vls_printf(&vls, "help units");
+	  Tcl_Eval(interp, bu_vls_addr(&vls));
+	  bu_vls_free(&vls);
+	  return TCL_ERROR;
+	}
+
+	if(argc == 2 && strcmp(argv[1], "-s") == 0){
+	  --argc;
+	  ++argv;
+
+	  sflag = 1;
+	}
+
+	if( argc < 2 )  {
+	  str = bu_units_string(dbip->dbi_local2base);
+	  if(!str) str = "Unknown_unit";
+
+	  if(sflag)
+	    bu_vls_printf(&vls, "%s", str);
+	  else
+	    bu_vls_printf(&vls, "You are editing in '%s'.  1 %s = %g mm \n",
+			  str, str, dbip->dbi_local2base );
+
+	  Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
+	  bu_vls_free(&vls);
+	  return TCL_OK;
+	}
+
+	sf = dbip->dbi_base2local;
+
+	/* Allow inputs of the form "25cm" or "3ft" */
+	if( (loc2mm = bu_mm_value(argv[1]) ) <= 0 )  {
+		  Tcl_AppendResult(interp, argv[1], ": unrecognized unit\n",
+			   "valid units: <um|mm|cm|m|km|in|ft|yd|mi>\n", (char *)NULL);
+		return TCL_ERROR;
+	}
+
+	/* See if this is a known v4 database unit */
+	if( (new_unit = db_v4_get_units_code(bu_units_string(loc2mm))) >= 0 ) {
+		/* One of the recognized db.h units */
+		/* change database to remember the new local unit */
+		if( dbip->dbi_read_only ||
+		 db_ident( dbip, dbip->dbi_title, new_unit ) < 0 )
+		  Tcl_AppendResult(interp,
+			   "Warning: unable to stash working units into database\n",
+			   (char *)NULL);
+	} else {
+		/*
+		 *  Can't stash requested units into the database for next session,
+		 *  but there is no problem with the user editing in these units.
+		 */
+		Tcl_AppendResult(interp, "\
+Due to a database restriction in the current format of .g files,\n\
+this choice of units will not be remembered on your next editing session.\n", (char *)NULL);
+	}
+	dbip->dbi_local2base = loc2mm;
+	dbip->dbi_base2local = 1.0 / loc2mm;
+
+	set_localunit_TclVar();
+	sf = dbip->dbi_base2local / sf;
+	update_grids(sf);
+
+	str = bu_units_string(dbip->dbi_local2base);
+	if(!str) str = "Unknown_unit";
+	bu_vls_printf(&vls, "You are now editing in '%s'.  1 %s = %g mm \n",
+			str, str, dbip->dbi_local2base );
+	Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
+	bu_vls_free(&vls);
+	update_views = 1;
+
+	return TCL_OK;
+}
+
+/*
+ *	Change the current title of the description
+ */
+int
+f_title(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
+{
+	struct bu_vls	title;
+	int bad = 0;
+	int code;
+
+	CHECK_DBI_NULL;
+
+	if(argc < 1 || MAXARGS < argc){
+	  struct bu_vls vls;
+
+	  bu_vls_init(&vls);
+	  bu_vls_printf(&vls, "help title");
+	  Tcl_Eval(interp, bu_vls_addr(&vls));
+	  bu_vls_free(&vls);
+	  return TCL_ERROR;
+	}
+
+	if (argc == 1) {
+	  Tcl_AppendResult(interp, dbip->dbi_title, "\n", (char *)NULL);
+	  return TCL_OK;
+	}
+
+	CHECK_READ_ONLY;
+
+	bu_vls_init( &title );
+	bu_vls_from_argv( &title, argc-1, argv+1 );
+
+	code = db_v4_get_units_code(bu_units_string(dbip->dbi_base2local));
+	if( db_ident( dbip, bu_vls_addr(&title), code ) < 0 ) {
+	  Tcl_AppendResult(interp, "Error: unable to change database title\n");
+	  bad = 1;
+	}
+
+	bu_vls_free( &title );
+	view_state->vs_flag = 1;
+
+	return bad ? TCL_ERROR : TCL_OK;
 }
 
 /* tell him it already exists */
@@ -1316,10 +1459,11 @@ char	*name;
  *  (Generic, or explicit)
  */
 int
-f_make(ClientData	clientData,
-       Tcl_Interp	*interp,
-       int		argc,
-       char		**argv)
+f_make(clientData, interp, argc, argv)
+ClientData clientData;
+Tcl_Interp *interp;
+int	argc;
+char	**argv;
 {
 	register struct directory *dp;
 	int i;
@@ -1356,7 +1500,6 @@ f_make(ClientData	clientData,
 	    Tcl_AppendElement(interp, "ell1");
 	    Tcl_AppendElement(interp, "epa");
 	    Tcl_AppendElement(interp, "eto");
-	    Tcl_AppendElement(interp, "extrude");
 	    Tcl_AppendElement(interp, "grip");
 	    Tcl_AppendElement(interp, "half");
 	    Tcl_AppendElement(interp, "nmg");
@@ -1366,12 +1509,13 @@ f_make(ClientData	clientData,
 	    Tcl_AppendElement(interp, "rec");
 	    Tcl_AppendElement(interp, "rhc");
 	    Tcl_AppendElement(interp, "rpc");
-	    Tcl_AppendElement(interp, "sketch");
 	    Tcl_AppendElement(interp, "sph");
 	    Tcl_AppendElement(interp, "tec");
 	    Tcl_AppendElement(interp, "tgc");
 	    Tcl_AppendElement(interp, "tor");
 	    Tcl_AppendElement(interp, "trc");
+	    Tcl_AppendElement(interp, "extrude");
+	    Tcl_AppendElement(interp, "sketch");
 
 	    return TCL_OK;
 	  }
@@ -1412,20 +1556,20 @@ f_make(ClientData	clientData,
 		arb_ip = (struct rt_arb_internal *)internal.idb_ptr;
 		arb_ip->magic = RT_ARB_INTERNAL_MAGIC;
 		VSET( arb_ip->pt[0] ,
-			-view_state->vs_vop->vo_center[MDX] +view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDY] -view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDZ] -view_state->vs_vop->vo_scale );
+			-view_state->vs_toViewcenter[MDX] +view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDY] -view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDZ] -view_state->vs_Viewscale );
 		for( i=1 ; i<8 ; i++ )			VMOVE( arb_ip->pt[i] , arb_ip->pt[0] );
-		arb_ip->pt[1][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[2][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[2][Z] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[3][Z] += view_state->vs_vop->vo_scale*2.0;
+		arb_ip->pt[1][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[2][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[2][Z] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[3][Z] += view_state->vs_Viewscale*2.0;
 		for( i=4 ; i<8 ; i++ )
-			arb_ip->pt[i][X] -= view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[5][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[6][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[6][Z] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[7][Z] += view_state->vs_vop->vo_scale*2.0;
+			arb_ip->pt[i][X] -= view_state->vs_Viewscale*2.0;
+		arb_ip->pt[5][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[6][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[6][Z] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[7][Z] += view_state->vs_Viewscale*2.0;
 	} else if( strcmp( argv[2], "arb7" ) == 0 )  {
 		internal.idb_type = ID_ARB8;
 		internal.idb_meth = &rt_functab[ID_ARB8];
@@ -1433,20 +1577,20 @@ f_make(ClientData	clientData,
 		arb_ip = (struct rt_arb_internal *)internal.idb_ptr;
 		arb_ip->magic = RT_ARB_INTERNAL_MAGIC;
 		VSET( arb_ip->pt[0] ,
-			-view_state->vs_vop->vo_center[MDX] +view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDY] -view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDZ] -(0.5*view_state->vs_vop->vo_scale) );
+			-view_state->vs_toViewcenter[MDX] +view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDY] -view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDZ] -(0.5*view_state->vs_Viewscale) );
 		for( i=1 ; i<8 ; i++ )
 			VMOVE( arb_ip->pt[i] , arb_ip->pt[0] );
-		arb_ip->pt[1][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[2][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[2][Z] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[3][Z] += view_state->vs_vop->vo_scale;
+		arb_ip->pt[1][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[2][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[2][Z] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[3][Z] += view_state->vs_Viewscale;
 		for( i=4 ; i<8 ; i++ )
-			arb_ip->pt[i][X] -= view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[5][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[6][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[6][Z] += view_state->vs_vop->vo_scale;
+			arb_ip->pt[i][X] -= view_state->vs_Viewscale*2.0;
+		arb_ip->pt[5][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[6][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[6][Z] += view_state->vs_Viewscale;
 	} else if( strcmp( argv[2], "arb6" ) == 0 )  {
 		internal.idb_type = ID_ARB8;
 		internal.idb_meth = &rt_functab[ID_ARB8];
@@ -1454,23 +1598,23 @@ f_make(ClientData	clientData,
 		arb_ip = (struct rt_arb_internal *)internal.idb_ptr;
 		arb_ip->magic = RT_ARB_INTERNAL_MAGIC;
 		VSET( arb_ip->pt[0],
-			-view_state->vs_vop->vo_center[MDX] +view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDY] -view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDZ] -view_state->vs_vop->vo_scale );
+			-view_state->vs_toViewcenter[MDX] +view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDY] -view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDZ] -view_state->vs_Viewscale );
 		for( i=1 ; i<8 ; i++ )
 			VMOVE( arb_ip->pt[i] , arb_ip->pt[0] );
-		arb_ip->pt[1][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[2][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[2][Z] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[3][Z] += view_state->vs_vop->vo_scale*2.0;
+		arb_ip->pt[1][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[2][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[2][Z] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[3][Z] += view_state->vs_Viewscale*2.0;
 		for( i=4 ; i<8 ; i++ )
-			arb_ip->pt[i][X] -= view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[4][Y] += view_state->vs_vop->vo_scale;
-		arb_ip->pt[5][Y] += view_state->vs_vop->vo_scale;
-		arb_ip->pt[6][Y] += view_state->vs_vop->vo_scale;
-		arb_ip->pt[6][Z] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[7][Y] += view_state->vs_vop->vo_scale;
-		arb_ip->pt[7][Z] += view_state->vs_vop->vo_scale*2.0;
+			arb_ip->pt[i][X] -= view_state->vs_Viewscale*2.0;
+		arb_ip->pt[4][Y] += view_state->vs_Viewscale;
+		arb_ip->pt[5][Y] += view_state->vs_Viewscale;
+		arb_ip->pt[6][Y] += view_state->vs_Viewscale;
+		arb_ip->pt[6][Z] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[7][Y] += view_state->vs_Viewscale;
+		arb_ip->pt[7][Z] += view_state->vs_Viewscale*2.0;
 	} else if( strcmp( argv[2], "arb5" ) == 0 )  {
 		internal.idb_type = ID_ARB8;
 		internal.idb_meth = &rt_functab[ID_ARB8];
@@ -1478,20 +1622,20 @@ f_make(ClientData	clientData,
 		arb_ip = (struct rt_arb_internal *)internal.idb_ptr;
 		arb_ip->magic = RT_ARB_INTERNAL_MAGIC;
 		VSET( arb_ip->pt[0] ,
-			-view_state->vs_vop->vo_center[MDX] +view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDY] -view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDZ] -view_state->vs_vop->vo_scale );
+			-view_state->vs_toViewcenter[MDX] +view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDY] -view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDZ] -view_state->vs_Viewscale );
 		for( i=1 ; i<8 ; i++ )
 			VMOVE( arb_ip->pt[i] , arb_ip->pt[0] );
-		arb_ip->pt[1][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[2][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[2][Z] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[3][Z] += view_state->vs_vop->vo_scale*2.0;
+		arb_ip->pt[1][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[2][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[2][Z] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[3][Z] += view_state->vs_Viewscale*2.0;
 		for( i=4 ; i<8 ; i++ )
 		{
-			arb_ip->pt[i][X] -= view_state->vs_vop->vo_scale*2.0;
-			arb_ip->pt[i][Y] += view_state->vs_vop->vo_scale;
-			arb_ip->pt[i][Z] += view_state->vs_vop->vo_scale;
+			arb_ip->pt[i][X] -= view_state->vs_Viewscale*2.0;
+			arb_ip->pt[i][Y] += view_state->vs_Viewscale;
+			arb_ip->pt[i][Z] += view_state->vs_Viewscale;
 		}
 	} else if( strcmp( argv[2], "arb4" ) == 0 )  {
 		internal.idb_type = ID_ARB8;
@@ -1500,20 +1644,20 @@ f_make(ClientData	clientData,
 		arb_ip = (struct rt_arb_internal *)internal.idb_ptr;
 		arb_ip->magic = RT_ARB_INTERNAL_MAGIC;
 		VSET( arb_ip->pt[0] ,
-			-view_state->vs_vop->vo_center[MDX] +view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDY] -view_state->vs_vop->vo_scale,
-			-view_state->vs_vop->vo_center[MDZ] -view_state->vs_vop->vo_scale );
+			-view_state->vs_toViewcenter[MDX] +view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDY] -view_state->vs_Viewscale,
+			-view_state->vs_toViewcenter[MDZ] -view_state->vs_Viewscale );
 		for( i=1 ; i<8 ; i++ )
 			VMOVE( arb_ip->pt[i] , arb_ip->pt[0] );
-		arb_ip->pt[1][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[2][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[2][Z] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[3][Y] += view_state->vs_vop->vo_scale*2.0;
-		arb_ip->pt[3][Z] += view_state->vs_vop->vo_scale*2.0;
+		arb_ip->pt[1][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[2][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[2][Z] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[3][Y] += view_state->vs_Viewscale*2.0;
+		arb_ip->pt[3][Z] += view_state->vs_Viewscale*2.0;
 		for( i=4 ; i<8 ; i++ )
 		{
-			arb_ip->pt[i][X] -= view_state->vs_vop->vo_scale*2.0;
-			arb_ip->pt[i][Y] += view_state->vs_vop->vo_scale*2.0;
+			arb_ip->pt[i][X] -= view_state->vs_Viewscale*2.0;
+			arb_ip->pt[i][Y] += view_state->vs_Viewscale*2.0;
 		}
 	} else if( strcmp( argv[2], "sph" ) == 0 )  {
 		internal.idb_type = ID_ELL;
@@ -1521,10 +1665,10 @@ f_make(ClientData	clientData,
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_ell_internal) , "rt_ell_internal" );
 		ell_ip = (struct rt_ell_internal *)internal.idb_ptr;
 		ell_ip->magic = RT_ELL_INTERNAL_MAGIC;
-		VSET( ell_ip->v , -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ] );
-		VSET( ell_ip->a, (0.5*view_state->vs_vop->vo_scale), 0.0, 0.0 );	/* A */
-		VSET( ell_ip->b, 0.0, (0.5*view_state->vs_vop->vo_scale), 0.0 );	/* B */
-		VSET( ell_ip->c, 0.0, 0.0, (0.5*view_state->vs_vop->vo_scale) );	/* C */
+		VSET( ell_ip->v , -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ] );
+		VSET( ell_ip->a, (0.5*view_state->vs_Viewscale), 0.0, 0.0 );	/* A */
+		VSET( ell_ip->b, 0.0, (0.5*view_state->vs_Viewscale), 0.0 );	/* B */
+		VSET( ell_ip->c, 0.0, 0.0, (0.5*view_state->vs_Viewscale) );	/* C */
 	} else if(( strcmp( argv[2], "grp" ) == 0 ) ||
 		  ( strcmp( argv[2], "grip") == 0 )) {
 		internal.idb_type = ID_GRIP;
@@ -1532,103 +1676,103 @@ f_make(ClientData	clientData,
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_grip_internal), "rt_grp_internal" );
 		grp_ip = (struct rt_grip_internal *) internal.idb_ptr;
 		grp_ip->magic = RT_GRIP_INTERNAL_MAGIC;
-		VSET( grp_ip->center, -view_state->vs_vop->vo_center[MDX], -view_state->vs_vop->vo_center[MDY],
-		    -view_state->vs_vop->vo_center[MDZ]);
+		VSET( grp_ip->center, -view_state->vs_toViewcenter[MDX], -view_state->vs_toViewcenter[MDY],
+		    -view_state->vs_toViewcenter[MDZ]);
 		VSET( grp_ip->normal, 1.0, 0.0, 0.0);
-		grp_ip->mag = view_state->vs_vop->vo_scale*0.75;
+		grp_ip->mag = view_state->vs_Viewscale*0.75;
 	} else if( strcmp( argv[2], "ell1" ) == 0 )  {
 		internal.idb_type = ID_ELL;
 		internal.idb_meth = &rt_functab[ID_ELL];
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_ell_internal) , "rt_ell_internal" );
 		ell_ip = (struct rt_ell_internal *)internal.idb_ptr;
 		ell_ip->magic = RT_ELL_INTERNAL_MAGIC;
-		VSET( ell_ip->v , -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ] );
-		VSET( ell_ip->a, (0.5*view_state->vs_vop->vo_scale), 0.0, 0.0 );	/* A */
-		VSET( ell_ip->b, 0.0, (0.25*view_state->vs_vop->vo_scale), 0.0 );	/* B */
-		VSET( ell_ip->c, 0.0, 0.0, (0.25*view_state->vs_vop->vo_scale) );	/* C */
+		VSET( ell_ip->v , -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ] );
+		VSET( ell_ip->a, (0.5*view_state->vs_Viewscale), 0.0, 0.0 );	/* A */
+		VSET( ell_ip->b, 0.0, (0.25*view_state->vs_Viewscale), 0.0 );	/* B */
+		VSET( ell_ip->c, 0.0, 0.0, (0.25*view_state->vs_Viewscale) );	/* C */
 	} else if( strcmp( argv[2], "ell" ) == 0 )  {
 		internal.idb_type = ID_ELL;
 		internal.idb_meth = &rt_functab[ID_ELL];
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_ell_internal) , "rt_ell_internal" );
 		ell_ip = (struct rt_ell_internal *)internal.idb_ptr;
 		ell_ip->magic = RT_ELL_INTERNAL_MAGIC;
-		VSET( ell_ip->v , -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ] );
-		VSET( ell_ip->a, view_state->vs_vop->vo_scale, 0.0, 0.0 );		/* A */
-		VSET( ell_ip->b, 0.0, (0.5*view_state->vs_vop->vo_scale), 0.0 );	/* B */
-		VSET( ell_ip->c, 0.0, 0.0, (0.25*view_state->vs_vop->vo_scale) );	/* C */
+		VSET( ell_ip->v , -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ] );
+		VSET( ell_ip->a, view_state->vs_Viewscale, 0.0, 0.0 );		/* A */
+		VSET( ell_ip->b, 0.0, (0.5*view_state->vs_Viewscale), 0.0 );	/* B */
+		VSET( ell_ip->c, 0.0, 0.0, (0.25*view_state->vs_Viewscale) );	/* C */
 	} else if( strcmp( argv[2], "tor" ) == 0 )  {
 		internal.idb_type = ID_TOR;
 		internal.idb_meth = &rt_functab[ID_TOR];
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_tor_internal) , "rt_tor_internal" );
 		tor_ip = (struct rt_tor_internal *)internal.idb_ptr;
 		tor_ip->magic = RT_TOR_INTERNAL_MAGIC;
-		VSET( tor_ip->v , -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ] );
+		VSET( tor_ip->v , -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ] );
 		VSET( tor_ip->h , 1.0 , 0.0 , 0.0 );	/* unit normal */
-		tor_ip->r_h = 0.5*view_state->vs_vop->vo_scale;
-		tor_ip->r_a = view_state->vs_vop->vo_scale;
-		tor_ip->r_b = view_state->vs_vop->vo_scale;
-		VSET( tor_ip->a , 0.0 , view_state->vs_vop->vo_scale , 0.0 );
-		VSET( tor_ip->b , 0.0 , 0.0 , view_state->vs_vop->vo_scale );
+		tor_ip->r_h = 0.5*view_state->vs_Viewscale;
+		tor_ip->r_a = view_state->vs_Viewscale;
+		tor_ip->r_b = view_state->vs_Viewscale;
+		VSET( tor_ip->a , 0.0 , view_state->vs_Viewscale , 0.0 );
+		VSET( tor_ip->b , 0.0 , 0.0 , view_state->vs_Viewscale );
 	} else if( strcmp( argv[2], "tgc" ) == 0 )  {
 		internal.idb_type = ID_TGC;
 		internal.idb_meth = &rt_functab[ID_TGC];
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_tgc_internal) , "rt_tgc_internal" );
 		tgc_ip = (struct rt_tgc_internal *)internal.idb_ptr;
 		tgc_ip->magic = RT_TGC_INTERNAL_MAGIC;
-		VSET( tgc_ip->v , -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale );
-		VSET( tgc_ip->h,  0.0, 0.0, (view_state->vs_vop->vo_scale*2) );
-		VSET( tgc_ip->a,  (0.5*view_state->vs_vop->vo_scale), 0.0, 0.0 );
-		VSET( tgc_ip->b,  0.0, (0.25*view_state->vs_vop->vo_scale), 0.0 );
-		VSET( tgc_ip->c,  (0.25*view_state->vs_vop->vo_scale), 0.0, 0.0 );
-		VSET( tgc_ip->d,  0.0, (0.5*view_state->vs_vop->vo_scale), 0.0 );
+		VSET( tgc_ip->v , -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale );
+		VSET( tgc_ip->h,  0.0, 0.0, (view_state->vs_Viewscale*2) );
+		VSET( tgc_ip->a,  (0.5*view_state->vs_Viewscale), 0.0, 0.0 );
+		VSET( tgc_ip->b,  0.0, (0.25*view_state->vs_Viewscale), 0.0 );
+		VSET( tgc_ip->c,  (0.25*view_state->vs_Viewscale), 0.0, 0.0 );
+		VSET( tgc_ip->d,  0.0, (0.5*view_state->vs_Viewscale), 0.0 );
 	} else if( strcmp( argv[2], "tec" ) == 0 )  {
 		internal.idb_type = ID_TGC;
 		internal.idb_meth = &rt_functab[ID_TGC];
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_tgc_internal) , "rt_tgc_internal" );
 		tgc_ip = (struct rt_tgc_internal *)internal.idb_ptr;
 		tgc_ip->magic = RT_TGC_INTERNAL_MAGIC;
-		VSET( tgc_ip->v , -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale );
-		VSET( tgc_ip->h,  0.0, 0.0, (view_state->vs_vop->vo_scale*2) );
-		VSET( tgc_ip->a,  (0.5*view_state->vs_vop->vo_scale), 0.0, 0.0 );
-		VSET( tgc_ip->b,  0.0, (0.25*view_state->vs_vop->vo_scale), 0.0 );
-		VSET( tgc_ip->c,  (0.25*view_state->vs_vop->vo_scale), 0.0, 0.0 );
-		VSET( tgc_ip->d,  0.0, (0.125*view_state->vs_vop->vo_scale), 0.0 );
+		VSET( tgc_ip->v , -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale );
+		VSET( tgc_ip->h,  0.0, 0.0, (view_state->vs_Viewscale*2) );
+		VSET( tgc_ip->a,  (0.5*view_state->vs_Viewscale), 0.0, 0.0 );
+		VSET( tgc_ip->b,  0.0, (0.25*view_state->vs_Viewscale), 0.0 );
+		VSET( tgc_ip->c,  (0.25*view_state->vs_Viewscale), 0.0, 0.0 );
+		VSET( tgc_ip->d,  0.0, (0.125*view_state->vs_Viewscale), 0.0 );
 	} else if( strcmp( argv[2], "rec" ) == 0 )  {
 		internal.idb_type = ID_TGC;
 		internal.idb_meth = &rt_functab[ID_TGC];
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_tgc_internal) , "rt_tgc_internal" );
 		tgc_ip = (struct rt_tgc_internal *)internal.idb_ptr;
 		tgc_ip->magic = RT_TGC_INTERNAL_MAGIC;
-		VSET( tgc_ip->v , -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale );
-		VSET( tgc_ip->h,  0.0, 0.0, (view_state->vs_vop->vo_scale*2) );
-		VSET( tgc_ip->a,  (0.5*view_state->vs_vop->vo_scale), 0.0, 0.0 );
-		VSET( tgc_ip->b,  0.0, (0.25*view_state->vs_vop->vo_scale), 0.0 );
-		VSET( tgc_ip->c,  (0.5*view_state->vs_vop->vo_scale), 0.0, 0.0 );
-		VSET( tgc_ip->d,  0.0, (0.25*view_state->vs_vop->vo_scale), 0.0 );
+		VSET( tgc_ip->v , -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale );
+		VSET( tgc_ip->h,  0.0, 0.0, (view_state->vs_Viewscale*2) );
+		VSET( tgc_ip->a,  (0.5*view_state->vs_Viewscale), 0.0, 0.0 );
+		VSET( tgc_ip->b,  0.0, (0.25*view_state->vs_Viewscale), 0.0 );
+		VSET( tgc_ip->c,  (0.5*view_state->vs_Viewscale), 0.0, 0.0 );
+		VSET( tgc_ip->d,  0.0, (0.25*view_state->vs_Viewscale), 0.0 );
 	} else if( strcmp( argv[2], "trc" ) == 0 )  {
 		internal.idb_type = ID_TGC;
 		internal.idb_meth = &rt_functab[ID_TGC];
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_tgc_internal) , "rt_tgc_internal" );
 		tgc_ip = (struct rt_tgc_internal *)internal.idb_ptr;
 		tgc_ip->magic = RT_TGC_INTERNAL_MAGIC;
-		VSET( tgc_ip->v , -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale );
-		VSET( tgc_ip->h,  0.0, 0.0, (view_state->vs_vop->vo_scale*2) );
-		VSET( tgc_ip->a,  (0.5*view_state->vs_vop->vo_scale), 0.0, 0.0 );
-		VSET( tgc_ip->b,  0.0, (0.5*view_state->vs_vop->vo_scale), 0.0 );
-		VSET( tgc_ip->c,  (0.25*view_state->vs_vop->vo_scale), 0.0, 0.0 );
-		VSET( tgc_ip->d,  0.0, (0.25*view_state->vs_vop->vo_scale), 0.0 );
+		VSET( tgc_ip->v , -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale );
+		VSET( tgc_ip->h,  0.0, 0.0, (view_state->vs_Viewscale*2) );
+		VSET( tgc_ip->a,  (0.5*view_state->vs_Viewscale), 0.0, 0.0 );
+		VSET( tgc_ip->b,  0.0, (0.5*view_state->vs_Viewscale), 0.0 );
+		VSET( tgc_ip->c,  (0.25*view_state->vs_Viewscale), 0.0, 0.0 );
+		VSET( tgc_ip->d,  0.0, (0.25*view_state->vs_Viewscale), 0.0 );
 	} else if( strcmp( argv[2], "rcc" ) == 0 )  {
 		internal.idb_type = ID_TGC;
 		internal.idb_meth = &rt_functab[ID_TGC];
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_tgc_internal) , "rt_tgc_internal" );
 		tgc_ip = (struct rt_tgc_internal *)internal.idb_ptr;
 		tgc_ip->magic = RT_TGC_INTERNAL_MAGIC;
-		VSET( tgc_ip->v , -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale );
-		VSET( tgc_ip->h,  0.0, 0.0, (view_state->vs_vop->vo_scale*2) );
-		VSET( tgc_ip->a,  (0.5*view_state->vs_vop->vo_scale), 0.0, 0.0 );
-		VSET( tgc_ip->b,  0.0, (0.5*view_state->vs_vop->vo_scale), 0.0 );
-		VSET( tgc_ip->c,  (0.5*view_state->vs_vop->vo_scale), 0.0, 0.0 );
-		VSET( tgc_ip->d,  0.0, (0.5*view_state->vs_vop->vo_scale), 0.0 );
+		VSET( tgc_ip->v , -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale );
+		VSET( tgc_ip->h,  0.0, 0.0, (view_state->vs_Viewscale*2) );
+		VSET( tgc_ip->a,  (0.5*view_state->vs_Viewscale), 0.0, 0.0 );
+		VSET( tgc_ip->b,  0.0, (0.5*view_state->vs_Viewscale), 0.0 );
+		VSET( tgc_ip->c,  (0.5*view_state->vs_Viewscale), 0.0, 0.0 );
+		VSET( tgc_ip->d,  0.0, (0.5*view_state->vs_Viewscale), 0.0 );
 	} else if( strcmp( argv[2], "half" ) == 0 ) {
 		internal.idb_type = ID_HALF;
 		internal.idb_meth = &rt_functab[ID_HALF];
@@ -1636,50 +1780,50 @@ f_make(ClientData	clientData,
 		half_ip = (struct rt_half_internal *)internal.idb_ptr;
 		half_ip->magic = RT_HALF_INTERNAL_MAGIC;
 		VSET( half_ip->eqn , 0.0 , 0.0 , 1.0 );
-		half_ip->eqn[3] = (-view_state->vs_vop->vo_center[MDZ]);
+		half_ip->eqn[3] = (-view_state->vs_toViewcenter[MDZ]);
 	} else if( strcmp( argv[2], "rpc" ) == 0 ) {
 		internal.idb_type = ID_RPC;
 		internal.idb_meth = &rt_functab[ID_RPC];
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_rpc_internal) , "rt_rpc_internal" );
 		rpc_ip = (struct rt_rpc_internal *)internal.idb_ptr;
 		rpc_ip->rpc_magic = RT_RPC_INTERNAL_MAGIC;
-		VSET( rpc_ip->rpc_V, -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale*0.5 );
-		VSET( rpc_ip->rpc_H, 0.0, 0.0, view_state->vs_vop->vo_scale );
-		VSET( rpc_ip->rpc_B, 0.0, (view_state->vs_vop->vo_scale*0.5), 0.0 );
-		rpc_ip->rpc_r = view_state->vs_vop->vo_scale*0.25;
+		VSET( rpc_ip->rpc_V, -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale*0.5 );
+		VSET( rpc_ip->rpc_H, 0.0, 0.0, view_state->vs_Viewscale );
+		VSET( rpc_ip->rpc_B, 0.0, (view_state->vs_Viewscale*0.5), 0.0 );
+		rpc_ip->rpc_r = view_state->vs_Viewscale*0.25;
 	} else if( strcmp( argv[2], "rhc" ) == 0 ) {
 		internal.idb_type = ID_RHC;
 		internal.idb_meth = &rt_functab[ID_RHC];
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_rhc_internal) , "rt_rhc_internal" );
 		rhc_ip = (struct rt_rhc_internal *)internal.idb_ptr;
 		rhc_ip->rhc_magic = RT_RHC_INTERNAL_MAGIC;
-		VSET( rhc_ip->rhc_V, -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale*0.5 );
-		VSET( rhc_ip->rhc_H, 0.0, 0.0, view_state->vs_vop->vo_scale );
-		VSET( rhc_ip->rhc_B, 0.0, (view_state->vs_vop->vo_scale*0.5), 0.0 );
-		rhc_ip->rhc_r = view_state->vs_vop->vo_scale*0.25;
-		rhc_ip->rhc_c = view_state->vs_vop->vo_scale*0.10;
+		VSET( rhc_ip->rhc_V, -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale*0.5 );
+		VSET( rhc_ip->rhc_H, 0.0, 0.0, view_state->vs_Viewscale );
+		VSET( rhc_ip->rhc_B, 0.0, (view_state->vs_Viewscale*0.5), 0.0 );
+		rhc_ip->rhc_r = view_state->vs_Viewscale*0.25;
+		rhc_ip->rhc_c = view_state->vs_Viewscale*0.10;
 	} else if( strcmp( argv[2], "epa" ) == 0 ) {
 		internal.idb_type = ID_EPA;
 		internal.idb_meth = &rt_functab[ID_EPA];
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_epa_internal) , "rt_epa_internal" );
 		epa_ip = (struct rt_epa_internal *)internal.idb_ptr;
 		epa_ip->epa_magic = RT_EPA_INTERNAL_MAGIC;
-		VSET( epa_ip->epa_V, -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale*0.5 );
-		VSET( epa_ip->epa_H, 0.0, 0.0, view_state->vs_vop->vo_scale );
+		VSET( epa_ip->epa_V, -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale*0.5 );
+		VSET( epa_ip->epa_H, 0.0, 0.0, view_state->vs_Viewscale );
 		VSET( epa_ip->epa_Au, 0.0, 1.0, 0.0 );
-		epa_ip->epa_r1 = view_state->vs_vop->vo_scale*0.5;
-		epa_ip->epa_r2 = view_state->vs_vop->vo_scale*0.25;
+		epa_ip->epa_r1 = view_state->vs_Viewscale*0.5;
+		epa_ip->epa_r2 = view_state->vs_Viewscale*0.25;
 	} else if( strcmp( argv[2], "ehy" ) == 0 ) {
 		internal.idb_type = ID_EHY;
 		internal.idb_meth = &rt_functab[ID_EHY];
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_ehy_internal) , "rt_ehy_internal" );
 		ehy_ip = (struct rt_ehy_internal *)internal.idb_ptr;
 		ehy_ip->ehy_magic = RT_EHY_INTERNAL_MAGIC;
-		VSET( ehy_ip->ehy_V, -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale*0.5 );
-		VSET( ehy_ip->ehy_H, 0.0, 0.0, view_state->vs_vop->vo_scale );
+		VSET( ehy_ip->ehy_V, -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale*0.5 );
+		VSET( ehy_ip->ehy_H, 0.0, 0.0, view_state->vs_Viewscale );
 		VSET( ehy_ip->ehy_Au, 0.0, 1.0, 0.0 );
-		ehy_ip->ehy_r1 = view_state->vs_vop->vo_scale*0.5;
-		ehy_ip->ehy_r2 = view_state->vs_vop->vo_scale*0.25;
+		ehy_ip->ehy_r1 = view_state->vs_Viewscale*0.5;
+		ehy_ip->ehy_r2 = view_state->vs_Viewscale*0.25;
 		ehy_ip->ehy_c = ehy_ip->ehy_r2;
 	} else if( strcmp( argv[2], "eto" ) == 0 ) {
 		internal.idb_type = ID_ETO;
@@ -1687,21 +1831,21 @@ f_make(ClientData	clientData,
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_eto_internal) , "rt_eto_internal" );
 		eto_ip = (struct rt_eto_internal *)internal.idb_ptr;
 		eto_ip->eto_magic = RT_ETO_INTERNAL_MAGIC;
-		VSET( eto_ip->eto_V, -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ] );
+		VSET( eto_ip->eto_V, -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ] );
 		VSET( eto_ip->eto_N, 0.0, 0.0, 1.0 );
-		VSET( eto_ip->eto_C, view_state->vs_vop->vo_scale*0.1, 0.0, view_state->vs_vop->vo_scale*0.1 );
-		eto_ip->eto_r = view_state->vs_vop->vo_scale*0.5;
-		eto_ip->eto_rd = view_state->vs_vop->vo_scale*0.05;
+		VSET( eto_ip->eto_C, view_state->vs_Viewscale*0.1, 0.0, view_state->vs_Viewscale*0.1 );
+		eto_ip->eto_r = view_state->vs_Viewscale*0.5;
+		eto_ip->eto_rd = view_state->vs_Viewscale*0.05;
 	} else if( strcmp( argv[2], "part" ) == 0 ) {
 		internal.idb_type = ID_PARTICLE;
 		internal.idb_meth = &rt_functab[ID_PARTICLE];
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof(struct rt_part_internal) , "rt_part_internal" );
 		part_ip = (struct rt_part_internal *)internal.idb_ptr;
 		part_ip->part_magic = RT_PART_INTERNAL_MAGIC;
-		VSET( part_ip->part_V, -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale*0.5 );
-		VSET( part_ip->part_H, 0.0, 0.0, view_state->vs_vop->vo_scale );
-		part_ip->part_vrad = view_state->vs_vop->vo_scale*0.5;
-		part_ip->part_hrad = view_state->vs_vop->vo_scale*0.25;
+		VSET( part_ip->part_V, -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale*0.5 );
+		VSET( part_ip->part_H, 0.0, 0.0, view_state->vs_Viewscale );
+		part_ip->part_vrad = view_state->vs_Viewscale*0.5;
+		part_ip->part_hrad = view_state->vs_Viewscale*0.25;
 		part_ip->part_type = RT_PARTICLE_TYPE_CONE;
 	} else if( strcmp( argv[2], "nmg" ) == 0 ) {
 		struct model *m;
@@ -1711,7 +1855,7 @@ f_make(ClientData	clientData,
 		m = nmg_mm();
 		r = nmg_mrsv( m );
 		s = BU_LIST_FIRST( shell , &r->s_hd );
-		nmg_vertex_g( s->vu_p->v_p, -view_state->vs_vop->vo_center[MDX], -view_state->vs_vop->vo_center[MDY], -view_state->vs_vop->vo_center[MDZ]);
+		nmg_vertex_g( s->vu_p->v_p, -view_state->vs_toViewcenter[MDX], -view_state->vs_toViewcenter[MDY], -view_state->vs_toViewcenter[MDZ]);
 		(void)nmg_meonvu( s->vu_p );
 		(void)nmg_ml( s );
 		internal.idb_type = ID_NMG;
@@ -1728,15 +1872,15 @@ f_make(ClientData	clientData,
 		BU_LIST_INIT( &pipe_ip->pipe_segs_head );
 		BU_GETSTRUCT( ps, wdb_pipept );
 		ps->l.magic = WDB_PIPESEG_MAGIC;
-		VSET( ps->pp_coord, -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale );
-		ps->pp_od = 0.5*view_state->vs_vop->vo_scale;
+		VSET( ps->pp_coord, -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale );
+		ps->pp_od = 0.5*view_state->vs_Viewscale;
 		ps->pp_id = 0.5*ps->pp_od;
 		ps->pp_bendradius = ps->pp_od;
 		BU_LIST_INSERT( &pipe_ip->pipe_segs_head, &ps->l );
 		BU_GETSTRUCT( ps, wdb_pipept );
 		ps->l.magic = WDB_PIPESEG_MAGIC;
-		VSET( ps->pp_coord, -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]+view_state->vs_vop->vo_scale );
-		ps->pp_od = 0.5*view_state->vs_vop->vo_scale;
+		VSET( ps->pp_coord, -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]+view_state->vs_Viewscale );
+		ps->pp_od = 0.5*view_state->vs_Viewscale;
 		ps->pp_id = 0.5*ps->pp_od;
 		ps->pp_bendradius = ps->pp_od;
 		BU_LIST_INSERT( &pipe_ip->pipe_segs_head, &ps->l );
@@ -1755,10 +1899,10 @@ f_make(ClientData	clientData,
 		bot_ip->vertices = (fastf_t *)bu_calloc( bot_ip->num_vertices * 3, sizeof( fastf_t ), "BOT vertices" );
 		bot_ip->thickness = (fastf_t *)NULL;
 		bot_ip->face_mode = (struct bu_bitv *)NULL;
-		VSET( &bot_ip->vertices[0],  -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]+view_state->vs_vop->vo_scale );
-		VSET( &bot_ip->vertices[3], -view_state->vs_vop->vo_center[MDX]-0.5*view_state->vs_vop->vo_scale , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale );
-		VSET( &bot_ip->vertices[6], -view_state->vs_vop->vo_center[MDX]-0.5*view_state->vs_vop->vo_scale , -view_state->vs_vop->vo_center[MDY]-0.5*view_state->vs_vop->vo_scale , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale );
-		VSET( &bot_ip->vertices[9], -view_state->vs_vop->vo_center[MDX]+0.5*view_state->vs_vop->vo_scale , -view_state->vs_vop->vo_center[MDY]-0.5*view_state->vs_vop->vo_scale , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale );
+		VSET( &bot_ip->vertices[0],  -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]+view_state->vs_Viewscale );
+		VSET( &bot_ip->vertices[3], -view_state->vs_toViewcenter[MDX]-0.5*view_state->vs_Viewscale , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale );
+		VSET( &bot_ip->vertices[6], -view_state->vs_toViewcenter[MDX]-0.5*view_state->vs_Viewscale , -view_state->vs_toViewcenter[MDY]-0.5*view_state->vs_Viewscale , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale );
+		VSET( &bot_ip->vertices[9], -view_state->vs_toViewcenter[MDX]+0.5*view_state->vs_Viewscale , -view_state->vs_toViewcenter[MDY]-0.5*view_state->vs_Viewscale , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale );
 		VSET( &bot_ip->faces[0], 0, 1, 3 );
 		VSET( &bot_ip->faces[3], 0, 1, 2 );
 		VSET( &bot_ip->faces[6], 0, 2, 3 );
@@ -1771,16 +1915,16 @@ f_make(ClientData	clientData,
 		internal.idb_ptr = (genptr_t)bu_malloc( sizeof( struct rt_extrude_internal), "rt_extrude_internal" );
 		extrude_ip = (struct rt_extrude_internal *)internal.idb_ptr;
 		extrude_ip->magic = RT_EXTRUDE_INTERNAL_MAGIC;
-		VSET( extrude_ip->V, -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale*0.5 );
-		VSET( extrude_ip->h, 0.0, 0.0, view_state->vs_vop->vo_scale/3.0 );
+		VSET( extrude_ip->V, -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale*0.5 );
+		VSET( extrude_ip->h, 0.0, 0.0, view_state->vs_Viewscale/3.0 );
 		VSET( extrude_ip->u_vec, 1.0, 0.0, 0.0 );
 		VSET( extrude_ip->v_vec, 0.0, 1.0, 0.0 );
 		extrude_ip->keypoint = 0;
 		av[0] = "make_name";
 		av[1] = "skt_";
 		Tcl_ResetResult( interp );
-		cmd_make_name( (ClientData)NULL, interp, 2, av );
-		extrude_ip->sketch_name = bu_strdup( interp->result );
+		f_make_name( (ClientData)NULL, interp, 2, av );
+		strcpy( extrude_ip->sketch_name, interp->result );
 		Tcl_ResetResult( interp );
 		extrude_ip->skt = (struct rt_sketch_internal *)NULL;
 		av[0] = "make";
@@ -1789,6 +1933,7 @@ f_make(ClientData	clientData,
 		f_make( clientData, interp, 3, av );
 	} else if( strcmp( argv[2], "sketch" ) == 0 ) {
 		struct carc_seg *csg;
+		struct nurb_seg *nsg;
 		struct line_seg *lsg;
 
 		internal.idb_type = ID_SKETCH;
@@ -1798,23 +1943,23 @@ f_make(ClientData	clientData,
 		sketch_ip->magic = RT_SKETCH_INTERNAL_MAGIC;
 		VSET( sketch_ip->u_vec, 1.0, 0.0, 0.0 );
 		VSET( sketch_ip->v_vec, 0.0, 1.0, 0.0 );
-		VSET( sketch_ip->V, -view_state->vs_vop->vo_center[MDX] , -view_state->vs_vop->vo_center[MDY] , -view_state->vs_vop->vo_center[MDZ]-view_state->vs_vop->vo_scale*0.5 );
+		VSET( sketch_ip->V, -view_state->vs_toViewcenter[MDX] , -view_state->vs_toViewcenter[MDY] , -view_state->vs_toViewcenter[MDZ]-view_state->vs_Viewscale*0.5 );
 		sketch_ip->vert_count = 7;
 		sketch_ip->verts = (point2d_t *)bu_calloc( sketch_ip->vert_count, sizeof( point2d_t ), "sketch_ip->verts" );
-		sketch_ip->verts[0][0] = 0.25*view_state->vs_vop->vo_scale;
+		sketch_ip->verts[0][0] = 0.25*view_state->vs_Viewscale;
 		sketch_ip->verts[0][1] = 0.0;
-		sketch_ip->verts[1][0] = 0.5*view_state->vs_vop->vo_scale;
+		sketch_ip->verts[1][0] = 0.5*view_state->vs_Viewscale;
 		sketch_ip->verts[1][1] = 0.0;
-		sketch_ip->verts[2][0] = 0.5*view_state->vs_vop->vo_scale;
-		sketch_ip->verts[2][1] = 0.5*view_state->vs_vop->vo_scale;
+		sketch_ip->verts[2][0] = 0.5*view_state->vs_Viewscale;
+		sketch_ip->verts[2][1] = 0.5*view_state->vs_Viewscale;
 		sketch_ip->verts[3][0] = 0.0;
-		sketch_ip->verts[3][1] = 0.5*view_state->vs_vop->vo_scale;
+		sketch_ip->verts[3][1] = 0.5*view_state->vs_Viewscale;
 		sketch_ip->verts[4][0] = 0.0;
-		sketch_ip->verts[4][1] = 0.25*view_state->vs_vop->vo_scale;
-		sketch_ip->verts[5][0] = 0.25*view_state->vs_vop->vo_scale;
-		sketch_ip->verts[5][1] = 0.25*view_state->vs_vop->vo_scale;
-		sketch_ip->verts[6][0] = 0.125*view_state->vs_vop->vo_scale;
-		sketch_ip->verts[6][1] = 0.125*view_state->vs_vop->vo_scale;
+		sketch_ip->verts[4][1] = 0.25*view_state->vs_Viewscale;
+		sketch_ip->verts[5][0] = 0.25*view_state->vs_Viewscale;
+		sketch_ip->verts[5][1] = 0.25*view_state->vs_Viewscale;
+		sketch_ip->verts[6][0] = 0.125*view_state->vs_Viewscale;
+		sketch_ip->verts[6][1] = 0.125*view_state->vs_Viewscale;
 		sketch_ip->skt_curve.seg_count = 6;
 		sketch_ip->skt_curve.reverse = (int *)bu_calloc( sketch_ip->skt_curve.seg_count, sizeof( int ), "sketch_ip->skt_curve.reverse" );
 		sketch_ip->skt_curve.segments = (genptr_t *)bu_calloc( sketch_ip->skt_curve.seg_count, sizeof( genptr_t ), "sketch_ip->skt_curve.segments" );
@@ -1824,7 +1969,7 @@ f_make(ClientData	clientData,
 		csg->magic = CURVE_CARC_MAGIC;
 		csg->start = 4;
 		csg->end = 0;
-		csg->radius = 0.25*view_state->vs_vop->vo_scale;
+		csg->radius = 0.25*view_state->vs_Viewscale;
 		csg->center_is_left = 1;
 		csg->orientation = 0;
 
@@ -1872,10 +2017,8 @@ f_make(ClientData	clientData,
 	  return TCL_ERROR;
 	} else {
 	  Tcl_AppendResult(interp, "make:  ", argv[2], " is not a known primitive\n",
-			   "\tchoices are: arb8, arb7, arb6, arb5, arb4, bot, ehy,\n",
-			   "\t\tell, ell1, epa, eto, extrude, grip, half, nmg,\n",
-			   "\t\tpart, pipe, rcc, rec, rhc, rpc, sketch, sph,\n",
-			   "\t\ttec, tgc, tor, trc\n",
+			   "\tchoices are: arb8, arb7, arb6, arb5, arb4, bot, sph, ell, ellg, grip, tor,\n",
+			   "\t\ttgc, tec, rec, trc, rcc, half, rpc, rhc, epa, ehy, eto, part, sketch extrude\n",
 			   (char *)NULL);
 	  return TCL_ERROR;
 	}
@@ -1883,10 +2026,10 @@ f_make(ClientData	clientData,
 	/* no interuprts */
 	(void)signal( SIGINT, SIG_IGN );
 
-	if( (dp = db_diradd( dbip, argv[1], -1L, 0, DIR_SOLID, (genptr_t)&internal.idb_type)) == DIR_NULL )  {
+	if( (dp = db_diradd( dbip, argv[1], -1L, 0, DIR_SOLID, NULL)) == DIR_NULL )  {
 	    	TCL_ALLOC_ERR_return;
 	}
-	if( rt_db_put_internal( dp, dbip, &internal, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( dp, dbip, &internal ) < 0 )  {
 		TCL_WRITE_ERR_return;
 	}
 
@@ -1898,7 +2041,7 @@ f_make(ClientData	clientData,
 	  av[2] = NULL;
 
 	  /* draw the "made" solid */
-	  return cmd_draw( clientData, interp, 2, av );
+	  return f_edit( clientData, interp, 2, av );
 	}
 }
 
@@ -1940,21 +2083,24 @@ vect_t argvect;
    *	2. trans == v_work
    *	3. same scale factor
    */
-  MAT_IDN(temp);
+  bn_mat_idn(temp);
   MAT_DELTAS(temp, v_work[X], v_work[Y], v_work[Z]);
   temp[15] = modelchanges[15];
-  MAT_COPY(modelchanges, temp);
+  bn_mat_copy(modelchanges, temp);
 
   /* build new rotation matrix */
-  MAT_IDN(temp);
-  bn_mat_angles(temp, argvect[0], argvect[1], argvect[2]);
+  bn_mat_idn(temp);
+  buildHrot(temp,
+	    argvect[0]*degtorad,
+	    argvect[1]*degtorad,
+	    argvect[2]*degtorad );
 
   if(iflag){
     /* apply accumulated rotations */
     bn_mat_mul2(acc_rot_sol, temp);
   }
 
-  /*XXX*/ MAT_COPY(acc_rot_sol, temp); /* used to rotate solid/object axis */
+  /*XXX*/ bn_mat_copy(acc_rot_sol, temp); /* used to rotate solid/object axis */
   
   /* Record the new rotation matrix into the revised
    *	modelchanges matrix wrt "point"
@@ -2058,7 +2204,7 @@ char	**argv;
 	}
 #endif
 
-	MAT_IDN(incr);
+	bn_mat_idn(incr);
 
 	/* switch depending on type of scaling to do */
 	switch( edobj ) {
@@ -2102,13 +2248,7 @@ char	**argv;
 	return TCL_OK;
 }
 
-/*
- *			F _ T R _ O B J
- *
- *  Bound to command "translate"
- *
- *  Allow precise changes to object translation
- */
+/* allow precise changes to object translation */
 int
 f_tr_obj(clientData, interp, argc, argv)
 ClientData clientData;
@@ -2133,24 +2273,13 @@ char	**argv;
 	  return TCL_ERROR;
 	}
 
-	if( state == ST_S_EDIT )  {
-		/* In solid edit mode,
-		 * perform the equivalent of "press sxy" and "p xyz"
-		 */
-		if( be_s_trans(clientData, interp, argc, argv) == TCL_ERROR )
-			return TCL_ERROR;
-		return f_param(clientData, interp, argc, argv);
-	}
-
 	if( not_state( ST_O_EDIT, "Object Translation") )
 	  return TCL_ERROR;
 
-	/* Remainder of code concerns object edit case */
-
 	update_views = 1;
 
-	MAT_IDN(incr);
-	MAT_IDN(old);
+	bn_mat_idn(incr);
+	bn_mat_idn(old);
 
 	if( (movedir & (RARROW|UARROW)) == 0 ) {
 		/* put in object trans mode */
@@ -2168,7 +2297,7 @@ char	**argv;
 	MAT4X3PNT(ed_sol_pt, modelchanges, model_sol_pt);
 	VSUB2(model_incr, new_vertex, ed_sol_pt);
 	MAT_DELTAS(incr, model_incr[0], model_incr[1], model_incr[2]);
-	MAT_COPY(old,modelchanges);
+	bn_mat_copy(old,modelchanges);
 	bn_mat_mul(modelchanges, incr, old);
 #ifdef DO_NEW_EDIT_MATS
 	new_edit_mats();
@@ -2255,7 +2384,7 @@ struct model *m;
 		return;
 	}
 
-	if( (new_dp=db_diradd( dbip, newname, -1, 0, DIR_SOLID, (genptr_t)&new_intern.idb_type)) == DIR_NULL )  {
+	if( (new_dp=db_diradd( dbip, newname, -1, 0, DIR_SOLID, NULL)) == DIR_NULL )  {
 	    	TCL_ALLOC_ERR;
 		return;
 	}
@@ -2271,7 +2400,7 @@ struct model *m;
 	new_intern.idb_meth = &rt_functab[ID_NMG];
 	new_intern.idb_ptr = (genptr_t)m;
 
-	if( rt_db_put_internal( new_dp, dbip, &new_intern, &rt_uniresource ) < 0 )  {
+	if( rt_db_put_internal( new_dp, dbip, &new_intern ) < 0 )  {
 		/* Free memory */
 		nmg_km(m);
 		Tcl_AppendResult(interp, "rt_db_put_internal() failure\n", (char *)NULL);
@@ -2331,7 +2460,7 @@ char	**argv;
 	if( (old_dp = db_lookup( dbip,  argv[1], LOOKUP_NOISY )) == DIR_NULL )
 		return TCL_ERROR;
 
-	if( rt_db_get_internal( &old_intern, old_dp, dbip, bn_mat_identity, &rt_uniresource ) < 0 )  {
+	if( rt_db_get_internal( &old_intern, old_dp, dbip, bn_mat_identity ) < 0 )  {
 	  Tcl_AppendResult(interp, "rt_db_get_internal() error\n", (char *)NULL);
 	  return TCL_ERROR;
 	}
@@ -2339,7 +2468,7 @@ char	**argv;
 	if( old_intern.idb_type != ID_NMG )
 	{
 		Tcl_AppendResult(interp, argv[1], " is not an NMG solid!!\n", (char *)NULL );
-		rt_db_free_internal( &old_intern, &rt_uniresource );
+		rt_db_free_internal( &old_intern );
 		return TCL_ERROR;
 	}
 
@@ -2510,14 +2639,14 @@ char	**argv;
 	 *	2. trans == v_work
 	 *	3. same scale factor
 	 */
-	MAT_IDN(temp);
+	bn_mat_idn(temp);
 	MAT_DELTAS(temp, v_work[X], v_work[Y], v_work[Z]);
 	temp[15] = modelchanges[15];
-	MAT_COPY(modelchanges, temp);
+	bn_mat_copy(modelchanges, temp);
 
 	/* build new rotation matrix */
-	MAT_IDN(temp);
-	bn_mat_angles(temp, 0.0, 0.0, atof(argv[7]));
+	bn_mat_idn(temp);
+	buildHrot(temp, 0.0, 0.0, atof(argv[7])*degtorad);
 
 	/* Record the new rotation matrix into the revised
 	 *	modelchanges matrix wrt "point"
@@ -2538,7 +2667,7 @@ set_localunit_TclVar()
 {
   struct bu_vls vls;
   struct bu_vls units_vls;
-  const char	*str;
+  CONST char	*str;
 
   if (dbip == DBI_NULL)
 	  return;
@@ -2557,197 +2686,4 @@ set_localunit_TclVar()
 
   bu_vls_free(&vls);
   bu_vls_free(&units_vls);
-}
-
-
-int
-f_binary(     ClientData	clientData,
-	      Tcl_Interp	*interp,
-	      int		argc,
-	      char 		**argv)
-{
-	int c;
-	struct bu_vls	vls;
-	unsigned int major_type=0;
-	unsigned int minor_type=0;
-	char *obj_name;
-	char *file_name;
-	int input_mode=0;
-	int output_mode=0;
-	struct rt_binunif_internal *bip;
-	struct rt_db_internal intern;
-	struct directory *dp;
-
-	optind = 1;
-	while( (c=getopt(argc, argv, "iou:")) != -1 ) {
-		switch( c ) {
-			case 'i':
-				input_mode = 1;
-				break;
-			case 'o':
-				output_mode = 1;
-				break;
-			case 'u':
-				major_type=DB5_MAJORTYPE_BINARY_UNIF;
-				switch( *optarg ) {
-				case 'f':
-					minor_type = DB5_MINORTYPE_BINU_FLOAT;
-					break;
-				case 'd':
-					minor_type = DB5_MINORTYPE_BINU_DOUBLE;
-					break;
-				case 'c':
-					minor_type = DB5_MINORTYPE_BINU_8BITINT;
-					break;
-				case 's':
-					minor_type = DB5_MINORTYPE_BINU_16BITINT;
-					break;
-				case 'i':
-					minor_type = DB5_MINORTYPE_BINU_32BITINT;
-					break;
-				case 'l':
-					minor_type = DB5_MINORTYPE_BINU_64BITINT;
-					break;
-				case 'C':
-					minor_type = DB5_MINORTYPE_BINU_8BITINT_U;
-					break;
-				case 'S':
-					minor_type = DB5_MINORTYPE_BINU_16BITINT_U;
-					break;
-				case 'I':
-					minor_type = DB5_MINORTYPE_BINU_32BITINT_U;
-					break;
-				case 'L':
-					minor_type = DB5_MINORTYPE_BINU_64BITINT_U;
-					break;
-				default:
-					bu_vls_init( &vls );
-					bu_vls_printf(&vls, "Unrecognized argument for '-u' option: %s",
-						      optarg);
-					Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
-					bu_vls_free(&vls);
-					return TCL_ERROR;
-				}
-				break;
-			default:
-				bu_vls_init( &vls );
-				bu_vls_printf(&vls, "Unrecognized option - %c", c);
-				Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
-				bu_vls_free(&vls);
-				return TCL_ERROR;
-				
-		}
-	}
-
-	if( input_mode + output_mode != 1 ) {
-		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib wdb_binary");
-		Tcl_Eval(interp, bu_vls_addr(&vls));
-		bu_vls_free(&vls);
-		return TCL_ERROR;
-	}
-
-	argc -= optind;
-	argv += optind;
-
-	if( argc < 2 ) {
-		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib wdb_binary");
-		Tcl_Eval(interp, bu_vls_addr(&vls));
-		bu_vls_free(&vls);
-		return TCL_ERROR;
-	}
-
-	if( input_mode ) {
-		if( minor_type == 0 ) {
-			bu_vls_init(&vls);
-			bu_vls_printf(&vls, "helplib wdb_binary");
-			Tcl_Eval(interp, bu_vls_addr(&vls));
-			bu_vls_free(&vls);
-			return TCL_ERROR;
-		}
-
-		obj_name = *argv;
-		if( db_lookup( dbip, obj_name, LOOKUP_QUIET ) != DIR_NULL ) {
-			bu_vls_init( &vls );
-			bu_vls_printf( &vls, "Object %s already exists", obj_name );
-			Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
-			bu_vls_free( &vls );
-			return TCL_ERROR;
-		}
-
-		argc--;
-		argv++;
-
-		file_name = *argv;
-
-		if( mk_binunif( wdbp, obj_name, file_name, minor_type ) ) {
-			Tcl_AppendResult(interp, "Error creating ", obj_name,
-					 (char *)NULL );
-			return TCL_ERROR;
-		}
-
-		return TCL_OK;
-
-	} else if( output_mode ) {
-		FILE *fd;
-		int id;
-
-		file_name = *argv;
-
-		argc--;
-		argv++;
-
-		obj_name = *argv;
-
-		if( (dp=db_lookup(dbip, obj_name, LOOKUP_NOISY )) == DIR_NULL ) { 
-			return TCL_ERROR;
-		}
-		
-		if( (fd=fopen( file_name, "w+")) == NULL ) {
-			Tcl_AppendResult(interp, "Error: cannot open file ", file_name,
-					 " for writing", (char *)NULL );
-			return TCL_ERROR;
-		}
-
-		if( (id=rt_db_get_internal( &intern, dp, dbip, NULL,
-					 &rt_uniresource )) < 0 ) {
-			Tcl_AppendResult(interp, "Error reading ", dp->d_namep,
-					 " from database", (char *)NULL );
-			fclose( fd );
-			return TCL_ERROR;
-		}
-
-		RT_CK_DB_INTERNAL( &intern );
-
-		bip = (struct rt_binunif_internal *)intern.idb_ptr;
-		if( bip->count < 1 ) {
-			Tcl_AppendResult(interp, obj_name, " has no contents", (char *)NULL );
-			fclose( fd );
-			rt_db_free_internal( &intern, &rt_uniresource );
-			return TCL_ERROR;
-		}
-
-		if( fwrite( bip->u.int8, bip->count * db5_type_sizeof_h_binu( bip->type ),
-			    1, fd) != 1 ) {
-			Tcl_AppendResult(interp, "Error writing contents to file",
-					 (char *)NULL );
-			fclose( fd );
-			rt_db_free_internal( &intern, &rt_uniresource );
-			return TCL_ERROR;
-		}
-
-		fclose( fd );
-		rt_db_free_internal( &intern, &rt_uniresource );
-		return TCL_OK;
-	} else {
-		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "helplib wdb_binary");
-		Tcl_Eval(interp, bu_vls_addr(&vls));
-		bu_vls_free(&vls);
-		return TCL_ERROR;
-	}
-
-	/* should never get here */
-	return TCL_ERROR;
 }

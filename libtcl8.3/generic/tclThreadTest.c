@@ -116,9 +116,9 @@ TCL_DECLARE_MUTEX(threadMutex)
 
 EXTERN int	TclThread_Init _ANSI_ARGS_((Tcl_Interp *interp));
 EXTERN int	Tcl_ThreadObjCmd _ANSI_ARGS_((ClientData clientData,
-	Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]));
+	Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
 EXTERN int	TclCreateThread _ANSI_ARGS_((Tcl_Interp *interp,
-	const char *script));
+	CONST char *script));
 EXTERN int	TclThreadList _ANSI_ARGS_((Tcl_Interp *interp));
 EXTERN int	TclThreadSend _ANSI_ARGS_((Tcl_Interp *interp, Tcl_ThreadId id,
 	char *script, int wait));
@@ -198,7 +198,7 @@ Tcl_ThreadObjCmd(dummy, interp, objc, objv)
     ClientData dummy;			/* Not used. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int objc;				/* Number of arguments. */
-    Tcl_Obj *const objv[];		/* Argument objects. */
+    Tcl_Obj *CONST objv[];		/* Argument objects. */
 {
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
     int option;
@@ -345,7 +345,7 @@ Tcl_ThreadObjCmd(dummy, interp, objc, objv)
 int
 TclCreateThread(interp, script)
     Tcl_Interp *interp;			/* Current interpreter. */
-    const char *script;			/* Script to execute */
+    CONST char *script;			/* Script to execute */
 {
     ThreadCtrl ctrl;
     Tcl_ThreadId id;
@@ -964,4 +964,3 @@ ThreadExitProc(clientData)
 }
 
 #endif /* TCL_THREADS */
-

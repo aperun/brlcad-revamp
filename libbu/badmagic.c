@@ -16,7 +16,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSbadmagic[] = "@(#)$Header$ (ARL)";
+static char RCSbadmagic[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -33,10 +33,10 @@ static const char RCSbadmagic[] = "@(#)$Header$ (ARL)";
  */
 void
 bu_badmagic( ptr, magic, str, file, line )
-const long	*ptr;
+CONST long	*ptr;
 long		magic;
-const char	*str;
-const char	*file;
+CONST char	*str;
+CONST char	*file;
 int		line;
 {
 	char	buf[512];

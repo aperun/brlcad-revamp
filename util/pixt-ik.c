@@ -26,7 +26,6 @@ int reverse = 0;		/* rotate picture 180 degrees if non-zero */
 
 char usage[] = "Usage: pixt-ik [-h] [-r] file.pix [width]\n";
 
-int
 main(argc, argv)
 int argc;
 char **argv;

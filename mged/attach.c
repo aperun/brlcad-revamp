@@ -21,26 +21,17 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
-#ifdef USE_STRING_H
-#  include <string.h>
-#else
-#  include <strings.h>
-#endif
+
 #include <stdio.h>
 #include <sys/time.h>		/* for struct timeval */
 #include "machine.h"
 #include "externs.h"
 #include "bu.h"
-#ifdef DM_X
 #include "tk.h"
-#include "itk.h"
-#else
-#include "tcl.h"
-#endif
 #include "vmath.h"
 #include "raytrace.h"
 #include "dm-Null.h"
@@ -63,13 +54,11 @@ extern int PS_dm_init();
 #ifdef DM_X
 extern int X_dm_init();
 extern void X_fb_open();
-
+#endif
 #ifdef DM_OGL
 extern int Ogl_dm_init();
 extern void Ogl_fb_open();
 #endif
-#endif /* DM_X */
-
 #ifdef DM_GLX
 extern int Glx_dm_init();
 #endif
@@ -82,11 +71,7 @@ extern void set_port();		/* defined in fbserv.c */
 extern void predictor_init();	/* defined in predictor.c */
 extern void view_ring_init(); /* defined in chgview.c */
 
-extern void Tk_CreateCanvasBezierType();
-
-#ifdef DM_X
 extern Tk_Window tkwin;
-#endif
 extern struct _color_scheme default_color_scheme;
 
 int gui_setup();
@@ -98,9 +83,7 @@ void mged_slider_init_vls();
 void mged_slider_free_vls();
 void mged_link_vars();
 
-#if 0
 static int do_2nd_attach_prompt();
-#endif
 void mged_fb_open();
 void mged_fb_close();
 
@@ -115,9 +98,9 @@ struct w_dm which_dm[] = {
   { DM_TYPE_PS, "ps", PS_dm_init },      /* DM_PS_INDEX defined in mged_dm.h */
 #ifdef DM_X
   { DM_TYPE_X, "X", X_dm_init },
+#endif
 #ifdef DM_OGL
   { DM_TYPE_OGL, "ogl", Ogl_dm_init },
-#endif
 #endif
 #ifdef DM_GLX
   { DM_TYPE_GLX, "glx", Glx_dm_init },
@@ -238,7 +221,6 @@ char	**argv;
     return release((char *)NULL, 1);
 }
 
-#if 0
 static int
 do_2nd_attach_prompt()
 {
@@ -266,7 +248,6 @@ do_2nd_attach_prompt()
 
   return TCL_ERROR;
 }
-#endif
 
 int
 f_attach(clientData, interp, argc, argv)
@@ -277,7 +258,7 @@ char    **argv;
 {
   register struct w_dm *wp;
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -288,7 +269,6 @@ char    **argv;
     return TCL_ERROR;
   }
 
-  /* Look at last argument, skipping over any options which preceed it */
   for( wp = &which_dm[2]; wp->type != -1; wp++ )
     if( strcmp(argv[argc - 1], wp->name ) == 0 )
       break;
@@ -308,9 +288,9 @@ print_valid_dm()
     Tcl_AppendResult(interp, "\tThe following display manager types are valid: ", (char *)NULL);
 #ifdef DM_X
     Tcl_AppendResult(interp, "X  ", (char *)NULL);
+#endif
 #ifdef DM_OGL
     Tcl_AppendResult(interp, "ogl  ", (char *)NULL);
-#endif
 #endif
 #ifdef DM_GLX
     Tcl_AppendResult(interp, "glx", (char *)NULL);
@@ -319,10 +299,10 @@ print_valid_dm()
 }
 
 int
-mged_attach(
-	struct w_dm *wp,
-	int argc,
-	char *argv[])
+mged_attach(wp, argc, argv)
+register struct w_dm *wp;
+int argc;
+char *argv[];
 {
   register struct dm_list *o_dm_list;
 
@@ -334,7 +314,6 @@ mged_attach(
   predictor_init();
 
   /* Only need to do this once */
-#ifdef DM_X
   if(tkwin == NULL && NEED_GUI(wp->type)){
     struct dm *tmp_dmp;
     struct bu_vls tmp_vls;
@@ -370,7 +349,6 @@ mged_attach(
     bu_vls_free(&tmp_vls);
     bu_free((genptr_t)tmp_dmp, "mged_attach: tmp_dmp");
   }
-#endif
 
   BU_LIST_APPEND(&head_dm_list.l, &curr_dm_list->l);
 
@@ -390,7 +368,7 @@ mged_attach(
   share_dlist(curr_dm_list);
 
   if(displaylist && mged_variables->mv_dlist && !dlist_state->dl_active){
-    createDLists(&dgop->dgo_headSolid); 
+    createDLists(&HeadSolid); 
     dlist_state->dl_active = 1;
   }
 #endif
@@ -455,7 +433,6 @@ int
 gui_setup(dstr)
 char *dstr;
 {
-#ifdef DM_X
   struct bu_vls vls;
 
   /* initialize only once */
@@ -474,9 +451,6 @@ char *dstr;
     bu_vls_free(&vls);
     return TCL_ERROR;
   }
-
-  /* Add Bezier Curves to the canvas widget */
-  Tk_CreateCanvasBezierType();
 
   /* Initialize [incr Tk] */
   if (Itk_Init(interp) == TCL_ERROR) {
@@ -504,10 +478,6 @@ char *dstr;
     return TCL_ERROR;
   }
 
-  /* Add Bezier Curves to the canvas widget */
-  Tk_CreateCanvasBezierType();
-
-
   /* Initialize libdm */
   (void)Dm_Init(interp);
 
@@ -525,7 +495,6 @@ char *dstr;
   bu_vls_strcpy(&vls, "wm withdraw . ; tk appname mged");
   Tcl_Eval(interp, bu_vls_addr(&vls));
   bu_vls_free(&vls);
-#endif /* DM_X */
 
   return TCL_OK;
 }
@@ -550,7 +519,7 @@ char	**argv;
     return TCL_ERROR;
   }
 
-  if(argc < 2){
+  if(argc < 2 || MAXARGS < argc){
     struct bu_vls vls;
 
     bu_vls_init(&vls);
@@ -625,10 +594,7 @@ struct dm_list *initial_dm_list;
   dlist_state->dl_rc = 1;
 
   BU_GETSTRUCT(view_state, _view_state);
-  *view_state = *initial_dm_list->dml_view_state;			/* struct copy */
-  view_state->vs_vop = vo_open_cmd("");
-  *view_state->vs_vop = *initial_dm_list->dml_view_state->vs_vop;	/* struct copy */
-  view_state->vs_vop->vo_clientData = view_state;
+  *view_state = *initial_dm_list->dml_view_state;		/* struct copy */
   view_state->vs_rc = 1;
   view_ring_init(curr_dm_list->dml_view_state, (struct _view_state *)NULL);
 
@@ -715,20 +681,17 @@ char **argv;
 void
 mged_fb_open()
 {
-#ifdef DM_X
   if(dmp->dm_type == DM_TYPE_X)
     X_fb_open();
 #ifdef DM_OGL
   else if(dmp->dm_type == DM_TYPE_OGL)
     Ogl_fb_open();
 #endif
-#endif
 }
 
 void
 mged_fb_close()
 {
-#ifdef DM_X
   struct bu_vls vls;
 
   bu_vls_init(&vls);
@@ -737,5 +700,4 @@ mged_fb_close()
   bu_vls_free(&vls);
 
   fbp = (FBIO *)0;
-#endif
 }

@@ -22,7 +22,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -110,7 +110,7 @@ static int
 select_region( tsp, pathp, combp, client_data )
 register struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
-const struct rt_comb_internal *combp;
+CONST struct rt_comb_internal *combp;
 genptr_t		client_data;
 {
 	if( tsp->ts_regionid == curr_id )
@@ -124,7 +124,7 @@ static int
 get_reg_id( tsp, pathp, combp, client_data )
 register struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
-const struct rt_comb_internal *combp;
+CONST struct rt_comb_internal *combp;
 genptr_t		client_data;
 {
 	insert_id( tsp->ts_regionid );
@@ -147,10 +147,11 @@ genptr_t		client_data;
 }
 
 static union tree *
-leaf_stub( tsp, pathp, ip, client_data )
+leaf_stub( tsp, pathp, ep, id, client_data )
 struct db_tree_state    *tsp;
 struct db_full_path     *pathp;
-struct rt_db_internal	*ip;
+struct bu_external      *ep;
+int                     id;
 genptr_t		client_data;
 {
 	struct directory *fp_name;	/* name from pathp */
@@ -160,15 +161,14 @@ genptr_t		client_data;
 	return( (union tree *)NULL );
 }
 
-#if 0
 /* Routine to identify external/void shells
  *	Marks external shells with a +1 in the flags array
  *	Marks void shells with a -1 in the flags array
  */
 static void
 nmg_find_void_shells( r , flags , ttol )
-const struct nmgregion *r;
-const struct bn_tol *ttol;
+CONST struct nmgregion *r;
+CONST struct bn_tol *ttol;
 long *flags;
 {
 	struct model *m;
@@ -209,7 +209,7 @@ static void
 nmg_assoc_void_shells( r , flags , ttol )
 struct nmgregion *r;
 long *flags;
-const struct bn_tol *ttol;
+CONST struct bn_tol *ttol;
 {
 	struct shell *s;
 	struct faceuse *fu;
@@ -316,7 +316,6 @@ const struct bn_tol *ttol;
 		}
 	}
 }
-#endif
 
 /*	Routine to write an nmgregion in the TANKILL format */
 static void
@@ -689,8 +688,6 @@ char	*argv[];
 		nmg_eue_dist = 2.0;
 	}
 
-	rt_init_resource( &rt_uniresource, 0, NULL );
-
 	BU_LIST_INIT( &rt_g.rtg_vlfree );	/* for vlist macros */
 
 	/* Get command line arguments. */
@@ -721,13 +718,13 @@ char	*argv[];
 			break;
 		case 'P':
 /*			ncpu = atoi( optarg ); */
-			bu_debug = BU_DEBUG_COREDUMP;	/* to get core dumps */
+			rt_g.debug = 1;	/* XXX DEBUG_ALLRAYS -- to get core dumps */
 			break;
 		case 'x':
-			sscanf( optarg, "%x", (unsigned int *)&rt_g.debug );
+			sscanf( optarg, "%x", &rt_g.debug );
 			break;
 		case 'X':
-			sscanf( optarg, "%x", (unsigned int *)&rt_g.NMG_debug );
+			sscanf( optarg, "%x", &rt_g.NMG_debug );
 			NMG_debug = rt_g.NMG_debug;
 			break;
 		default:
@@ -749,7 +746,7 @@ char	*argv[];
 		perror(argv[0]);
 		exit(1);
 	}
-	db_dirbuild( dbip );
+	db_scan(dbip, (int (*)())db_diradd, 1, NULL);
 
 	if( out_file == NULL )
 		fp_out = stdout;
@@ -776,7 +773,7 @@ char	*argv[];
 	optind++;
 
 	/* First produce a list of region ident codes */
-	(void)db_walk_tree(dbip, argc-optind, (const char **)(&argv[optind]),
+	(void)db_walk_tree(dbip, argc-optind, (CONST char **)(&argv[optind]),
 		1,				/* ncpu */
 		&tree_state,
 		get_reg_id,			/* put id in table */
@@ -810,7 +807,7 @@ char	*argv[];
 		bu_log( "Processing id %d\n" , curr_id );
 
 		/* Walk indicated tree(s).  Each region will be output separately */
-		(void)db_walk_tree(dbip, argc-optind, (const char **)(&argv[optind]),
+		(void)db_walk_tree(dbip, argc-optind, (CONST char **)(&argv[optind]),
 			1,				/* ncpu */
 			&tree_state,
 			select_region,			/* selects regions with curr_id */
@@ -855,6 +852,7 @@ struct db_full_path	*pathp;
 union tree		*curtree;
 genptr_t		client_data;
 {
+	extern FILE		*fp_fig;
 	struct nmgregion	*r;
 	struct bu_list		vhead;
 	union tree		*ret_tree;
@@ -865,7 +863,7 @@ genptr_t		client_data;
 
 	BU_LIST_INIT(&vhead);
 
-	if (RT_G_DEBUG&DEBUG_TREEWALK || verbose) {
+	if (rt_g.debug&DEBUG_TREEWALK || verbose) {
 		char	*sofar = db_path_to_string(pathp);
 		bu_log("\ndo_region_end(%d %d%%) %s\n",
 			regions_tried,
@@ -913,8 +911,7 @@ genptr_t		client_data;
 		goto out;
 	}
 	(void)nmg_model_fuse(*tsp->ts_m, tsp->ts_tol);
-	/* librt/nmg_bool.c */
-	ret_tree = nmg_booltree_evaluate(curtree, tsp->ts_tol, &rt_uniresource);
+	ret_tree = nmg_booltree_evaluate(curtree, tsp->ts_tol);	/* librt/nmg_bool.c */
 
 	if( ret_tree )
 		r = ret_tree->tr_d.td_r;
@@ -1007,7 +1004,7 @@ out:
 	 *  A return of TREE_NULL from this routine signals an error,
 	 *  so we need to cons up an OP_NOP node to return.
 	 */
-	db_free_tree(curtree, &rt_uniresource);		/* Does an nmg_kr() */
+	db_free_tree(curtree);		/* Does an nmg_kr() */
 
 	BU_GETUNION(curtree, tree);
 	curtree->magic = RT_TREE_MAGIC;

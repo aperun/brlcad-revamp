@@ -467,7 +467,7 @@ Tcl_PackageObjCmd(dummy, interp, objc, objv)
     ClientData dummy;			/* Not used. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int objc;				/* Number of arguments. */
-    Tcl_Obj *const objv[];	/* Argument objects. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     static char *pkgOptions[] = {
 	"forget", "ifneeded", "names", "present", "provide", "require",
@@ -977,4 +977,3 @@ ComparePkgVersions(v1, v2, satPtr)
 	return -1;
     }
 }
-

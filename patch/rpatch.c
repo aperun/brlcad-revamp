@@ -18,10 +18,8 @@
 #include <strings.h>
 #endif
 
-#include "externs.h"
-
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #define	MAXLINELEN	256
@@ -180,7 +178,6 @@ unsigned int start_col;
 	return( atoi( tmp_str ) );
 }
 
-int
 main( argc, argv )
 int argc;
 char *argv[];
@@ -292,5 +289,4 @@ char *argv[];
 		printf( " %3d %3d\n" , m , n );
 
 	}
-	return 0;
 }

@@ -240,7 +240,7 @@ dist-clobber&:
 clobber&:	clean noprod
 
 clean&:
-	-rm -f core *.core *~ *.o EXTRA_CLEAN SRCDIR.out SRCDIR.err SRCDIR.xref SRCDIR.flow SRCDIR.lint
+	-rm -f core *~ *.o EXTRA_CLEAN SRCDIR.out SRCDIR.err SRCDIR.xref SRCDIR.flow SRCDIR.lint
 
 #if defined(LIBRARY_TITLE)
 /*
@@ -248,12 +248,9 @@ clean&:
  *  This depends on the fact that for libraries, PRODUCTS is a single name,
  *  not a list of file names, and that there will be no source file called
  *  PRODUCTS.c, e.g., no librt.c file for making librt.so.10.
- *
- *  The "SRCDIR.*" version is to catch the case where we're changing
- *  from shared libraries to non-shared libraries.
  */
 noprod&:
-	-rm -f PRODUCTS* SRCDIR.*
+	-rm -f PRODUCTS*
 #else
 noprod&:
 	-rm -f PRODUCTS

@@ -554,7 +554,7 @@ EXTERN void		TkpDestroyMenuEntry
 			    _ANSI_ARGS_((TkMenuEntry *mEntryPtr));
 EXTERN void		TkpDrawMenuEntry _ANSI_ARGS_((TkMenuEntry *mePtr,
 			    Drawable d, Tk_Font tkfont, 
-			    const Tk_FontMetrics *menuMetricsPtr, int x,
+			    CONST Tk_FontMetrics *menuMetricsPtr, int x,
 			    int y, int width, int height, int strictMotif,
 			    int drawArrow));
 EXTERN void		TkpMenuInit _ANSI_ARGS_((void));

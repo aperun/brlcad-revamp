@@ -27,7 +27,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -56,7 +56,7 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
  */
 int
 db_regexp_match( pattern, string )
-register const char *pattern, *string;
+register CONST char *pattern, *string;
 {
 	do {
 		switch( *pattern ) {
@@ -124,7 +124,7 @@ int
 db_regexp_match_all( dest, dbip, pattern )
 struct bu_vls	*dest;
 struct db_i	*dbip;
-const char	*pattern;
+CONST char	*pattern;
 {
 	register int i, num;
 	register struct directory *dp;
@@ -172,7 +172,8 @@ genptr_t		 dummy1, dummy2, dummy3;
  */
 
 void
-db_update_nref( struct db_i *dbip, struct resource *resp )
+db_update_nref( dbip )
+struct db_i    *dbip;
 {
 	register int			i;
 	register struct directory      *dp;
@@ -180,7 +181,6 @@ db_update_nref( struct db_i *dbip, struct resource *resp )
 	struct rt_comb_internal	       *comb;
 
 	RT_CK_DBI( dbip );
-	RT_CK_RESOURCE(resp);
 
 	/* First, clear any existing counts */
 	for( i = 0; i < RT_DBNHASH; i++ )
@@ -188,24 +188,18 @@ db_update_nref( struct db_i *dbip, struct resource *resp )
 			dp->d_nref = 0;
 
 	/* Examine all COMB nodes */
-	for( i = 0; i < RT_DBNHASH; i++ )  {
+	for( i = 0; i < RT_DBNHASH; i++ )
 		for( dp = dbip->dbi_Head[i]; dp != DIR_NULL; dp = dp->d_forw ){
 			if( !(dp->d_flags & DIR_COMB) )
 				continue;
-			if( rt_db_get_internal(&intern, dp, dbip, (fastf_t *)NULL, resp) < 0 )
+			if( rt_db_get_internal(&intern, dp, dbip, (fastf_t *)NULL) < 0 )
 				continue;
-			if( intern.idb_type != ID_COMBINATION )  {
-				bu_log("NOTICE: %s was marked a combination, but isn't one?  Clearing flag\n",
-					dp->d_namep);
-				dp->d_flags &= ~DIR_COMB;
-				rt_db_free_internal( &intern, resp );
+			if( intern.idb_type != ID_COMBINATION )
 				continue;
-			}
 			comb = (struct rt_comb_internal *)intern.idb_ptr;
 			db_tree_funcleaf( dbip, comb, comb->tree,
 					  db_count_refs, (genptr_t)NULL,
 					  (genptr_t)NULL, (genptr_t)NULL );
-			rt_db_free_internal( &intern, resp );
+			intern.idb_meth->ft_ifree( &intern );
 		}
-	}
 }

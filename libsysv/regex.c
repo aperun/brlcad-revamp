@@ -19,7 +19,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -139,7 +139,7 @@ static regex_t reg;
 
 char *
 re_comp(s)
-const char *s;
+CONST char *s;
 {
 	int i;
 	static char errbuf[1024];
@@ -154,7 +154,7 @@ const char *s;
 
 int
 re_exec(s)
-const char *s;
+CONST char *s;
 {
 	int i;
 

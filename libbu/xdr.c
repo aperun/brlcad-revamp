@@ -16,7 +16,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char libbu_xdr_RCSid[] = "@(#)$Header$ (ARL)";
+static char libbu_xdr_RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 
@@ -49,9 +49,9 @@ static const char libbu_xdr_RCSid[] = "@(#)$Header$ (ARL)";
  */
 unsigned short
 bu_gshort(msgp)
-const unsigned char *msgp;
+CONST unsigned char *msgp;
 {
-	register const unsigned char *p = msgp;
+	register CONST unsigned char *p = msgp;
 #ifdef vax
 	/*
 	 * vax compiler doesn't put shorts in registers
@@ -70,9 +70,9 @@ const unsigned char *msgp;
  */
 unsigned long
 bu_glong(msgp)
-const unsigned char *msgp;
+CONST unsigned char *msgp;
 {
-	register const unsigned char *p = msgp;
+	register CONST unsigned char *p = msgp;
 	register unsigned long u;
 
 	u = *p++; u <<= 8;

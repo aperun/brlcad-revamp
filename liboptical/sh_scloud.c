@@ -20,27 +20,21 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include <math.h>
 #include "machine.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 #include "../rt/light.h"
 
-extern int rr_render(struct application	*ap,
-		     struct partition	*pp,
-		     struct shadework   *swp);
 #if !defined(M_PI)
 #define M_PI            3.14159265358979323846
 #endif
@@ -165,7 +159,7 @@ struct rt_i		*rtip;
 		/* bad thing */
 		rt_bomb("db_string_to_path() error");
 	}
-	if(! db_path_to_mat(rtip->rti_dbip, &full_path, region_to_model, 0, &rt_uniresource)) {
+	if(! db_path_to_mat(rtip->rti_dbip, &full_path, region_to_model, 0)) {
 		/* bad thing */
 		rt_bomb("db_path_to_mat() error");
 	}
@@ -174,7 +168,7 @@ struct rt_i		*rtip;
 	bn_mat_inv(model_to_region, region_to_model);
 
 	/* add the noise-space scaling */
-	MAT_IDN(tmp);
+	bn_mat_idn(tmp);
 	if (scloud->scale != 1.0) {
 		tmp[0] = tmp[5] = tmp[10] = 1.0 / scloud->scale;
 	} else {
@@ -186,7 +180,7 @@ struct rt_i		*rtip;
 	bn_mat_mul(scloud->mtos, tmp, model_to_region);
 
 	/* add the translation within noise space */
-	MAT_IDN(tmp);
+	bn_mat_idn(tmp);
 	tmp[MDX] = scloud->delta[0];
 	tmp[MDY] = scloud->delta[1];
 	tmp[MDZ] = scloud->delta[2];
@@ -344,6 +338,8 @@ char	*dp;
 		val = bn_noise_turb(pt, scloud_sp->h_val, 
 			scloud_sp->lacunarity, scloud_sp->octaves );
 
+		if (rdebug&RDEBUG_SHADE)
+			
 		density = scloud_sp->min_d_p_mm + val * delta_dpmm;
 
 		val = exp( - density * step_delta);

@@ -20,18 +20,13 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include "machine.h"
 #include "bu.h"
 #include "db.h"
@@ -54,9 +49,6 @@ FILE	*fp;
 char	*name;
 {
 	union record rec;
-
-	/* In v5, the caller should be using BoT solids */
-	BU_ASSERT_LONG( mk_version, <=, 4 );
 
 	bzero( (char *)&rec, sizeof(rec) );
 	rec.p.p_id = ID_P_HEAD;
@@ -85,9 +77,6 @@ fastf_t	norms[][3];
 		fprintf(stderr,"mk_poly:  npts=%d is bad\n", npts);
 		return(-1);
 	}
-
-	/* In v5, the caller should be using BoT solids */
-	BU_ASSERT_LONG( mk_version, <=, 4 );
 
 	bzero( (char *)&rec, sizeof(rec) );
 	rec.q.q_id = ID_P_DATA;
@@ -125,9 +114,6 @@ fastf_t	verts[][3];
 		fprintf(stderr,"mk_poly:  npts=%d is bad\n", npts);
 		return(-1);
 	}
-
-	/* In v5, the caller should be using BoT solids */
-	BU_ASSERT_LONG( mk_version, <=, 4 );
 
 	VSUB2( v1, verts[1], verts[0] );
 	VSUB2( v2, verts[npts-1], verts[0] );

@@ -18,13 +18,13 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
+#ifdef USE_STRING_H
 #include	<string.h>
 #else
 #include	<strings.h>
@@ -47,7 +47,6 @@ Usage: pixfields [-v]\n\
         [-s squaresize] [-w width] [-n height]\n\
 	 field1.pix field2.pix > file.pix\n";
 
-int
 get_args( argc, argv )
 register char **argv;
 {
@@ -103,7 +102,6 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int
 main( argc, argv )
 int argc; char **argv;
 {

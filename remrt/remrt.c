@@ -20,7 +20,7 @@
  *	This software is Copyright (C) 1989 by the United States Army.
  *	All rights reserved.
  */
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "conf.h"
 
@@ -53,8 +53,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
  *  Note that on many SYSV machines, the Cakefile has to set BSD
  */
 #if BSD && !SYSV
-#  include <time.h>
-#  include <sys/time.h>		/* sometimes includes <time.h> */
+#  include <sys/time.h>		/* includes <time.h> */
 #else
 #  if CRAY1 && !__STDC__
 #	include <time.h>	/* includes <sys/time.h> */
@@ -64,15 +63,18 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #  endif
 #endif
 
+#ifdef linux
+#	include <time.h>
+#endif
+
 #include "machine.h"
-#include "externs.h"
-#include "bu.h"
 #include "vmath.h"
-#include "bn.h"
+#include "rtstring.h"
+#include "rtlist.h"
 #include "raytrace.h"
 #include "fb.h"
 #include "pkg.h"
-#include "rtprivate.h"
+#include "externs.h"
 #include "../librt/debug.h"
 
 #include "./protocol.h"
@@ -84,8 +86,8 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 /* Needed to satisfy the reference created by including ../rt/opt.o */
 struct command_tab rt_cmdtab[] = {
-	{(char *)0, (char *)0, (char *)0,
-		0,		0, 0}	/* END */
+	(char *)0, (char *)0, (char *)0,
+		0,		0, 0	/* END */
 };
 
 void		read_rc_file();
@@ -118,7 +120,6 @@ void		drop_server();
 void		send_do_lines();
 void		do_work();
 void		source();
-
 
 FBIO *fbp = FBIO_NULL;		/* Current framebuffer ptr */
 int cur_fbwidth;		/* current fb width */
@@ -246,7 +247,7 @@ struct frame *FreeFrame;
 		} else { \
 			FreeFrame = (p)->fr_forw; (p)->fr_forw = FRAME_NULL; \
 		} \
-		memset( (char *)(p), 0, sizeof(struct frame) ); \
+		bzero( (char *)(p), sizeof(struct frame) ); \
 		(p)->fr_magic = FRAME_MAGIC; \
 		bu_vls_init( &(p)->fr_cmd ); \
 		bu_vls_init( &(p)->fr_after_cmd ); \
@@ -360,7 +361,7 @@ int		use_air = 0;
 
 /* variables shared with worker() */
 extern int	hypersample;
-extern unsigned int	jitter;
+extern int	jitter;
 extern fastf_t	rt_perspective;
 extern fastf_t	aspect;
 extern fastf_t	eye_backoff;
@@ -407,18 +408,6 @@ char *allocate_method[] = {
 	"Frame",
 	"Load Avaraging",
 	"One per Frame"};
-
-
-int init_fb(char *name);
-int create_outputfilename( struct frame *fr );
-int cd_frames( int argc, char **argv );
-int cd_stat( int argc, char **argv );
-int is_hackers_night( struct timeval *tv );
-int is_night( struct timeval *tv );
-int task_server( struct servers *sp, struct frame *fr, struct timeval *nowp );
-int server_q_len( struct servers *sp );
-int cd_stop( int argc, char **argv );
-
 
 /*
  *			T V S U B
@@ -831,13 +820,12 @@ struct pkg_conn *pc;
 	fd = pc->pkc_fd;
 
 	fromlen = sizeof (from);
-
 	if (getpeername(fd, (struct sockaddr *)&from, &fromlen) < 0) {
 		perror("getpeername");
 		close(fd);
 		return;
 	}
-	if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (const char *)&on, sizeof (on)) < 0)
+	if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (CONST char *)&on, sizeof (on)) < 0)
 		perror("setsockopt (SO_KEEPALIVE)");
 
 	if( (ihp = host_lookup_by_addr( &from, 1 )) == IHOST_NULL )  {
@@ -852,7 +840,7 @@ struct pkg_conn *pc;
 	FD_SET( fd, &clients );
 
 	sp = &servers[fd];
-	memset( (char *)sp, 0, sizeof(*sp) );
+	bzero( (char *)sp, sizeof(*sp) );
 	sp->sr_pc = pc;
 	BU_LIST_INIT( &sp->sr_work );
 	sp->sr_curframe = FRAME_NULL;
@@ -1030,7 +1018,8 @@ next_host:	continue;
  *  machines used by hackers who stay up late.
  */
 int
-is_night( struct timeval *tv )
+is_night( tv )
+struct timeval	*tv;
 {
 	struct tm	*tp;
 	time_t		sec;
@@ -1054,7 +1043,8 @@ is_night( struct timeval *tv )
  *  using machines in another time zone.
  */
 int
-is_hackers_night( struct timeval *tv )
+is_hackers_night( tv )
+struct timeval	*tv;
 {
 	struct tm	*tp;
 	time_t		sec;
@@ -1218,7 +1208,7 @@ register char *str;
 
 	ret = 0;
 	if( str[0] == '0' && str[1] == 'x' )
-		cnt = sscanf( str+2, "%x", (unsigned int *)&ret );
+		cnt = sscanf( str+2, "%x", &ret );
 	else
 		cnt = sscanf( str, "%d", &ret );
 	if( cnt != 1 )
@@ -1333,7 +1323,7 @@ register struct frame *fr;
 		use_air, jitter,
 		AmbientIntensity, lightmodel,
 		eye_backoff,
-		RT_G_DEBUG, rdebug,
+		rt_g.debug, rdebug,
 		rt_dist_tol, rt_perp_tol
 	);
 	bu_vls_strcat( &fr->fr_cmd, buf );
@@ -1469,7 +1459,8 @@ register struct frame	*fr;
  *	 0	OK
  */
 int
-create_outputfilename( struct frame *fr )
+create_outputfilename( fr )
+register struct frame	*fr;
 {
 	char	name[512];
 	struct stat	sb;
@@ -1725,7 +1716,7 @@ struct timeval	*nowp;
 	register struct frame *fr;
 	register struct frame *fr2;
 	int		another_pass;
-	int		nxt_frame=0;
+	int		nxt_frame;
 	static int	scheduler_going = 0;	/* recursion protection */
 	int		ret;
 
@@ -1810,7 +1801,7 @@ top:
 			for( sp = &servers[0]; sp < &servers[MAXSERVERS]; sp++ )  {
 				if( sp->sr_pc == PKC_NULL )  continue;
 
-				if( (ret = task_server(sp,fr,nowp)) < 0 )  {
+				if( (ret = task_server(fr,sp,nowp)) < 0 )  {
 					/* fr is no longer valid */
 					goto top;
 				} else if (ret == 2) {
@@ -1900,7 +1891,10 @@ assignment_time()
  *	1	when this server needs additional work
  */
 int
-task_server( struct servers *sp, struct frame *fr, struct timeval *nowp )
+task_server( fr, sp, nowp )
+register struct servers	*sp;
+register struct frame	*fr;
+struct timeval		*nowp;
 {
 	register struct list	*lp;
 	int			a, b;
@@ -2056,7 +2050,8 @@ task_server( struct servers *sp, struct frame *fr, struct timeval *nowp )
  *  Report number of assignments that a server has
  */
 int
-server_q_len( struct servers *sp )
+server_q_len( sp )
+register struct servers	*sp;
 {
 	register struct list	*lp;
 	register int		count;
@@ -2643,7 +2638,8 @@ register struct frame *fr;
  *			I N I T _ F B
  */
 int
-init_fb(char *name)
+init_fb(name)
+char *name;
 {
 	register int xx, yy;
 
@@ -3129,7 +3125,6 @@ char	**argv;
  *
  *  Set/toggle the local (dispatcher) debugging flag
  */
-int
 cd_debug( argc, argv )
 int	argc;
 char	**argv;
@@ -3137,7 +3132,7 @@ char	**argv;
 	if( argc <= 1 )  {
 		rem_debug = !rem_debug;
 	} else {
-		sscanf( argv[1], "%x", (unsigned int *)&rem_debug );
+		sscanf( argv[1], "%x", &rem_debug );
 	}
 	bu_log("%s Dispatcher debug=x%x\n", stamp(), rem_debug );
 	return 0;
@@ -3149,7 +3144,6 @@ char	**argv;
  *  Send a string to the command processor on all the remote workers.
  *  Typically this would be of the form "opt -x42;"
  */
-int
 cd_rdebug( argc, argv )
 int	argc;
 char	**argv;
@@ -3170,7 +3164,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_f( argc, argv )
 int	argc;
 char	**argv;
@@ -3184,7 +3177,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_S( argc, argv )
 int	argc;
 char	**argv;
@@ -3199,7 +3191,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_N( argc, argv )
 int	argc;
 char	**argv;
@@ -3212,7 +3203,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_hyper( argc, argv )
 int	argc;
 char	**argv;
@@ -3222,7 +3212,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_bench( argc, argv )
 int	argc;
 char	**argv;
@@ -3232,7 +3221,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_persp( argc, argv )
 int	argc;
 char	**argv;
@@ -3243,7 +3231,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_read( argc, argv )
 int	argc;
 char	**argv;
@@ -3272,7 +3259,6 @@ FILE	*fp;
 	}
 }
 
-int
 cd_detach( argc, argv )
 int	argc;
 char	**argv;
@@ -3283,7 +3269,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_file( argc, argv )
 int	argc;
 char	**argv;
@@ -3298,7 +3283,6 @@ char	**argv;
  *
  *  Read one specific matrix from an old-format eyepoint file.
  */
-int
 cd_mat( argc, argv )
 int	argc;
 char	**argv;
@@ -3338,7 +3322,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_movie( argc, argv )
 int	argc;
 char	**argv;
@@ -3394,7 +3377,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_add( argc, argv )
 int	argc;
 char	**argv;
@@ -3410,7 +3392,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_drop( argc, argv )
 int	argc;
 char	**argv;
@@ -3423,7 +3404,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_hold( argc, argv )
 int	argc;
 char	**argv;
@@ -3441,7 +3421,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_resume( argc, argv )
 int	argc;
 char	**argv;
@@ -3474,7 +3453,7 @@ char **argv;
 	return( 0 );
 }
 		
-int
+
 cd_restart( argc, argv )
 int	argc;
 char	**argv;
@@ -3497,15 +3476,15 @@ char	**argv;
 	return 0;
 }
 
-int
-cd_stop( int argc, char **argv )
+cd_stop( argc, argv )
+int	argc;
+char	**argv;
 {
 	bu_log("%s No more scanlines being scheduled, done soon\n", stamp() );
 	running = 0;
 	return 0;
 }
 
-int
 cd_reset( argc, argv )
 int	argc;
 char	**argv;
@@ -3524,7 +3503,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_attach( argc, argv )
 int	argc;
 char	**argv;
@@ -3546,7 +3524,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_release( argc, argv )
 int	argc;
 char	**argv;
@@ -3563,8 +3540,9 @@ char	**argv;
  *  Sumarize frames waiting
  *	Usage: frames [-v]
  */
-int
-cd_frames( int argc, char **argv )
+cd_frames( argc, argv )
+int	argc;
+char	**argv;
 {
 	register struct frame *fr;
 
@@ -3589,7 +3567,6 @@ cd_frames( int argc, char **argv )
 	return 0;
 }
 
-int
 cd_memprint( argc, argv)
 int	argc;
 char	**argv;
@@ -3609,8 +3586,9 @@ char	**argv;
  *
  *  Brief version
  */
-int
-cd_stat( int argc, char **argv )
+cd_stat( argc, argv )
+int	argc;
+char	**argv;
 {
 	register struct servers *sp;
     	int	frame;
@@ -3663,7 +3641,6 @@ cd_stat( int argc, char **argv )
  *
  *  Full status version
  */
-int
 cd_status( argc, argv )
 int	argc;
 char	**argv;
@@ -3730,7 +3707,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_clear( argc, argv )
 int	argc;
 char	**argv;
@@ -3741,7 +3717,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_print( argc, argv )
 int	argc;
 char	**argv;
@@ -3763,7 +3738,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_go( argc, argv )
 int	argc;
 char	**argv;
@@ -3772,7 +3746,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_wait( argc, argv )
 int	argc;
 char	**argv;
@@ -3810,7 +3783,6 @@ char	**argv;
 	return 0;
 }
 
-int
 cd_help( argc, argv )
 int	argc;
 char	**argv;
@@ -3828,7 +3800,6 @@ char	**argv;
 /*
  * host name always|night|passive cd|convert path
  */
-int
 cd_host( argc, argv )
 int	argc;
 char	**argv;
@@ -3928,7 +3899,6 @@ char	**argv;
 /*
  *			C D _ E X I T
  */
-int
 cd_exit( argc, argv )
 int	argc;
 char	**argv;
@@ -3947,7 +3917,6 @@ char	**argv;
  *	frame_script is set to the shell script to execute.
  *
  */
-int
 cd_EOFrame( argc, argv )
 int	argc;
 char	**argv;
@@ -3964,85 +3933,85 @@ char	**argv;
 }
 
 struct command_tab cmd_tab[] = {
-	{"load",	"file obj(s)",	"specify database and treetops",
-		cd_load,	3, 99},
-	{"read", "file",		"source a command file",
-		cd_read,	2, 2},
-	{"file", "name",		"base name for storing frames",
-		cd_file,	2, 2},
-	{"mat", "file [frame]",	"read one matrix from file",
-		cd_mat,		2, 3},
-	{"movie", "file start_frame end_frame",	"read movie",
-		cd_movie,	4, 4},
-	{"add", "host(s)",	"attach to hosts",
-		cd_add,		2, 99},
-	{"drop", "host",		"drop first instance of 'host'",
-		cd_drop,	2, 2},
-	{"hold", "host",		"Hold a host from processing",
-		cd_hold,	2, 2},
-	{"resume","host",	"resume a host processing",
-		cd_resume,	2, 2},
-	{"allocteby", "allocateby", "Work allocation method",
-		cd_allocate,	2, 2},
-	{"restart", "[host]",	"restart one or all hosts",
-		cd_restart,	1, 2},
-	{"go", "",		"start scheduling frames",
-		cd_go,		1, 1},
-	{"stop", "",		"stop scheduling work",
-		cd_stop,	1, 1},
-	{"reset", "",		"purge frame list of all work",
-		cd_reset,	1, 1},
-	{"frames", "[-v]",	"summarize waiting frames",
-		cd_frames,	1, 2},
-	{"stat", "",		"brief worker status",
-		cd_stat,	1, 1},
-	{"status", "",		"full worker status",
-		cd_status,	1, 1},
-	{"detach", "",		"detatch from interactive keyboard",
-		cd_detach,	1, 1},
-	{"host", "name always|night|passive|rs[ rays/sec]|passrs[ rays/sec] cd|convert path", "register server host",
-		cd_host,	1, 6},
-	{"wait", "",		"wait for current work assignment to finish",
-		cd_wait,	1, 1},
-	{"exit", "",		"terminate remrt",
-		cd_exit,	1, 1},
-	{"EOFrame", "EOFrame command|'off'", "Run command/script on dispatcher at End Of Frame",
-		cd_EOFrame,	2, 2},
+	"load",	"file obj(s)",	"specify database and treetops",
+		cd_load,	3, 99,
+	"read", "file",		"source a command file",
+		cd_read,	2, 2,
+	"file", "name",		"base name for storing frames",
+		cd_file,	2, 2,
+	"mat", "file [frame]",	"read one matrix from file",
+		cd_mat,		2, 3,
+	"movie", "file start_frame end_frame",	"read movie",
+		cd_movie,	4, 4,
+	"add", "host(s)",	"attach to hosts",
+		cd_add,		2, 99,
+	"drop", "host",		"drop first instance of 'host'",
+		cd_drop,	2, 2,
+	"hold", "host",		"Hold a host from processing",
+		cd_hold,	2, 2,
+	"resume","host",	"resume a host processing",
+		cd_resume,	2, 2,
+	"allocteby", "allocateby", "Work allocation method",
+		cd_allocate,	2, 2,
+	"restart", "[host]",	"restart one or all hosts",
+		cd_restart,	1, 2,
+	"go", "",		"start scheduling frames",
+		cd_go,		1, 1,
+	"stop", "",		"stop scheduling work",
+		cd_stop,	1, 1,
+	"reset", "",		"purge frame list of all work",
+		cd_reset,	1, 1,
+	"frames", "[-v]",	"summarize waiting frames",
+		cd_frames,	1, 2,
+	"stat", "",		"brief worker status",
+		cd_stat,	1, 1,
+	"status", "",		"full worker status",
+		cd_status,	1, 1,
+	"detach", "",		"detatch from interactive keyboard",
+		cd_detach,	1, 1,
+	"host", "name always|night|passive|rs[ rays/sec]|passrs[ rays/sec] cd|convert path", "register server host",
+		cd_host,	1, 6,
+	"wait", "",		"wait for current work assignment to finish",
+		cd_wait,	1, 1,
+	"exit", "",		"terminate remrt",
+		cd_exit,	1, 1,
+	"EOFrame", "EOFrame command|'off'", "Run command/script on dispatcher at End Of Frame",
+		cd_EOFrame,	2, 2,
 	/* FRAME BUFFER */
-	{"attach", "[fb]",	"attach to frame buffer",
-		cd_attach,	1, 2},
-	{"release", "",		"release frame buffer",
-		cd_release,	1, 1},
-	{"clear", "",		"clear framebuffer",
-		cd_clear,	1, 1},
-	{"S", "square_size",	"set square frame buffer size",
-		cd_S,		2, 2},
-	{"N", "square_height",	"set height of frame buffer",
-		cd_N,		2, 2},
+	"attach", "[fb]",	"attach to frame buffer",
+		cd_attach,	1, 2,
+	"release", "",		"release frame buffer",
+		cd_release,	1, 1,
+	"clear", "",		"clear framebuffer",
+		cd_clear,	1, 1,
+	"S", "square_size",	"set square frame buffer size",
+		cd_S,		2, 2,
+	"N", "square_height",	"set height of frame buffer",
+		cd_N,		2, 2,
 	/* FLAGS */
-	{"debug", "[hex_flags]",	"set local debugging flag bits",
-		cd_debug,	1, 2},
-	{"rdebug", "options",	"set remote debugging via 'opt' command",
-		cd_rdebug,	2, 2},
-	{"f", "square_size",	"set square frame size",
-		cd_f,		2, 2},
-	{"s", "square_size",	"set square frame size",
-		cd_f,		2, 2},
-	{"-H", "hypersample",	"set number of hypersamples/pixel",
-		cd_hyper,	2, 2},
-	{"-B", "0|1",		"set benchmark flag",
-		cd_bench,	2, 2},
-	{"p", "angle",		"set perspective angle (degrees) 0=ortho",
-		cd_persp,	2, 2},
-	{"print", "[0|1]",	"set/toggle remote message printing",
-		cd_print,	1, 2},
-	{"memprint", "on|off|NULL",	"debug dump of memory usage",
-		cd_memprint,	1, 2},
+	"debug", "[hex_flags]",	"set local debugging flag bits",
+		cd_debug,	1, 2,
+	"rdebug", "options",	"set remote debugging via 'opt' command",
+		cd_rdebug,	2, 2,
+	"f", "square_size",	"set square frame size",
+		cd_f,		2, 2,
+	"s", "square_size",	"set square frame size",
+		cd_f,		2, 2,
+	"-H", "hypersample",	"set number of hypersamples/pixel",
+		cd_hyper,	2, 2,
+	"-B", "0|1",		"set benchmark flag",
+		cd_bench,	2, 2,
+	"p", "angle",		"set perspective angle (degrees) 0=ortho",
+		cd_persp,	2, 2,
+	"print", "[0|1]",	"set/toggle remote message printing",
+		cd_print,	1, 2,
+	"memprint", "on|off|NULL",	"debug dump of memory usage",
+		cd_memprint,	1, 2,
 	/* HELP */
-	{"?", "",		"help",
-		cd_help,	1, 1},
-	{(char *)0, (char *)0, (char *)0,
-		0,		0, 0}	/* END */
+	"?", "",		"help",
+		cd_help,	1, 1,
+	(char *)0, (char *)0, (char *)0,
+		0,		0, 0	/* END */
 };
 
 #ifdef CRAY2

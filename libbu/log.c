@@ -28,7 +28,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char RCSlog[] = "@(#)$Header$ (ARL)";
+static char RCSlog[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -48,7 +48,7 @@ static const char RCSlog[] = "@(#)$Header$ (ARL)";
 #include "bu.h"
 
 #if defined(HAVE_VARARGS_H) || defined(HAVE_STDARG_H)
-BU_EXTERN(void	bu_vls_vprintf, (struct bu_vls *vls, const char *fmt, va_list ap));
+BU_EXTERN(void	bu_vls_vprintf, (struct bu_vls *vls, CONST char *fmt, va_list ap));
 #endif
 
 static int	bu_log_indent_cur_level = 0; /* formerly rt_g.rtg_logindent */
@@ -80,8 +80,14 @@ struct bu_vls	*v;
 	bu_vls_spaces( v, bu_log_indent_cur_level );
 }
 
-#if 1
-struct bu_hook_list bu_log_hook_list = {
+
+struct bu_hook_list {
+	struct bu_list	l;
+	bu_hook_t	hookfunc;
+	genptr_t 	clientdata;
+};
+
+static struct bu_hook_list bu_log_hook_list = {
 	{	BU_LIST_HEAD_MAGIC, 
 		&bu_log_hook_list.l, 
 		&bu_log_hook_list.l
@@ -89,9 +95,9 @@ struct bu_hook_list bu_log_hook_list = {
 	BUHOOK_NULL,
 	GENPTR_NULL
 };
-#else
-struct bu_hook_list bu_log_hook_list;
-#endif
+
+#define BUHOOK_LIST_MAGIC	0x90d5dead	/* Nietzsche? */
+#define BUHOOK_LIST_NULL	((struct bu_hook_list *) 0)
 
 static int bu_log_first_time = 1;
 static int bu_log_hooks_called = 0;
@@ -112,7 +118,6 @@ bu_log_add_hook( func, clientdata )
 bu_hook_t func;
 genptr_t clientdata;
 {
-#if 0
     struct bu_hook_list *toadd;
 
     /* Grab a hunk of memory for a new node, and put it at the head of the
@@ -124,9 +129,6 @@ genptr_t clientdata;
     toadd->l.magic = BUHOOK_LIST_MAGIC;
 
     BU_LIST_APPEND( &(bu_log_hook_list.l), &(toadd->l) );
-#else
-    bu_add_hook(&bu_log_hook_list, func, clientdata);
-#endif
 }
 
 
@@ -141,7 +143,6 @@ bu_log_delete_hook( func, clientdata )
 bu_hook_t func;
 genptr_t clientdata;
 {
-#if 0
     struct bu_hook_list *cur = &bu_log_hook_list;
 
     for ( BU_LIST_FOR( cur, bu_hook_list, &(bu_log_hook_list.l) ) ) {
@@ -152,35 +153,24 @@ genptr_t clientdata;
 	    cur = old;
 	}
     }    
-#else
-    bu_delete_hook(&bu_log_hook_list, func, clientdata);
-#endif
 }
 
-#if 1
 HIDDEN void
 bu_log_call_hooks( buf )
 genptr_t	buf;
 {
-#if 0
     bu_hook_t hookfunc;		/* for clarity */
     genptr_t clientdata;
-#endif
 
     bu_log_hooks_called = 1;
 
-#if 0
     hookfunc = BU_LIST_FIRST(bu_hook_list, &(bu_log_hook_list.l))->hookfunc;
     clientdata = BU_LIST_FIRST(bu_hook_list, &(bu_log_hook_list.l))->clientdata;
 
     (hookfunc)( clientdata, buf);
-#else
-    bu_call_hook(&bu_log_hook_list, buf);
-#endif
 
     bu_log_hooks_called = 0;
 }
-#endif
 
 /*
  *			B U _ L O G _ D O _ I N D E N T _ L E V E L
@@ -227,11 +217,7 @@ int c;
 	char buf[2];
 	buf[0] = (char)c;
 	buf[1] = '\0';
-#if 1
 	bu_log_call_hooks(buf);
-#else
-	bu_call_hook(&bu_log_hook_list, (genptr_t)buf);
-#endif
     }
 
     if (bu_log_indent_cur_level > 0 && c == '\n') {
@@ -330,11 +316,7 @@ char *fmt;
 	}
 
     } else {
-#if 1
-	    bu_log_call_hooks(bu_vls_addr(&output));
-#else
-	    bu_call_hook(&bu_log_hook_list, (genptr_t)bu_vls_addr(&output));
-#endif
+	bu_log_call_hooks(bu_vls_addr(&output));
     }
 
 #if defined(HAVE_STDARG_H) || defined(HAVE_VARARGS_H)
@@ -428,11 +410,7 @@ char *fmt;
 	}
 
     } else {
-#if 1
-	    bu_log_call_hooks(bu_vls_addr(&output));
-#else
-	    bu_call_hook(&bu_log_hook_list, (genptr_t)bu_vls_addr(&output));
-#endif
+	bu_log_call_hooks(bu_vls_addr(&output));
     }
 
 #if defined(HAVE_STDARG_H) || defined(HAVE_VARARGS_H)

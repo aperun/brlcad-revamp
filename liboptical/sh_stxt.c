@@ -18,13 +18,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 #include "machine.h"
 #include "externs.h"
@@ -32,7 +31,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
 HIDDEN int  stxt_setup(), brick_render(), mbound_render(), rbound_render();
 HIDDEN void	stxt_print(), stxt_free();
@@ -241,7 +240,7 @@ char	*dp;
 }
 
 
-HIDDEN int
+HIDDEN
 brick_render( ap, pp, swp, dp )
 struct application	*ap;
 struct partition	*pp;
@@ -339,7 +338,7 @@ char	*dp;
  *
  *  Use region RPP to bound solid texture (rbound).
  */
-HIDDEN int
+HIDDEN
 rbound_render( ap, pp, swp, dp )
 struct application	*ap;
 struct partition	*pp;
@@ -414,7 +413,7 @@ char	*dp;
  *
  *  Use model RPP as solid texture bounds.  (mbound).
  */
-HIDDEN int
+HIDDEN
 mbound_render( ap, pp, swp, dp )
 struct application	*ap;
 struct partition	*pp;

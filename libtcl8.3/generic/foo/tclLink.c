@@ -428,4 +428,3 @@ StringValue(linkPtr, buffer)
 
     return "??";
 }
-

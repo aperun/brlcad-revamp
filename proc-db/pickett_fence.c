@@ -3,7 +3,6 @@
 #include <math.h>
 #include "machine.h"
 #include "vmath.h"
-#include "raytrace.h"
 #include "wdb.h"
 
 int main(int argc, char *argv[])

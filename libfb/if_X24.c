@@ -924,7 +924,7 @@ static int
 X24_write(ifp, x, y, pixelp, count)
 FBIO	*ifp;
 int	x, y;
-const unsigned char	*pixelp;
+CONST unsigned char	*pixelp;
 int	count;
 {
 	struct xinfo *xi = XI(ifp);
@@ -987,7 +987,7 @@ printf("X24_rmap(ifp:0x%x, cmp:0x%x) entered.\n",
 static int
 X24_wmap(ifp, cmp)
 FBIO	*ifp;
-const ColorMap	*cmp;
+CONST ColorMap	*cmp;
 {
 	struct xinfo *xi = XI(ifp);
 	ColorMap *map = xi->xi_rgb_cmap;
@@ -1145,7 +1145,7 @@ printf("X24_getview(ifp:0x%x, xcenter:0x%x, ycenter:0x%x, xzoom:0x%x, yzoom:0x%x
 static int
 X24_setcursor(ifp, bits, xbits, ybits, xorig, yorig)
 FBIO	*ifp;
-const unsigned char *bits;
+CONST unsigned char *bits;
 int	xbits, ybits;
 int	xorig, yorig;
 {
@@ -1295,7 +1295,7 @@ X24_writerect(ifp, xmin, ymin, width, height, pp)
 FBIO	*ifp;
 int	xmin, ymin;
 int	width, height;
-const unsigned char	*pp;
+CONST unsigned char	*pp;
 {
 	struct xinfo *xi = XI(ifp);
 

@@ -29,10 +29,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "tcl.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
-
 #include <sys/time.h>		/* for struct timeval */
 #include "machine.h"
 #include "externs.h"
@@ -249,7 +245,7 @@ plot_open(interp, argc, argv)
 		pl_space(((struct plot_vars *)dmp->dm_vars.priv_vars)->up_fp,
 			 -2048, -2048, 2048, 2048);
 
-	MAT_IDN(plotmat);
+	bn_mat_idn(plotmat);
 
 	Tcl_SetObjResult(interp, obj);
 	return dmp;
@@ -340,7 +336,7 @@ plot_loadMatrix(dmp, mat, which_eye)
 		bu_vls_free(&tmp_vls);
 	}
 
-	MAT_COPY(plotmat, mat);
+	bn_mat_copy(plotmat, mat);
 	Tcl_SetObjResult(dmp->dm_interp, obj);
 	return TCL_OK;
 }

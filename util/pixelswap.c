@@ -5,7 +5,7 @@
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
+#ifdef USE_STRING_H
 #include <string.h>
 #else
 #include <strings.h>

@@ -41,12 +41,6 @@
 
 #include <stdio.h>
 
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include "machine.h"
 #include "externs.h"		/* For malloc and free */
 #include "rle.h"
@@ -84,7 +78,7 @@ void usage() {
     }\
     
 
-int
+void
 main(argc,argv) 
 int argc;
 char *argv[];

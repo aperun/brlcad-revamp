@@ -6,7 +6,7 @@
 			(301)278-6647 or AV-298-6647
 */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -152,7 +152,7 @@ FILE	*fp;
 	else
 		return	1;
 	}
-int
+
 read_IR( fp )
 FILE	*fp;
 	{	register int	fy;
@@ -301,7 +301,6 @@ int		temp;
 	temperature mapping for different views of the vehicle, but is only
 	valid for display of the current view.
  */
-int
 init_Temp_To_RGB()
 	{	register int	temp, i;
 		RGBpixel	rgb;
@@ -456,7 +455,7 @@ register RGBpixel	*pixelp;
 		);*/
 	return	ABSOLUTE_ZERO;
 	}
-int
+
 f_IR_Model( ap, op )
 register struct application	*ap;
 Octree				*op;
@@ -557,7 +556,7 @@ Octree				*op;
 	}
 	return	1;
 	}
-int
+
 f_IR_Backgr( ap )
 register struct application *ap;
 	{

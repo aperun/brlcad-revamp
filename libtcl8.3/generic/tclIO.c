@@ -134,16 +134,16 @@ static int		SetBlockMode _ANSI_ARGS_((Tcl_Interp *interp,
 				Channel *chanPtr, int mode));
 static void		StopCopy _ANSI_ARGS_((CopyState *csPtr));
 static int		TranslateInputEOL _ANSI_ARGS_((ChannelState *statePtr,
-				char *dst, const char *src, int *dstLenPtr,
+				char *dst, CONST char *src, int *dstLenPtr,
 				int *srcLenPtr));
 static int		TranslateOutputEOL _ANSI_ARGS_((ChannelState *statePtr,
-				char *dst, const char *src, int *dstLenPtr,
+				char *dst, CONST char *src, int *dstLenPtr,
 				int *srcLenPtr));
 static void		UpdateInterest _ANSI_ARGS_((Channel *chanPtr));
 static int		WriteBytes _ANSI_ARGS_((Channel *chanPtr,
-				const char *src, int srcLen));
+				CONST char *src, int srcLen));
 static int		WriteChars _ANSI_ARGS_((Channel *chanPtr,
-				const char *src, int srcLen));
+				CONST char *src, int srcLen));
 
 
 /*
@@ -945,7 +945,7 @@ Tcl_CreateChannel(typePtr, chanName, instanceData, mask)
     Channel *chanPtr;		/* The channel structure newly created. */
     ChannelState *statePtr;	/* The stack-level independent state info
 				 * for the channel. */
-    const char *name;
+    CONST char *name;
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
 
     /*
@@ -2483,7 +2483,7 @@ Tcl_WriteRaw(chan, src, srcLen)
 int
 Tcl_WriteChars(chan, src, len)
     Tcl_Channel chan;		/* The channel to buffer output for. */
-    const char *src;		/* UTF-8 characters to queue in output buffer. */
+    CONST char *src;		/* UTF-8 characters to queue in output buffer. */
     int len;			/* Length of string in bytes, or < 0 for 
 				 * strlen(). */
 {
@@ -2597,7 +2597,7 @@ Tcl_WriteObj(chan, objPtr)
 static int
 WriteBytes(chanPtr, src, srcLen)
     Channel *chanPtr;		/* The channel to buffer output for. */
-    const char *src;		/* Bytes to write. */
+    CONST char *src;		/* Bytes to write. */
     int srcLen;			/* Number of bytes to write. */
 {
     ChannelState *statePtr = chanPtr->state;	/* state info for channel */
@@ -2685,7 +2685,7 @@ WriteBytes(chanPtr, src, srcLen)
 static int
 WriteChars(chanPtr, src, srcLen)
     Channel *chanPtr;		/* The channel to buffer output for. */
-    const char *src;		/* UTF-8 string to write. */
+    CONST char *src;		/* UTF-8 string to write. */
     int srcLen;			/* Length of UTF-8 string in bytes. */
 {
     ChannelState *statePtr = chanPtr->state;	/* state info for channel */
@@ -2866,7 +2866,7 @@ TranslateOutputEOL(statePtr, dst, src, dstLenPtr, srcLenPtr)
     char *dst;			/* Output buffer filled with UTF-8 chars by
 				 * applying appropriate EOL translation to
 				 * source characters. */
-    const char *src;		/* Source UTF-8 characters. */
+    CONST char *src;		/* Source UTF-8 characters. */
     int *dstLenPtr;		/* On entry, the maximum length of output
 				 * buffer in bytes.  On exit, the number of
 				 * bytes actually used in output buffer. */
@@ -2914,7 +2914,7 @@ TranslateOutputEOL(statePtr, dst, src, dstLenPtr, srcLenPtr)
 	     */
 
 	    char *dstStart, *dstMax;
-	    const char *srcStart;
+	    CONST char *srcStart;
 	    
 	    dstStart = dst;
 	    dstMax = dst + *dstLenPtr;
@@ -4338,7 +4338,7 @@ TranslateInputEOL(statePtr, dstStart, srcStart, dstLenPtr, srcLenPtr)
     char *dstStart;		/* Output buffer filled with chars by
 				 * applying appropriate EOL translation to
 				 * source characters. */
-    const char *srcStart;	/* Source characters. */
+    CONST char *srcStart;	/* Source characters. */
     int *dstLenPtr;		/* On entry, the maximum length of output
 				 * buffer in bytes; must be <= *srcLenPtr.  On
 				 * exit, the number of bytes actually used in
@@ -4348,7 +4348,7 @@ TranslateInputEOL(statePtr, dstStart, srcStart, dstLenPtr, srcLenPtr)
 				 * the source buffer. */
 {
     int dstLen, srcLen, inEofChar;
-    const char *eof;
+    CONST char *eof;
 
     dstLen = *dstLenPtr;
 
@@ -4362,7 +4362,7 @@ TranslateInputEOL(statePtr, dstStart, srcStart, dstLenPtr, srcLenPtr)
 	 * destination buffer.
 	 */
 
-	const char *src, *srcMax;
+	CONST char *src, *srcMax;
 
 	srcMax = srcStart + *srcLenPtr;
 	for (src = srcStart; src < srcMax; src++) {
@@ -4402,7 +4402,7 @@ TranslateInputEOL(statePtr, dstStart, srcStart, dstLenPtr, srcLenPtr)
 	}
 	case TCL_TRANSLATE_CRLF: {
 	    char *dst;
-	    const char *src, *srcEnd, *srcMax;
+	    CONST char *src, *srcEnd, *srcMax;
 	    
 	    dst = dstStart;
 	    src = srcStart;
@@ -4429,7 +4429,7 @@ TranslateInputEOL(statePtr, dstStart, srcStart, dstLenPtr, srcLenPtr)
 	}
 	case TCL_TRANSLATE_AUTO: {
 	    char *dst;
-	    const char *src, *srcEnd, *srcMax;
+	    CONST char *src, *srcEnd, *srcMax;
 
 	    dst = dstStart;
 	    src = srcStart;
@@ -5439,7 +5439,7 @@ Tcl_BadChannelOption(interp, optionName, optionList)
 					 */
 {
     if (interp) {
-	const char *genericopt = 
+	CONST char *genericopt = 
 	    "blocking buffering buffersize encoding eofchar translation";
 	char **argv;
 	int  argc, i;
@@ -6747,7 +6747,7 @@ Tcl_FileEventObjCmd(clientData, interp, objc, objv)
                                          * for which to create the handler
                                          * is found. */
     int objc;				/* Number of arguments. */
-    Tcl_Obj *const objv[];		/* Argument objects. */
+    Tcl_Obj *CONST objv[];		/* Argument objects. */
 {
     Channel *chanPtr;			/* The channel to create
                                          * the handler for. */
@@ -8288,4 +8288,3 @@ Tcl_ChannelHandlerProc(chanTypePtr)
 {
     return (chanTypePtr->handlerProc);
 }
-

@@ -20,15 +20,12 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include <math.h>
 #include "machine.h"
 #include "vmath.h"
@@ -36,11 +33,8 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "raytrace.h"
 #include "shadefuncs.h"
 #include "shadework.h"
-#include "rtprivate.h"
+#include "../rt/rdebug.h"
 
-extern int rr_render(struct application	*ap,
-		     struct partition	*pp,
-		     struct shadework   *swp);
 #ifndef M_PI
 #define M_PI            3.14159265358979323846
 #endif
@@ -139,7 +133,7 @@ struct grass_specific {
 };
 
 /* The default values for the variables in the shader specific structure */
-static const
+static CONST
 struct grass_specific grass_defaults = {
 	grass_MAGIC,
 	0,
@@ -158,6 +152,10 @@ struct grass_specific grass_defaults = {
 	{ 1.0, 1.0, 1.0 },		/* vscale */
 	{ 1001.6, 1020.5, 1300.4 },	/* delta into noise space */
 	{.7, .6, .3},	
+	{	0.0, 0.0, 0.0, 0.0,	/* m_to_sh */
+		0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0 }
 	};
 
 #define SHDR_NULL	((struct grass_specific *)0)
@@ -240,7 +238,7 @@ struct grass_specific *grass_sp;
 static void
 print_plant(str, plant)
 char *str;
-const struct plant *plant;
+CONST struct plant *plant;
 {
 	int blade, seg;
 
@@ -269,7 +267,7 @@ blade_rot(o, i, m, root)
 struct blade *o;
 struct blade *i;
 mat_t m;
-const point_t root;
+CONST point_t root;
 {
 	struct blade tmp;
 	int seg;
@@ -358,7 +356,7 @@ static void
 make_proto(grass_sp)
 struct grass_specific *grass_sp;
 {
-  static const point_t z_axis = { 0.0, 0.0, 1.0 };
+  static CONST point_t z_axis = { 0.0, 0.0, 1.0 };
   vect_t left;
   int blade, seg;
   mat_t m, r;
@@ -380,7 +378,7 @@ struct grass_specific *grass_sp;
    * a rotation/scale of this first one.
    */
   bn_mat_zrot(r, sin(bn_degtorad*137.0), cos(bn_degtorad*137.0));
-  MAT_COPY(m,r);
+  bn_mat_copy(m,r);
 
   seg_delta_angle = (87.0 / (double)BLADE_SEGS_MAX);
 
@@ -521,7 +519,7 @@ struct rt_i		*rtip;	/* New since 4.4 release */
 	 * fixed on the region when the region is moved (as in animation).
 	 * We need to get a matrix to perform the appropriate transform(s).
 	 */
-	db_region_mat(grass_sp->m_to_sh, rtip->rti_dbip, rp->reg_name, &rt_uniresource);
+	db_region_mat(grass_sp->m_to_sh, rtip->rti_dbip, rp->reg_name);
 
 	bn_mat_inv(grass_sp->sh_to_m, grass_sp->m_to_sh);
 
@@ -610,8 +608,8 @@ static void
 make_bush(pl, seed, cell_pos, grass_sp, w, r)
 struct plant 			*pl;
 double 				seed;	/* derived from cell_num */
-const point_t			cell_pos;
-const struct grass_specific 	*grass_sp;
+CONST point_t			cell_pos;
+CONST struct grass_specific 	*grass_sp;
 double				w; /* cell specific weght for count, height */
 struct grass_ray		*r;
 {
@@ -667,10 +665,10 @@ struct grass_ray		*r;
  */
 static void
 hit_blade(bl, r, swp, grass_sp, seg, ldist, blade_num, fract)
-const struct blade *bl;
+CONST struct blade *bl;
 struct grass_ray *r;
 struct shadework	*swp;	/* defined in material.h */
-const struct grass_specific *grass_sp;
+CONST struct grass_specific *grass_sp;
 int seg;
 double ldist[2];
 int blade_num;
@@ -740,11 +738,11 @@ double fract;
  */
 static void
 isect_blade(bl, root, r, swp, grass_sp, blade_num)
-const struct blade *bl;
-const point_t root;
+CONST struct blade *bl;
+CONST point_t root;
 struct grass_ray *r;
 struct shadework	*swp;	/* defined in material.h */
-const struct grass_specific *grass_sp;
+CONST struct grass_specific *grass_sp;
 int blade_num;
 {
 	double ldist[2];
@@ -840,10 +838,10 @@ iter:
 
 static void
 isect_plant(pl, r, swp, grass_sp)
-const struct plant *pl;
+CONST struct plant *pl;
 struct grass_ray *r;
 struct shadework	*swp;	/* defined in material.h */
-const struct grass_specific *grass_sp;
+CONST struct grass_specific *grass_sp;
 {
 	int i;
 

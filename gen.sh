@@ -37,10 +37,9 @@ NFS=1
 # Label number for this CAD Release,
 # RCS main Revision number, and date.
 #RELEASE=M.N;	RCS_REVISION=X;		REL=DATE=dd-mmm-yy
-RELEASE=6.0;	RCS_REVISION=15;	REL_DATE=today		# 6.0
+RELEASE=5.4;	RCS_REVISION=15;	REL_DATE=11-Jul-01	# 5.4
 #RELEASE=5.3;	RCS_REVISION=14;	REL_DATE=5-Mar-01	# 5.3
-#RELEASE=5.2;	RCS_REVISION=13;	REL_DATE=21-Aug-00	# 5.2
-#RELEASE=5.1;	RCS_REVISION=13;	REL_DATE=Today		# beyond 5.1
+#RELEASE=5.2;	RCS_REVISION=13;	REL_DATE=7-Oct-00	# 5.2
 #RELEASE=5.0;	RCS_REVISION=12;	REL_DATE=15-Sept-99	# 5.0 production
 #RELEASE=4.6;	RCS_REVISION=11;	REL_DATE=7-Jul-99	# 5.0beta
 #RELEASE=4.5;	RCS_REVISION=11;	REL_DATE=14-Feb-98	# 4.5 production
@@ -174,8 +173,7 @@ CDIRS="sh cake cakeaux html"
 # db depends on conv, conv depends on libwdb, libwdb depends on librt
 BDIRS="bench \
 	libsysv \
-	libbu \
-	libbn \
+	libbu libbn \
 	libwdb \
 	libpkg \
 	libfb \
@@ -194,6 +192,7 @@ BDIRS="bench \
 	conv \
 	db \
 	rt \
+	anim \
 	mged \
 	remrt \
 	libcursor \
@@ -215,7 +214,6 @@ BDIRS="bench \
 	sig \
 	tab \
 	tools \
-	anim \
 	off \
 	halftone \
 	nirt \
@@ -225,7 +223,6 @@ BDIRS="bench \
 	burst \
 	gtools \
 	bwish \
-	btclsh \
 "			# This ends the list.
 
 TSDIRS=". mged nirt pl-dm lib util"
@@ -351,35 +348,10 @@ benchmark)
 #  clobber	clean + noprod
 #  lint
 #  ls		ls -al of all subdirectories
-#
-#  If operations are enclosed in sub-shells "(...)",
-#  then on newer systems, ^C will only terminate the sub-shell
 all)
 	for dir in ${BDIRS}; do
 		echo -------------------------------- ${DIRPRE}${dir}${DIRSUF};
-		if test ! -d ${DIRPRE}${dir}${DIRSUF}
-		then	continue;
-		fi
-		cd ${DIRPRE}${dir}${DIRSUF}
-		cake -k ${SILENT}
-		cd ..
-	done;;
-
-# Just like "all", but will use the "fast.sh" scripts when available.
-fast)
-	for dir in ${BDIRS}; do
-		echo -------------------------------- ${DIRPRE}${dir}${DIRSUF};
-		if test ! -d ${DIRPRE}${dir}${DIRSUF}
-		then	continue;
-		fi
-		cd ${DIRPRE}${dir}${DIRSUF}
-		if test -f ../${dir}/fast.sh
-		then
-			../${dir}/fast.sh ${SILENT}
-		else
-			cake -k ${SILENT}
-		fi
-		cd ..
+		( cd ${DIRPRE}${dir}${DIRSUF} && cake -k ${SILENT} )
 	done;;
 
 clean|noprod|clobber|lint)
@@ -484,7 +456,7 @@ mkdir|relink)
 	then	lnarg="-s"
 	else	lnarg=""
 	fi
-	for dir in ${BDIRS} ; do
+	for dir in ${BDIRS}; do
 		if test -d ${DIRPRE}${dir}${DIRSUF}
 		then
 			rm -f ${DIRPRE}${dir}${DIRSUF}/Cakefile
@@ -532,8 +504,7 @@ etags)
 	/bin/rm -f etags;
 	for dir in ${BDIRS}; do
 		echo -------------------------------- ${dir};
-#		etags -a -o etags ${dir}/*.c
-		find ${dir} -name \*.c -exec etags -a -o etags {} \;
+		etags -a -o etags ${dir}/*.c
 	done;;
 shell)
 	for dir in ${BDIRS}; do
@@ -548,7 +519,6 @@ command)
 	done;;
 
 rcs-lock)
-	echo "rcs-lock is deprecated"
 	rcs -l ${TOP_FILES}
 	rcs -u ${TOP_FILES}
 	for dir in ${ADIRS} ${BDIRS}; do
@@ -559,7 +529,6 @@ rcs-lock)
 	done;;
 
 checkin)
-	echo "checkin is deprecated"
 	echo " RCS_Revision ${RCS_REVISION}"
 	REL_NODOT=`echo ${RELEASE}|tr . _`
 	CI_ARGS="-f -r${RCS_REVISION} -sRel${REL_NODOT} -mRelease_${RELEASE}"
@@ -844,10 +813,10 @@ Version: ${RELEASE}
 Release: ${REV}
 Copyright:  Copyright 2000 by U.S.Army in all countires except the USA.  See distribution restrictions in your license agreement or ftp.arl.mil:/pub/brl-cad/agreement
 Group: Applications/Graphics
-Source:  http://ftp.arl.mil:/brl-cad/Downloads/Rel${RELEASE}/
-URL:  http://ftp.arl.mil/brlcad/
+Source:  http://ftp.arl.army.mil:/brl-cad/Downloads/Rel${RELEASE}/
+URL:  http://ftp.arl.army.mil/brlcad/
 Vendor: The U. S. Army Research Laboratory, Aberdeen Proving Ground, MD  USA  21005-5068
-Packager: Mike Muuss <Mike@arl.mil>
+Packager: John Anderson <jra@arl.army.mil>
 %description
 The BRL-CAD(tm) Package is a powerful Constructive Solid Geometry (CSG)
 solid modeling system.  BRL-CAD includes an interactive geometry
@@ -856,7 +825,7 @@ a generic framebuffer library, a network-distributed image-processing
 and signal-processing capability, and a large collection of related
 tools and utilities.
 
-This version was compiled on RedHat Linux 6.2
+This version was compiled on RedHat Linux 7.1
 
 %prep
         exit 0
@@ -898,7 +867,7 @@ and signal-processing capability, and a large collection of related \
 tools and utilities. \
 Copyright 2000 by U.S.Army in all countires except the USA.  See distribution restrictions in your license agreement or ftp.arl.mil:/pub/brl-cad/agreement
 VENDOR=The U. S. Army Research Laboratory, Aberdeen Proving Ground, MD  USA  21005-5068
-HOTLINE=http://ftp.arl.army.mil/brlcad/
+HOTLINE=http://ftp.arl.mil/brlcad/
 EMAIL=acst@arl.army.mil
 EOF
 	echo "i pkginfo=./pkginfo" >> ./prototype

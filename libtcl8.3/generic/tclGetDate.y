@@ -1137,4 +1137,3 @@ TclGetDate(p, now, zone, timePtr)
     *timePtr = Start;
     return 0;
 }
-

@@ -13,7 +13,7 @@ Usage: syn samples_per_set [ratio] > doubles\n";
 
 void makesintab();
 
-int main( argc, argv )
+main( argc, argv )
 int	argc;
 char	**argv;
 {
@@ -46,7 +46,6 @@ char	**argv;
 				findex -= TABSIZE;
 		}
 	}
-	return 0;
 }
 
 void

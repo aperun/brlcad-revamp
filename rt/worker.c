@@ -17,15 +17,12 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSworker[] = "@(#)$Header$ (BRL)";
+static char RCSworker[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include <math.h>
 #include "machine.h"
 #include "bu.h"
@@ -33,7 +30,7 @@ static const char RCSworker[] = "@(#)$Header$ (BRL)";
 #include "bn.h"
 #include "raytrace.h"
 #include "./ext.h"
-#include "rtprivate.h"
+#include "./rdebug.h"
 
 int		per_processor_chunk = 0;	/* how many pixels to do at once */
 
@@ -52,12 +49,6 @@ int		reproj_max;	/* out of total number of pixels */
 /* Local communication with worker() */
 int cur_pixel;			/* current pixel number, 0..last_pixel */
 int last_pixel;			/* last pixel number */
-
-extern int		query_x;
-extern int		query_y;
-extern int		Query_one_pixel;
-extern int		query_rdebug;
-extern int		query_debug;
 
 /*
  *			G R I D _ S E T U P
@@ -79,7 +70,7 @@ grid_setup()
 	if( viewsize <= 0.0 )
 		rt_bomb("viewsize <= 0");
 	/* model2view takes us to eye_model location & orientation */
-	MAT_IDN( toEye );
+	bn_mat_idn( toEye );
 	MAT_DELTAS_VEC_NEG( toEye, eye_model );
 	Viewrotscale[15] = 0.5*viewsize;	/* Viewscale */
 	bn_mat_mul( model2view, Viewrotscale, toEye );
@@ -114,7 +105,7 @@ grid_setup()
 		mat_t		hv2model;
 
 		/* Build model2hv matrix, including mm2inches conversion */
-		MAT_COPY( model2hv, Viewrotscale );
+		bn_mat_copy( model2hv, Viewrotscale );
 		model2hv[15] = gift_grid_rounding;
 		bn_mat_inv( hv2model, model2hv );
 
@@ -208,7 +199,8 @@ grid_setup()
  *
  *  For a general-purpose version, see LIBRT rt_shoot_many_rays()
  */
-void do_run( int a, int b )
+void
+do_run( a, b )
 {
 	int		cpu;
 
@@ -337,6 +329,7 @@ genptr_t	arg;
 	int	pixel_start;
 	int	pixelnum;
 	int	samplenum;
+	FAST fastf_t dx, dy;
 	int	pat_num = -1;
 
 	/* The more CPUs at work, the bigger the bites we take */
@@ -395,17 +388,6 @@ genptr_t	arg;
 				a.a_x = pixelnum%width;
 				a.a_y = pixelnum/width;
 			}
-
-			if (Query_one_pixel) {
-				if (a.a_x == query_x && a.a_y == query_y) {
-					rdebug = query_rdebug;
-					rt_g.debug = query_debug;
-				} else {
-					rt_g.debug = rdebug = 0;
-				}
-			}
-
-
 
 			if( sub_grid_mode )  {
 				if( a.a_x < sub_xmin || a.a_x > sub_xmax )

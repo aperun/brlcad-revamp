@@ -8,21 +8,16 @@
  * 		Aberdeen Proving Ground, Md.
  * Date:	Mon Dec 29 1986
  */
-static const char rcs_ident[] = "$Header$";
+static char rcs_ident[] = "$Header$";
 
 #include "conf.h"
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 
 #include <stdio.h>
 #include <math.h>
 #include "machine.h"
 #include "externs.h"
+#include "db.h"
 #include "vmath.h"
-#include "raytrace.h"
 #include "wdb.h"
 
 
@@ -50,15 +45,11 @@ char * matname = "plastic";
 char * matparm = "shine=100.0 diffuse=.8 specular=.2";
 
 void	read_data(), process_sphere();
-int	make_bond( int sp1, int sp2 );
 
 struct wmember head;
 
-static const char usage[] = "Usage: molecule db_title < mol-cube.dat > mol.g\n";
+static CONST char usage[] = "Usage: molecule db_title < mol-cube.dat > mol.g\n";
 
-struct rt_wdb	*outfp;
-
-int
 main(argc, argv)
 int argc;
 char ** argv;
@@ -70,15 +61,11 @@ char ** argv;
 	}
 
 	BU_LIST_INIT( &head.l );
-	outfp = wdb_fopen( "molecule.g" );
-	mk_id( outfp, argv[1] );
+	mk_id( stdout, argv[1] );
 	read_data();
 
 	/* Build the overall combination */
-	mk_lfcomb( outfp, "mol.g", &head, 0 );
-
-	wdb_close(outfp);
-	return 0;
+	mk_lfcomb( stdout, "mol.g", &head, 0 );
 }
 
 /* File format from stdin
@@ -153,28 +140,25 @@ int	sph_type;
 	struct sphere * new = (struct sphere *)
 	    malloc( sizeof ( struct sphere) );
 	char nm[128], nm1[128];
+	mat_t m;
 	unsigned char rgb[3];
-	struct wmember	reg_head;
+
+	bn_mat_idn( m);
 
 	rgb[0] = atom_list[sph_type].red;
 	rgb[1] = atom_list[sph_type].green;
 	rgb[2] = atom_list[sph_type].blue;
 
-	sprintf(nm1, "sph.%d", id );
-	mk_sph( outfp, nm1, center, rad );
-
-	/* Create a region nm to contain the solid nm1 */
-	BU_LIST_INIT( &reg_head.l );
-	(void)mk_addmember( nm1, &reg_head.l, WMOP_UNION );
 	sprintf(nm, "SPH.%d", id );
-	mk_lcomb( outfp, nm, &reg_head, 1, matname, matparm, rgb, 0 );
-
-	/* Include this region in the larger group */
-	(void)mk_addmember( nm, &head.l, WMOP_UNION );
+	(void)mk_addmember( nm, &head, WMOP_UNION );
+	sprintf(nm1, "sph.%d", id );
+	mk_sph( stdout, nm1, center, rad );
+	mk_comb( stdout, nm, 1, 1, matname, matparm, rgb, 0 );
+	mk_memb( stdout, nm1, m, UNION);
 
 	new->next = ( struct sphere *)0;
 	new->s_id = id;
-	strncpy(new->s_name, nm1, sizeof(nm1) );
+	NAMEMOVE(nm1, new->s_name);
 	VMOVE( new->s_center, center );
 	new->s_rad = rad;
 	new->s_atom_type = sph_type;
@@ -189,15 +173,17 @@ int	sph_type;
 	}
 }
 
-int
-make_bond( int sp1, int sp2 )
+make_bond( sp1, sp2 )
+int sp1, sp2;
 {
 	struct sphere * s1, *s2, *s_ptr;
 	point_t base;
 	vect_t height;
+	mat_t m;
 	char nm[128], nm1[128];
 	unsigned char rgb[3];
-	struct wmember reg_head;
+
+	bn_mat_idn( m );
 
 	s1 = s2 = (struct sphere *) 0;
 
@@ -217,6 +203,8 @@ make_bond( int sp1, int sp2 )
 	VSUB2( height, s2->s_center, s1->s_center );
 
 	sprintf( nm, "bond.%d.%d", sp1, sp2);
+	sprintf( nm1, "BOND.%d.%d", sp1, sp2);
+	(void)mk_addmember( nm1, &head, WMOP_UNION );
 
 	rgb[0] = 191;
 	rgb[1] = 142;
@@ -224,19 +212,15 @@ make_bond( int sp1, int sp2 )
 
 #if 1
 	/* Use this for mol-cube.dat */
-	mk_rcc( outfp, nm, base, height, s1->s_rad * 0.15 );
+	mk_rcc( stdout, nm, base, height, s1->s_rad * 0.15 );
 #else
 	/* Use this for chemical molecules */
-	mk_rcc( outfp, nm, base, height, s1->s_rad * 0.5 );
+	mk_rcc( stdout, nm, base, height, s1->s_rad * 0.5 );
 #endif
 
-	BU_LIST_INIT( &reg_head.l );
-	(void)mk_addmember( nm, &reg_head.l, WMOP_UNION );
-	(void)mk_addmember( s1->s_name, &reg_head.l, WMOP_SUBTRACT );
-	(void)mk_addmember( s2->s_name, &reg_head.l, WMOP_SUBTRACT );
-	sprintf( nm1, "BOND.%d.%d", sp1, sp2);
-	mk_lcomb( outfp, nm1, &reg_head, 1, matname, matparm, rgb, 0 );
-	(void)mk_addmember( nm1, &head.l, WMOP_UNION );
-
+	mk_comb( stdout, nm1, 3, 1, matname, matparm, rgb, 0 );
+	mk_memb( stdout, nm, m, UNION);
+	mk_memb( stdout, s1->s_name, m, SUBTRACT);
+	mk_memb( stdout, s2->s_name, m, SUBTRACT);
 	return(0);		/* OK */
 }

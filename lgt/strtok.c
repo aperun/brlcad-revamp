@@ -14,24 +14,21 @@
  * remain constant from call to call.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$";
+static char RCSid[] = "@(#)$Header$";
 #endif
 
 #define	NULL	0
-/*
- * sean - why was const undefined here?
- * #define const
- */
+#define CONST
 static char *scanpoint = NULL;
 
 char *				/* NULL if no token left */
 strtok(s, delim)
 char *s;
-register const char *delim;
+register CONST char *delim;
 {
 	register char *scan;
 	char *tok;
-	register const char *dscan;
+	register CONST char *dscan;
 	if (s == NULL && scanpoint == NULL)
 		return(NULL);
 	if (s != NULL)

@@ -13,7 +13,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char libbu_getopt_RCSid[] = "@(#)$Header$ (BRL)";
+static char libbu_getopt_RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -50,8 +50,8 @@ char	*bu_optarg = NULL;	/* argument associated with option */
 int
 bu_getopt(nargc,nargv,ostr)
 int	nargc;
-char	* const nargv[];
-const char *ostr;
+char	* CONST nargv[];
+CONST char *ostr;
 {
 	static char	*place = EMSG;	/* option letter processing */
 	register char	*oli;		/* option letter list index */

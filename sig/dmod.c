@@ -12,12 +12,6 @@
  */
 #include "conf.h"
 
-#ifdef USE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include <stdio.h>
 #include <math.h>
 
@@ -115,7 +109,7 @@ register char **argv;
 	return(1);		/* OK */
 }
 
-int main( argc, argv )
+main( argc, argv )
 int	argc;
 char	**argv;
 {
@@ -170,6 +164,4 @@ char	**argv;
 		}
 		fwrite( buf, sizeof(*buf), n, stdout );
 	}
-
-	return 0;
 }

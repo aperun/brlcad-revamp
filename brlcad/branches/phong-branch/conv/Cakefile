@@ -1,7 +1,7 @@
 /*
  *			conv/Cakefile
  *
- *  $Header: /usr/Backup/upgrade/brlcad/brlcad/conv/Cakefile,v 11.38.2.1 2003-09-17 18:39:23 butler Exp $
+ *  $Header: /usr/Backup/upgrade/brlcad/brlcad/conv/Cakefile,v 11.38.2.2 2003-09-17 18:45:28 butler Exp $
  */
 
 #define SRCDIR	conv
@@ -22,7 +22,7 @@
 /* Explicit composition of each product */
 
 botprint : botprint.o LIBRT_DEP LIBBN_DEP LIBBU_DEP LIBTCL_DEP 
-	CC LDFLAGS g-stl.o LIBRT LIBBN LIBBU LIBBU_LIBES LIBTCL LIBTCL_LIBES LIBES -o botprint
+	CC LDFLAGS botprint.o LIBRT LIBBN LIBBU LIBBU_LIBES LIBTCL LIBTCL_LIBES LIBES -o botprint
 
 g-stl: g-stl.o LIBRT_DEP LIBBN_DEP LIBBU_DEP LIBTCL_DEP LIBWDB_DEP
 	CC LDFLAGS g-stl.o LIBWDB LIBRT LIBBN LIBBU LIBBU_LIBES LIBTCL LIBTCL_LIBES LIBES -o g-stl

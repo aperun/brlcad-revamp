@@ -23,6 +23,7 @@ static char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include <stdio.h>
 #include <ctype.h>
+#include <math.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
@@ -121,6 +122,7 @@ struct	xinfo {
 	int	depth;			/* 1, 8, or 24bit */
 	int	mode;			/* 0,1,2 */
 	ColorMap rgb_cmap;		/* User's libfb colormap */
+	double	luvmap[3*256];		/* Luv version of rgb_cmap */
 };
 #define	XI(ptr) ((struct xinfo *)((ptr)->u1.p))
 #define	XIL(ptr) ((ptr)->u1.p)		/* left hand side version */
@@ -205,6 +207,7 @@ static unsigned short greyvec[16] = {
 };
 
 static unsigned char convRGB();
+static int TotalColors;
 unsigned long 	*x_pixel_table;
 XColor 		*color_defs; 
 
@@ -659,10 +662,13 @@ int	save;
 			}
 			goto done;
 		}
+
+		TotalColors = DisplayCells(XI(ifp)->dpy, XI(ifp)->screen);
+
 		/* PseudoColor Mode */
 		for( i = 0; i < count; i++ ) {
 			int value;
-			value = convRGB(pixelp[i]);
+			value = convRGB(ifp,pixelp[i]);
 			cp[i] = (unsigned char) x_pixel_table[value];
 		}
 		goto done;
@@ -783,6 +789,10 @@ ColorMap	*cmp;
 {
 	register int i;
 
+
+	TotalColors = DisplayCells(XI(ifp)->dpy, XI(ifp)->screen);
+
+
 	if( cmp == (ColorMap *)NULL ) {
 		/* Linear map */
 		cmp = &(XI(ifp)->rgb_cmap);
@@ -824,9 +834,10 @@ ColorMap	*cmp;
 			color_defs[i].blue  = cmp->cm_blue[i];
 		        color_defs[i].flags = DoRed | DoGreen | DoBlue;
 		}
-		XStoreColors( XI(ifp)->dpy, XI(ifp)->cmap, color_defs, 256 );
+		XStoreColors( XI(ifp)->dpy, XI(ifp)->cmap, color_defs, TotalColors );
 	}
 
+/* 	x_make_luv(ifp); */
 	return(0);
 }
 
@@ -958,8 +969,6 @@ int	width, height;
 	XI(ifp)->screen = screen;
 	XI(ifp)->visual = visual;
 	XI(ifp)->depth = DisplayPlanes(dpy,screen);
-	if( DisplayCells(dpy,screen) != 256 )
-		XI(ifp)->depth = 1;	/*XXX - until cmap fix */
 
 #if DEBUGX
 	print_display_info(dpy);
@@ -1289,37 +1298,67 @@ FBIO	*ifp;
  *	convert a single RGBpixel to its corresponding entry in the Sun
  *	colormap.
  */
-static unsigned char convRGB(v)
-register RGBpixel *v;
+static unsigned char convRGB(ifp,colorwanted)
+FBIO *ifp;
+register RGBpixel *colorwanted;
 {
-	register int r, g, b;
+	static int oldr = -1, oldg = -1, oldb = -1;
+	static unsigned char last = '\0';
+	int r, g, b;
+	register double *luvp;
+	double red,green,blue,x,y,z;
+	register double l,u,v;
+	register double smallest,new;
+	int i;
 
-	r = ( (*v)[RED]+26 ) / 51;
-	g = ( (*v)[GRN]+26 ) / 51;
-	b = ( (*v)[BLU]+26 ) / 51;
+	r = (*colorwanted)[RED];
+	g = (*colorwanted)[GRN];
+	b = (*colorwanted)[BLU];
 
-	/*printf("Pixel r = %d, g = %d, b = %d\n",(*v)[RED],(*v)[GRN],(*v)[BLU]);*/
-	if ( r == g )  {
-		if( r == b )  {
-			/* all grey, take average */
-			return greyvec[( ((*v)[RED]+(*v)[GRN]+(*v)[BLU]) / 3 ) /16];
+	if (oldr == r && oldg == g && oldb == b) return(last);
+
+	red = ((r<<8) +1) / 65280.0;
+	green =((g<<8)+1) / 65280.0;
+	blue  =((b<<8)+1) / 65280.0;
+
+	x = 58.9316 * red + 17.8982 * green + 18.307 * blue;
+	y = 29.026 * red  + 60.5128 * green + 10.4612 * blue;
+	z =                 6.81835* green + 101.996 * blue;
+
+	l = 25.0 * pow(((100.0*y)/100.0),.33333) - 16.0;
+	u = 13.0 * l * 
+	    (((4.0 * x) / (x + (15.0 *y) +(3.0 *z))) - 0.198039);
+	v = 13.0 * l *
+	    (((9.0 * y) / (x + (15.0 *y) +(3.0 *z))) - 0.468364);
+
+	luvp = XI(ifp)->luvmap;
+
+	last = '\0';
+	smallest =	(*luvp - l) * (*luvp - l) +
+			(*(luvp+1) - u) * (*(luvp+1) - u) +
+			(*(luvp+2) - v) * (*(luvp+2) - v);
+	luvp += 3;
+	for (i = 1; i< TotalColors; i++) {
+		new =	(*luvp - l) * (*luvp - l) +
+			(*(luvp+1) - u) * (*(luvp+1) - u) +
+			(*(luvp+2) - v) * (*(luvp+2) - v);
+		luvp += 3;
+
+		if (new < smallest) {
+			last = i;
+			smallest = new;
 		}
-		else if (r == 0)  {
-			/* r=g=0, all blue */
-			return bluvec[((*v)[BLU])/16];
-		}
-		else	return r + g * 6 + b * 36;
 	}
-	else if (g == b && g == 0)  {
-		/* all red */
-		return redvec[((*v)[RED])/16];
-	}
-	else if (r == b && r == 0)  {
-		/* all green */
-		return grnvec[((*v)[GRN])/16];
-	}
-	else
-		return r + g * 6 + b * 36;
+#if DEBUGX
+	luvp = &XI(ifp)->luvmap[last*3];
+	printf("[%g, %g, %g][%d] - [%g, %g, %g] = %g\n", *luvp, *(luvp+1), *(luvp+2),
+	    last, l, u, v, smallest);
+#endif
+		
+	oldr = r;
+	oldg = g;
+	oldb = b;
+	return(last);
 }
 
 
@@ -1368,13 +1407,12 @@ static int
 x_make_colormap(ifp)
 FBIO *ifp;
 {
-	int 		tot_levels;
 	int 		i;
 	Colormap	color_map;
 	int		tmp;
 	long		b, w;	/* server black and white pixels */
 
-	tot_levels = 256;
+	TotalColors  = 256;
 
 #if DEBUGX
 	printf("make_colormap\n");
@@ -1388,7 +1426,7 @@ FBIO *ifp;
 
 	color_defs = (XColor *) malloc (256 * sizeof (XColor) );
 	x_pixel_table = (unsigned long *)
-			malloc( tot_levels * sizeof( unsigned long) );
+			malloc( TotalColors * sizeof( unsigned long) );
 
 	color_map = XCreateColormap( XI(ifp)->dpy, 
 		XI(ifp)->win, XI(ifp)->visual, AllocNone);
@@ -1398,9 +1436,10 @@ FBIO *ifp;
 
 	XI(ifp)->cmap = color_map;
 
+	TotalColors = DisplayCells(XI(ifp)->dpy,XI(ifp)->screen);
 	/* Allocate the colors cells */
 	if( (XAllocColorCells( XI(ifp)->dpy, color_map, 0, NULL, 0,
-	      x_pixel_table, tot_levels )) == 0) {
+	      x_pixel_table, TotalColors )) == 0) {
 		fprintf(stderr,"XAllocColorCells died\n");
 	}
 
@@ -1422,14 +1461,18 @@ FBIO *ifp;
 	x_pixel_table[b] = tmp;			/* and orig b to 0 */
 
 	/* put our colors into those cells */
-	for (i = 0; i < tot_levels; i++) {
+	for (i = 0; i < TotalColors; i++) {
         	color_defs[i].pixel = x_pixel_table[i];
-	        color_defs[i].red   = redmap[i]<<8;
-	        color_defs[i].green = grnmap[i]<<8;
-	        color_defs[i].blue  = blumap[i]<<8;
+		XI(ifp)->rgb_cmap.cm_red[i] = 
+		    color_defs[i].red   = redmap[i]<<8;
+		XI(ifp)->rgb_cmap.cm_green[i] = 
+		    color_defs[i].green = grnmap[i]<<8;
+		XI(ifp)->rgb_cmap.cm_blue[i] = 
+		    color_defs[i].blue  = blumap[i]<<8;
 	        color_defs[i].flags = DoRed | DoGreen | DoBlue;
+
 	}
-	XStoreColors ( XI(ifp)->dpy, color_map, color_defs, tot_levels);
+	XStoreColors ( XI(ifp)->dpy, color_map, color_defs, TotalColors);
 
 	/* assign this colormap to our window */
 	XSetWindowColormap( XI(ifp)->dpy, XI(ifp)->win, XI(ifp)->cmap);
@@ -1440,6 +1483,7 @@ FBIO *ifp;
 	if( (XI(ifp)->mode&MODE_5MASK) == MODE_5INSTCMAP ) {
 		XInstallColormap( XI(ifp)->dpy, color_map );
 	}
+ 	x_make_luv(ifp);
 }
 
 static int
@@ -1759,5 +1803,44 @@ int ymin, ymax;
 		}
 		/*printf("Write Scan %d pixels @ S(%d,%d)\n", sxlen, sxmin, sy);*/
 		X_scanwrite( ifp, sxmin, sy, scanbuf, sxlen, 0 );
+	}
+}
+x_make_luv(ifp)
+FBIO *ifp;
+{
+	int i;
+	register double *luvp;
+	ColorMap *mapp;
+	double	l,u,v;
+	double	red,green,blue;
+	double	x,y,z;
+
+#if DEBUGX
+	printf("x_make_luv\n");
+#endif
+	mapp = & XI(ifp)->rgb_cmap;
+	luvp = XI(ifp)->luvmap;
+	for (i=0 ; i < 256; i++) {
+		red = (mapp->cm_red[i]+1) / 65280.0;  /* 255 * 256 */
+		green = (mapp->cm_green[i]+1) / 65280.0;
+		blue  = (mapp->cm_blue[i]+1) / 65280.0;
+
+		x = 58.9316 * red + 17.8982 * green + 18.307 * blue;
+		y = 29.026 * red  + 60.5128 * green + 10.4612 * blue;
+		z =                 6.81835* green + 101.996 * blue;
+
+		l = 25.0 * pow(((100.0*y)/100.0),.33333) - 16.0;
+		u = 13.0 * l * 
+		    (((4.0 * x) / (x + (15.0 *y) +(3.0 *z))) - 0.198039);
+		v = 13.0 * l *
+		    (((9.0 * y) / (x + (15.0 *y) +(3.0 *z))) - 0.468364);
+		*luvp = l;
+		*(luvp+1) = u;
+		*(luvp+2) = v;
+		luvp += 3;
+#if DEBUGX
+	printf("[%g, %g, %g] -> luvmap[%d] = [%g, %g, %g]\n", x, y, z,
+	    i, l, u, v);
+#endif
 	}
 }

@@ -1,8 +1,8 @@
 /*
 	SCCS id:	@(#) vproc.c	2.6
 	Last edit: 	12/20/85 at 19:04:33
-	Retrieved: 	8/13/86 at 08:26:34
-	SCCS archive:	/m/cad/vdeck/RCS/s.vproc.c
+	Retrieved: 	6/16/86 at 20:29:53
+	SCCS archive:	/vld/src/vdeck/s.vproc.c
 
 	Author:		Gary S. Moss
 			U. S. Army Ballistic Research Laboratory
@@ -27,9 +27,11 @@ char	sccsTag[] = "@(#) vproc.c	2.6	last edit 12/20/85 at 19:04:33";
  */
 #include <stdio.h>
 #include <signal.h>
-#include <setjmp.h>
-#include <std.h>
+
 #include "./vextern.h"
+
+#include "./std.h"
+
 Directory	directory[NDIR];
 static char	*db_title = NULL, *db_units = "  ";
 
@@ -301,13 +303,13 @@ builddir()
 			if( db_title == NULL )
 				{
 				/* This must be the first ident record.	*/
-				db_title = emalloc( strlen(record.I.i_title)+1 );
-				(void) strcpy( db_title, record.I.i_title );
+				db_title = emalloc( strlen(record.i.i_title)+1 );
+				(void) strcpy( db_title, record.i.i_title );
 				}
-			(void) fprintf( stdout, "%s\n", record.I.i_title );
+			(void) fprintf( stdout, "%s\n", record.i.i_title );
 			(void) fprintf( stdout,
 					"GED database version (%s)\n",
-					record.I.i_version
+					record.i.i_version
 					);
 			/* Ignore second ident records' units, unless
 				previous were bogus or unspecified.
@@ -317,7 +319,7 @@ builddir()
 				/* NOTE : Default unit conversion factor (1.0)
 					is set in 'vglobal.c'.
 				 */
-				switch( record.I.i_units )
+				switch( record.i.i_units )
 					{
 				case ID_NO_UNIT : /* unspecified	*/
 					(void) printf( "No units specified.\n" );
@@ -355,7 +357,7 @@ builddir()
 				default :
 					(void) fprintf( stderr,
 							"Unknown units (%d)!\n",
-							record.I.i_units
+							record.i.i_units
 							);
 					break;
 					}
@@ -363,7 +365,7 @@ builddir()
 				}
 			}
 		case ID_FREE :  /* Free record -- ignore.		*/
-		case ID_MATER : /* Material database record -- ignore.	*/
+		case ID_MATERIAL : /* Material database record -- ignore.	*/
 			ndir--;
 			dirp--;
 			break;

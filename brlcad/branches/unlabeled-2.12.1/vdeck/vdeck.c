@@ -1,8 +1,8 @@
 /*
 	SCCS id:	@(#) vdeck.c	2.12
 	Last edit: 	12/20/85 at 19:03:57
-	Retrieved: 	8/13/86 at 08:14:09
-	SCCS archive:	/m/cad/vdeck/RCS/s.vdeck.c
+	Retrieved: 	6/16/86 at 20:29:44
+	SCCS archive:	/vld/src/vdeck/s.vdeck.c
 
 	Author:		Gary S. Moss
 			U. S. Army Ballistic Research Laboratory
@@ -54,8 +54,8 @@ char	sccsTag[] = "@(#) vdeck.c	2.12	last edit 12/20/85 at 19:03:57";
  */
 #include <stdio.h>
 #include <signal.h>
-#include <setjmp.h>
 #include "./vextern.h"
+
 extern Directory	*diradd();
 extern double		fabs();
 extern long		lseek();
@@ -947,13 +947,13 @@ Record *rec;
 		return;
 	}
 	if(	fabs( (mb/md)-(ma/mc) ) < CONV_EPSILON
-	    &&  fabs( fabs(DOT(axb,cxd)) - (maxb*mcxd) ) < CONV_EPSILON
+	    &&  fabs( fabs(VDOT(axb,cxd)) - (maxb*mcxd) ) < CONV_EPSILON
 		)
 		rec->s.s_cgtype = TEC;
 
 	/* check for right cylinder
 	 */
-	if( fabs( fabs(DOT(SV1,axb)) - (mh*maxb) ) < CONV_EPSILON )
+	if( fabs( fabs(VDOT(SV1,axb)) - (mh*maxb) ) < CONV_EPSILON )
 		{
 		if( fabs( ma-mb ) < CONV_EPSILON )
 			{

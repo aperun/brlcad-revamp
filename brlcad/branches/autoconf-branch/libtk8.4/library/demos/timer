@@ -5,7 +5,7 @@ exec wish "$0" "$@"
 # timer --
 # This script generates a counter with start and stop buttons.
 #
-# RCS: @(#) $Id: timer,v 1.1.6.1 2003-12-03 16:25:21 erikg Exp $
+# RCS: @(#) $Id: timer,v 1.1.6.2 2004-02-12 19:02:43 erikg Exp $
 
 label .counter -text 0.00 -relief raised -width 10 -padx 2m -pady 1m
 button .start -text Start -command {

@@ -27,7 +27,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -1280,7 +1280,7 @@ struct rt_wdb		*wdb;
 		}
 
 		dp_curr = DB_FULL_PATH_CUR_DIR( &new_path );
-		ret = db_follow_path( &ts, &old_path, &new_path, LOOKUP_NOISY, 0 );
+		ret = db_follow_path( &ts, &old_path, &new_path, LOOKUP_NOISY );
 		db_free_full_path( &old_path );
 		db_free_full_path( &new_path );
 

@@ -25,7 +25,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -46,6 +46,7 @@ static const char RCSid[] = "$Header$";
 #include "rtgeom.h"
 #include "raytrace.h"
 #include "wdb.h"
+#include "../librt/debug.h"
 #include "regex.h"
 
 extern char *optarg;
@@ -61,6 +62,7 @@ static char *brlcad_file;	/* name of output file */
 static char ret_name[NAMESIZE]; /* unique name built by Build_unique_name() */
 static char forced_name[NAME_LENGTH+1];	/* name specified on command line */
 static int stl_format=0;	/* Flag, non-zero indocates raw Stereolithography format input */
+static int polysolid=1;		/* Flag for polysolid output rather than NMG's */
 static int solid_count=0;	/* count of solids converted */
 static struct bn_tol tol;	/* Tolerance structure */
 static int id_no=1000;		/* Ident numbers */
@@ -103,7 +105,7 @@ static char *stl_usage="%s [-da] [-N forced_name] [-i initial_ident] [-I constan
 	The -x option specifies an RT debug flags (see cad/librt/debug.h).\n";
 static char *usage;
 static FILE *fd_in;		/* input file (from Pro/E) */
-static struct rt_wdb *fd_out;	/* Resulting BRL-CAD file */
+static FILE *fd_out;		/* Resulting BRL-CAD file */
 static struct bu_ptbl null_parts; /* Table of NULL solids */
 static float conv_factor=1.0;	/* conversion factor from model units to mm */
 static int top_level=1;		/* flag to catch top level assembly or part */
@@ -1132,7 +1134,6 @@ Rm_nulls()
 	struct db_i *dbip;
 	int i;	
 
-/* XXX you can just use existing fd_out->dbip here. */
 	dbip = db_open( brlcad_file, "rw" );
 	if( dbip == DBI_NULL )
 	{
@@ -1251,12 +1252,10 @@ top:
 				else
 					comb->tree = (union tree *)NULL;
 
-/* XXX Why delete and re-add, why not just put the new version? */
-#if 0
 				if( db_delete( dbip, dp ) || db_dirdelete( dbip, dp ) )
 				{
 					bu_log( "Failed to delete combination (%s)\n", dp->d_namep );
-					rt_db_free_internal( &intern );
+					rt_comb_ifree( &intern );
 					continue;
 				}
 				if( (dp=db_diradd( dbip, name, -1, 0, flags, NULL)) == DIR_NULL )
@@ -1265,7 +1264,6 @@ top:
 					rt_comb_ifree( &intern );
 					continue;
 				}
-#endif
 
 				if( rt_db_put_internal( dp, dbip, &intern ) < 0 )
 				{
@@ -1398,7 +1396,7 @@ char	*argv[];
 	}
 	optind++;
 	brlcad_file = argv[optind];
-	if( (fd_out=wdb_fopen( brlcad_file)) == NULL )
+	if( (fd_out=fopen( brlcad_file, "w")) == NULL )
 	{
 		bu_log( "Cannot open BRL-CAD file (%s)\n" , brlcad_file );
 		perror( argv[0] );
@@ -1424,9 +1422,8 @@ char	*argv[];
 	}
 
 	fclose( fd_in );
-	wdb_close( fd_out );
+	fclose( fd_out );
 
 	/* Remove references to null parts */
 	Rm_nulls();
-	return 0;
 }

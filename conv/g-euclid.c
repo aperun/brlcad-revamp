@@ -16,7 +16,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -175,10 +175,11 @@ genptr_t		client_data;
 }
 
 static union tree *
-leaf_stub( tsp, pathp, ip, client_data )
+leaf_stub( tsp, pathp, ep, id, client_data )
 struct db_tree_state    *tsp;
 struct db_full_path     *pathp;
-struct rt_db_internal	*ip;
+struct bu_external      *ep;
+int                     id;
 genptr_t		client_data;
 {
 	bu_log( "leaf stub called, this shouldn't happen\n" );
@@ -691,6 +692,7 @@ struct db_full_path	*pathp;
 union tree		*curtree;
 genptr_t		client_data;
 {
+	extern FILE		*fp_fig;
 	struct nmgregion	*r;
 	struct bu_list		vhead;
 	union tree		*ret_tree;

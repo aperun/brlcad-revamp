@@ -20,7 +20,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -37,7 +37,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "machine.h"
 #include "externs.h"
 #include "vmath.h"
-#include "raytrace.h"
+#include "rtlist.h"
 #include "wdb.h"
 
 struct wmember	*wmp;	/* array indexed by region number */

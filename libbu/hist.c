@@ -20,16 +20,13 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCShist[] = "@(#)$Header$ (BRL)";
+static char RCShist[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include "machine.h"
 #include "bu.h"
 

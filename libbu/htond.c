@@ -41,7 +41,7 @@
  *	Public Domain, Distribution Unlimited
  */
 #ifndef lint
-static const char libbu_htond_RCSid[] = "@(#)$Header$ (BRL)";
+static char libbu_htond_RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -110,7 +110,7 @@ int			count;
 		*out++ = in[2];
 		*out++ = in[1];
 		*out++ = in[0];
-		in += SIZEOF_NETWORK_DOUBLE;
+		in += 8;
 	}
 #	define	HTOND	yes2
 
@@ -414,12 +414,12 @@ int			count;
 	 *  IEEE format internally, using big-endian order.
 	 *  These are the lucky ones.
 	 */
-	if( sizeof(double) != SIZEOF_NETWORK_DOUBLE )
-		bu_bomb("ntohd:  sizeof(double) != SIZEOF_NETWORK_DOUBLE\n");
+	if( sizeof(double) != 8 )
+		fprintf(stderr, "ntohd:  sizeof(double) != 8\n");
 #	if BSD
-		bcopy( in, out, count*SIZEOF_NETWORK_DOUBLE );
+		bcopy( in, out, count*8 );
 #	else
-		memcpy( out, in, count*SIZEOF_NETWORK_DOUBLE );
+		memcpy( out, in, count*8 );
 #	endif
 	return;
 #	define	NTOHD	yes1
@@ -436,7 +436,7 @@ int			count;
 		*out++ = in[2];
 		*out++ = in[1];
 		*out++ = in[0];
-		in += SIZEOF_NETWORK_DOUBLE;
+		in += 8;
 	}
 #	define	NTOHD	yes2
 #endif

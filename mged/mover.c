@@ -60,16 +60,17 @@ register struct directory *dp;
 matp_t xlate;
 {
 	struct rt_db_internal	intern;
+	int			id;
 
 	if(dbip == DBI_NULL)
 	  return;
 
     	RT_INIT_DB_INTERNAL(&intern);
-	if( rt_db_get_internal( &intern, dp, dbip, xlate ) < 0 )
+	if( (id=rt_db_get_internal( &intern, dp, dbip, xlate )) < 0 )
 	{
 		Tcl_AppendResult(interp, "rt_db_get_internal() failed for ", dp->d_namep,
 			(char *)NULL );
-		rt_db_free_internal( &intern );
+		if( intern.idb_ptr )  rt_functab[id].ft_ifree( &intern );
 		READ_ERR_return;
 	}
 
@@ -77,7 +78,7 @@ matp_t xlate;
 	{
 		Tcl_AppendResult(interp, "moveHobj(", dp->d_namep,
 			   "):  solid export failure\n", (char *)NULL);
-		rt_db_free_internal( &intern );
+		if( intern.idb_ptr )  rt_functab[id].ft_ifree( &intern );
 		TCL_WRITE_ERR;
 		return;
 	}

@@ -568,7 +568,7 @@ int flag;
 	bu_vls_printf( &str, "%16s:\n", dp->d_namep );
 	if( rt_functab[id].ft_describe( &str, &intern, 1, base2local ) < 0 )
 		Tcl_AppendResult(interp, dp->d_namep, ": describe error\n", (char *)NULL);
-	rt_db_free_internal( &intern );
+	rt_functab[id].ft_ifree( &intern );
 	Tcl_AppendResult(interp, bu_vls_addr(&str), (char *)NULL);
 	bu_vls_free(&str);
 }
@@ -625,10 +625,11 @@ static int push_error;
  * linked list could be handled by bu_list macros but it is simple
  * enough to do hear with out them.
  */
-HIDDEN union tree *push_leaf( tsp, pathp, ip, client_data)
+HIDDEN union tree *push_leaf( tsp, pathp, ep, id, client_data)
 struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
-struct rt_db_internal	*ip;
+struct bu_external	*ep;
+int			id;
 genptr_t		client_data;
 {
 	union tree	*curtree;
@@ -637,14 +638,13 @@ genptr_t		client_data;
 
 	RT_CK_TESS_TOL(tsp->ts_ttol);
 	BN_CK_TOL(tsp->ts_tol);
-	RT_CK_DB_INTERNAL(ip);
 
 	dp = pathp->fp_names[pathp->fp_len-1];
 
 	if (rt_g.debug&DEBUG_TREEWALK) {
 	  char *sofar = db_path_to_string(pathp);
 
-	  Tcl_AppendResult(interp, "push_leaf(", ip->idb_meth->ft_name,
+	  Tcl_AppendResult(interp, "push_leaf(", rt_functab[id].ft_name,
 			   ") path='", sofar, "'\n", (char *)NULL);
 	  bu_free((genptr_t)sofar, "path string");
 	}
@@ -771,7 +771,8 @@ char **argv;
 	int	i;
 	int	id;
 	struct push_id *pip;
-	struct rt_db_internal	intern;
+	struct bu_external	es_ext;
+	struct rt_db_internal	es_int;
 
 	CHECK_DBI_NULL;
 	CHECK_READ_ONLY;
@@ -859,24 +860,36 @@ char **argv;
 		Tcl_AppendResult(interp, "push:\tdb_walk_tree failed or there was a solid moving\n\tin two or more directions\n", (char *)NULL);
 		return TCL_ERROR;
 	}
-	/*
-	 * We've built the push solid list, now all we need to do is apply
-	 * the matrix we've stored for each solid.
-	 */
+/*
+ * We've built the push solid list, now all we need to do is apply
+ * the matrix we've stored for each solid.
+ */
 	FOR_ALL_PUSH_SOLIDS(pip) {
-		if (rt_db_get_internal( &intern, pip->pi_dir, dbip, pip->pi_mat ) < 0 )  {
+		BU_INIT_EXTERNAL(&es_ext);
+		RT_INIT_DB_INTERNAL(&es_int);
+		if (db_get_external( &es_ext, pip->pi_dir, dbip) < 0) {
 		  Tcl_AppendResult(interp, "f_push: Read error fetching '",
 				   pip->pi_dir->d_namep, "'\n", (char *)NULL);
 		  push_error = -1;
 		  continue;
 		}
-		RT_CK_DB_INTERNAL( &intern );
-
-		if (rt_db_put_internal( pip->pi_dir, dbip, &intern ) < 0)  {
+		id = rt_id_solid( &es_ext);
+		if (rt_functab[id].ft_import(&es_int, &es_ext, pip->pi_mat, dbip) < 0 ) {
+		  Tcl_AppendResult(interp, "push(", pip->pi_dir->d_namep,
+				   "): solid import failure\n", (char *)NULL);
+		  if (es_int.idb_ptr) rt_functab[id].ft_ifree( &es_int);
+		  db_free_external( &es_ext);
+		  continue;
+		}
+		RT_CK_DB_INTERNAL( &es_int);
+		if ( rt_functab[id].ft_export( &es_ext, &es_int, 1.0, dbip) < 0 ) {
 		  Tcl_AppendResult(interp, "push(", pip->pi_dir->d_namep,
 				   "): solid export failure\n", (char *)NULL);
+		} else {
+			db_put_external(&es_ext, pip->pi_dir, dbip);
 		}
-		rt_db_free_internal( &intern );
+		if (es_int.idb_ptr) rt_functab[id].ft_ifree(&es_int);
+		db_free_external(&es_ext);
 	}
 
 	/*
@@ -922,11 +935,10 @@ genptr_t		user_ptr1, user_ptr2, user_ptr3;
 	RT_CK_DBI( dbip );
 	RT_CK_TREE( comb_leaf );
 
-	/* NULL pointer signifies an identity matrix */
-	if( comb_leaf->tr_l.tl_mat )  {
-		bu_free( comb_leaf->tr_l.tl_mat, "tl_mat" );
-		comb_leaf->tr_l.tl_mat = NULL;
+	if( !comb_leaf->tr_l.tl_mat )  {
+		comb_leaf->tr_l.tl_mat = (matp_t)bu_malloc( sizeof(mat_t), "tl_mat" );
 	}
+	bn_mat_idn( comb_leaf->tr_l.tl_mat );
 	if( (dp = db_lookup( dbip, comb_leaf->tr_l.tl_name, LOOKUP_NOISY )) == DIR_NULL )
 		return;
 
@@ -966,7 +978,6 @@ struct directory *dp;
 			return;
 		}
 	}
-	rt_db_free_internal( &intern );
 }
 
 static void

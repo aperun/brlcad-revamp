@@ -25,7 +25,6 @@
 #include "machine.h"
 #include "db.h"
 #include "vmath.h"
-#include "raytrace.h"
 #include "wdb.h"
 
 #define MAXSEG 10		/*  Maximum number of segments.  The  */
@@ -40,7 +39,7 @@ int argc;
 char *argv[];
 
 {							/*  START # 1  */
-   struct rt_wdb *fpw;		/*  File to be created.  */
+   FILE *fpw;			/*  File to be created.  */
    char filemged[26];		/*  Mged file name.  */
    double numseg;		/*  Number of segments.  */
    double strtpt[MAXSEG][3];	/*  Start point of segment.  */
@@ -207,7 +206,7 @@ char *argv[];
    }							/*  END # 5  */
 
    /*  Open mged file.  */
-   fpw = wdb_fopen(filemged);
+   fpw = fopen(filemged,"w");
 
    /*  Write ident record.  */
    mk_id(fpw,"Wiring");
@@ -448,6 +447,5 @@ char *argv[];
    }							/*  END # 50  */
 
    mk_lfcomb(fpw,group,&comb1,0);
-   wdb_close(fpw);
    return 0;
 }							/*  END # 1  */

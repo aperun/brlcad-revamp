@@ -19,7 +19,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -50,7 +50,9 @@ BU_EXTERN(void db_ck_tree, (CONST union tree *tp));
  *  including a private copy of the ts_mater field(s).
  */
 void
-db_dup_db_tree_state(struct db_tree_state *otsp, const struct db_tree_state *itsp)
+db_dup_db_tree_state( otsp, itsp )
+register struct db_tree_state		*otsp;
+register CONST struct db_tree_state	*itsp;
 {
 	int		shader_len=0;
 
@@ -75,7 +77,8 @@ db_dup_db_tree_state(struct db_tree_state *otsp, const struct db_tree_state *its
  *  Release dynamic fields inside the structure, but not the structure itself.
  */
 void
-db_free_db_tree_state( struct db_tree_state *tsp )
+db_free_db_tree_state( tsp )
+register struct db_tree_state	*tsp;
 {
 	RT_CK_DBI(tsp->ts_dbip);
 	if( tsp->ts_mater.ma_shader )  {
@@ -93,7 +96,9 @@ db_free_db_tree_state( struct db_tree_state *tsp )
  *  and then set ts_dbip in your copy.
  */
 void
-db_init_db_tree_state( struct db_tree_state *tsp, struct db_i *dbip )
+db_init_db_tree_state( tsp, dbip )
+register struct db_tree_state	*tsp;
+struct db_i			*dbip;
 {
 	RT_CK_DBI(dbip);
 
@@ -376,12 +381,12 @@ CONST union tree	*tp;
  *	 1	state applied OK
  */
 int
-db_apply_state_from_one_member(
-	struct db_tree_state *tsp,
-	struct db_full_path *pathp,
-	const char *cp,
-	int sofar,
-	const union tree *tp )
+db_apply_state_from_one_member( tsp, pathp, cp, sofar, tp )
+struct db_tree_state	*tsp;
+struct db_full_path	*pathp;
+CONST char		*cp;
+int			sofar;
+CONST union tree	*tp;
 {
 	int	ret;
 
@@ -430,7 +435,9 @@ db_apply_state_from_one_member(
  *	TREE_NULL	if not found in this tree
  */
 union tree *
-db_find_named_leaf( union tree *tp, const char *cp )
+db_find_named_leaf( tp, cp )
+union tree		*tp;
+CONST char		*cp;
 {
 	union tree	*ret;
 
@@ -471,7 +478,10 @@ db_find_named_leaf( union tree *tp, const char *cp )
  *
  */
 union tree *
-db_find_named_leafs_parent( int *side, union tree *tp, const char *cp )
+db_find_named_leafs_parent( side, tp, cp )
+int			*side;
+union tree		*tp;
+CONST char		*cp;
 {
 	union tree	*ret;
 
@@ -516,7 +526,8 @@ db_find_named_leafs_parent( int *side, union tree *tp, const char *cp )
  *			D B _ T R E E _ D E L _ L H S
  */
 void
-db_tree_del_lhs( union tree *tp )
+db_tree_del_lhs( tp )
+union tree		*tp;
 {
 	union tree	*subtree;
 
@@ -560,7 +571,8 @@ db_tree_del_lhs( union tree *tp )
  *			D B _ T R E E _ D E L _ R H S
  */
 void
-db_tree_del_rhs( union tree *tp )
+db_tree_del_rhs( tp )
+union tree		*tp;
 {
 	union tree	*subtree;
 
@@ -623,8 +635,9 @@ db_tree_del_rhs( union tree *tp )
  *	-1	Unable to find OP_DB_LEAF node specified by 'cp'.
  *	 0	OK
  */
-int
-db_tree_del_dbleaf(union tree **tp, const char *cp)
+db_tree_del_dbleaf( tp, cp )
+union tree		**tp;
+CONST char		*cp;
 {
 	union tree	*parent;
 	int		side = 0;
@@ -664,7 +677,9 @@ db_tree_del_dbleaf(union tree **tp, const char *cp)
  *  Multiply on the left every matrix found in a DB_LEAF node in a tree.
  */
 void
-db_tree_mul_dbleaf( union tree *tp, const mat_t mat )
+db_tree_mul_dbleaf( tp, mat )
+union tree	*tp;
+CONST mat_t	mat;
 {
 	mat_t	temp;
 
@@ -705,14 +720,12 @@ db_tree_mul_dbleaf( union tree *tp, const mat_t mat )
  *	was comb_functree().
  */
 void
-db_tree_funcleaf(
-	struct db_i		*dbip,
-	struct rt_comb_internal	*comb,
-	union tree		*comb_tree,
-	void			(*leaf_func)(),
-	genptr_t		user_ptr1,
-	genptr_t		user_ptr2,
-	genptr_t		user_ptr3 )
+db_tree_funcleaf( dbip, comb, comb_tree, leaf_func, user_ptr1, user_ptr2, user_ptr3 )
+struct db_i		*dbip;
+struct rt_comb_internal	*comb;
+union tree		*comb_tree;
+void			(*leaf_func)();
+genptr_t		user_ptr1,user_ptr2,user_ptr3;
 {
 	RT_CK_DBI( dbip );
 
@@ -761,12 +774,12 @@ db_tree_funcleaf(
  *	-1	error (*tsp values are not useful)
  */
 int
-db_follow_path(
-	struct db_tree_state		*tsp,
-	struct db_full_path		*total_path,
-	CONST struct db_full_path	*new_path,
-	int				noisy,
-	int				depth )		/* # arcs in new_path to use */
+db_follow_path( tsp, total_path, new_path, noisy, depth )
+struct db_tree_state		*tsp;
+struct db_full_path		*total_path;
+CONST struct db_full_path	*new_path;
+int				noisy;
+int				depth;		/* # arcs in new_path to use */
 {
 	struct rt_db_internal	intern;
 	struct rt_comb_internal	*comb;
@@ -869,7 +882,7 @@ db_follow_path(
 		/* Found it, state has been applied, sofar applied,
 		 * member's directory entry pushed onto total_path
 		 */
-		rt_db_free_internal( &intern );
+		intern.idb_meth->ft_ifree( &intern );
 
 		/* If member is a leaf, handle leaf processing too. */
 		if( (dp->d_flags & DIR_COMB) == 0 )  {
@@ -949,7 +962,7 @@ int			noisy;
  *
  *  Helper routine for db_recurse()
  */
-HIDDEN void
+void
 db_recurse_subtree( tp, msp, pathp, region_start_statepp, client_data )
 union tree		*tp;
 struct db_tree_state	*msp;
@@ -1044,6 +1057,7 @@ struct combined_tree_state	**region_start_statepp;
 genptr_t	client_data;
 {
 	struct directory	*dp;
+	struct bu_external	ext;
 	struct rt_db_internal	intern;
 	union tree		*curtree = TREE_NULL;
 
@@ -1068,25 +1082,27 @@ genptr_t	client_data;
 
 	/*
 	 * Load the entire object into contiguous memory.
-	 * Note that this code depends on the d_flags being set properly.
 	 */
 	if( dp->d_addr == RT_DIR_PHONY_ADDR )  return TREE_NULL;
+	if( db_get_external( &ext, dp, tsp->ts_dbip ) < 0 )  {
+		bu_log("db_recurse() db_get_external() FAIL\n");
+		return(TREE_NULL);		/* FAIL */
+	}
 
 	if( dp->d_flags & DIR_COMB )  {
 		struct rt_comb_internal	*comb;
 		struct db_tree_state	nts;
 		int			is_region;
 
-	    	RT_INIT_DB_INTERNAL(&intern);
-		if( rt_db_get_internal( &intern, dp, tsp->ts_dbip, NULL ) < 0 )  {
-			bu_log("db_recurse() rt_db_get_internal(%s) FAIL\n", dp->d_namep);
-			curtree = TREE_NULL;		/* FAIL */
-			goto out;
-		}
-
 		/*  Handle inheritance of material property. */
 		db_dup_db_tree_state( &nts, tsp );
 
+		if( rt_comb_v4_import( &intern , &ext , NULL ) < 0 )  {
+			bu_log("db_recurse() import of %s failed\n", dp->d_namep);
+			db_free_db_tree_state( &nts );
+			curtree = TREE_NULL;		/* FAIL */
+			goto out;
+		}
 		comb = (struct rt_comb_internal *)intern.idb_ptr;
 		RT_CK_COMB(comb);
 		if( (is_region = db_apply_state_from_comb( &nts, pathp, comb )) < 0 )  {
@@ -1164,21 +1180,21 @@ region_end:
 		db_free_db_tree_state( &nts );
 		if(curtree) RT_CK_TREE(curtree);
 	} else if( dp->d_flags & DIR_SOLID )  {
+		int	id;
+
+		/* Get solid ID */
+		if( (id = rt_id_solid( &ext )) == ID_NULL )  {
+			bu_log("db_recurse(%s): defective database record, addr=x%x\n",
+				dp->d_namep,
+				dp->d_addr );
+			curtree = TREE_NULL;		/* FAIL */
+			goto out;
+		}
 
 		if( bn_mat_ck( dp->d_namep, tsp->ts_mat ) < 0 )  {
 			bu_log("db_recurse(%s):  matrix does not preserve axis perpendicularity.\n",
 				dp->d_namep );
 			bn_mat_print("bad matrix", tsp->ts_mat);
-			curtree = TREE_NULL;		/* FAIL */
-			goto out;
-		}
-
-		if(rt_g.debug&DEBUG_TREEWALK)
-			bu_log("db_recurse() rt_db_get_internal(%s) solid\n", dp->d_namep);
-
-	    	RT_INIT_DB_INTERNAL(&intern);
-		if( rt_db_get_internal( &intern, dp, tsp->ts_dbip, tsp->ts_mat ) < 0 )  {
-			bu_log("db_recurse() rt_db_get_internal(%s) FAIL\n", dp->d_namep);
 			curtree = TREE_NULL;		/* FAIL */
 			goto out;
 		}
@@ -1219,7 +1235,7 @@ region_end:
 			curtree = TREE_NULL;		/* FAIL */
 			goto out;
 		}
-		curtree = tsp->ts_leaf_func( tsp, pathp, &intern, client_data );
+		curtree = tsp->ts_leaf_func( tsp, pathp, &ext, id, client_data );
 		if(curtree) RT_CK_TREE(curtree);
 	} else {
 		bu_log("db_recurse:  %s is neither COMB nor SOLID?\n",
@@ -1227,7 +1243,8 @@ region_end:
 		curtree = TREE_NULL;
 	}
 out:
-	rt_db_free_internal( &intern );
+	if( intern.idb_ptr )  intern.idb_meth->ft_ifree( &intern );
+	db_free_external( &ext );
 	if(rt_g.debug&DEBUG_TREEWALK)  {
 		char	*sofar = db_path_to_string(pathp);
 		bu_log("db_recurse() return curtree=x%x, pathp='%s', *statepp=x%x\n",
@@ -1290,7 +1307,8 @@ CONST union tree	*tp;
  *			D B _ C K _ T R E E
  */
 void
-db_ck_tree( const union tree *tp )
+db_ck_tree( tp )
+CONST union tree	*tp;
 {
 
 	RT_CK_TREE(tp);
@@ -1449,7 +1467,8 @@ register union tree	*tp;
  *	od this subtree.
  */
 void
-db_left_hvy_node( union tree *tp )
+db_left_hvy_node( tp )
+register union tree *tp;
 {
 	union tree *lhs, *rhs;
 
@@ -1487,7 +1506,7 @@ register union tree	*tp;
 	int repush_child=0;
 
 	RT_CK_TREE(tp);
-
+top:
 	switch( tp->tr_op )  {
 	case OP_REGION:
 	case OP_SOLID:
@@ -1625,7 +1644,9 @@ register union tree	*tp;
  *  including tp.
  */
 int
-db_count_tree_nodes( const union tree *tp, int count )
+db_count_tree_nodes( tp, count )
+register CONST union tree	*tp;
+register int			count;
 {
 	RT_CK_TREE(tp);
 	switch( tp->tr_op )  {
@@ -1667,7 +1688,8 @@ db_count_tree_nodes( const union tree *tp, int count )
  *	0	if at least one subtraction or intersection op exists.
  */
 int
-db_is_tree_all_unions( const union tree *tp )
+db_is_tree_all_unions( tp )
+register CONST union tree	*tp;
 {
 	RT_CK_TREE(tp);
 	switch( tp->tr_op )  {
@@ -1813,17 +1835,17 @@ genptr_t		client_data;
 	return(curtree);
 }
 
-HIDDEN union tree *db_gettree_leaf( tsp, pathp, ip, client_data )
+HIDDEN union tree *db_gettree_leaf( tsp, pathp, ext, id, client_data )
 struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
-struct rt_db_internal	*ip;
+struct bu_external	*ext;
+int			id;
 genptr_t		client_data;
 {
 	register union tree	*curtree;
 
 	RT_CK_DBI(tsp->ts_dbip);
 	RT_CK_FULL_PATH(pathp);
-	RT_CK_DB_INTERNAL(ip);
 
 	BU_GETUNION( curtree, tree );
 	curtree->magic = RT_TREE_MAGIC;
@@ -1852,7 +1874,7 @@ HIDDEN void
 db_walk_subtree( tp, region_start_statepp, leaf_func, client_data )
 register union tree	*tp;
 struct combined_tree_state	**region_start_statepp;
-union tree		 *(*leaf_func) BU_ARGS((struct db_tree_state *, struct db_full_path *, struct rt_db_internal *, void *));
+union tree		 *(*leaf_func) BU_ARGS((struct db_tree_state *, struct db_full_path *, struct bu_external *, int, void *));
 genptr_t	client_data;
 {
 	struct combined_tree_state	*ctsp;
@@ -1944,7 +1966,7 @@ genptr_t	client_data;
  *
  *  Pick off the next region's tree, and walk it.
  */
-HIDDEN void
+void
 db_walk_dispatcher( cpu, arg )
 int		cpu;
 genptr_t	arg;
@@ -2080,7 +2102,8 @@ union tree *	(*reg_end_func) BU_ARGS((
 union tree *	(*leaf_func) BU_ARGS((
 			struct db_tree_state * /*tsp*/,
 			struct db_full_path * /*pathp*/,
-			struct rt_db_internal * /*ip*/,
+			struct bu_external * /*ep*/,
+			int /*id*/,
 			genptr_t client_data
 		));
 genptr_t	client_data;
@@ -2369,7 +2392,10 @@ struct mater_info *materp;
  *	<0	Failure
  */
 int
-db_region_mat( mat_t m, const struct db_i *dbip, const char *name )
+db_region_mat(m, dbip, name)
+mat_t m;
+CONST struct db_i *dbip;
+CONST char *name;
 {
 	struct db_full_path		full_path;
 	mat_t	region_to_model;

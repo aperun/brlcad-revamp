@@ -15,7 +15,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSglobal[] = "@(#)$Header$ (BRL)";
+static char RCSglobal[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"

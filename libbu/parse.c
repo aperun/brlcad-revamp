@@ -29,7 +29,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSparse[] = "@(#)$Header$ (BRL)";
+static char RCSparse[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -1837,9 +1837,6 @@ char *params;
 	return( 0 );
 }
 
-/*
- *			B U _ S H A D E R _ T O _ K E Y _ E Q
- */
 int
 bu_shader_to_key_eq( in, vls )
 char *in;
@@ -1940,88 +1937,27 @@ struct bu_vls *vls;
  *	0	OK
  */
 int
-bu_fwrite_external( FILE *fp, const struct bu_external *ep )
+bu_fwrite_external( fp, ep )
+FILE			*fp;
+CONST struct bu_external *ep;
 {
-	size_t	got;
-
 	BU_CK_EXTERNAL(ep);
 
-	if( (got = fwrite( ep->ext_buf, 1, ep->ext_nbytes, fp )) != ep->ext_nbytes )  {
-		perror("fwrite");
-		bu_log("bu_fwrite_external() attempted to write %ld, got %ld\n", (long)ep->ext_nbytes, (long)got );
+	if( fwrite( ep->ext_buf, ep->ext_nbytes, 1, fp ) != 1 )
 		return -1;
-	}
 	return 0;
-}
-
-/*
- *			B U _ H E X D U M P _ E X T E R N A L
- */
-void
-bu_hexdump_external( FILE *fp, CONST struct bu_external *ep, CONST char *str)
-{
-	const unsigned char	*cp;
-	const unsigned char	*endp;
-	int i, j, k;
-
-	BU_CK_EXTERNAL(ep);
-
-	fprintf(fp, "%s:\n", str);
-	if( ep->ext_nbytes <= 0 )  fprintf(fp, "\tWarning: 0 length external buffer\n");
-
-	cp = ep->ext_buf;
-	endp = cp + ep->ext_nbytes;
-	for( i=0; i < ep->ext_nbytes; i += 16 )  {
-		const unsigned char	*sp = cp;
-
-		for( j=0; j < 4; j++ )  {
-			for( k=0; k < 4; k++ )  {
-				if( cp >= endp )
-					fprintf(fp, "   ");
-				else
-					fprintf(fp, "%2.2x ", *cp++ );
-			}
-			fprintf(fp, " ");
-		}
-		fprintf(fp, " |");
-
-		for( j=0; j < 16; j++,sp++ )  {
-			if( sp >= endp )  break;
-			if( isprint(*sp) )
-				putc(*sp, fp);
-			else
-				putc('.', fp);
-		}
-
-		fprintf(fp, "|\n");
-	}
 }
 
 /*
  *			B U _ F R E E _ E X T E R N A L
  */
 void
-bu_free_external( register struct bu_external *ep)
+bu_free_external( ep )
+register struct bu_external	*ep;
 {
 	BU_CK_EXTERNAL(ep);
 	if( ep->ext_buf )  {
 		bu_free( ep->ext_buf, "bu_external ext_buf" );
 		ep->ext_buf = GENPTR_NULL;
 	}
-}
-
-/*
- *			B U _ C O P Y _ E X T E R N A L
- */
-void
-bu_copy_external(struct bu_external *op, const struct bu_external *ip)
-{
-	BU_CK_EXTERNAL(ip);
-	BU_INIT_EXTERNAL(op);
-
-	if( op == ip )  return;
-
-	op->ext_nbytes = ip->ext_nbytes;
-	op->ext_buf = bu_malloc( ip->ext_nbytes, "bu_copy_external" );
-	bcopy( ip->ext_buf, op->ext_buf, ip->ext_nbytes );
 }

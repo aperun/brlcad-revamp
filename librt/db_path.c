@@ -19,7 +19,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -42,7 +42,8 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
  *			D B _ F U L L _ P A T H _ I N I T
  */
 void
-db_full_path_init( struct db_full_path *pathp )
+db_full_path_init( pathp )
+struct db_full_path	*pathp;
 {
 	pathp->fp_len = 0;
 	pathp->fp_maxlen = 0;
@@ -136,7 +137,9 @@ int				incr;
  *			D B _ A P P E N D _ F U L L _ P A T H
  */
 void
-db_append_full_path( struct db_full_path *dest, const struct db_full_path *src )
+db_append_full_path( dest, src )
+register struct db_full_path	*dest;
+register struct db_full_path	*src;
 {
 	RT_CK_FULL_PATH(dest);
 	RT_CK_FULL_PATH(src);
@@ -243,7 +246,10 @@ CONST struct db_full_path	*pathp;
  *	 0	OK
  */
 int
-db_string_to_path(struct db_full_path *pp, const struct db_i *dbip, const char *str)
+db_string_to_path( pp, dbip, str )
+register struct db_full_path	*pp;
+struct db_i			*dbip;
+CONST char			*str;
 {
 	register char		*cp;
 	register char		*slashp;

@@ -21,7 +21,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -47,7 +47,7 @@ int		rt_bound_tree();	/* used by rt/sh_light.c */
 
 HIDDEN struct region *rt_getregion();
 HIDDEN void	rt_tree_region_assign();
-int rt_tree_elim_nops(register union tree *);
+
 
 /*
  *  Also used by converters in conv/ directory.
@@ -61,7 +61,7 @@ CONST struct db_tree_state	rt_initial_tree_state = {
 	{
 #endif
 		/* struct mater_info ts_mater */
-		{1.0, 1.0, 1.0},	/* color, RGB */
+		1.0, 1.0, 1.0,		/* color, RGB */
 		-1.0,			/* Temperature */
 		0,			/* ma_color_valid=0 --> use default */
 		DB_INH_LOWER,		/* color inherit */
@@ -71,10 +71,10 @@ CONST struct db_tree_state	rt_initial_tree_state = {
 	}
 #endif
 	,
-	{1.0, 0.0, 0.0, 0.0},
-	{0.0, 1.0, 0.0, 0.0},
-	{0.0, 0.0, 1.0, 0.0},
-	{0.0, 0.0, 0.0, 1.0},
+	1.0, 0.0, 0.0, 0.0,
+	0.0, 1.0, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.0, 0.0, 0.0, 1.0,
 	REGION_NON_FASTGEN,		/* ts_is_fastgen */
 	0,				/* ts_stop_at_regions */
 	NULL,				/* ts_region_start_func */
@@ -418,22 +418,24 @@ more_checks:
  *
  *  This routine must be prepared to run in parallel.
  */
-HIDDEN union tree *rt_gettree_leaf( tsp, pathp, ip, client_data )
+HIDDEN union tree *rt_gettree_leaf( tsp, pathp, ep, id, client_data )
 /*CONST*/ struct db_tree_state	*tsp;
 struct db_full_path		*pathp;
-/*CONST*/ struct rt_db_internal	*ip;
+/*CONST*/ struct bu_external	*ep;
+int				id;
 genptr_t			client_data;
 {
 	register struct soltab	*stp;
 	union tree		*curtree;
 	struct directory	*dp;
+	struct rt_db_internal	intern;
 	register matp_t		mat;
 	int			i;
 	struct rt_i		*rtip;
 
 	RT_CK_DBI(tsp->ts_dbip);
 	RT_CK_FULL_PATH(pathp);
-	RT_CK_DB_INTERNAL(ip);
+	BU_CK_EXTERNAL(ep);
 	rtip = tsp->ts_rtip;
 	RT_CK_RTI(rtip);
 	dp = DB_FULL_PATH_CUR_DIR(pathp);
@@ -468,15 +470,31 @@ genptr_t			client_data;
 		goto found_it;
 	}
 
-	stp->st_id = ip->idb_type;
-	stp->st_meth = &rt_functab[ip->idb_type];
+	stp->st_id = id;
+	stp->st_meth = &rt_functab[id];
 	if( mat )  {
 		mat = stp->st_matp;
 	} else {
 		mat = (matp_t)bn_mat_identity;
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	/*
+	 *  Import geometry from on-disk (external) format to internal.
+	 */
+    	RT_INIT_DB_INTERNAL(&intern);
+	if( stp->st_meth->ft_import( &intern, ep, mat, tsp->ts_dbip ) < 0 )  {
+		int	hash;
+		bu_log("rt_gettree_leaf(%s):  solid import failure\n", dp->d_namep );
+	    	if( intern.idb_ptr )  stp->st_meth->ft_ifree( &intern );
+		/* Too late to delete soltab entry; mark it as "dead" */
+		hash = db_dirhash( dp->d_namep );
+		ACQUIRE_SEMAPHORE_TREE(hash);
+		stp->st_aradius = -1;
+		stp->st_uses--;
+		RELEASE_SEMAPHORE_TREE(hash);
+		return( TREE_NULL );		/* BAD */
+	}
+	RT_CK_DB_INTERNAL( &intern );
 
 	/* init solid's maxima and minima */
 	VSETALL( stp->st_max, -INFINITY );
@@ -487,10 +505,11 @@ genptr_t			client_data;
     	 *  that is OK, as long as idb_ptr is set to null.
 	 *  Note that the prep routine may have changed st_id.
     	 */
-	if( stp->st_meth->ft_prep( stp, ip, rtip ) )  {
+	if( stp->st_meth->ft_prep( stp, &intern, rtip ) )  {
 		int	hash;
 		/* Error, solid no good */
 		bu_log("rt_gettree_leaf(%s):  prep failure\n", dp->d_namep );
+	    	if( intern.idb_ptr )  stp->st_meth->ft_ifree( &intern );
 		/* Too late to delete soltab entry; mark it as "dead" */
 		hash = db_dirhash( dp->d_namep );
 		ACQUIRE_SEMAPHORE_TREE(hash);
@@ -544,13 +563,16 @@ genptr_t			client_data;
 		bu_log("\n---Solid %d: %s\n", stp->st_bit, dp->d_namep);
 		bu_vls_init( &str );
 		/* verbose=1, mm2local=1.0 */
-		if( stp->st_meth->ft_describe( &str, ip, 1, 1.0 ) < 0 )  {
+		if( stp->st_meth->ft_describe( &str, &intern, 1, 1.0 ) < 0 )  {
 			bu_log("rt_gettree_leaf(%s):  solid describe failure\n",
 				dp->d_namep );
 		}
 		bu_log( "%s:  %s", dp->d_namep, bu_vls_addr( &str ) );
 		bu_vls_free( &str );
 	}
+
+	/* Release internal version */
+    	if( intern.idb_ptr )  stp->st_meth->ft_ifree( &intern );
 
 found_it:
 	BU_GETUNION( curtree, tree );

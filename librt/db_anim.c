@@ -16,7 +16,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSanim[] = "@(#)$Header$ (BRL)";
+static char RCSanim[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -225,7 +225,8 @@ struct mater_info	*materp;
  *  Free one animation structure
  */
 void
-db_free_1anim( struct animate *anp )
+db_free_1anim( anp )
+struct animate		*anp;
 {
 	RT_CK_ANIMATE( anp );
 

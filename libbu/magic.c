@@ -22,7 +22,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSmagic[] = "@(#)$Header$ (BRL)";
+static char RCSmagic[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -69,26 +69,22 @@ register long	magic;
 	/*
 	 *  bu.h
 	 */
-	case BU_LIST_HEAD_MAGIC:
-		return "bu_list";
-	case BU_BITV_MAGIC:
-		return "bu_bitv";
-	case BU_HIST_MAGIC:
-		return "bu_hist";
-	case BU_PTBL_MAGIC:
-		return "bu_ptbl";
-	case BU_MAPPED_FILE_MAGIC:
-		return "bu_mapped_file";
-	case BU_AVS_MAGIC:
-		return "bu_attribute_value_set";
 	case BU_VLS_MAGIC:
 		return "bu_vls";
+	case BU_PTBL_MAGIC:
+		return "bu_ptbl";
+	case BU_BITV_MAGIC:
+		return "bu_bitv";
+	case BU_LIST_HEAD_MAGIC:
+		return "bu_list";
+	case BU_HIST_MAGIC:
+		return "bu_hist";
+	case BU_MAPPED_FILE_MAGIC:
+		return "bu_mapped_file";
 	case BU_EXTERNAL_MAGIC:
 		return "bu_external";
-	case BU_COLOR_MAGIC:
-		return "bu_color";
 	case BU_RB_TREE_MAGIC:
-		return "bu_rb_tree";
+		return "red-black tree";
 
 	/*
 	 *  bn.h

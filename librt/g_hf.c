@@ -114,54 +114,6 @@ struct hf_specific {
 };
 
 /*
- *			R T _ H F _ T O _ D S P
- *
- *	Convert in-memory form of a height-field (HF) to a displacement-map
- *	solid (DSP) in internal representation.
- *	There is no record in the V5 database for an HF.
- */
-int
-rt_hf_to_dsp(struct rt_db_internal *db_intern)
-{
-	struct rt_hf_internal	*hip = (struct rt_hf_internal *)db_intern;
-	struct rt_dsp_internal	*dsp;
-	mat_t 			tmp, mat, matA, matB, matC;
-
-	BU_GETSTRUCT( dsp, rt_dsp_internal );
-	dsp->dsp_xcnt = hip->w;
-	dsp->dsp_ycnt = hip->n;
-
-	if (! hip->shorts) {
-		bu_log("cannot convert float HF to DSP\n");
-		return -1;
-	}
-	bn_mat_idn(mat);
-	MAT_DELTAS_VEC(mat,  hip->v);	/* translate */
-
-	/* Apply modeling transformations */
-	MAT4X3PNT( tmp, mat, hip->v );
-	VMOVE( hip->v, tmp );
-	MAT4X3VEC( tmp, mat, hip->x );
-	VMOVE( hip->x, tmp );
-	MAT4X3VEC( tmp, mat, hip->y );
-	VMOVE( hip->y, tmp );
-	hip->xlen /= mat[15];
-	hip->ylen /= mat[15];
-	hip->zscale /= mat[15];
-
-	/* XXX There is more logic needed here */
-
-	rt_db_free_internal( db_intern );
-	db_intern->idb_ptr = (genptr_t)dsp;
-	db_intern->idb_type = ID_DSP;
-	db_intern->idb_meth = &rt_functab[ID_DSP];
-
-	return -1;
-
-}
-
-
-/*
  *  			R T _ H F _ P R E P
  *  
  *  Given a pointer to a GED database record, and a transformation matrix,
@@ -182,7 +134,7 @@ struct soltab		*stp;
 struct rt_db_internal	*ip;
 struct rt_i		*rtip;
 {
-	struct rt_hf_internal *hip;
+	struct rt_hf_internal		*hip;
 	register struct hf_specific	*hf;
 	CONST struct bn_tol		*tol = &rtip->rti_tol;
 	double	dot;
@@ -1963,7 +1915,7 @@ CONST struct db_i		*dbip;
 		return(-1);
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_HF;
 	ip->idb_meth = &rt_functab[ID_HF];
 	ip->idb_ptr = bu_calloc( 1, sizeof(struct rt_hf_internal), "rt_hf_internal");
@@ -2130,7 +2082,7 @@ CONST struct db_i		*dbip;
 	xip->ylen /= local2mm;
 	xip->zscale /= local2mm;
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 	ep->ext_nbytes = sizeof(union record) * DB_SS_NGRAN;
 	ep->ext_buf = (genptr_t)bu_calloc( 1, ep->ext_nbytes, "hf external");
 	rec = (union record *)ep->ext_buf;
@@ -2148,30 +2100,6 @@ CONST struct db_i		*dbip;
 	bu_vls_free( &str );
 
 	return(0);
-}
-
-int
-rt_hf_import5( ip, ep, mat, dbip )
-struct rt_db_internal		*ip;
-CONST struct bu_external	*ep;
-CONST mat_t			mat;
-CONST struct db_i		*dbip;
-{
-	bu_log( "Import of HF solids from a version 5 database is not allowed.\n" );
-	bu_log( "\tHF solids should be converted to DSP solids using the rt_hf_to_dsp() routine or g4-g5 utility.\n" );
-	return -1;
-}
-
-int
-rt_hf_export5( ep, ip, local2mm, dbip )
-struct bu_external		*ep;
-CONST struct rt_db_internal	*ip;
-double				local2mm;
-CONST struct db_i		*dbip;
-{
-	bu_log( "Export of HF solids from a version 5 database is not allowed.\n" );
-	bu_log( "\tHF solids should be converted to DSP solids using the rt_hf_to_dsp() routine or g4-g5 utility.\n" );
-	return -1;
 }
 
 /*

@@ -29,7 +29,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -47,11 +47,10 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "tk.h"
 
 #include "machine.h"
-#include "externs.h"
 #include "bu.h"
 #include "vmath.h"
 #include "raytrace.h"
-#include "wdb.h"
+#include "externs.h"
 #include "./ged.h"
 #include "./mged_solid.h"
 #include "./mged_dm.h"
@@ -239,8 +238,7 @@ char	**argv;
   Tcl_AppendResult(interp, "Display manager free map:\n", (char *)NULL);
   rt_memprint( &(dmp->dm_map) );
 #endif
-
-  bu_log("Database free-storage map:\n");
+  Tcl_AppendResult(interp, "Database free granule map:\n", (char *)NULL);
   rt_memprint( &(dbip->dbi_freep) );
 
   return TCL_OK;
@@ -282,12 +280,11 @@ dir_summary(flag)
 		for( dp = dbip->dbi_Head[i]; dp != DIR_NULL; dp = dp->d_forw )  {
 			if( dp->d_flags & DIR_SOLID )
 				sol++;
-			if( dp->d_flags & DIR_COMB )  {
+			if( dp->d_flags & DIR_COMB )
 				if( dp->d_flags & DIR_REGION )
 					reg++;
 				else
 					comb++;
-			}
 		}
 	}
 	bu_log("Summary:\n");
@@ -837,17 +834,15 @@ struct db_i	*dbip;
 register struct directory *dp;
 genptr_t	ptr;
 {
-	struct rt_wdb	*keepfp = (struct rt_wdb *)ptr;
-	struct bu_external	ext;
-
-	RT_CK_WDB(keepfp);
+	FILE		*keepfp = (FILE *)ptr;
+	struct rt_db_internal	intern;
 
 	if( dp->d_nref++ > 0 )
 		return;		/* already written */
 
-	if( db_get_external( &ext, dp, dbip ) < 0 )
+	if( rt_db_get_internal( &intern, dp, dbip, (fastf_t *)NULL ) < 0 )
 		READ_ERR_return;
-	if( wdb_export_external( keepfp, &ext, dp->d_namep, dp->d_flags ) < 0 )
+	if( mk_export_fwrite( keepfp, dp->d_namep, intern.idb_ptr, intern.idb_type ) )
 		WRITE_ERR_return;
 }
 
@@ -858,11 +853,11 @@ Tcl_Interp *interp;
 int	argc;
 char	**argv;
 {
-	struct rt_wdb		*keepfp;
+	FILE			*keepfp;
 	register struct directory *dp;
 	struct bu_vls		title;
+	struct bu_vls		units;
 	register int		i;
-	struct db_i		*new_dbip;
 
 	CHECK_DBI_NULL;
 
@@ -883,16 +878,15 @@ char	**argv;
 	}
 
 	/* Alert user if named file already exists */
-	if( (new_dbip = db_open( argv[1], "w" )) !=  DBI_NULL  &&
-	    (keepfp = wdb_dbopen( new_dbip, RT_WDB_TYPE_DB_DISK ) ) != NULL )  {
-		Tcl_AppendResult(interp, "keep:  appending to '", argv[1],
+	if( (keepfp = fopen( argv[1], "r" ) ) != NULL )  {
+	  Tcl_AppendResult(interp, "keep:  appending to '", argv[1],
 			   "'\n", (char *)NULL);
-	} else {
-		/* Create a new database */
-		if( (keepfp = wdb_fopen( argv[1] ) ) == NULL )  {
-			perror( argv[1] );
-			return TCL_ERROR;
-		}
+	  fclose(keepfp);
+	}
+
+	if( (keepfp = fopen( argv[1], "a" ) ) == NULL )  {
+		perror( argv[1] );
+		return TCL_ERROR;
 	}
 	
 	/* ident record */
@@ -900,14 +894,16 @@ char	**argv;
 	bu_vls_strcat( &title, "Parts of: " );
 	bu_vls_strcat( &title, dbip->dbi_title );
 
-	if( db_update_ident( keepfp->dbip, bu_vls_addr(&title), dbip->dbi_local2base ) < 0 )  {
+	bu_vls_init( &units);
+	
+	if( db_fwrite_ident( keepfp, bu_vls_addr(&title), dbip->dbi_local2base ) < 0 )  {
 		perror("fwrite");
-		Tcl_AppendResult(interp, "db_update_ident() failed\n", (char *)NULL);
-		wdb_close(keepfp);
+		Tcl_AppendResult(interp, "db_fwrite_ident() failed\n", (char *)NULL);
+		fclose(keepfp);
 		bu_vls_free( &title );
+		bu_vls_free( &units );
 		return TCL_ERROR;
 	}
-	bu_vls_free( &title );
 
 	for(i = 2; i < argc; i++) {
 		if( (dp = db_lookup( dbip, argv[i], LOOKUP_NOISY)) == DIR_NULL )
@@ -915,7 +911,9 @@ char	**argv;
 		db_functree( dbip, dp, node_write, node_write, (genptr_t)keepfp );
 	}
 
-	wdb_close(keepfp);
+	fclose(keepfp);
+	bu_vls_free( &title );
+	bu_vls_free( &units );
 
 	return TCL_OK;
 }
@@ -1086,6 +1084,7 @@ printnode(dp, pathpos, prefix, cflag)
 		bu_free((char *)rt_tree_array, "printnode: rt_tree_array");
 	}
 
+end:
 	rt_comb_ifree( &intern );
 }
 

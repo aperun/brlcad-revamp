@@ -214,12 +214,10 @@ struct rt_db_internal  {
 	int		idb_type;		/* ID_xxx */
 	CONST struct rt_functab *idb_meth;	/* for ft_ifree(), etc. */
 	genptr_t	idb_ptr;
-	struct bu_attribute_value_set idb_avs;
 };
 #define RT_DB_INTERNAL_MAGIC	0x0dbbd867
 #define RT_INIT_DB_INTERNAL(_p)	{(_p)->idb_magic = RT_DB_INTERNAL_MAGIC; \
-	(_p)->idb_type = -1; (_p)->idb_ptr = GENPTR_NULL;\
-	(_p)->idb_avs.magic = -1;}
+	(_p)->idb_type = -1; (_p)->idb_ptr = GENPTR_NULL;}
 #define RT_CK_DB_INTERNAL(_p)	BU_CKMAG(_p, RT_DB_INTERNAL_MAGIC, "rt_db_internal")
 
 /*
@@ -517,16 +515,9 @@ struct soltab {
 #define ID_SUBMODEL	28	/* Instanced submodel */
 #define	ID_CLINE	29	/* FASTGEN4 CLINE solid */
 #define	ID_BOT		30	/* Bag o' triangles */
-#define	ID_MAX_SOLID	30	/* Maximum defined ID_xxx for solids */
+#define ID_MAXIMUM	30	/* Maximum defined ID_xxx value */
 
-/*
- *	Non-geometric objects
- */
-#define ID_COMBINATION	31	/* Combination Record */
-#define ID_BINEXPM	32	/* Experimental binary */
-#define ID_BINUNIF	33	/* Uniform-array binary */
-#define ID_BINMIME	34	/* MIME-typed binary */
-#define ID_MAXIMUM	35	/* Maximum defined ID_xxx value */
+#define ID_COMBINATION	(ID_MAXIMUM+1)	/* Combination Record (non-geometric) */
 
 /*
  *			M A T E R _ I N F O
@@ -811,13 +802,6 @@ struct directory  {
 #define LOOKUP_NOISY	1
 #define LOOKUP_QUIET	0
 
-#define FOR_ALL_DIRECTORY_START(_dp,_dbip)	{ int _i; \
-	for( _i = RT_DBNHASH-1; _i >= 0; _i-- )  { \
-		for( (_dp) = (_dbip)->dbi_Head[_i]; (_dp); (_dp) = (_dp)->d_forw )  {
-
-#define FOR_ALL_DIRECTORY_END	}}}
-	
-
 /*
  *			R T _ C O M B _ I N T E R N A L
  *
@@ -848,35 +832,6 @@ struct rt_comb_internal  {
 #define RT_CK_COMB(_p)			RT_CHECK_COMB(_p)
 #define RT_CHECK_COMB_TCL(_interp,_p)	BU_CKMAG_TCL(interp,_p,RT_COMB_MAGIC, "rt_comb_internal" )
 #define RT_CK_COMB_TCL(_interp,_p)	RT_CHECK_COMB_TCL(_interp,_p)
-
-/*
- *			R T _ B I N U N I F _ I N T E R N A L
- *
- *  In-memory format for database uniform-array binary object.
- *  Perhaps move to h/wdb.h or h/rtgeom.h?
- */
-struct rt_binunif_internal {
-	long		magic;
-	char		type;
-	long		count;
-	union		{
-			    float		*flt;
-			    double		*dbl;
-			    char		*int8;
-			    short		*int16;
-			    int			*int32;
-			    long		*int64;
-			    unsigned char	*uint8;
-			    unsigned short	*uint16;
-			    unsigned int	*uint32;
-			    unsigned long	*uint64;
-	}		u;
-};
-#define RT_BINUNIF_INTERNAL_MAGIC	0x42696e55	/* "BinU" */
-#define RT_CHECK_BINUNIF(_p)		BU_CKMAG( _p , RT_BINUNIF_INTERNAL_MAGIC , "rt_binunif_internal" )
-#define RT_CK_BINUNIF(_p)		RT_CHECK_BINUNIF(_p)
-#define RT_CHECK_BINUNIF_TCL(_interp,_p)	BU_CKMAG_TCL(interp,_p,RT_BINUNIF_MAGIC, "rt_binunif_internal" )
-#define RT_CK_BINUNIF_TCL(_interp,_p)	RT_CHECK_BINUNIF_TCL(_interp,_p)
 
 /*
  *			D B _ T R E E _ S T A T E
@@ -913,7 +868,8 @@ struct db_tree_state {
 	union tree *	(*ts_leaf_func) BU_ARGS((
 				struct db_tree_state * /*tsp*/,
 				struct db_full_path * /*pathp*/,
-				struct rt_db_internal * /*ip*/,
+				struct bu_external * /*ep*/,
+				int /*id*/,
 				genptr_t client_data
 			));
 	CONST struct rt_tess_tol *ts_ttol;	/* Tessellation tolerance */
@@ -1038,6 +994,7 @@ struct rt_tree_array
 struct rt_wdb  {
 	struct bu_list	l;
 	int		type;
+	FILE		*fp;
 	struct db_i	*dbip;
 	struct bu_vls	wdb_name;	/* database object name */
 	struct db_tree_state	wdb_initial_tree_state;
@@ -1063,6 +1020,7 @@ struct rt_wdb  {
 #define RT_CK_WDB(_p)			RT_CHECK_WDB(_p)
 #define RT_CK_WDB_TCL(_interp,_p)	RT_CHECK_WDB_TCL(_interp,_p)
 #define RT_WDB_NULL		((struct rt_wdb *)NULL)
+#define RT_WDB_TYPE_FILE			1
 #define RT_WDB_TYPE_DB_DISK			2
 #define RT_WDB_TYPE_DB_DISK_APPEND_ONLY		3
 #define RT_WDB_TYPE_DB_INMEM			4
@@ -1558,8 +1516,8 @@ struct rt_i {
 	int		rti_ncut_by_type[CUT_MAXIMUM+1];	/* number of cuts by type */
 	int		rti_cut_totobj;	/* # objs in all bins, total */
 	int		rti_cut_maxdepth;/* max depth of cut tree */
-	struct soltab	**rti_sol_by_type[ID_MAX_SOLID+1];
-	int		rti_nsol_by_type[ID_MAX_SOLID+1];
+	struct soltab	**rti_sol_by_type[ID_MAXIMUM+1];
+	int		rti_nsol_by_type[ID_MAXIMUM+1];
 	int		rti_maxsol_by_type;
 	int		rti_air_discards;/* # of air regions discarded */
 	struct bu_hist rti_hist_cellsize; /* occupancy of cut cells */
@@ -1798,14 +1756,6 @@ struct rt_functab {
 			struct rt_db_internal * /*ip*/,
 			CONST struct bn_tol * /*tol*/));
 #endif
-	int	(*ft_import5) BU_ARGS((struct rt_db_internal * /*ip*/,
-			CONST struct bu_external * /*ep*/,
-			CONST mat_t /*mat*/,
-			CONST struct db_i * /*dbip*/));
-	int	(*ft_export5) BU_ARGS((struct bu_external * /*ep*/,
-			CONST struct rt_db_internal * /*ip*/,
-			double /*local2mm*/,
-			CONST struct db_i * /*dbip*/));
 	int	(*ft_import) BU_ARGS((struct rt_db_internal * /*ip*/,
 			CONST struct bu_external * /*ep*/,
 			CONST mat_t /*mat*/,
@@ -2285,15 +2235,11 @@ BU_EXTERN(void rt_pr_cut, (CONST union cutter *cutp, int lvl) );
 					/* free a cut tree */
 BU_EXTERN(void rt_fr_cut, (struct rt_i *rtip, union cutter *cutp) );
 					/* regionid-driven color override */
-
-/* mater.c */
 BU_EXTERN(void rt_region_color_map, (struct region *regp) );
 					/* process ID_MATERIAL record */
-void rt_color_addrec( int low, int hi, int r, int g, int b, long addr );
+BU_EXTERN(void rt_color_addrec, () );
 BU_EXTERN(void rt_color_free, () );
 					/* extend a cut box */
-
-/* cut.c */
 BU_EXTERN(void rt_cut_extend, (union cutter *cutp, struct soltab *stp,
 	CONST struct rt_i *rtip) );
 					/* find RPP of one region */
@@ -2303,35 +2249,12 @@ BU_EXTERN(void rt_bomb, (CONST char *s));
 BU_EXTERN(int rt_in_rpp, (struct xray *rp, CONST fastf_t *invdir,
 		CONST fastf_t *min, CONST fastf_t *max));
 BU_EXTERN(CONST union cutter *rt_cell_n_on_ray, (struct application *ap, int n));
-extern void rt_cut_clean(struct rt_i *rtip);
 
 /* The database library */
 
 /* wdb.c */
-struct rt_wdb *wdb_fopen( const char *filename );
-struct rt_wdb *wdb_dbopen( struct db_i *dbip, int mode );
-int wdb_import(
-	struct rt_wdb *wdbp,
-	struct rt_db_internal *internp,
-	const char *name,
-	const mat_t mat );
-int wdb_export_external(
-	struct rt_wdb *wdbp,
-	struct bu_external *ep,
-	const char *name,
-	int flags );
-int wdb_put_internal(
-	struct rt_wdb *wdbp,
-	const char *name,
-	struct rt_db_internal *ip,
-	double local2mm );
-int wdb_export(
-	struct rt_wdb *wdbp,
-	const char *name,
-	genptr_t gp,
-	int id,
-	double local2mm );
-void wdb_close( struct rt_wdb *wdbp );
+BU_EXTERN(struct rt_wdb *wdb_dbopen, (struct db_i *dbip, int mode));
+BU_EXTERN(struct rt_wdb *wdb_fopen, (CONST char *filename));
 
 /* db_anim.c */
 BU_EXTERN(int db_add_anim, (struct db_i *dbip, struct animate *anp, int root) );
@@ -2339,9 +2262,6 @@ BU_EXTERN(int db_do_anim, (struct animate *anp, mat_t stack, mat_t arc,
 	struct mater_info *materp) );
 BU_EXTERN(void db_free_anim, (struct db_i *dbip) );
 BU_EXTERN(void db_write_anim, (FILE *fop, struct animate *anp));
-BU_EXTERN(struct animate	*db_parse_1anim, (struct db_i *dbip,
-				int argc, CONST char **argv));
-void			db_free_1anim( struct animate *anp );
 
 /* db_path.c */
 BU_EXTERN(void db_add_node_to_full_path, (struct db_full_path *pp,
@@ -2355,10 +2275,6 @@ BU_EXTERN(int db_region_mat, (mat_t m, CONST struct db_i *dbip,
 BU_EXTERN(int db_shader_mat, (mat_t model_to_shader, CONST struct rt_i *rtip,
 				CONST struct region *rp, point_t p_min,
 				point_t p_max) );
-int db_string_to_path(struct db_full_path *pp, const struct db_i *dbip, const char *str);
-void db_full_path_init( struct db_full_path *pathp );
-void db_append_full_path( struct db_full_path *dest, const struct db_full_path *src );
-
 /* db_open.c */
 					/* open an existing model database */
 BU_EXTERN(struct db_i *db_open, ( CONST char *name, CONST char *mode ) );
@@ -2370,10 +2286,6 @@ BU_EXTERN(void db_close, ( struct db_i *dbip ) );
 					/* dump a full copy of a database */
 BU_EXTERN(int db_dump, (struct rt_wdb *wdbp, struct db_i *dbip));
 BU_EXTERN(struct db_i *db_clone_dbi, (struct db_i *dbip, long *client));
-
-/* db5_io.c */
-BU_EXTERN(int rt_fwrite_internal5, (FILE *, CONST char *, struct rt_db_internal *, double));
-BU_EXTERN(int db5_fwrite_ident, (FILE *, CONST char *, double));
 
 /* db_io.c */
 /* It is normal to test for __STDC__ when using *_DEFINED tests but in
@@ -2413,14 +2325,7 @@ BU_EXTERN(int db_scan, ( struct db_i *,
 	int nrec, int flags, genptr_t client_data)),
 	int do_old_matter, genptr_t client_data ) );
 					/* update db unit conversions */
-#define db_ident(a,b,c)		+++error+++
-int db_update_ident( struct db_i *dbip, const char *title, double local2mm );
-int db_fwrite_ident( FILE *fp, const char *title, double local2mm );
 BU_EXTERN(void db_conversions, ( struct db_i *, int units ) );
-int db_v4_get_units_code( const char *str );
-
-/* db5_scan.c */
-int db_dirbuild( struct db_i *dbip );
 
 /* db_lookup.c */
 BU_EXTERN(int db_dirhash, (CONST char *str) );
@@ -2431,10 +2336,8 @@ BU_EXTERN(struct directory *db_diradd, ( struct db_i *, CONST char *name, long l
 	int len, int flags, genptr_t ptr ) );
 					/* delete entry from directory */
 BU_EXTERN(int db_dirdelete, ( struct db_i *, struct directory *dp ) );
-BU_EXTERN(int db_fwrite_ident, (FILE *, CONST char *, double));
-BU_EXTERN(void db_pr_dir, ( CONST struct db_i *dbip ) );
 BU_EXTERN(int db_rename, ( struct db_i *, struct directory *, CONST char *newname) );
-
+BU_EXTERN(void db_pr_dir, ( CONST struct db_i *dbip ) );
 
 /* db_match.c */
 BU_EXTERN(int db_regexp_match, (CONST char *pattern, CONST char *string));
@@ -2455,9 +2358,6 @@ BU_EXTERN(int db_delete, ( struct db_i *, struct directory *dp ) );
 BU_EXTERN(int db_zapper, ( struct db_i *, struct directory *dp, int start ) );
 
 /* db_tree.c */
-void db_dup_db_tree_state(struct db_tree_state *otsp, const struct db_tree_state *itsp);
-void db_free_db_tree_state( struct db_tree_state *tsp );
-void db_init_db_tree_state( struct db_tree_state *tsp, struct db_i *dbip );
 BU_EXTERN(struct combined_tree_state *db_new_combined_tree_state,
 	(CONST struct db_tree_state *tsp, CONST struct db_full_path *pathp));
 BU_EXTERN(struct combined_tree_state *db_dup_combined_tree_state,
@@ -2471,42 +2371,14 @@ BU_EXTERN(int db_apply_state_from_comb, (struct db_tree_state *tsp,
 	CONST struct db_full_path *pathp, CONST struct rt_comb_internal *comb));
 BU_EXTERN(int db_apply_state_from_memb, (struct db_tree_state *tsp,
 	struct db_full_path *pathp, CONST union tree *tp));
-int db_apply_state_from_one_member( struct db_tree_state *tsp,
-	struct db_full_path *pathp, const char *cp, int sofar,
-	const union tree *tp );
-union tree *db_find_named_leaf( union tree *tp, const char *cp );
-union tree *db_find_named_leafs_parent( int *side, union tree *tp, const char *cp );
-void db_tree_del_lhs( union tree *tp );
-void db_tree_del_rhs( union tree *tp );
-int db_tree_del_dbleaf(union tree **tp, const char *cp);
-void db_tree_mul_dbleaf( union tree *tp, const mat_t mat );
-void db_tree_funcleaf(
-	struct db_i		*dbip,
-	struct rt_comb_internal	*comb,
-	union tree		*comb_tree,
-	void			(*leaf_func)(),
-	genptr_t		user_ptr1,
-	genptr_t		user_ptr2,
-	genptr_t		user_ptr3 );
-int
-db_follow_path(
-	struct db_tree_state		*tsp,
-	struct db_full_path		*total_path,
-	CONST struct db_full_path	*new_path,
-	int				noisy,
-	int				depth );
 BU_EXTERN(int db_follow_path_for_state, (struct db_tree_state *tsp,
 	struct db_full_path *pathp, CONST char *orig_str, int noisy));
 BU_EXTERN(union tree *db_recurse, (struct db_tree_state	*tsp,
 	struct db_full_path *pathp,
 	struct combined_tree_state **region_start_statepp, genptr_t client_data));
 BU_EXTERN(union tree *db_dup_subtree, (CONST union tree	*tp));
-void db_ck_tree( const union tree *tp );
 BU_EXTERN(void db_free_tree, (union tree *tp));
-void db_left_hvy_node( union tree *tp );
 BU_EXTERN(void db_non_union_push, (union tree *tp));
-int db_count_tree_nodes( const union tree *tp, int count );
-int db_is_tree_all_unions( const union tree *tp );
 BU_EXTERN(int db_count_subtree_regions, (CONST union tree *tp));
 BU_EXTERN(int db_tally_subtree_regions, (union tree *tp,
 	union tree **reg_trees, int cur, int lim));
@@ -2525,7 +2397,8 @@ BU_EXTERN(int db_walk_tree, (struct db_i *dbip, int argc, CONST char **argv,
 	union tree * (*leaf_func) (
 		struct db_tree_state * /*tsp*/,
 		struct db_full_path * /*pathp*/,
-		struct rt_db_internal * /*ip*/,
+		struct bu_external * /*ep*/,
+		int /*id*/,
 		genptr_t client_data ),
 	genptr_t client_data ));
 BU_EXTERN(int db_path_to_mat, (struct db_i *dbip, struct db_full_path *pathp,
@@ -2533,23 +2406,14 @@ BU_EXTERN(int db_path_to_mat, (struct db_i *dbip, struct db_full_path *pathp,
 BU_EXTERN(void db_apply_anims, (struct db_full_path *pathp,
 	struct directory *dp, mat_t stck, mat_t arc,
 	struct mater_info *materp));
-int db_region_mat( mat_t m, const struct db_i *dbip, const char *name );
-/* XXX db_shader_mat, should be called rt_shader_mat */
 
 /* dir.c */
-extern struct rt_i *rt_dirbuild( const char *filename, char *buf, int len );
 BU_EXTERN(int rt_db_get_internal, (struct rt_db_internal *ip,
 	CONST struct directory *dp,
 	CONST struct db_i *dbip, CONST mat_t mat));
 BU_EXTERN(int rt_db_put_internal, (struct directory *dp, struct db_i *dbip,
 	struct rt_db_internal *ip));
-extern int rt_fwrite_internal( FILE *fp, const char *name, const struct rt_db_internal *ip, double conv2mm );
-extern void rt_db_free_internal( struct rt_db_internal *ip );
-extern int rt_db_lookup_internal( struct db_i *dbip, const char *obj_name,
-	struct directory **dpp, struct rt_db_internal *ip, int noisy );
 
-extern void rt_optim_tree(register union tree *tp,
-			  struct resource *resp);
 /* db_comb.c */
 
 /* db_walk.c */
@@ -2568,7 +2432,6 @@ BU_EXTERN(struct rt_pt_node *rt_ptalloc, () );
 
 /* memalloc.c -- non PARALLEL routines */
 BU_EXTERN(unsigned long rt_memalloc, (struct mem_map **pp, unsigned size) );
-BU_EXTERN(struct mem_map * rt_memalloc_nosplit, (struct mem_map **pp, unsigned size) );
 BU_EXTERN(unsigned long rt_memget, (struct mem_map **pp, unsigned int size,
 	unsigned int place) );
 BU_EXTERN(void rt_memfree, (struct mem_map **pp, unsigned size, unsigned long addr) );
@@ -2583,12 +2446,6 @@ BU_EXTERN(struct bu_list *rt_vlblock_find, (struct bn_vlblock *vbp,
 
 /* g_ars.c */
 BU_EXTERN(void rt_hitsort, (struct hit h[], int nh));
-
-/* g_pg.c */
-int rt_pg_to_bot( struct rt_db_internal *ip, const struct bn_tol *tol );
-
-/* g_hf.c */
-int rt_hf_to_dsp(struct rt_db_internal *db_intern);
 
 /* pr.c */
 BU_EXTERN(void rt_pr_soltab, (CONST struct soltab *stp));
@@ -2632,8 +2489,6 @@ BU_EXTERN(void rt_clean_resource, (struct rt_i *rtip, struct resource *resp));
 /* shoot.c */
 BU_EXTERN(void rt_add_res_stats, (struct rt_i *rtip, struct resource *resp) );
 					/* Tally stats into struct rt_i */
-extern void rt_res_pieces_clean(struct resource *resp,
-			   struct rt_i *rtip);
 
 /* vlist.c */
 BU_EXTERN(struct bn_vlblock *	rt_vlblock_init, () );
@@ -3401,10 +3256,10 @@ BU_EXTERN(int			nmg_two_region_vertex_fuse, (struct nmgregion *r1,
 				struct nmgregion *r2, CONST struct bn_tol *tol));
 BU_EXTERN(union tree		*nmg_booltree_leaf_tess, (struct db_tree_state *tsp,
 				struct db_full_path *pathp,
-				struct rt_db_internal *ip, genptr_t client_data));
+				struct bu_external *ep, int id, genptr_t client_data));
 BU_EXTERN(union tree		*nmg_booltree_leaf_tnurb, (struct db_tree_state *tsp,
 				struct db_full_path *pathp,
-				struct rt_db_internal *ip, genptr_t client_data));
+				struct bu_external *ep, int id, genptr_t client_data));
 BU_EXTERN(union tree		*nmg_booltree_evaluate, (union tree *tp,
 				CONST struct bn_tol *tol));
 BU_EXTERN(void			nmg_region_v_unique, (struct nmgregion *r1,
@@ -4007,41 +3862,6 @@ BU_EXTERN(void			nmg_visit,
 				(CONST long			*magicp,
 				CONST struct nmg_visit_handlers	*htab,
 				genptr_t			*state));
-
-/* db5_types.c */
-BU_EXTERN(int			db5_type_tag_from_major,
-				(char				**tag,
-				CONST unsigned char		major));
-
-BU_EXTERN(int			db5_type_descrip_from_major,
-				(char				**descrip,
-				CONST unsigned char		major));
-
-BU_EXTERN(int			db5_type_tag_from_codes,
-				(char				**tag,
-				CONST unsigned char		major,
-				CONST unsigned char		minor));
-
-BU_EXTERN(int			db5_type_descrip_from_codes,
-				(char				**descrip,
-				CONST unsigned char		major,
-				CONST unsigned char		minor));
-
-BU_EXTERN(int			db5_type_codes_from_tag,
-				(unsigned char			*major,
-				unsigned char			*minor,
-				CONST char			*tag));
-
-BU_EXTERN(int			db5_type_codes_from_descrip,
-				(unsigned char			*major,
-				unsigned char			*minor,
-				CONST char			*descrip));
-
-BU_EXTERN(size_t		db5_type_sizeof_h_binu,
-				(CONST unsigned char		minor));
-
-BU_EXTERN(size_t		db5_type_sizeof_n_binu,
-				(CONST unsigned char		minor));
 
 #endif
 

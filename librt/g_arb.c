@@ -37,18 +37,13 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSarb[] = "@(#)$Header$ (BRL)";
+static char RCSarb[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 #include "machine.h"
 #include "bu.h"
 #include "vmath.h"
@@ -109,12 +104,12 @@ struct arb_info {
 	int	ai_sub[4];
 };
 static CONST struct arb_info rt_arb_info[6] = {
-	{ "1234", {3, 2, 1, 0} },		/* "bottom" face */
-	{ "8765", {4, 5, 6, 7} },		/* "top" face */
-	{ "1485", {4, 7, 3, 0} },
-	{ "2673", {2, 6, 5, 1} },
-	{ "1562", {1, 5, 4, 0} },
-	{ "4378", {7, 6, 2, 3} }
+	{ "1234", 3, 2, 1, 0 },		/* "bottom" face */
+	{ "8765", 4, 5, 6, 7 },		/* "top" face */
+	{ "1485", 4, 7, 3, 0 },
+	{ "2673", 2, 6, 5, 1 },
+	{ "1562", 1, 5, 4, 0 },
+	{ "4378", 7, 6, 2, 3 }
 };
 
 RT_EXTERN(void rt_arb_ifree, (struct rt_db_internal *) );
@@ -1020,14 +1015,25 @@ register struct uvcoord *uvp;
 
 	if( arbp->arb_opt == (struct oface *)0 )  {
 		register int		ret = 0;
+		struct bu_external	ext;
 		struct rt_db_internal	intern;
 		struct rt_arb_internal	*aip;
 
-		if( rt_db_get_internal( &intern, stp->st_dp, ap->a_rt_i->rti_dbip, stp->st_matp ) < 0 )  {
-			bu_log("rt_arb_uv(%s) rt_db_get_internal failure\n",
+		BU_INIT_EXTERNAL(&ext);
+		if( db_get_external( &ext, stp->st_dp, ap->a_rt_i->rti_dbip ) < 0 )  {
+			bu_log("rt_arb_uv(%s) db_get_external failure\n",
 				stp->st_name);
 			return;
 		}
+		if( rt_arb_import( &intern, &ext,
+		    stp->st_matp ? stp->st_matp : bn_mat_identity,
+		    ap->a_rt_i->rti_dbip ) < 0 )  {
+			bu_log("rt_arb_uv(%s) database import error\n",
+				stp->st_name);
+			db_free_external( &ext );
+			return;
+		}
+		db_free_external( &ext );
 		RT_CK_DB_INTERNAL( &intern );
 		aip = (struct rt_arb_internal *)intern.idb_ptr;
 		RT_ARB_CK_MAGIC(aip);
@@ -1043,7 +1049,7 @@ register struct uvcoord *uvp;
 		}
 		bu_semaphore_release( RT_SEM_MODEL );
 
-		rt_db_free_internal( &intern );
+		rt_arb_ifree( &intern );
 
 		if( ret != 0 || arbp->arb_opt == (struct oface *)0 )  {
 			bu_log("rt_arb_uv(%s) dyanmic setup failure st_specific=x%x, optp=x%x\n",
@@ -1198,7 +1204,7 @@ CONST struct db_i		*dbip;
 		return(-1);
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_ARB8;
 	ip->idb_meth = &rt_functab[ID_ARB8];
 	ip->idb_ptr = bu_malloc( sizeof(struct rt_arb_internal), "rt_arb_internal");
@@ -1240,7 +1246,7 @@ CONST struct db_i		*dbip;
 	aip = (struct rt_arb_internal *)ip->idb_ptr;
 	RT_ARB_CK_MAGIC(aip);
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 	ep->ext_nbytes = sizeof(union record);
 	ep->ext_buf = (genptr_t)bu_calloc( 1, ep->ext_nbytes, "arb external");
 	rec = (union record *)ep->ext_buf;
@@ -1257,68 +1263,6 @@ CONST struct db_i		*dbip;
 	return(0);
 }
 
-/*
- *			R T _ A R B _ I M P O R T 5
- *
- * Import an arb from the db5 format and convert to the internal structure.
- * Code duplicated from rt_arb_import() with db5 help from g_ell.c
- */
-int
-rt_arb_import5( ip, ep, mat, dbip )
-struct rt_db_internal		*ip;
-CONST struct bu_external	*ep;
-register CONST mat_t		mat;
-CONST struct db_i		*dbip;
-{
-	struct rt_arb_internal *aip;
-	register int		i;
-	fastf_t			vec[3*8];
-
-	BU_CK_EXTERNAL( ep );
-	BU_ASSERT_LONG( ep->ext_nbytes, ==, SIZEOF_NETWORK_DOUBLE * 3*8);
-	RT_CK_DB_INTERNAL( ip );
-	ip->idb_type = ID_ARB8;
-	ip->idb_meth = &rt_functab[ID_ARB8];
-	ip->idb_ptr = bu_malloc( sizeof(struct rt_arb_internal), "rt_arb_internal");
-
-	aip = (struct rt_arb_internal *)ip->idb_ptr;
-	aip->magic = RT_ARB_INTERNAL_MAGIC;
-
-	/* Convert from database (network) to internal (host) format */
-	ntohd( (unsigned char *)vec, ep->ext_buf, 8*3);
-	for (i=0; i<8; i++) {
-		MAT4X3PNT( aip->pt[i], mat, &vec[i*3]);
-	}
-	return 0;	/* OK */
-}
-/*
- *			R T _ A R B _ E X P O R T 5
- */
-int
-rt_arb_export5( ep, ip, local2mm, dbip )
-struct bu_external		*ep;
-CONST struct rt_db_internal	*ip;
-double				local2mm;
-CONST struct db_i		*dbip;
-{
-	struct rt_arb_internal	*aip;
-	fastf_t			vec[3*8];
-	register int		i;
-
-	RT_CK_DB_INTERNAL(ip);
-	if (ip->idb_type != ID_ARB8) return -1;
-	aip = (struct rt_arb_internal *)ip->idb_ptr;
-	RT_ARB_CK_MAGIC(aip);
-
-	BU_CK_EXTERNAL(ep);
-	ep->ext_nbytes = SIZEOF_NETWORK_DOUBLE * 8 * 3;
-	ep->ext_buf = (genptr_t)bu_malloc( ep->ext_nbytes, "arb external");
-	for (i=0; i<8; i++) {
-		VSCALE( &vec[i*3], aip->pt[i], local2mm );
-	}
-	htond( ep->ext_buf, (unsigned char *)vec, 8*3);
-	return 0;
-}
 /*
  *			R T _ A R B _ D E S C R I B E
  *

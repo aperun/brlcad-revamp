@@ -2279,7 +2279,8 @@ struct hold_point *hp;
 	mat_t mat;
 	struct joint *jp;
 	struct rt_grip_internal *gip;
-	struct rt_db_internal	intern;
+	struct bu_external	es_ext;
+	struct rt_db_internal	es_int;
 	int id;
 
 	if(dbip == DBI_NULL)
@@ -2296,17 +2297,23 @@ struct hold_point *hp;
 			MAT4X3PNT(loc, mat, hp->point);
 			return 1;
 		}
-
-		if( rt_db_get_internal( &intern, hp->path.fp_names[hp->path.fp_len-1], dbip, NULL ) < 0 )
+		bn_mat_idn(mat);
+		BU_INIT_EXTERNAL(&es_ext);
+		RT_INIT_DB_INTERNAL(&es_int);
+		if (db_get_external( &es_ext,
+		    hp->path.fp_names[hp->path.fp_len-1], dbip) < 0) return 0;
+		id = rt_id_solid( &es_ext);
+		if (id != ID_GRIP) return 0;
+		if (rt_functab[id].ft_import( &es_int, &es_ext, mat, dbip) < 0) {
+			db_free_external(&es_ext);
 			return 0;
-
-		RT_CK_DB_INTERNAL(&intern);
-		if( intern.idb_type != ID_GRIP )  return 0;
-		gip = (struct rt_grip_internal *)intern.idb_ptr;
+		}
+		RT_CK_DB_INTERNAL(&es_int);
+		gip = (struct rt_grip_internal *)es_int.idb_ptr;
 		VMOVE(hp->point, gip->center);
 		hp->flag |= HOLD_PT_GOOD;
-		rt_db_free_internal( &intern );
-
+		rt_functab[id].ft_ifree( &es_int);
+		db_free_external(&es_ext);
 		db_path_to_mat(dbip, &hp->path, mat, hp->path.fp_len-2);
 		MAT4X3PNT(loc, mat, hp->point);
 		return 1;
@@ -3554,12 +3561,14 @@ struct db_full_path	*pathp;
 	return (struct joint *) 0;
 }
 
-HIDDEN union tree *mesh_leaf( tsp, pathp, ip, client_data)
+HIDDEN union tree *mesh_leaf( tsp, pathp, ep, id, client_data)
 struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
-struct rt_db_internal	*ip;
+struct bu_external	*ep;
+int			id;
 genptr_t		client_data;
 {
+	struct	rt_db_internal	internal;
 	struct rt_grip_internal *gip;
 	struct	artic_joints	*newJoint;
 	struct	artic_grips	*newGrip;
@@ -3567,10 +3576,8 @@ genptr_t		client_data;
 	union	tree		*curtree;
 	struct	directory	*dp;
 
-	RT_CK_FULL_PATH(pathp);
-	RT_CK_DB_INTERNAL(ip);
 
-	if (ip->idb_type != ID_GRIP) {
+	if (id != ID_GRIP) {
 		return TREE_NULL;
 	}
 
@@ -3582,7 +3589,13 @@ genptr_t		client_data;
 /*
  * get the grip information.
  */
-	gip = (struct rt_grip_internal *) ip->idb_ptr;
+	RT_INIT_DB_INTERNAL(&internal);
+	if ( rt_functab[id].ft_import( &internal, ep, tsp->ts_mat, dbip) < 0 ) {
+	  Tcl_AppendResult(interp, dp->d_namep, ": solid import failure\n", (char *)NULL);
+	  if (internal.idb_ptr) rt_functab[id].ft_ifree(&internal);
+	  return curtree;
+	}
+	gip = (struct rt_grip_internal *) internal.idb_ptr;
 /*
  * find the joint that this grip belongs to.
  */
@@ -3590,11 +3603,13 @@ genptr_t		client_data;
 /*
  * Get the grip structure.
  */
+	rt_functab[id].ft_ifree(&internal);
+
 	newGrip = (struct artic_grips *)bu_malloc(sizeof(struct artic_grips),
 	    "artic_grip");
 	newGrip->l.magic = MAGIC_A_GRIP;
 	VMOVE(newGrip->vert, gip->center);
-	newGrip->dir = dp;
+	newGrip->dir = pathp->fp_names[pathp->fp_len-1];
 	for (BU_LIST_FOR(newJoint, artic_joints, &artic_head)) {
 		if (newJoint->joint == jp) {
 			BU_LIST_APPEND(&newJoint->head, &(newGrip->l));

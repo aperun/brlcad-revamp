@@ -19,7 +19,7 @@
  *	Public Domain, Distribution Unlimited
  */
 #ifndef lint
-static const char libbu_vfont_RCSid[] = "@(#)$Header$ (BRL)";
+static char libbu_vfont_RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -28,16 +28,10 @@ static const char libbu_vfont_RCSid[] = "@(#)$Header$ (BRL)";
 #include "machine.h"
 #include "externs.h"
 #include "vfont-if.h"
-#include "bu.h"
 
 #define FONTDIR2	"/usr/lib/vfont"
 #define DEFAULT_FONT	"nonie.r.12"
 #define FONTNAMESZ	128
-
-/*
- * Forward Definitions
- */
-int vax_gshort(unsigned char *);
 
 /*
  *			V F O N T _ G E T
@@ -151,7 +145,7 @@ char *font;
  */
 int
 vax_gshort(msgp)
-unsigned char *msgp;
+char *msgp;
 {
 	register unsigned char *p = (unsigned char *) msgp;
 	register int	i;

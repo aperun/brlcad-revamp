@@ -17,7 +17,6 @@
 #include "bu.h"
 #include "vmath.h"
 #include "bn.h"
-#include "raytrace.h"
 #include "wdb.h" 
 
 #define D2R(x) (((x)/180)*3.14159265358979)
@@ -82,7 +81,7 @@ struct params {
 typedef struct params params_t;
 
 int count = 0; /* global sphere count */
-struct rt_wdb *fp;
+FILE *fp;
 mat_t IDENT;
 
 /* make the wmember structs, in order to produce individual     
@@ -174,7 +173,7 @@ int main(argc, argv)
   initializeInfo(&params, inter, fileName, depth);
   
   /* now open a file for outputting the database */
-  fp = wdb_fopen(params.fileName);
+  fp = fopen(params.fileName, "w");
   
   /* create the initial id */
   i = mk_id_units(fp, "SphereFlake", "mm");
@@ -211,7 +210,7 @@ int main(argc, argv)
   
   createScene(&params);
   
-  wdb_close(fp);
+  fclose(fp);
   
   return 0;
 }

@@ -28,7 +28,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -44,15 +44,22 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "bu.h"
 #include "vmath.h"
 #include "bn.h"
+#include "wdb.h"
 #include "./sedit.h"
 #include "raytrace.h"
-#include "wdb.h"
 #include "rtgeom.h"
 #include "./ged.h"
 #include "externs.h"
 #include "./mged_solid.h"
 #include "./mged_dm.h"
 #include "./mgedtcl.h"
+
+/* XXX Move to raytrace.h */
+BU_EXTERN(struct animate	*db_parse_1anim, (struct db_i *dbip,
+				int argc, CONST char **argv));
+BU_EXTERN(union tree		*db_find_named_leaf, (union tree *tp,
+				CONST char *cp));
+
 
 extern void solid_list_callback(); /* chgview.c */
 extern struct db_tree_state	mged_initial_tree_state;	/* dodraw.c */
@@ -155,7 +162,8 @@ char	**argv;
 	/* no interuprts */
 	(void)signal( SIGINT, SIG_IGN );
 
-	if( (dp=db_diradd( dbip, argv[2], -1, proto->d_len, proto->d_flags, NULL)) == DIR_NULL )  {
+	if( (dp=db_diradd( dbip, argv[2], -1, proto->d_len, proto->d_flags, NULL)) == DIR_NULL ||
+	    db_alloc( dbip, dp, proto->d_len ) < 0 )  {
 	  TCL_ALLOC_ERR_return;
 	}
 
@@ -787,16 +795,16 @@ fail:
  *			P A T H L I S T _ L E A F _ F U N C
  */
 static union tree *
-pathlist_leaf_func( tsp, pathp, ip, client_data )
+pathlist_leaf_func( tsp, pathp, ext, id, client_data )
 struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
-struct rt_db_internal	*ip;
+struct bu_external	*ext;
+int			id;
 genptr_t		client_data;
 {
 	char	*str;
 
 	RT_CK_FULL_PATH( pathp );
-	RT_CK_DB_INTERNAL(ip);
 
 	str = db_path_to_string( pathp );
 

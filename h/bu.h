@@ -223,19 +223,6 @@ extern char	*realloc();
 #endif
 
 /*----------------------------------------------------------------------*/
-/*
- *  Sizes of "network" format data.
- *  We use the same convention as the TCP/IP specification,
- *  namely, big-Endian, IEEE format, twos compliment.
- *  This is the BRL-CAD external data representation (XDR).
- *  See also the support routines in libbu/xdr.c
- */
-#define SIZEOF_NETWORK_SHORT	2	/* htons(), bu_gshort(), bu_pshort() */
-#define SIZEOF_NETWORK_LONG	4	/* htonl(), bu_glong(), bu_plong() */
-#define SIZEOF_NETWORK_FLOAT	4	/* htonf() */
-#define SIZEOF_NETWORK_DOUBLE	8	/* htond() */
-
-/*----------------------------------------------------------------------*/
 /* list.c */
 /*
  *									*
@@ -755,53 +742,6 @@ typedef int (*bu_hook_t)BU_ARGS((genptr_t, genptr_t));
 #define BUHOOK_NULL 0
 
 /*----------------------------------------------------------------------*/
-/* avs.c */
-/*
- *  Attribute/value sets
- */
-
-/*
- *			B U _ A T T R I B U T E _ V A L U E _ P A I R
- *
- *  These strings may or may not be individually allocated,
- *  it depends on usage.
- */
-struct bu_attribute_value_pair {
-	const char	*name;
-	const char	*value;
-};
-
-/*
- *			B U _ A T T R I B U T E _ V A L U E _ S E T
- *
- *  A variable-sized attribute-value-pair array.
- *
- *  avp points to an array of [max] slots.
- *  The interface routines will realloc to extend as needed.
- *
- *  In general,
- *  each of the names and values is a local copy made with bu_strdup(),
- *  and each string needs to be freed individually.
- *  However, if a name or value pointer is between
- *  readonly_min and readonly_max, then it is part of a big malloc
- *  block that is being freed by the caller, and should not be individually
- *  freed.
- */
-struct bu_attribute_value_set {
-	long				magic;
-	int				count;	/* # valid entries in avp */
-	int				max;	/* # allocated slots in avp */
-	struct bu_attribute_value_pair	*avp;	/* array[max] */
-	char				*readonly_min;
-	char				*readonly_max;
-};
-#define BU_AVS_MAGIC		0x41765321	/* AvS! */
-#define BU_CK_AVS(_avp)		BU_CKMAG(_avp, BU_AVS_MAGIC, "bu_attribute_value_set")
-
-#define BU_AVS_FOR(_pp, _avp)	\
-	(_pp) = &(_avp)->avp[(_avp)->count-1]; (_pp) >= (_avp)->avp; (_pp)--
-
-/*----------------------------------------------------------------------*/
 /* vls.c */
 /*
  *  Variable Length Strings: bu_vls support (formerly rt_vls in h/rtstring.h)
@@ -859,7 +799,6 @@ extern int	bu_debug;
 
 #define BU_DEBUG_MATH		0x00000100	/* 011 Fundamental math routines (plane.c, mat.c) */
 #define BU_DEBUG_PTBL		0x00000200	/* 012 bu_ptbl_*() logging */
-#define BU_DEBUG_AVS		0x00000400	/* 013 bu_avs_*() logging */
 
 #define BU_DEBUG_TABDATA	0x00010000	/* 025 LIBBN: tabdata */
 
@@ -868,7 +807,7 @@ extern int	bu_debug;
 "\020\
 \025TABDATA\
 \015?\
-\013AVS\012PTBL\011MATH\010?\7?\6?\5PARALLEL\
+\012PTBL\011MATH\010?\7?\6?\5PARALLEL\
 \4?\3MEM_LOG\2MEM_CHECK\1COREDUMP"
 
 /*----------------------------------------------------------------------*/
@@ -952,8 +891,6 @@ struct bu_structparse {
 
 /*----------------------------------------------------------------------*/
 /*
- *			B U _ E X T E R N A L
- *
  *  An "opaque" handle for holding onto objects,
  *  typically in some kind of external form that is not directly
  *  usable without passing through an "importation" function.
@@ -1156,25 +1093,6 @@ struct bu_observer {
  *  Source file names listed alphabetically.
  */
 
-/* avs.c */
-BU_EXTERN(void			bu_avs_init, (struct bu_attribute_value_set *avp,
-				int len, CONST char *str));
-BU_EXTERN(struct bu_attribute_value_set	*bu_avs_new, (int len, CONST char *str));
-BU_EXTERN(int			bu_avs_add, (struct bu_attribute_value_set *avp,
-				CONST char *attribute,
-				CONST char *value));
-extern int			bu_avs_add_vls(struct bu_attribute_value_set *avp,
-				const char *attribute,
-				const struct bu_vls *value_vls);
-void				bu_avs_merge( struct bu_attribute_value_set *dest,
-				struct bu_attribute_value_set *src );
-extern const char *		bu_avs_get( const struct bu_attribute_value_set *avp,
-				const char *attribute );
-BU_EXTERN(int			bu_avs_remove, (struct bu_attribute_value_set *avp,
-				CONST char *attribute));
-BU_EXTERN(void			bu_avs_free, (struct bu_attribute_value_set *avp));
-extern void			bu_avs_print( const struct bu_attribute_value_set *avp, const char *title );
-
 /* badmagic.c */
 BU_EXTERN(void			bu_badmagic, (CONST long *ptr, long magic,
 				CONST char *str, CONST char *file, int line));
@@ -1194,7 +1112,6 @@ BU_EXTERN(void			bu_bitv_to_hex, (struct bu_vls *v,
 				CONST struct bu_bitv *bv));
 BU_EXTERN( struct bu_bitv *	bu_hex_to_bitv, (CONST char *str));
 BU_EXTERN( struct bu_bitv *	bu_bitv_dup, (CONST struct bu_bitv *bv));
-BU_EXTERN( void			bu_bitv_free, (struct bu_bitv *bv));
 
 /* bomb.c */
 BU_EXTERN(void			bu_bomb, (CONST char *str) );
@@ -1250,12 +1167,6 @@ BU_EXTERN(void			bu_hist_pr, (CONST struct bu_hist *histp,
 BU_EXTERN(void			htond, (unsigned char *out,
 				CONST unsigned char *in, int count));
 BU_EXTERN(void			ntohd, (unsigned char *out,
-				CONST unsigned char *in, int count));
-
-/* htonf.c */
-BU_EXTERN(void			htonf, (unsigned char *out,
-				CONST unsigned char *in, int count));
-BU_EXTERN(void			ntohf, (unsigned char *out,
 				CONST unsigned char *in, int count));
 
 /* ispar.c */
@@ -1370,10 +1281,6 @@ BU_EXTERN( int                  bu_key_eq_to_key_val, (char *in, char **next, st
 BU_EXTERN( int                  bu_shader_to_tcl_list, (char *in, struct bu_vls *vls) );
 BU_EXTERN( int                  bu_key_val_to_key_eq, (char *in) );
 BU_EXTERN( int                  bu_shader_to_key_eq, (char *in, struct bu_vls *vls) );
-int				bu_fwrite_external( FILE *fp, const struct bu_external *ep );
-void				bu_hexdump_external( FILE *fp, CONST struct bu_external *ep, CONST char *str);
-void				bu_free_external(struct bu_external *ep);
-void				bu_copy_external(struct bu_external *op, const struct bu_external *ip);
 				
 /* printb.c */
 BU_EXTERN(void			bu_vls_printb, (struct bu_vls *vls,
@@ -1398,7 +1305,6 @@ BU_EXTERN(void			bu_ptbl_free, (struct bu_ptbl	*b));
 BU_EXTERN(int			bu_ptbl, (struct bu_ptbl *b, int func, long *p));
 BU_EXTERN(void			bu_pr_ptbl, (CONST char *title,
 				CONST struct bu_ptbl *tbl, int verbose));
-BU_EXTERN(void			bu_ptbl_trunc, (struct bu_ptbl *tbl, int end));
 
 /* rb_create.c */
 BU_EXTERN(bu_rb_tree *bu_rb_create,	(char		*description,
@@ -1523,13 +1429,9 @@ BU_EXTERN(void			bu_vls_strncat, (struct bu_vls *vp, CONST char *s, long n) );
 BU_EXTERN(void			bu_vls_vlscat, (struct bu_vls *dest, CONST struct bu_vls *src) );
 BU_EXTERN(void			bu_vls_vlscatzap, (struct bu_vls *dest, struct bu_vls *src) );
 BU_EXTERN(void			bu_vls_from_argv, (struct bu_vls *vp, int argc, char **argv) );
-BU_EXTERN(int			bu_argv_from_string, (char **argv, int lim, char *lp));
 BU_EXTERN(void			bu_vls_fwrite, (FILE *fp, CONST struct bu_vls *vp) );
-void				bu_vls_write( int fd, const struct bu_vls *vp );
-int				bu_vls_read( struct bu_vls *vp, int fd );
 BU_EXTERN(int			bu_vls_gets, (struct bu_vls *vp, FILE *fp) );
 BU_EXTERN(void			bu_vls_putc, (struct bu_vls *vp, int c) );
-void				bu_vls_trimspace( struct bu_vls *vp );
 #if 0
 BU_EXTERN(void			bu_vls_vprintf, (struct bu_vls *vls,
 				CONST char *fmt, va_list ap));
@@ -1585,13 +1487,9 @@ BU_EXTERN(unsigned char *	bu_plong, (register unsigned char *msgp,
 /* association.c */
 BU_EXTERN(struct bu_vls *bu_association, (CONST char *fname, CONST char *value, int field_sep));
 
-/* These things that live in libbu/observer.c */
+/* These things live in libbu/observer.c */
 extern void bu_observer_notify();
 extern struct bu_cmdtab bu_observer_cmds[];
-extern void bu_observer_free(struct bu_observer *);
-
-/* bu_tcl.c */
-extern void bu_badmagic_tcl();
 
 #ifdef __cplusplus
 }

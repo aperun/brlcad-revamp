@@ -24,7 +24,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -152,8 +152,6 @@ int		count;
 		return(-1);
 	}
 
-	BU_ASSERT_LONG( dbip->dbi_version, ==, 4 );
-
 	/* Easy case -- see if at end-of-file */
 	old_len = dp->d_len;
 	extra_start = dp->d_addr + dp->d_len * sizeof(union record);
@@ -228,8 +226,6 @@ int			 count;
 		bu_log("db_trunc on READ-ONLY file\n");
 		return(-1);
 	}
-	BU_ASSERT_LONG( dbip->dbi_version, ==, 4 );
-
 	i = db_zapper( dbip, dp, dp->d_len - count );
 	rt_memfree( &(dbip->dbi_freep), (unsigned)count,
 		(dp->d_addr/(sizeof(union record)))+dp->d_len-count );
@@ -263,8 +259,7 @@ int			recnum;
  *  			D B _ D E L E T E
  *  
  *  Delete the indicated database record(s).
- *  Arrange to write "free storage" database markers in it's place,
- *  positively erasing what had been there before.
+ *  Mark all records with ID_FREE.
  */
 int
 db_delete( dbip, dp )
@@ -285,21 +280,14 @@ struct directory *dp;
 		return 0;
 	}
 
-	if( dbip->dbi_version == 4 )  {
-		i = db_zapper( dbip, dp, 0 );
-		rt_memfree( &(dbip->dbi_freep), (unsigned)dp->d_len,
-			dp->d_addr/(sizeof(union record)) );
-	} else if( dbip->dbi_version == 5 )  {
-		i = db5_write_free( dbip, dp, dp->d_len );
-		rt_memfree( &(dbip->dbi_freep), dp->d_len,
-			dp->d_addr );
-	} else {
-		bu_bomb("db_delete() unsupported database version\n");
-	}
+	i = db_zapper( dbip, dp, 0 );
+
+	rt_memfree( &(dbip->dbi_freep), (unsigned)dp->d_len,
+		dp->d_addr/(sizeof(union record)) );
 
 	dp->d_len = 0;
 	dp->d_addr = -1;
-	return i;
+	return(i);
 }
 
 /*
@@ -332,8 +320,6 @@ int		start;
 
 	if( dbip->dbi_read_only )
 		return(-1);
-
-	BU_ASSERT_LONG( dbip->dbi_version, ==, 4 );
 
 	if( (todo = dp->d_len - start) == 0 )
 		return(0);		/* OK -- trivial */

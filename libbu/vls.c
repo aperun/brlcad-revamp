@@ -17,7 +17,7 @@
  *  Distribution Status -
  *      Public Domain, Distribution Unlimitied.
  */
-static const char libbu_vls_RCSid[] = "@(#)$Header$ (BRL)";
+static char libbu_vls_RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "conf.h"
 
@@ -585,7 +585,9 @@ CONST struct bu_vls	*vp;
  *			B U _ V L S _ W R I T E
  */
 void
-bu_vls_write( int fd, const struct bu_vls *vp )
+bu_vls_write( fd, vp )
+int			fd;
+CONST struct bu_vls	*vp;
 {
 	int status;
 
@@ -617,7 +619,9 @@ bu_vls_write( int fd, const struct bu_vls *vp )
  *	-1	read error
  */
 int
-bu_vls_read( struct bu_vls *vp, int fd )
+bu_vls_read( vp, fd )
+struct bu_vls	*vp;
+int		fd;
 {
 	int	ret = 0;
 	int	todo;
@@ -714,7 +718,8 @@ int			c;
  *  Remove leading and trailing white space from a vls string.
  */
 void
-bu_vls_trimspace( struct bu_vls *vp )
+bu_vls_trimspace( vp )
+struct bu_vls	*vp;
 {
 	BU_CK_VLS(vp);
 
@@ -754,7 +759,7 @@ va_list ap;
 #define FIELDLEN 0x002
 
     int flags;
-    int fieldlen=-1;
+    int fieldlen;
     char fbuf[64], buf[1024];			/* % format buffer */
 
     BU_CK_VLS(vls);
@@ -811,7 +816,7 @@ va_list ap;
 				int	stringlen = strlen(str);
 				int	left_justify;
 
-				if ((left_justify = (fieldlen < 0)))
+				if (left_justify = (fieldlen < 0))
 					fieldlen *= -1;
 
 				if (stringlen >= fieldlen)
@@ -854,7 +859,7 @@ va_list ap;
 				int	stringlen = bu_vls_strlen(vp);
 				int	left_justify;
 
-				if ((left_justify = (fieldlen < 0)))
+				if (left_justify = (fieldlen < 0))
 					fieldlen *= -1;
 
 				if (stringlen >= fieldlen)

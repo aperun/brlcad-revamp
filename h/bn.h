@@ -82,9 +82,6 @@ extern "C" {
  *		if( fabs(VDOT(a,b)) >= tol->para )	a & b are parallel
  *		if( fabs(VDOT(a,b)) <= tol->perp )	a & b are perpendicular
  *
- *  Note:
- *	tol->dist_sq = tol->dist * tol->dist;
- *	tol->para = 1 - tol->perp;
  */
 struct bn_tol {
 	unsigned long	magic;
@@ -102,33 +99,6 @@ struct bn_tol {
 	(((_dot) < 0) ? ((-(_dot))<=(_tol)->perp) : ((_dot) <= (_tol)->perp))
 
 #define BN_APPROXEQUAL(_a, _b, _tol) (fabs( (_a) - (_b) ) <= _tol->dist)
-
-/* asize.c */
-BU_EXTERN(int			bn_common_file_size, (int *width,
-						      int *height,
-						      char *filename,
-						      int pixel_size));
-BU_EXTERN(int			bn_common_name_size, (int *width,
-						      int *height,
-						      char *name));
-BU_EXTERN(int			bn_common_image_zie, (int *width,
-						      int *height,
-						      int num_pixels));
-
-/*----------------------------------------------------------------------*/
-/* bn_tcl.c */
-int bn_decode_mat(mat_t m, const char *str);
-int bn_decode_tol(struct bn_tol *tol, const char *str);
-int bn_decode_quat(quat_t q, const char *str);
-int bn_decode_quat(quat_t q, const char *str);
-int bn_decode_vect( vect_t v, const char *str );
-int bn_decode_hvect(hvect_t v, const char *str);
-int bn_decode_plane(plane_t v, const char *str);
-void bn_encode_mat(struct bu_vls *vp, const mat_t m);
-void bn_encode_quat(struct bu_vls *vp, const quat_t q);
-void bn_encode_vect(struct bu_vls *vp, const vect_t v);
-void bn_encode_hvect(struct bu_vls *vp, const hvect_t v);
-
 
 /*----------------------------------------------------------------------*/
 /* complex.c */

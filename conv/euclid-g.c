@@ -15,7 +15,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -116,21 +116,20 @@ struct shell *s;
 	}
 }
 
-int
 main(argc, argv)
 int	argc;
 char	*argv[];
 {
 	char		*bfile, *efile;
-	FILE		*fpin;
-	struct rt_wdb	*fpout;
+	FILE		*fpin, *fpout;
 	char		title[BRLCAD_TITLE_LENGTH];	/* BRL-CAD database title */
 	register int	c;
 	int i;
 
 	fpin = stdin;
+	fpout = stdout;
 	efile = NULL;
-	bfile = "euclid.g";
+	bfile = NULL;
 	polysolids = 0;
 	debug = 0;
 
@@ -163,6 +162,12 @@ char	*argv[];
 			break;
 		case 'o':
 			bfile = optarg;
+			if ((fpout = fopen(bfile, "w")) == NULL) {
+				fprintf(stderr,	"%s: cannot open %s for writing\n",
+					argv[0], bfile);
+				perror( argv[0] );
+				exit(1);
+			}
 			break;
 		case 'p':
 			polysolids = 1;
@@ -198,13 +203,6 @@ char	*argv[];
 			strcat( title, tol_str );
 	}
 
-	if ((fpout = wdb_fopen(bfile)) == NULL) {
-		fprintf(stderr,	"%s: cannot open %s for writing\n",
-			argv[0], bfile);
-		perror( argv[0] );
-		exit(1);
-	}
-
 	mk_id( fpout, title );
 
 	for( i=0 ; i<11 ; i++ )
@@ -213,8 +211,7 @@ char	*argv[];
 	euclid_to_brlcad(fpin, fpout);
 
 	fclose(fpin);
-	wdb_close(fpout);
-	return 0;
+	fclose(fpout);
 }
 
 /*
@@ -224,7 +221,7 @@ char	*argv[];
  */
 static void
 add_nmg_to_db(fpout, m, reg_id)
-struct rt_wdb	*fpout;
+FILE		*fpout;
 struct model	*m;
 int		reg_id;
 {
@@ -298,7 +295,7 @@ int		reg_id;
 
 static void
 build_groups( fpout )
-struct rt_wdb *fpout;
+FILE *fpout;
 {
 	int i,j;
 	struct wmember head;
@@ -384,8 +381,7 @@ struct rt_wdb *fpout;
  */
 void
 euclid_to_brlcad(fpin, fpout)
-FILE	*fpin;
-struct rt_wdb *fpout;
+FILE	*fpin, *fpout;
 {
 	char	str[80];
 	int	reg_id;
@@ -412,7 +408,7 @@ struct rt_wdb *fpout;
 
 static void
 add_shells_to_db( fpout, shell_count, shells, reg_id )
-struct rt_wdb *fpout;
+FILE *fpout;
 int shell_count;
 struct shell *shells[];
 int reg_id;
@@ -499,8 +495,7 @@ int reg_id;
  */
 int
 cvt_euclid_region(fp, fpdb, reg_id)
-FILE	*fp;
-struct rt_wdb *fpdb;
+FILE	*fp, *fpdb;
 int	reg_id;
 {
 	int	cur_id, face, facet_type, hole_face, i,

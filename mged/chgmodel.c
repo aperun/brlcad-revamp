@@ -1087,7 +1087,7 @@ char	**argv;
 				{
 					Tcl_AppendResult(interp, "Sorry, Can only mirror NMG solids with planar faces", (char *)0 );
 					bu_ptbl_free( &table );
-					rt_db_free_internal( &internal );
+					rt_functab[internal.idb_type].ft_ifree( &internal );   /* free internal rep */
 					return TCL_ERROR;
 				}
 
@@ -1114,7 +1114,7 @@ char	**argv;
 				{
 					Tcl_AppendResult(interp, "nmg_calc_face_g() failed", (char *)0 );
 					bu_ptbl_free( &table );
-					rt_db_free_internal( &internal );
+					rt_functab[internal.idb_type].ft_ifree( &internal );   /* free internal rep */
 					return TCL_ERROR;
 				}
 
@@ -1122,7 +1122,7 @@ char	**argv;
 				{
 					Tcl_AppendResult(interp, "nmg_calc_face_g() failed", (char *)0 );
 					bu_ptbl_free( &table );
-					rt_db_free_internal( &internal );
+					rt_functab[internal.idb_type].ft_ifree( &internal );   /* free internal rep */
 					return TCL_ERROR;
 				}
 			}
@@ -1212,7 +1212,7 @@ char	**argv;
 		}
 		default:
 		{
-			rt_db_free_internal( &internal );
+			rt_functab[internal.idb_type].ft_ifree( &internal );   /* free internal rep */
 			Tcl_AppendResult(interp, "Cannot mirror this solid type\n", (char *)NULL);
 			return TCL_ERROR;
 		}
@@ -1360,12 +1360,24 @@ char	**argv;
 		return TCL_ERROR;
 	}
 
-	if( db_update_ident( dbip, dbip->dbi_title, loc2mm ) < 0 )  {
+	/* See if this is a known v4 database unit */
+	if( (new_unit = db_v4_get_units_code(bu_units_string(loc2mm))) >= 0 ) {
+		/* One of the recognized db.h units */
+		/* change database to remember the new local unit */
+		if( dbip->dbi_read_only ||
+		 db_ident( dbip, dbip->dbi_title, new_unit ) < 0 )
 		  Tcl_AppendResult(interp,
 			   "Warning: unable to stash working units into database\n",
 			   (char *)NULL);
+	} else {
+		/*
+		 *  Can't stash requested units into the database for next session,
+		 *  but there is no problem with the user editing in these units.
+		 */
+		Tcl_AppendResult(interp, "\
+Due to a database restriction in the current format of .g files,\n\
+this choice of units will not be remembered on your next editing session.\n", (char *)NULL);
 	}
-
 	dbip->dbi_local2base = loc2mm;
 	dbip->dbi_base2local = 1.0 / loc2mm;
 
@@ -1420,7 +1432,8 @@ char	**argv;
 	bu_vls_init( &title );
 	bu_vls_from_argv( &title, argc-1, argv+1 );
 
-	if( db_update_ident( dbip, bu_vls_addr(&title), dbip->dbi_base2local ) < 0 )  {
+	code = db_v4_get_units_code(bu_units_string(dbip->dbi_base2local));
+	if( db_ident( dbip, bu_vls_addr(&title), code ) < 0 ) {
 	  Tcl_AppendResult(interp, "Error: unable to change database title\n");
 	  bad = 1;
 	}
@@ -2235,13 +2248,7 @@ char	**argv;
 	return TCL_OK;
 }
 
-/*
- *			F _ T R _ O B J
- *
- *  Bound to command "translate"
- *
- *  Allow precise changes to object translation
- */
+/* allow precise changes to object translation */
 int
 f_tr_obj(clientData, interp, argc, argv)
 ClientData clientData;
@@ -2266,19 +2273,8 @@ char	**argv;
 	  return TCL_ERROR;
 	}
 
-	if( state == ST_S_EDIT )  {
-		/* In solid edit mode,
-		 * perform the equivalent of "press sxy" and "p xyz"
-		 */
-		if( be_s_trans(clientData, interp, argc, argv) == TCL_ERROR )
-			return TCL_ERROR;
-		return f_param(clientData, interp, argc, argv);
-	}
-
 	if( not_state( ST_O_EDIT, "Object Translation") )
 	  return TCL_ERROR;
-
-	/* Remainder of code concerns object edit case */
 
 	update_views = 1;
 

@@ -27,7 +27,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char RCSmalloc[] = "@(#)$Header$ (ARL)";
+static char RCSmalloc[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -260,7 +260,7 @@ register genptr_t	ptr;
 unsigned int		cnt;
 CONST char		*str;
 {
-	struct memdebug		*mp=NULL;
+	struct memdebug		*mp;
 	char	*original_ptr = ptr;
 
 	if( bu_debug&BU_DEBUG_MEM_CHECK )  {

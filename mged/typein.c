@@ -538,7 +538,8 @@ char **argv;
 		switch( bot_in(argc, argv, &internal, &p_bot[0]) ) {
 		case CMD_BAD:
 		  Tcl_AppendResult(interp, "ERROR, BOT not made!\n", (char *)NULL);
-		  rt_db_free_internal( &internal );
+		  if(internal.idb_type) rt_functab[internal.idb_type].
+					  ft_ifree( &internal );
 		  return TCL_ERROR;
 		case CMD_MORE:
 		  return TCL_ERROR;
@@ -564,7 +565,8 @@ char **argv;
 		switch( pipe_in(argc, argv, &internal, &p_pipe[0]) ) {
 		case CMD_BAD:
 		  Tcl_AppendResult(interp, "ERROR, pipe not made!\n", (char *)NULL);
-		  rt_db_free_internal( &internal );
+		  if(internal.idb_type) rt_functab[internal.idb_type].
+					  ft_ifree( &internal );
 		  return TCL_ERROR;
 		case CMD_MORE:
 		  return TCL_ERROR;
@@ -574,7 +576,8 @@ char **argv;
 		switch( ars_in(argc, argv, &internal, &p_ars[0]) ) {
 		case CMD_BAD:
 		  Tcl_AppendResult(interp, "ERROR, ars not made!\n", (char *)NULL);
-		  rt_db_free_internal( &internal );
+		  if(internal.idb_type) rt_functab[internal.idb_type].
+					  ft_ifree( &internal );
 		  return TCL_ERROR;
 		case CMD_MORE:
 		  return TCL_ERROR;
@@ -685,7 +688,8 @@ char **argv;
 
 	if (fn_in(argv, &internal, menu) != 0)  {
 	  Tcl_AppendResult(interp, "ERROR, ", argv[2], " not made!\n", (char *)NULL);
-	  rt_db_free_internal( &internal );
+	  if(internal.idb_type) rt_functab[internal.idb_type].
+				  ft_ifree( &internal );
 	  return TCL_ERROR;
 	}
 
@@ -793,9 +797,7 @@ struct rt_db_internal	*intern;
 	intern->idb_ptr = (genptr_t)dsp;
 	dsp->magic = RT_DSP_INTERNAL_MAGIC;
 
-	bu_vls_init( &dsp->dsp_file );
-	bu_vls_strcpy( &dsp->dsp_file, cmd_argvs[3] );
-
+	strcpy( dsp->dsp_file, cmd_argvs[3] );
 	dsp->dsp_xcnt = atoi( cmd_argvs[4] );
 	dsp->dsp_ycnt = atoi( cmd_argvs[5] );
 	dsp->dsp_smooth = atoi( cmd_argvs[6] );

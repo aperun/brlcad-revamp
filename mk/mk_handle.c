@@ -27,7 +27,6 @@
 #include "machine.h"
 #include "db.h"
 #include "vmath.h"
-#include "raytrace.h"
 #include "wdb.h"
 
 #ifdef M_PI
@@ -43,7 +42,7 @@ int argc;
 char *argv[];
 
 {							/*  START # 1  */
-   struct rt_wdb *fpw;			/*  File to be written to.  */
+   FILE *fpw;			/*  File to be written to.  */
    char filemged[26];		/*  Mged file create.  */
    double hgt,len;		/*  Height & length of handle.  */
    double r1,r2;		/*  Radius of tori & radius of cylinders.  */
@@ -221,7 +220,7 @@ char *argv[];
    (void)fflush(stdout);
 
    /*  Open mged file for writing to.  */
-   fpw = wdb_fopen(filemged);
+   fpw = fopen(filemged,"w");
 
    /*  Write ident record.  */
    mk_id(fpw,"handles");
@@ -380,7 +379,7 @@ char *argv[];
    }							/*  END # 2  */
 
    /*  Close mged file.  */
-   wdb_close(fpw);
+   (void)fclose(fpw);
    return 0;
 
 }							/*  END # 1  */

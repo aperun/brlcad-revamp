@@ -17,7 +17,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSregionfix[] = "@(#)$Header$ (BRL)";
+static char RCSregionfix[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"

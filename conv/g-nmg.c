@@ -22,7 +22,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -53,8 +53,8 @@ static int	NMG_debug;		/* saved arg of -X, for longjmp handling */
 static int	verbose;
 /* static int	ncpu = 1; */		/* Number of processors */
 static int	nmg_count=0;		/* Count of nmgregions written to output */
-static char	*out_file = "nmg.g";	/* Output filename */
-static struct rt_wdb		*fp_out; /* Output file pointer */
+static char	*out_file = NULL;	/* Output filename */
+static FILE	*fp_out;		/* Output file pointer */
 static struct db_i		*dbip;
 static struct rt_tess_tol	ttol;
 static struct bn_tol		tol;
@@ -78,6 +78,7 @@ struct db_full_path	*pathp;
 union tree		*curtree;
 genptr_t		client_data;
 {
+	extern FILE		*fp_fig;
 	struct nmgregion	*r;
 	struct bu_list		vhead;
 	union tree		*ret_tree;
@@ -430,6 +431,7 @@ int	argc;
 char	*argv[];
 {
 	int		i;
+	CONST char	*units;
 	register int	c;
 	double		percent;
 
@@ -512,16 +514,24 @@ char	*argv[];
 	}
 	db_scan(dbip, (int (*)())db_diradd, 1, NULL);
 
-	if ((fp_out = wdb_fopen( out_file )) == NULL)
+	if( out_file == NULL )
+		fp_out = stdout;
+	else
 	{
-		perror( out_file );
-		bu_log( "g-nng: Cannot open %s\n" , out_file );
-		return 2;
+		if ((fp_out = fopen( out_file , "w")) == NULL)
+		{
+			bu_log( "Cannot open %s\n" , out_file );
+			perror( argv[0] );
+			return 2;
+		}
 	}
 
 	optind++;
 
-	mk_id_editunits( fp_out , dbip->dbi_title , dbip->dbi_local2base );
+	if( units=rt_units_string( dbip->dbi_local2base ) )
+		mk_id_units( fp_out , dbip->dbi_title , units );
+	else
+		mk_id( fp_out , dbip->dbi_title );
 
 	/* Walk the trees outputting regions and combinations */
 	for( i=optind ; i<argc ; i++ )
@@ -551,7 +561,6 @@ char	*argv[];
 	printf( "Tried %d regions, %d converted successfully.  %g%%\n",
 		regions_tried, regions_converted, percent );
 
-	wdb_close(fp_out);
 	return 0;
 }
 

@@ -24,7 +24,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -5053,8 +5053,8 @@ CONST char		*title;
 	/* Scale change on export is 1.0 -- no change */
 	if( rt_functab[ID_NMG].ft_export( &ext, &intern, 1.0, DBI_NULL ) < 0 )  {
 		bu_log("nmg_stash_model_to_file: solid export failure\n");
-		bu_free_external( &ext );
-		bu_bomb("nmg_stash_model_to_file() ft_export() error\n");
+		db_free_external( &ext );
+		rt_bomb("nmg_stash_model_to_file() ft_export() error\n");
 	}
 	NAMEMOVE( "error", ((union record *)ext.ext_buf)->s.s_name );
 
@@ -5065,7 +5065,7 @@ CONST char		*title;
 	fwrite( (char *)&rec, sizeof(rec), 1, fp );
 	fwrite( ext.ext_buf, ext.ext_nbytes, 1, fp );
 	fclose(fp);
-	bu_free_external( &ext );
+	db_free_external( &ext );
 	bu_log("nmg_stash_model_to_file(): wrote '%s' in %d bytes\n", filename, ext.ext_nbytes);
 }
 

@@ -30,7 +30,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"
@@ -173,12 +173,12 @@ int			op;
 }
 
 /*
- *			R T _ C O M B _ I M P O R T 4
+ *			R T _ C O M B _ V 4 _ I M P O R T
  *
  *  Import a combination record from a V4 database into internal form.
  */
 int
-rt_comb_import4( ip, ep, matrix, dbip )
+rt_comb_v4_import( ip, ep, matrix, dbip )
 struct rt_db_internal		*ip;
 CONST struct bu_external	*ep;
 CONST matp_t			matrix;		/* NULL if identity */
@@ -196,7 +196,7 @@ CONST struct db_i		*dbip;
 
 	if( rp[0].u_id != ID_COMB )
 	{
-		bu_log( "rt_comb_import4: Attempt to import a non-combination\n" );
+		bu_log( "rt_comb_v4_import: Attempt to import a non-combination\n" );
 		return( -1 );
 	}
 
@@ -212,8 +212,8 @@ CONST struct db_i		*dbip;
 	{
 		if( rp[j+1].u_id != ID_MEMB )
 		{
-			bu_free( (genptr_t)rt_tree_array , "rt_comb_import4: rt_tree_array" );
-			bu_log( "rt_comb_import4(): granule in external buffer is not ID_MEMB, id=%d\n", rp[j+1].u_id );
+			bu_free( (genptr_t)rt_tree_array , "rt_comb_v4_import: rt_tree_array" );
+			bu_log( "rt_comb_v4_import(): granule in external buffer is not ID_MEMB, id=%d\n", rp[j+1].u_id );
 			return( -1 );
 		}
 
@@ -226,7 +226,7 @@ CONST struct db_i		*dbip;
 				rt_tree_array[j].tl_op = OP_SUBTRACT;
 				break;
 			default:
-				bu_log("rt_comb_import4() unknown op=x%x, assuming UNION\n", rp[j+1].M.m_relation );
+				bu_log("rt_comb_v4_import() unknown op=x%x, assuming UNION\n", rp[j+1].M.m_relation );
 				/* Fall through */
 			case 'u':
 				rt_tree_array[j].tl_op = OP_UNION;
@@ -292,7 +292,7 @@ CONST struct db_i		*dbip;
 	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_COMBINATION;
 	ip->idb_meth = &rt_functab[ID_COMBINATION];
-	comb = (struct rt_comb_internal *)bu_malloc( sizeof( struct rt_comb_internal ) , "rt_comb_import4: rt_comb_internal" );
+	comb = (struct rt_comb_internal *)bu_malloc( sizeof( struct rt_comb_internal ) , "rt_comb_v4_import: rt_comb_internal" );
 	ip->idb_ptr = (genptr_t)comb;
 	comb->magic = RT_COMB_MAGIC;
 	bu_vls_init( &comb->shader );
@@ -361,7 +361,7 @@ CONST struct db_i		*dbip;
 		/* convert to TCL format and place into comb->shader */
 		if( bu_shader_to_tcl_list( shader_str, &comb->shader ) )
 		{
-			bu_log( "rt_comb_import4: Error: Cannot convert following shader to TCL format:\n" );
+			bu_log( "rt_comb_v4_import: Error: Cannot convert following shader to TCL format:\n" );
 			bu_log( "\t%s\n", shader_str );
 			bu_vls_free( &comb->shader );
 		}
@@ -380,10 +380,10 @@ CONST struct db_i		*dbip;
 }
 
 /*
- *			R T _ C O M B _ E X P O R T 4
+ *			R T _ C O M B _ V 4 _ E X P O R T
  */
 int
-rt_comb_export4( ep, ip, local2mm, dbip )
+rt_comb_v4_export( ep, ip, local2mm, dbip )
 struct bu_external		*ep;
 CONST struct rt_db_internal	*ip;
 double				local2mm;
@@ -400,7 +400,7 @@ CONST struct db_i		*dbip;
 	struct bu_vls		tmp_vls;
 
 	RT_CK_DB_INTERNAL( ip );
-	if( ip->idb_type != ID_COMBINATION ) bu_bomb("rt_comb_export4() type not ID_COMBINATION");
+	if( ip->idb_type != ID_COMBINATION ) bu_bomb("rt_comb_v4_export() type not ID_COMBINATION");
 	comb = (struct rt_comb_internal *)ip->idb_ptr;
 	RT_CK_COMB(comb);
 
@@ -408,7 +408,7 @@ CONST struct db_i		*dbip;
 		db_non_union_push( comb->tree );
 		if( db_ck_v4gift_tree( comb->tree ) < 0 )  {
 			/* Need to further modify tree */
-			bu_log("rt_comb_export4() Unfinished: need to V4-ify tree\n");
+			bu_log("rt_comb_v4_export() Unfinished: need to V4-ify tree\n");
 			rt_pr_tree( comb->tree, 0 );
 			return -1;
 		}
@@ -421,8 +421,8 @@ CONST struct db_i		*dbip;
 
 		/* Convert tree into array form */
 		actual_count = db_flatten_tree( rt_tree_array, comb->tree, OP_UNION ) - rt_tree_array;
-		if( actual_count > node_count )  bu_bomb("rt_comb_export4() array overflow!");
-		if( actual_count < node_count )  bu_log("WARNING rt_comb_export4() array underflow! %d < %d", actual_count, node_count);
+		if( actual_count > node_count )  bu_bomb("rt_comb_v4_export() array overflow!");
+		if( actual_count < node_count )  bu_log("WARNING rt_comb_v4_export() array underflow! %d < %d", actual_count, node_count);
 	} else {
 		rt_tree_array = (struct rt_tree_array *)NULL;
 		actual_count = 0;
@@ -438,7 +438,7 @@ CONST struct db_i		*dbip;
 	for( j = 0; j < node_count; j++ )  {
 		tp = rt_tree_array[j].tl_tree;
 		RT_CK_TREE(tp);
-		if( tp->tr_op != OP_DB_LEAF )  bu_bomb("rt_comb_export4() tree not OP_DB_LEAF");
+		if( tp->tr_op != OP_DB_LEAF )  bu_bomb("rt_comb_v4_export() tree not OP_DB_LEAF");
 
 		rp[j+1].u_id = ID_MEMB;
 		switch( rt_tree_array[j].tl_op )  {
@@ -452,7 +452,7 @@ CONST struct db_i		*dbip;
 			rp[j+1].M.m_relation = 'u';
 			break;
 		default:
-			bu_bomb("rt_comb_export4() corrupt rt_tree_array");
+			bu_bomb("rt_comb_v4_export() corrupt rt_tree_array");
 		}
 		strncpy( rp[j+1].M.m_instname, tp->tr_l.tl_name, NAMESIZE );
 		if( tp->tr_l.tl_mat )  {
@@ -497,7 +497,7 @@ CONST struct db_i		*dbip;
 	/* convert TCL list format shader to keyword=value format */
 	if( bu_shader_to_key_eq( bu_vls_addr(&comb->shader), &tmp_vls ) )
 	{
-		bu_log( "rt_comb_export4: Error in combination!\n" );
+		bu_log( "rt_comb_v4_export: Error in combination!\n" );
 		bu_log( "\tCannot convert following shader string to keyword=value format:\n" );
 		bu_log( "\t%s\n", bu_vls_addr(&comb->shader) );
 		rp[0].c.c_matparm[0] = '\0';
@@ -790,6 +790,36 @@ double		mm2local;
 	}
 }
 
+/*==================== BEGIN table.c rt_functab interface ========== */
+
+/*
+ *			R T _ C O M B _ I M P O R T
+ */
+int
+rt_comb_import(ip, ep, mat, dbip)
+struct rt_db_internal	*ip;
+CONST struct bu_external *ep;
+CONST mat_t		mat;
+CONST struct db_i	*dbip;
+{
+	/* XXX Switch out to right routine, based on database version */
+	return rt_comb_v4_import( ip, ep, mat, dbip );
+}
+
+/*
+ *			R T _ C O M B _ E X P O R T
+ */
+int
+rt_comb_export(ep, ip, local2mm, dbip)
+struct bu_external	*ep;
+CONST struct rt_db_internal *ip;
+double			local2mm;
+CONST struct db_i	*dbip;
+{
+	/* XXX Switch out to right routine, based on database version */
+	return rt_comb_v4_export( ep, ip, local2mm, dbip );
+}
+
 /*
  *			R T _ C O M B _ I F R E E
  *
@@ -842,19 +872,36 @@ double		mm2local;
 /*
  *			D B _ W R A P _ V 4 _ E X T E R N A L
  *
+ *  Wraps the v4 object body in "ip" into a v4 wrapper in "op".
+ *  db_free_external(ip) will be performed.
+ *  op and ip must not point at the same bu_external structure.
+ *
  *  As the v4 database does not really have the notion of "wrapping",
- *  this function writes the object name into the
- *  proper place (a standard location in all granules).
+ *  this function primarily writes the object name into the
+ *  proper place (a standard location in all granules),
+ *  and (maybe) checks/sets the u_id field.
  */
-void
-db_wrap_v4_external( struct bu_external	*op, const char *name )
+int
+db_wrap_v4_external( op, ip, dp )
+struct bu_external	*op;
+struct bu_external	*ip;
+CONST struct directory	*dp;
 {
-	union record	*rec;
+	union record *rec;
 
-	BU_CK_EXTERNAL(op);
+	BU_CK_EXTERNAL(ip);
+	RT_CK_DIR(dp);
+
+	if( op != ip )  {
+		*op = *ip;		/* struct copy */
+		ip->ext_buf = NULL;
+		ip->ext_nbytes = 0;
+	}
 
 	rec = (union record *)op->ext_buf;
-	NAMEMOVE( name, rec->s.s_name );
+	NAMEMOVE( dp->d_namep, rec->s.s_name );
+
+	return 0;
 }
 
 /* Some export support routines */
@@ -1065,4 +1112,77 @@ final:
 		rt_pr_tree(curtree, 0);
 	}
 	return( curtree );
+}
+
+/* ------------------------------------------------------------ */
+/* Preliminary V5 wrap/unwrap support */
+/* in-memory form of the standardized object 'wrapper' */
+/* Object's name is stashed in directory, not in internal wrapper */
+struct db_wrapper {
+	long	magic;
+	
+};
+
+/*
+ *			D B _ W R A P _ V 5 _ E X T E R N A L
+ */
+int
+db_wrap_v5_external( op, ip, dp, wp )
+struct bu_external		*op;
+struct bu_external		*ip;
+CONST struct directory		*dp;
+CONST struct db_wrapper		*wp;
+{
+
+	/* First, build up compressible portion of wrapper (header),
+	 * if more than just object body
+	 */
+
+	/* Second, compress compressible portion */
+
+	/* Third, add non-compressible portion of wrapper (header) */
+
+	return( 0 );
+}
+
+/*
+ *			R T _ V 5 _ E X P O R T
+ */
+int
+rt_v5_export( ep, ip, local2mm, dp, wp, dbip )
+struct bu_external		*ep;
+CONST struct rt_db_internal	*ip;
+double				local2mm;
+CONST struct directory		*dp;
+CONST struct db_wrapper		*wp;
+CONST struct db_i		*dbip;
+{
+	struct bu_external	temp;
+	int			ret;
+
+	RT_CK_DB_INTERNAL(ip);
+	RT_CK_DIR(dp);
+
+	/* XXX need v5 versions.  For testing, use v4 in object body. */
+
+	/* Convert Object Body to external form */
+	if( ip->idb_type == ID_COMBINATION )  {
+		ret = rt_comb_v4_export( &temp, ip, local2mm, dbip );
+	} else {
+		ret = rt_functab[ip->idb_type].ft_export( &temp, ip, local2mm, dbip );
+	}
+	if( ret < 0 )  {
+		bu_log("rt_v5_export(%s): ft_export error %d\n",
+			dp->d_namep, ret );
+		return ret;
+	}
+
+	if( (ret = db_wrap_v5_external( ep, &temp, dp, wp )) < 0 )  {
+		bu_log("rt_v5_export(%s): db_wrap_v5_external error %d\n",
+			dp->d_namep, ret );
+		return ret;
+	}
+	/* "temp" has been freed by db_wrap_v4_external() */
+	return 0;
+
 }

@@ -24,7 +24,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -771,6 +771,7 @@ struct db_full_path	*pathp;
 union tree		*curtree;
 genptr_t		client_data;
 {
+	extern FILE		*fp_fig;
 	struct nmgregion	*r;
 	struct bu_list		vhead;
 	union tree		*ret_tree;

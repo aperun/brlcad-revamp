@@ -21,7 +21,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
  
 #include "conf.h"
@@ -32,8 +32,8 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "vmath.h"
 #include "externs.h"
 #include "db.h"
-#include "raytrace.h"
 #include "wdb.h"
+#include "raytrace.h"
 #include "rtgeom.h"
 
 
@@ -68,7 +68,6 @@ Usage: g2asc < file.g > file.asc\n\
 FILE	*ifp;
 FILE	*ofp;
 
-int
 main(argc, argv)
 char **argv;
 {

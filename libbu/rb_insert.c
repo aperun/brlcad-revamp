@@ -19,7 +19,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char libbu_rb_insert_RCSid[] = "@(#) $Header$";
+static char libbu_rb_insert_RCSid[] = "@(#) $Header$";
 #endif
 
 #include "conf.h"
@@ -51,7 +51,7 @@ struct bu_rb_node	*new_node;
     struct bu_rb_node	*grand_parent;
     struct bu_rb_node	*y;
     int			(*compare)();
-    int			comparison=0xdeadbeef;
+    int			comparison;
     int			direction;
     int			result = 0;
 

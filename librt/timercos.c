@@ -6,7 +6,7 @@
  *	THIS VERSION FOR Cray COS "C"
  */
 #ifndef lint
-static const char RCScos[] = "@(#)$Header$ (BRL)";
+static char RCScos[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include <stdio.h>

@@ -16,7 +16,7 @@
  *	Public Domain, Distribution Unlimited.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (ARL)";
+static char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include <stdio.h>
@@ -217,5 +217,4 @@ char *av[];
 		}
 		nmg_to_rib((struct model *)ip.idb_ptr );
 	}
-	return 0;
 }

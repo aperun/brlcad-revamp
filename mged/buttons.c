@@ -68,75 +68,55 @@ fastf_t	acc_sc_sol;
 fastf_t	acc_sc_obj;     /* global object scale factor --- accumulations */
 fastf_t	acc_sc[3];	/* local object scale factors --- accumulations */
 
-int bv_zoomin(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_zoomout(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_rate_toggle(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_top(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_bottom(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_right(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_left(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_front(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_rear(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_vrestore(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_vsave(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_adcursor(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_reset(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_45_45(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int bv_35_25(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_illuminate(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_s_illuminate(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_scale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_x(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_y(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_xy(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_rotate(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_accept(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_reject(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_s_edit(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_s_rotate(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_s_trans(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_s_scale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_xscale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_yscale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
-int be_o_zscale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
+static void bv_zoomin(), bv_zoomout(), bv_rate_toggle();
+static void bv_top(), bv_bottom(), bv_right();
+static void bv_left(), bv_front(), bv_rear();
+static void bv_vrestore(), bv_vsave(), bv_adcursor(), bv_reset();
+static void bv_45_45(), bv_35_25();
+static void be_o_illuminate(), be_s_illuminate();
+static void be_o_scale(), be_o_x(), be_o_y(), be_o_xy(), be_o_rotate();
+static void be_accept(), be_reject(), bv_slicemode();
+static void be_s_edit(), be_s_rotate(), be_s_trans(), be_s_scale();
+static void be_o_xscale(), be_o_yscale(), be_o_zscale();
 
 struct buttons  {
 	int	bu_code;	/* dm_values.dv_button */
 	char	*bu_name;	/* keyboard string */
-	int	(*bu_func)(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);	/* function to call */
+	void	(*bu_func)();	/* function to call */
 }  button_table[] = {
-	{BV_35_25,		"35,25",	bv_35_25},
-	{BV_45_45,		"45,45",	bv_45_45},
-	{BE_ACCEPT,		"accept",	be_accept},
-	{BV_ADCURSOR,		"adc",		bv_adcursor},
-	{BV_BOTTOM,		"bottom",	bv_bottom},
-	{BV_FRONT,		"front",	bv_front},
-	{BV_LEFT,		"left",		bv_left},
-	{BE_O_ILLUMINATE,	"oill",		be_o_illuminate},
-	{BE_O_ROTATE,		"orot",		be_o_rotate},
-	{BE_O_SCALE,		"oscale",	be_o_scale},
-	{BE_O_X,		"ox",		be_o_x},
-	{BE_O_XY,		"oxy",		be_o_xy},
-	{BE_O_XSCALE,		"oxscale",	be_o_xscale},
-	{BE_O_Y,		"oy",		be_o_y},
-	{BE_O_YSCALE,		"oyscale",	be_o_yscale},
-	{BE_O_ZSCALE,		"ozscale",	be_o_zscale},
-	{BV_REAR,		"rear",		bv_rear},
-	{BE_REJECT,		"reject",	be_reject},
-	{BV_RESET,		"reset",	bv_reset},
-	{BV_VRESTORE,		"restore",	bv_vrestore},
-	{BV_RIGHT,		"right",	bv_right},
-	{BV_VSAVE,		"save",		bv_vsave},
-	{BE_S_EDIT,		"sedit",	be_s_edit},
-	{BE_S_ILLUMINATE,	"sill",		be_s_illuminate},
-	{BE_S_ROTATE,		"srot",		be_s_rotate},
-	{BE_S_SCALE,		"sscale",	be_s_scale},
-	{BE_S_TRANS,		"sxy",		be_s_trans},
-	{BV_TOP,		"top",		bv_top},
-	{BV_ZOOM_IN,		"zoomin",	bv_zoomin},
-	{BV_ZOOM_OUT,		"zoomout",	bv_zoomout},
-	{BV_RATE_TOGGLE,	"rate",		bv_rate_toggle},
-	{-1,			"-end-",	be_reject}
+	BV_35_25,	"35,25",	bv_35_25,
+	BV_45_45,	"45,45",	bv_45_45,
+	BE_ACCEPT,	"accept",	be_accept,
+	BV_ADCURSOR,	"adc",		bv_adcursor,
+	BV_BOTTOM,	"bottom",	bv_bottom,
+	BV_FRONT,	"front",	bv_front,
+	BV_LEFT,	"left",		bv_left,
+	BE_O_ILLUMINATE,"oill",		be_o_illuminate,
+	BE_O_ROTATE,	"orot",		be_o_rotate,
+	BE_O_SCALE,	"oscale",	be_o_scale,
+	BE_O_X,		"ox",		be_o_x,
+	BE_O_XY,	"oxy",		be_o_xy,
+	BE_O_XSCALE,	"oxscale",	be_o_xscale,
+	BE_O_Y,		"oy",		be_o_y,
+	BE_O_YSCALE,	"oyscale",	be_o_yscale,
+	BE_O_ZSCALE,	"ozscale",	be_o_zscale,
+	BV_REAR,	"rear",		bv_rear,
+	BE_REJECT,	"reject",	be_reject,
+	BV_RESET,	"reset",	bv_reset,
+	BV_VRESTORE,	"restore",	bv_vrestore,
+	BV_RIGHT,	"right",	bv_right,
+	BV_VSAVE,	"save",		bv_vsave,
+	BE_S_EDIT,	"sedit",	be_s_edit,
+	BE_S_ILLUMINATE,"sill",		be_s_illuminate,
+	BV_SLICEMODE,	"slice",	bv_slicemode,
+	BE_S_ROTATE,	"srot",		be_s_rotate,
+	BE_S_SCALE,	"sscale",	be_s_scale,
+	BE_S_TRANS,	"sxy",		be_s_trans,
+	BV_TOP,		"top",		bv_top,
+	BV_ZOOM_IN,	"zoomin",	bv_zoomin,
+	BV_ZOOM_OUT,	"zoomout",	bv_zoomout,
+	BV_RATE_TOGGLE, "rate",		bv_rate_toggle,
+	-1,		"-end-",	be_reject
 };
 
 static mat_t sav_viewrot, sav_toviewcenter;
@@ -215,7 +195,7 @@ register int bnum;
 		if( bnum != bp->bu_code )
 			continue;
 
-		bp->bu_func( (ClientData)NULL, interp, 0, NULL );
+		bp->bu_func();
 		return;
 	}
 
@@ -223,100 +203,72 @@ register int bnum;
 }
 
 /*
- *			F _ P R E S S
- *
- * Hook for displays with no buttons
- *
- *  Given a string description of which button to press, simulate
- *  pressing that button on the button box.
- *
- *  These days, just hand off to the appropriate Tcl proc of the same name.
+ *  			P R E S S
  */
-int
-f_press(ClientData clientData,
-	Tcl_Interp *interp,
-	int	argc,
-	char	**argv)
-{
-	register int i;
+void
+press( str )
+char *str;{
+	register struct buttons *bp;
+	struct menu_item	**m;
+	int menu, item;
+	register struct menu_item	*mptr;
 
-	if(argc < 2 || MAXARGS < argc){
-		struct bu_vls vls;
 
-		bu_vls_init(&vls);
-		bu_vls_printf(&vls, "help press");
-		Tcl_Eval(interp, bu_vls_addr(&vls));
-		bu_vls_free(&vls);
-		return TCL_ERROR;
+	if( edsol && edobj ){
+	  struct bu_vls tmp_vls;
+
+	  bu_vls_init(&tmp_vls);
+	  bu_vls_printf(&tmp_vls, "WARNING: State error: edsol=%x, edobj=%x\n", edsol, edobj );
+	  Tcl_AppendResult(interp, bu_vls_addr(&tmp_vls), (char *)NULL);
+	  bu_vls_free(&tmp_vls);
 	}
 
-	for( i = 1; i < argc; i++ )  {
-		char *str = argv[i];
-		register struct buttons *bp;
-		struct menu_item	**m;
-		int menu, item;
-		register struct menu_item	*mptr;
+	if(strcmp(str, "help") == 0) {
+	  struct bu_vls vls;
 
-		if( edsol && edobj ){
-		  struct bu_vls tmp_vls;
+	  bu_vls_init(&vls);
 
-		  bu_vls_init(&tmp_vls);
-		  bu_vls_printf(&tmp_vls, "WARNING: State error: edsol=%x, edobj=%x\n", edsol, edobj );
-		  Tcl_AppendResult(interp, bu_vls_addr(&tmp_vls), (char *)NULL);
-		  bu_vls_free(&tmp_vls);
-		}
+	  for( bp = button_table; bp->bu_code >= 0; bp++ )
+	    vls_col_item(&vls, bp->bu_name);
+	  vls_col_eol(&vls);
 
-		if(strcmp(str, "help") == 0) {
-		  struct bu_vls vls;
+	  Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
+	  bu_vls_free(&vls);
+	  return;
+	}
 
-		  bu_vls_init(&vls);
+	/* Process the button function requested. */
+	for( bp = button_table; bp->bu_code >= 0; bp++ )  {
+		if( strcmp( str, bp->bu_name ) != 0 )
+			continue;
 
-		  for( bp = button_table; bp->bu_code >= 0; bp++ )
-		    vls_col_item(&vls, bp->bu_name);
-		  vls_col_eol(&vls);
+		bp->bu_func();
+		return;
+	}
 
-		  Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
-		  bu_vls_free(&vls);
-		  goto next;
-		}
-
-		/* Process the button function requested. */
-		for( bp = button_table; bp->bu_code >= 0; bp++ )  {
-			if( strcmp( str, bp->bu_name ) != 0 )
-				continue;
-
-			(void)bp->bu_func(clientData, interp, 2, argv+1);
-			goto next;
-		}
-
-		for( menu=0, m=menu_state->ms_menus; m - menu_state->ms_menus < NMENU; m++,menu++ )  {
-			if( *m == MENU_NULL )  continue;
-			for( item=0, mptr = *m;
-			     mptr->menu_string[0] != '\0';
-			     mptr++, item++ )  {
-			    if ( strcmp( str, mptr->menu_string ) != 0 )
-				continue;
+	for( menu=0, m=menu_state->ms_menus; m - menu_state->ms_menus < NMENU; m++,menu++ )  {
+		if( *m == MENU_NULL )  continue;
+		for( item=0, mptr = *m;
+		     mptr->menu_string[0] != '\0';
+		     mptr++, item++ )  {
+		    if ( strcmp( str, mptr->menu_string ) != 0 )
+			continue;
 			
-			    menu_state->ms_cur_item = item;
-			    menu_state->ms_cur_menu = menu;
-			    menu_state->ms_flag = 1;
-			    /* It's up to the menu_func to set menu_state->ms_flag=0
-			     * if no arrow is desired */
-			    if( mptr->menu_func != ((void (*)())0) )
-				(*(mptr->menu_func))(mptr->menu_arg, menu, item);
+		    menu_state->ms_cur_item = item;
+		    menu_state->ms_cur_menu = menu;
+		    menu_state->ms_flag = 1;
+		    /* It's up to the menu_func to set menu_state->ms_flag=0
+		     * if no arrow is desired */
+		    if( mptr->menu_func != ((void (*)())0) )
+			(*(mptr->menu_func))(mptr->menu_arg, menu, item);
 
-			    goto next;
-			}
+		    return;
 		}
-
-		Tcl_AppendResult(interp, "press(", str,
-			 "):  Unknown operation, type 'press help' for help\n", (char *)NULL);
-next:		;
 	}
 
-	return TCL_OK;
+	Tcl_AppendResult(interp, "press(", str,
+			 "):  Unknown operation, type 'press help' for help\n", (char *)NULL);
 }
-
 /*
  *  			L A B E L _ B U T T O N
  *  
@@ -348,78 +300,69 @@ int bnum;
 	return("");
 }
 
-int
-bv_zoomin(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+static void
+bv_zoomin()
 {
   (void)mged_zoom(2.0);
-  return TCL_OK;
 }
 
-int
-bv_zoomout(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+static void
+bv_zoomout()
 {
   (void)mged_zoom(0.5);
-  return TCL_OK;
 }
 
-int
-bv_rate_toggle(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+static void
+bv_rate_toggle()
 {
   mged_variables->mv_rateknobs = !mged_variables->mv_rateknobs;
   set_scroll_private();
-  return TCL_OK;
 }
 
-int
-bv_top(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+static void
+bv_top()
 {
   /* Top view */
   setview( 0.0, 0.0, 0.0 );
-  return TCL_OK;
 }
 
-int
-bv_bottom(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+static void
+bv_bottom()
 {
   /* Bottom view */
   setview( 180.0, 0.0, 0.0 );
-  return TCL_OK;
 }
 
-int
-bv_right(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+static void
+bv_right()
 {
   /* Right view */
   setview( 270.0, 0.0, 0.0 );
-  return TCL_OK;
 }
 
-int
-bv_left(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+static void
+bv_left()
 {
   /* Left view */
   setview( 270.0, 0.0, 180.0 );
-  return TCL_OK;
 }
 
-int
-bv_front(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+static void
+bv_front()
 {
   /* Front view */
   setview( 270.0, 0.0, 270.0 );
-  return TCL_OK;
 }
 
-int
-bv_rear(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+static void
+bv_rear()
 {
   /* Rear view */
   setview( 270.0, 0.0, 90.0 );
-  return TCL_OK;
 }
 
-int
-bv_vrestore(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+static void
+bv_vrestore()
 {
   /* restore to saved view */
   if ( vsaved )  {
@@ -430,30 +373,20 @@ bv_vrestore(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
 
     (void)mged_svbase();
   }
-  return TCL_OK;
 }
 
-int
-bv_vsave(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+static void
+bv_vsave()
 {
   /* save current view */
   sav_vscale = view_state->vs_Viewscale;
   bn_mat_copy( sav_viewrot, view_state->vs_Viewrot );
   bn_mat_copy( sav_toviewcenter, view_state->vs_toViewcenter );
   vsaved = 1;
-  return TCL_OK;
 }
 
-/*
- *			B V _ A D C U R S O R
- *
- *  Toggle state of angle/distance cursor.
- *  "press adc"
- *  This command conflicts with existing "adc" command,
- *  can't be bound as "adc", only as "press adc".
- */
-int
-bv_adcursor(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+static void
+bv_adcursor()
 {
   if (adc_state->adc_draw)  {
     /* Was on, turn off */
@@ -464,29 +397,25 @@ bv_adcursor(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
   }
 
   adc_set_scroll();
-  return TCL_OK;
 }
 
-int
-bv_reset(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+bv_reset()  {
   /* Reset view such that all solids can be seen */
   size_reset();
   setview( 0.0, 0.0, 0.0 );
   (void)mged_svbase();
-  return TCL_OK;
 }
 
-int
-bv_45_45(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+bv_45_45()  {
   setview( 270.0+45.0, 0.0, 270.0-45.0 );
-  return TCL_OK;
 }
 
-int
-bv_35_25(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+bv_35_25()  {
   /* Use Azmuth=35, Elevation=25 in GIFT's backwards space */
   setview( 270.0+25.0, 0.0, 270.0-35.0 );
-  return TCL_OK;
 }
 
 /* returns 0 if error, !0 if success */
@@ -508,10 +437,10 @@ ill_common()  {
 	return(1);		/* OK */
 }
 
-int
-be_o_illuminate(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_o_illuminate()  {
 	if( not_state( ST_VIEW, "Object Illuminate" ) )
-		return TCL_ERROR;
+		return;
 
 	if( ill_common() )  {
 		(void)chg_state( ST_VIEW, ST_O_PICK, "Object Illuminate" );
@@ -521,24 +450,22 @@ be_o_illuminate(ClientData clientData, Tcl_Interp *interp, int argc, char **argv
 
 	/* reset accumulation global scale factors */
 	acc_sc_obj = 1.0;
-	return TCL_OK;
 }
 
-int
-be_s_illuminate(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_s_illuminate()  {
 	if( not_state( ST_VIEW, "Solid Illuminate" ) )
-		return TCL_ERROR;
+		return;
 
 	if( ill_common() )  {
 		(void)chg_state( ST_VIEW, ST_S_PICK, "Solid Illuminate" );
 	}
-	return TCL_OK;
 }
 
-int
-be_o_scale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_o_scale()  {
 	if( not_state( ST_O_EDIT, "Object Scale" ) )
-		return TCL_ERROR;
+		return;
 
 	edobj = BE_O_SCALE;
 	movedir = SARROW;
@@ -548,13 +475,12 @@ be_o_scale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
 	edit_absolute_scale = acc_sc_obj - 1.0;
 	if(edit_absolute_scale > 0.0)
 	  edit_absolute_scale /= 3.0;
-	return TCL_OK;
 }
 
-int
-be_o_xscale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_o_xscale()  {
 	if( not_state( ST_O_EDIT, "Object Local X Scale" ) )
-		return TCL_ERROR;
+		return;
 
 	edobj = BE_O_XSCALE;
 	movedir = SARROW;
@@ -564,13 +490,12 @@ be_o_xscale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
 	edit_absolute_scale = acc_sc[0] - 1.0;
 	if(edit_absolute_scale > 0.0)
 	  edit_absolute_scale /= 3.0;
-	return TCL_OK;
 }
 
-int
-be_o_yscale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_o_yscale()  {
 	if( not_state( ST_O_EDIT, "Object Local Y Scale" ) )
-		return TCL_ERROR;
+		return;
 
 	edobj = BE_O_YSCALE;
 	movedir = SARROW;
@@ -580,13 +505,12 @@ be_o_yscale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
 	edit_absolute_scale = acc_sc[1] - 1.0;
 	if(edit_absolute_scale > 0.0)
 	  edit_absolute_scale /= 3.0;
-	return TCL_OK;
 }
 
-int
-be_o_zscale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_o_zscale()  {
 	if( not_state( ST_O_EDIT, "Object Local Z Scale" ) )
-		return TCL_ERROR;
+		return;
 
 	edobj = BE_O_ZSCALE;
 	movedir = SARROW;
@@ -596,60 +520,55 @@ be_o_zscale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
 	edit_absolute_scale = acc_sc[2] - 1.0;
 	if(edit_absolute_scale > 0.0)
 	  edit_absolute_scale /= 3.0;
-	return TCL_OK;
 }
 
-int
-be_o_x(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_o_x()  {
 	if( not_state( ST_O_EDIT, "Object X Motion" ) )
-		return TCL_ERROR;
+		return;
 
 	edobj = BE_O_X;
 	movedir = RARROW;
 	update_views = 1;
 	set_e_axes_pos(1);
-	return TCL_OK;
 }
 
-int
-be_o_y(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_o_y()  {
 	if( not_state( ST_O_EDIT, "Object Y Motion" ) )
-		return TCL_ERROR;
+		return;
 
 	edobj = BE_O_Y;
 	movedir = UARROW;
 	update_views = 1;
 	set_e_axes_pos(1);
-	return TCL_OK;
 }
 
 
-int
-be_o_xy(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_o_xy()  {
 	if( not_state( ST_O_EDIT, "Object XY Motion" ) )
-		return TCL_ERROR;
+		return;
 
 	edobj = BE_O_XY;
 	movedir = UARROW | RARROW;
 	update_views = 1;
 	set_e_axes_pos(1);
-	return TCL_OK;
 }
 
-int
-be_o_rotate(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_o_rotate()  {
 	if( not_state( ST_O_EDIT, "Object Rotation" ) )
-		return TCL_ERROR;
+		return;
 
 	edobj = BE_O_ROTATE;
 	movedir = ROTARROW;
 	update_views = 1;
 	set_e_axes_pos(1);
-	return TCL_OK;
 }
 
-int
-be_accept(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_accept()  {
 	register struct solid *sp;
 	register struct dm_list *dmlp;
 
@@ -681,9 +600,8 @@ be_accept(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
 		color_soltab();
 		(void)chg_state( ST_O_EDIT, ST_VIEW, "Edit Accept" );
 	} else {
-		if( not_state( ST_S_EDIT, "Edit Accept" ) )
-			return TCL_ERROR;
-		return TCL_OK;
+		(void)not_state( ST_S_EDIT, "Edit Accept" );
+		return;
 	}
 
 	FOR_ALL_DISPLAYS(dmlp, &head_dm_list.l)
@@ -698,11 +616,10 @@ be_accept(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
 	  (void)Tcl_Eval(interp, bu_vls_addr(&vls));
 	  bu_vls_free(&vls);
 	}
-	return TCL_OK;
 }
 
-int
-be_reject(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_reject()  {
 	register struct solid *sp;
 	register struct dm_list *dmlp;
 
@@ -713,7 +630,7 @@ be_reject(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
 	switch( state )  {
 	default:
 		state_err( "Edit Reject" );
-		return TCL_ERROR;
+		return;
 
 	case ST_S_EDIT:
 		/* Reject a solid edit */
@@ -761,39 +678,40 @@ be_reject(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
 	  (void)Tcl_Eval(interp, bu_vls_addr(&vls));
 	  bu_vls_free(&vls);
 	}
-	return TCL_OK;
 }
 
-int
-be_s_edit(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+bv_slicemode() {
+}
+
+static void
+be_s_edit()  {
 	/* solid editing */
 	if( not_state( ST_S_EDIT, "Solid Edit (Menu)" ) )
-		return TCL_ERROR;
+		return;
 
 	edsol = BE_S_EDIT;
 	sedit_menu();		/* Install appropriate menu */
-	return TCL_OK;
 }
 
-int
-be_s_rotate(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_s_rotate()  {
 	/* rotate solid */
 	if( not_state( ST_S_EDIT, "Solid Rotate" ) )
-		return TCL_ERROR;
+		return;
 
 	es_edflag = SROT;
 	edsol = BE_S_ROTATE;
 	mmenu_set( MENU_L1, MENU_NULL );
 
         set_e_axes_pos(1);
-	return TCL_OK;
 }
 
-int
-be_s_trans(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_s_trans()  {
 	/* translate solid */
 	if( not_state( ST_S_EDIT, "Solid Translate" ) )
-		return TCL_ERROR;
+		return;
 
 	edsol = BE_S_TRANS;
 	es_edflag = STRANS;
@@ -801,14 +719,13 @@ be_s_trans(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
 	mmenu_set( MENU_L1, MENU_NULL );
 
         set_e_axes_pos(1);
-	return TCL_OK;
 }
 
-int
-be_s_scale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
+static void
+be_s_scale()  {
 	/* scale solid */
 	if( not_state( ST_S_EDIT, "Solid Scale" ) )
-		return TCL_ERROR;
+		return;
 
 	edsol = BE_S_SCALE;
 	es_edflag = SSCALE;
@@ -816,7 +733,6 @@ be_s_scale(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)  {
 	acc_sc_sol = 1.0;
 
         set_e_axes_pos(1);
-	return TCL_OK;
 }
 
 /*
@@ -833,10 +749,10 @@ char *str;
   if( state != desired ) {
     Tcl_AppendResult(interp, "Unable to do <", str, "> from ",
 		     state_str[state], " state.\n", (char *)NULL);
-    return -1;
+    return TCL_ERROR;
   }
 
-  return 0;
+  return TCL_OK;
 }
 
 /*

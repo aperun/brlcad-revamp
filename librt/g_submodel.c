@@ -27,7 +27,7 @@
  *	in all countries except the USA.  All rights reserved.
  */
 #ifndef lint
-static const char RCSsubmodel[] = "@(#)$Header$ (BRL)";
+static char RCSsubmodel[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -627,18 +627,19 @@ struct goodies {
  *  This routine must be prepared to run in parallel.
  *  This routine should be generally exported for other uses.
  */
-HIDDEN union tree *rt_submodel_wireframe_leaf( tsp, pathp, ip, client_data )
+HIDDEN union tree *rt_submodel_wireframe_leaf( tsp, pathp, ep, id, client_data )
 struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
-struct rt_db_internal	*ip;
+struct bu_external	*ep;
+int			id;
 genptr_t		client_data;
 {
+	struct rt_db_internal	intern;
 	union tree	*curtree;
 	struct goodies	*gp;
 
 	RT_CK_TESS_TOL(tsp->ts_ttol);
 	BN_CK_TOL(tsp->ts_tol);
-	RT_CK_DB_INTERNAL(ip );
 
 	gp = (struct goodies *)tsp->ts_m;	/* hack */
 	RT_CK_DBI(gp->dbip);
@@ -650,18 +651,34 @@ genptr_t		client_data;
 		char	*sofar = db_path_to_string(pathp);
 
 		bu_log("rt_submodel_wireframe_leaf(%s) path=%s\n",
-			ip->idb_meth->ft_name, sofar );
+			rt_functab[id].ft_name, sofar );
 		bu_free((genptr_t)sofar, "path string");
 	}
 
-	if( ip->idb_meth->ft_plot(
-	    gp->vheadp, ip,
-	    tsp->ts_ttol, tsp->ts_tol ) < 0 )  {
-		bu_log("rt_submodel_wireframe_leaf(%s): %s plot failure\n",
-			ip->idb_meth->ft_name,
+    	RT_INIT_DB_INTERNAL(&intern);
+	if( rt_functab[id].ft_import( &intern, ep, tsp->ts_mat, gp->dbip ) < 0 )  {
+		bu_log("rt_submodel_wireframe_leaf(%s): %s solid import failure\n",
+			rt_functab[id].ft_name,
 			DB_FULL_PATH_CUR_DIR(pathp)->d_namep );
+
+		if( intern.idb_ptr )  intern.idb_meth->ft_ifree( &intern );
 		return(TREE_NULL);		/* ERROR */
 	}
+	RT_CK_DB_INTERNAL( &intern );
+
+	if( rt_functab[id].ft_plot(
+	    gp->vheadp,
+	    &intern,
+	    tsp->ts_ttol, tsp->ts_tol ) < 0 )  {
+		bu_log("rt_submodel_wireframe_leaf(%s): %s plot failure\n",
+			rt_functab[id].ft_name,
+			DB_FULL_PATH_CUR_DIR(pathp)->d_namep );
+
+		rt_functab[id].ft_ifree( &intern );
+		return(TREE_NULL);		/* ERROR */
+	}
+
+	intern.idb_meth->ft_ifree( &intern );
 
 	/* Indicate success by returning something other than TREE_NULL */
 	BU_GETUNION( curtree, tree );
@@ -797,7 +814,7 @@ CONST struct db_i		*dbip;
 		return(-1);
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_SUBMODEL;
 	ip->idb_meth = &rt_functab[ID_SUBMODEL];
 	ip->idb_ptr = bu_malloc( sizeof(struct rt_submodel_internal), "rt_submodel_internal");
@@ -862,7 +879,7 @@ bu_log("export: file='%s', treetop='%s', meth=%d\n", sip->file, sip->treetop, si
 	/* Ignores scale factor */
 	BU_ASSERT( local2mm == 1.0 );
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 	ep->ext_nbytes = sizeof(union record)*DB_SS_NGRAN;
 	ep->ext_buf = bu_calloc( 1, ep->ext_nbytes, "submodel external");
 	rec = (union record *)ep->ext_buf;
@@ -873,105 +890,6 @@ bu_log("export: file='%s', treetop='%s', meth=%d\n", sip->file, sip->treetop, si
 	rec->ss.ss_id = DBID_STRSOL;
 	strncpy( rec->ss.ss_keyword, "submodel", NAMESIZE-1 );
 	strncpy( rec->ss.ss_args, bu_vls_addr(&str), DB_SS_LEN-1 );
-	bu_vls_free( &str );
-#if 0
-bu_log("rt_submodel_export: '%s'\n", rec->ss.ss_args);
-#endif
-
-	return(0);
-}
-
-
-/*
- *			R T _ S U B M O D E L _ I M P O R T 5
- *
- *  Import an SUBMODEL from the database format to the internal format.
- *  Apply modeling transformations as well.
- */
-int
-rt_submodel_import5( ip, ep, mat, dbip )
-struct rt_db_internal		*ip;
-CONST struct bu_external	*ep;
-register CONST mat_t		mat;
-CONST struct db_i		*dbip;
-{
-	LOCAL struct rt_submodel_internal	*sip;
-	struct bu_vls		str;
-
-	BU_CK_EXTERNAL( ep );
-	RT_CK_DBI(dbip);
-
-	RT_CK_DB_INTERNAL( ip );
-	ip->idb_type = ID_SUBMODEL;
-	ip->idb_meth = &rt_functab[ID_SUBMODEL];
-	ip->idb_ptr = bu_malloc( sizeof(struct rt_submodel_internal), "rt_submodel_internal");
-	sip = (struct rt_submodel_internal *)ip->idb_ptr;
-	sip->magic = RT_SUBMODEL_INTERNAL_MAGIC;
-	sip->dbip = dbip;
-
-	bn_mat_copy( sip->root2leaf, mat );
-
-	bu_vls_init( &str );
-	bu_vls_strcpy( &str, ep->ext_buf );
-#if 0
-bu_log("rt_submodel_import: '%s'\n", rp->ss.ss_args);
-#endif
-	if( bu_struct_parse( &str, rt_submodel_parse, (char *)sip ) < 0 )  {
-		bu_vls_free( &str );
-fail:
-		bu_free( (char *)sip , "rt_submodel_import: sip" );
-		ip->idb_type = ID_NULL;
-		ip->idb_ptr = (genptr_t)NULL;
-		return -2;
-	}
-	bu_vls_free( &str );
-
-	/* Check for reasonable values */
-	if( sip->treetop[0] == '\0' )  {
-		bu_log("rt_submodel_import() treetop= must be specified\n");
-		goto fail;
-	}
-#if 0
-bu_log("import: file='%s', treetop='%s', meth=%d\n", sip->file, sip->treetop, sip->meth);
-bn_mat_print("root2leaf", sip->root2leaf );
-#endif
-
-	return(0);			/* OK */
-}
-
-/*
- *			R T _ S U B M O D E L _ E X P O R T 5
- *
- *  The name is added by the caller, in the usual place.
- */
-int
-rt_submodel_export5( ep, ip, local2mm, dbip )
-struct bu_external		*ep;
-CONST struct rt_db_internal	*ip;
-double				local2mm;
-CONST struct db_i		*dbip;
-{
-	struct rt_submodel_internal	*sip;
-	struct bu_vls		str;
-
-	RT_CK_DB_INTERNAL(ip);
-	if( ip->idb_type != ID_SUBMODEL )  return(-1);
-	sip = (struct rt_submodel_internal *)ip->idb_ptr;
-	RT_SUBMODEL_CK_MAGIC(sip);
-#if 0
-bu_log("export: file='%s', treetop='%s', meth=%d\n", sip->file, sip->treetop, sip->meth);
-#endif
-
-	/* Ignores scale factor */
-	BU_ASSERT( local2mm == 1.0 );
-	BU_CK_EXTERNAL(ep);
-
-	bu_vls_init( &str );
-	bu_vls_struct_print( &str, rt_submodel_parse, (char *)sip );
-	ep->ext_nbytes = bu_vls_strlen( &str );
-	ep->ext_buf = bu_calloc( 1, ep->ext_nbytes, "submodel external");
-
-	strcpy( ep->ext_buf, bu_vls_addr(&str) );
 	bu_vls_free( &str );
 #if 0
 bu_log("rt_submodel_export: '%s'\n", rec->ss.ss_args);

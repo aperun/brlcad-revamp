@@ -25,7 +25,6 @@
 #include "machine.h"
 #include "db.h"
 #include "vmath.h"
-#include "raytrace.h"
 #include "wdb.h"
 
 #ifdef M_PI
@@ -41,7 +40,7 @@ int argc;
 char *argv[];
 
 {							/*  START # 1  */
-   struct rt_wdb *fpw;		/*  File to be written to.  */
+   FILE *fpw;			/*  File to be written to.  */
    char filemged[26];		/*  Mged file create.  */
    double hgt,wid,dpt;		/*  Height, width, & depth of gas tank.  */
    double rds;			/*  Radius of the corner of gas tank.  */
@@ -188,7 +187,7 @@ char *argv[];
    (void)fflush(stdout);
 
    /*  Open mged file.  */
-   fpw = wdb_fopen(filemged);
+   fpw = fopen(filemged,"w");
 
    /*  Write ident record.  */
    mk_id(fpw,"windows");
@@ -740,6 +739,6 @@ char *argv[];
    }							/*  START # 2  */
 
    /*  Close file.  */
-   wdb_close(fpw);
+   (void)fclose(fpw);
    return 0;
 }							/*  END # 1  */

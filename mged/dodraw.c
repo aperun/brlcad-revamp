@@ -221,27 +221,27 @@ genptr_t		client_data;
  *
  *  This routine must be prepared to run in parallel.
  */
-HIDDEN union tree *mged_wireframe_leaf( tsp, pathp, ip, client_data )
+HIDDEN union tree *mged_wireframe_leaf( tsp, pathp, ep, id, client_data )
 struct db_tree_state	*tsp;
 struct db_full_path	*pathp;
-struct rt_db_internal	*ip;
+struct bu_external	*ep;
+int			id;
 genptr_t		client_data;
 {
+	struct rt_db_internal	intern;
 	union tree	*curtree;
 	int		dashflag;		/* draw with dashed lines */
 	struct bu_list	vhead;
 
 	RT_CK_TESS_TOL(tsp->ts_ttol);
 	BN_CK_TOL(tsp->ts_tol);
-	RT_CK_DB_INTERNAL(ip);
 
 	BU_LIST_INIT( &vhead );
 
 	if(rt_g.debug&DEBUG_TREEWALK)  {
 	  char	*sofar = db_path_to_string(pathp);
 
-	  Tcl_AppendResult(interp, "mged_wireframe_leaf(",
-			   ip->idb_meth->ft_name,
+	  Tcl_AppendResult(interp, "mged_wireframe_leaf(", rt_functab[id].ft_name,
 			   ") path='", sofar, "'\n", (char *)NULL);
 	  bu_free((genptr_t)sofar, "path string");
 	}
@@ -251,11 +251,23 @@ genptr_t		client_data;
 	else
 		dashflag = (tsp->ts_sofar & (TS_SOFAR_MINUS|TS_SOFAR_INTER) );
 
-	if( ip->idb_meth->ft_plot(
-	    &vhead, ip,
+    	RT_INIT_DB_INTERNAL(&intern);
+	if( rt_functab[id].ft_import( &intern, ep, tsp->ts_mat, dbip ) < 0 )  {
+	  Tcl_AppendResult(interp, DB_FULL_PATH_CUR_DIR(pathp)->d_namep,
+			   ":  solid import failure\n", (char *)NULL);
+
+	  if( intern.idb_ptr )  rt_functab[id].ft_ifree( &intern );
+	  return(TREE_NULL);		/* ERROR */
+	}
+	RT_CK_DB_INTERNAL( &intern );
+
+	if( rt_functab[id].ft_plot(
+	    &vhead,
+	    &intern,
 	    tsp->ts_ttol, tsp->ts_tol ) < 0 )  {
 	  Tcl_AppendResult(interp, DB_FULL_PATH_CUR_DIR(pathp)->d_namep,
 			   ": plot failure\n", (char *)NULL);
+	  rt_functab[id].ft_ifree( &intern );
 	  return(TREE_NULL);		/* ERROR */
 	}
 
@@ -265,7 +277,7 @@ genptr_t		client_data;
 	 * solids, this needs to be something different and drawH
 	 * has no idea or need to know what type of solid this is.
 	 */
-	if (ip->idb_type == ID_GRIP) {
+	if (intern.idb_type == ID_GRIP) {
 		int r,g,b;
 		r= tsp->ts_mater.ma_color[0];
 		g= tsp->ts_mater.ma_color[1];
@@ -280,6 +292,7 @@ genptr_t		client_data;
 	} else {
 		drawH_part2( dashflag, &vhead, pathp, tsp, SOLID_NULL );
 	}
+	rt_functab[id].ft_ifree( &intern );
 
 	/* Indicate success by returning something other than TREE_NULL */
 	BU_GETUNION( curtree, tree );
@@ -1090,7 +1103,7 @@ matp_t matp;
 
 			db_tree_funcleaf( dbip, comb, comb->tree, Do_getmat,
 				(genptr_t)xmat, (genptr_t)kidp->d_namep, (genptr_t)&found );
-			rt_db_free_internal( &intern );
+			rt_comb_ifree( &intern );
 
 			if( found )
 			{
@@ -1123,6 +1136,7 @@ int
 replot_original_solid( sp )
 struct solid	*sp;
 {
+	struct bu_external	ext;
 	struct rt_db_internal	intern;
 	struct directory	*dp;
 	mat_t			mat;
@@ -1139,17 +1153,33 @@ struct solid	*sp;
 	}
 	pathHmat( sp, mat, sp->s_last-1 );
 
-	if( rt_db_get_internal( &intern, dp, dbip, mat ) < 0 )  {
+	BU_INIT_EXTERNAL( &ext );
+	if( db_get_external( &ext, dp, dbip ) < 0 )  return(-1);
+
+	if( (id = rt_id_solid( &ext )) == ID_NULL )  {
+	  Tcl_AppendResult(interp, "replot_original_solid() unable to identify type of solid ",
+			   dp->d_namep, "\n", (char *)NULL);
+	  db_free_external( &ext );
+	  return(-1);
+	}
+
+    	RT_INIT_DB_INTERNAL(&intern);
+	if( rt_functab[id].ft_import( &intern, &ext, mat, dbip ) < 0 )  {
 	  Tcl_AppendResult(interp, dp->d_namep, ":  solid import failure\n", (char *)NULL);
+	  if( intern.idb_ptr )  rt_functab[id].ft_ifree( &intern );
+	  db_free_external( &ext );
 	  return(-1);		/* ERROR */
 	}
 	RT_CK_DB_INTERNAL( &intern );
 
 	if( replot_modified_solid( sp, &intern, bn_mat_identity ) < 0 )  {
-		rt_db_free_internal( &intern );
+	    	if( intern.idb_ptr )  rt_functab[id].ft_ifree( &intern );
+		db_free_external( &ext );
 		return(-1);
 	}
-	rt_db_free_internal( &intern );
+	if( intern.idb_type > ID_NULL && intern.idb_ptr )
+		rt_functab[id].ft_ifree( &intern );
+	db_free_external( &ext );
 	return(0);
 }
 
@@ -1199,7 +1229,7 @@ CONST mat_t			mat;
 			   ": re-plot failure\n", (char *)NULL);
 	  return(-1);
 	}
-	rt_db_free_internal( &intern );
+    	if( intern.idb_ptr )  rt_functab[ip->idb_type].ft_ifree( &intern );
 
 	/* Write new displaylist */
 	drawH_part2( sp->s_soldash, &vhead,

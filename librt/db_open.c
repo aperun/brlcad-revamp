@@ -21,7 +21,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -181,39 +181,36 @@ struct db_i *
 db_create( name )
 CONST char *name;
 {
-	FILE	*fp;
-	struct db_i	*dbip;
+	union record new;
 
 	if(rt_g.debug&DEBUG_DB) bu_log("db_create(%s, %s)\n", name );
 
-	if( (fp = fopen( name, "w" )) == NULL )  {
-		perror(name);
-		return(DBI_NULL);
-	}
+	/* Prepare the IDENT record */
+	bzero( (char *)&new, sizeof(new) );
+	new.i.i_id = ID_IDENT;
+	new.i.i_units = ID_MM_UNIT;
+	strncpy( new.i.i_version, ID_VERSION, sizeof(new.i.i_version) );
+	strcpy( new.i.i_title, "Untitled MGED Database" );
 
-#if 1
-	/* Create a v5 database */
-	if( db5_fwrite_ident( fp, "Untitled v5 BRL-CAD Database", 1.0 ) < 0 )  {
-		(void)fclose(fp);
-		return DBI_NULL;
+#ifdef HAVE_UNIX_IO
+	{
+		int	fd;
+		if( (fd = creat(name, 0644)) < 0 ||
+		    write( fd, (char *)&new, sizeof(new) ) != sizeof(new) )
+			return(DBI_NULL);
+		(void)close(fd);
 	}
-#else
-	/* Create a v4 database */
-	if( db_fwrite_ident( fp, "Untitled v4 BRL-CAD Database", 1.0 ) < 0 )  {
+#else /* HAVE_UNIX_IO */
+	{
+		FILE	*fp;
+		if( (fp = fopen( name, "w" )) == NULL )
+			return(DBI_NULL);
+		(void)fwrite( (char *)&new, 1, sizeof(new), fp );
 		(void)fclose(fp);
-		return DBI_NULL;
 	}
 #endif
 
-	(void)fclose(fp);
-
-	if( (dbip = db_open( name, "r+w" ) ) == DBI_NULL )
-		return DBI_NULL;
-
-	/* Do a quick scan to determine version, find _GLOBAL, etc. */
-	if( db_dirbuild( dbip ) < 0 )
-		return DBI_NULL;
-	return dbip;
+	return( db_open( name, "r+w" ) );
 }
 
 /*
@@ -333,17 +330,16 @@ struct db_i	*dbip;		/* input */
 	for( i=0; i < RT_DBNHASH; i++ )  {
 		for( dp = dbip->dbi_Head[i]; dp != DIR_NULL; dp = dp->d_forw )  {
 			RT_CK_DIR(dp);
-/* XXX Need to go to internal form, if database versions don't match */
 			if( db_get_external( &ext, dp, dbip ) < 0 )  {
 				bu_log("db_dump() read failed on %s, skipping\n", dp->d_namep );
 				continue;
 			}
 			if( wdb_export_external( wdbp, &ext, dp->d_namep, dp->d_flags ) < 0 )  {
 				bu_log("db_dump() write failed on %s, aborting\n", dp->d_namep);
-				bu_free_external( &ext );
+				db_free_external( &ext );
 				return -1;
 			}
-			bu_free_external( &ext );
+			db_free_external( &ext );
 		}
 	}
 	return 0;

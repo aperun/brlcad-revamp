@@ -21,7 +21,7 @@
  */
 
 #ifndef lint
-static const char RCSid[] = "$Header$";
+static char RCSid[] = "$Header$";
 #endif
 
 #include "conf.h"
@@ -53,7 +53,7 @@ static const char RCSid[] = "$Header$";
 
 static char	line[LINELEN+1];		/* Space for input line */
 static FILE	*fdin;			/* Input FASTGEN4 file pointer */
-static struct rt_wdb *fdout;		/* Output BRL-CAD file pointer */
+static FILE	*fdout;			/* Output BRL-CAD file pointer */
 static FILE	*fd_plot=NULL;		/* file for plot output */
 static FILE	*fd_muves=NULL;		/* file for MUVES data, output CHGCOMP and CBACKING data */
 static int	grid_size;		/* Number of points that will fit in current grid_pts array */
@@ -3416,6 +3416,7 @@ struct db_i *dbip;
 	struct rt_comb_internal *comb;
 	union tree *tr_ptr, *new_tree;
 	int saw_a_union, used_node;
+	int i;
 
 	RT_CK_TREE( ptr );
 
@@ -3424,8 +3425,9 @@ struct db_i *dbip;
 		case OP_DB_LEAF:
 			if( (dp=db_lookup( dbip, ptr->tr_l.tl_name, LOOKUP_QUIET)) == DIR_NULL )
 			{
-				ptr->tr_l.tl_op = OP_NOP;
-				return( ptr );
+				db_free_tree( ptr );
+				ptr = TREE_NULL;
+				return( TREE_NULL );
 			}
 
 			if( !(dp->d_flags & DIR_REGION) )
@@ -3511,6 +3513,54 @@ struct db_i *dbip;
 			/* recurse */
 			ptr->tr_b.tb_left = expand_tree( ptr->tr_b.tb_left, dbip );
 			ptr->tr_b.tb_right = expand_tree( ptr->tr_b.tb_right, dbip );
+			if( (ptr->tr_b.tb_left == TREE_NULL) && (ptr->tr_b.tb_right == TREE_NULL) )
+			{
+				ptr->tr_op = 0;
+				bu_free( (char *)ptr, "union tree" );
+				ptr = TREE_NULL;
+			}
+			else if( ptr->tr_b.tb_right == TREE_NULL )
+			{
+				if( ptr->tr_op == OP_INTERSECT )
+				{
+					/* intersection with nothing is nothing */
+					db_free_tree( ptr->tr_b.tb_left );
+					ptr->tr_op = 0;
+					bu_free( (char *)ptr, "union tree" );
+					ptr = TREE_NULL;
+				}
+				else
+				{
+					union tree *save;
+
+					/* just return the left tree */
+					save = ptr->tr_b.tb_left;
+					ptr->tr_op = 0;
+					bu_free( (char *)ptr, "union tree" );
+					ptr = save;
+				}
+			}
+			else if( ptr->tr_b.tb_left == TREE_NULL )
+			{
+				if( ptr->tr_op == OP_UNION )
+				{
+					union tree *save;
+
+					/* return the right tree */
+					save = ptr->tr_b.tb_right;
+					ptr->tr_op = 0;
+					bu_free( (char *)ptr, "union tree" );
+					ptr = save;
+				}
+				else
+				{
+					/* result is nothing */
+					db_free_tree( ptr->tr_b.tb_right );
+					ptr->tr_op = 0;
+					bu_free( (char *)ptr, "union tree" );
+					ptr = TREE_NULL;
+				}
+			}
 			return( ptr );
 			break;
 	}
@@ -3524,6 +3574,7 @@ char *name;
 	struct directory *dp;
 	struct rt_db_internal internal;
 	struct rt_comb_internal *comb;
+	struct db_full_path path;
 
 	if( (dp=db_lookup( dbip, name, LOOKUP_QUIET)) == DIR_NULL )
 		return;
@@ -3669,7 +3720,7 @@ char *argv[];
 		exit( 1 );
 	}
 
-	if( (fdout=wdb_fopen( argv[optind+1] )) == NULL )
+	if( (fdout=fopen( argv[optind+1] , "w" )) == (FILE *)NULL )
 	{
 		bu_log( "Cannot open file for output (%s)\n" , argv[optind+1] );
 		perror( "fast4-g" );
@@ -3741,7 +3792,7 @@ char *argv[];
 	if( debug )
 		List_holes();
 
-	wdb_close( fdout );
+	fclose( fdout );
 
 	/* post process */
 	bu_ptbl_init( &tstack , 64, " tstack ");

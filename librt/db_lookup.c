@@ -23,7 +23,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -385,15 +385,14 @@ register CONST struct db_i	*dbip;
 				flags = "COM";
 			else
 				flags = "Bad";
-			bu_log("x%.8x %s %s=x%.8x len=%.5d use=%.2d nref=%.2d %s",
-				dp,
+			bu_log("%.8x %.16s %s %s=%.8x use=%.2d len=%.3d nref=%.2d",
+				dp, dp->d_namep,
+				dp->d_flags & RT_DIR_INMEM ? "ptr" : "d_addr",
 				flags,
-				dp->d_flags & RT_DIR_INMEM ? "  ptr " : "d_addr",
 				dp->d_addr,
-				dp->d_len,
 				dp->d_uses,
-				dp->d_nref,
-				dp->d_namep );
+				dp->d_len,
+				dp->d_nref );
 			if( dp->d_animate )
 				bu_log(" anim=x%x\n", dp->d_animate );
 			else

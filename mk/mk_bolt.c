@@ -25,7 +25,6 @@
 #include "vmath.h"
 #include "externs.h"
 #include "db.h"
-#include "raytrace.h"
 #include "wdb.h"
 
 #ifdef M_PI
@@ -41,7 +40,7 @@ int argc;
 char *argv[];
 
 {
-   struct rt_wdb *fpw;		/*  File to be written to.  */
+   FILE *fpw;			/*  File to be written to.  */
    char filemged[26];		/*  Mged file create.  */
    double hd,hh;		/*  Diameter & height of bolt head.  */
    double wd,wh;		/*  Diameter & height of washer.  */
@@ -284,7 +283,7 @@ char *argv[];
    (void)fflush(stdout);
 
    /*  Open mged file for writing to.  */
-   fpw = wdb_fopen(filemged);
+   fpw = fopen(filemged,"w");
 
    /*  Write ident record.  */
    mk_id(fpw,"bolts");
@@ -476,6 +475,6 @@ char *argv[];
    }							/*  END # 20  */
 
    /*  Close mged file.  */
-   wdb_close(fpw);
+   (void)fclose(fpw);
    return 0;
 }

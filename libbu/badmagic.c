@@ -16,7 +16,7 @@
  *	Public Domain, Distribution Unlimitied.
  */
 #ifndef lint
-static const char RCSbadmagic[] = "@(#)$Header$ (ARL)";
+static char RCSbadmagic[] = "@(#)$Header$ (ARL)";
 #endif
 
 #include "conf.h"

@@ -15,7 +15,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSbot[] = "@(#)$Header$ (BRL)";
+static char RCSbot[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -1130,7 +1130,7 @@ CONST struct db_i		*dbip;
 		return(-1);
 	}
 
-	RT_CK_DB_INTERNAL( ip );
+	RT_INIT_DB_INTERNAL( ip );
 	ip->idb_type = ID_BOT;
 	ip->idb_meth = &rt_functab[ID_BOT];
 	ip->idb_ptr = bu_malloc( sizeof(struct rt_bot_internal), "rt_bot_internal");
@@ -1209,7 +1209,7 @@ CONST struct db_i		*dbip;
 	bot_ip = (struct rt_bot_internal *)ip->idb_ptr;
 	RT_BOT_CK_MAGIC(bot_ip);
 
-	BU_CK_EXTERNAL(ep);
+	BU_INIT_EXTERNAL(ep);
 	ep->ext_nbytes = sizeof( struct bot_rec ) - 1 +
 		bot_ip->num_vertices * 3 * 8 + bot_ip->num_faces * 3 * 4;
 	if( bot_ip->mode == RT_BOT_PLATE || bot_ip->mode == RT_BOT_PLATE_NOCOS )
@@ -1289,170 +1289,6 @@ CONST struct db_i		*dbip;
 	}
 
 	return(0);
-}
-
-/*
- *			R T _ B O T _ I M P O R T 5
- */
-int
-rt_bot_import5( ip, ep, mat, dbip )
-struct rt_db_internal           *ip;
-CONST struct bu_external        *ep;
-register CONST mat_t            mat;
-CONST struct db_i               *dbip;
-{
-	struct rt_bot_internal		*bip;
-	register unsigned char		*cp;
-	int				i;
-
-	BU_CK_EXTERNAL( ep );
-
-	RT_CK_DB_INTERNAL( ip );
-	ip->idb_type = ID_BOT;
-	ip->idb_meth = &rt_functab[ID_BOT];
-	ip->idb_ptr = bu_malloc( sizeof(struct rt_bot_internal), "rt_bot_internal");
-
-	bip = (struct rt_bot_internal *)ip->idb_ptr;
-	bip->magic = RT_BOT_INTERNAL_MAGIC;
-
-	cp = ep->ext_buf;
-	bip->num_vertices = bu_glong( cp );
-	cp += SIZEOF_NETWORK_LONG;
-	bip->num_faces = bu_glong( cp );
-	cp += SIZEOF_NETWORK_LONG;
-	bip->orientation = *cp++;
-	bip->mode = *cp++;
-	bip->error_mode = *cp++;
-
-	bip->vertices = (fastf_t *)bu_calloc( bip->num_vertices * 3, sizeof( fastf_t ), "BOT vertices" );
-	bip->faces = (int *)bu_calloc( bip->num_faces * 3, sizeof( int ), "BOT faces" );
-
-	for( i=0 ; i<bip->num_vertices ; i++ )
-	{
-		point_t tmp;
-
-		ntohd( (unsigned char *)tmp, (CONST unsigned char *)cp, 3 );
-		cp += SIZEOF_NETWORK_DOUBLE * 3;
-		MAT4X3PNT( &(bip->vertices[i*3]), mat, tmp );
-	}
-
-	for( i=0 ; i<bip->num_faces ; i++ )
-	{
-		bip->faces[i*3] = bu_glong( cp );
-		cp += SIZEOF_NETWORK_LONG;
-		bip->faces[i*3 + 1] = bu_glong( cp );
-		cp += SIZEOF_NETWORK_LONG;
-		bip->faces[i*3 + 2] = bu_glong( cp );
-		cp += SIZEOF_NETWORK_LONG;
-	}
-
-	if( bip->mode == RT_BOT_PLATE || bip->mode == RT_BOT_PLATE_NOCOS )
-	{
-		bip->thickness = (fastf_t *)bu_calloc( bip->num_faces, sizeof( fastf_t ), "BOT thickness" );
-		for( i=0 ; i<bip->num_faces ; i++ )
-		{
-			ntohd( (unsigned char *)&(bip->thickness[i]), cp, 1 );
-			cp += SIZEOF_NETWORK_DOUBLE;
-		}
-		bip->face_mode = bu_hex_to_bitv( (CONST char *)cp );
-	}
-	else
-	{
-		bip->thickness = (fastf_t *)NULL;
-		bip->face_mode = (struct bu_bitv *)NULL;
-	}
-
-	return(0);			/* OK */
-}
-
-/*
- *			R T _ B O T _ E X P O R T 5
- */
-int
-rt_bot_export5( ep, ip, local2mm, dbip )
-struct bu_external              *ep;
-CONST struct rt_db_internal     *ip;
-double                          local2mm;
-CONST struct db_i               *dbip;
-{
-	struct rt_bot_internal		*bip;
-	struct bu_vls			vls;
-	register unsigned char		*cp;
-	int				i;
-
-	RT_CK_DB_INTERNAL( ip );
-
-	if( ip->idb_type != ID_BOT ) return -1;
-	bip = (struct rt_bot_internal *)ip->idb_ptr;
-	RT_BOT_CK_MAGIC( bip );
-
-	BU_CK_EXTERNAL( ep );
-
-	if( bip->mode == RT_BOT_PLATE || bip->mode == RT_BOT_PLATE_NOCOS )
-	{
-		/* build hex string for face mode */
-		bu_vls_init( &vls );
-		if( bip->face_mode )
-			bu_bitv_to_hex( &vls, bip->face_mode );
-	}
-
-	ep->ext_nbytes = 3				/* orientation, mode, error_mode */
-			+ SIZEOF_NETWORK_LONG * (bip->num_faces * 3 + 2) /* faces, num_faces, num_vertices */
-			+ SIZEOF_NETWORK_DOUBLE * bip->num_vertices * 3; /* vertices */
-
-	if( bip->mode == RT_BOT_PLATE || bip->mode == RT_BOT_PLATE_NOCOS )
-		ep->ext_nbytes += SIZEOF_NETWORK_DOUBLE * bip->num_faces /* face thicknesses */
-			+ bu_vls_strlen( &vls ) + 1;	/* face modes */
-
-	ep->ext_buf = (genptr_t)bu_malloc( ep->ext_nbytes, "BOT external" );
-
-	
-	cp = ep->ext_buf;
-
-	(void)bu_plong( cp, bip->num_vertices );
-	cp += SIZEOF_NETWORK_LONG;
-	(void)bu_plong( cp, bip->num_faces );
-	cp += SIZEOF_NETWORK_LONG;
-	*cp++ = bip->orientation;
-	*cp++ = bip->mode;
-	*cp++ = bip->error_mode;
-
-	for( i=0 ; i<bip->num_vertices ; i++ )
-	{
-		point_t tmp;
-
-		VSCALE( tmp, &bip->vertices[i*3], local2mm );
-		htond( cp, (unsigned char *)tmp, 3 );
-		cp += SIZEOF_NETWORK_DOUBLE * 3;
-	}
-
-	for( i=0 ; i<bip->num_faces ; i++ )
-	{
-		(void)bu_plong( cp, bip->faces[i*3] );
-		cp += SIZEOF_NETWORK_LONG;
-		(void)bu_plong( cp, bip->faces[i*3 + 1] );
-		cp += SIZEOF_NETWORK_LONG;
-		(void)bu_plong( cp, bip->faces[i*3 + 2] );
-		cp += SIZEOF_NETWORK_LONG;
-	}
-
-	if( bip->mode == RT_BOT_PLATE || bip->mode == RT_BOT_PLATE_NOCOS )
-	{
-		for( i=0 ; i<bip->num_faces ; i++ )
-		{
-			fastf_t tmp;
-
-			tmp = bip->thickness[i] * local2mm;
-			htond( cp, (CONST unsigned char *)&tmp, 1 );
-			cp += SIZEOF_NETWORK_DOUBLE;
-		}
-		strcpy( (char *)cp, bu_vls_addr( &vls ) );
-		cp += bu_vls_strlen( &vls );
-		*cp = '\0';
-		bu_vls_free( &vls );
-	}
-
-	return 0;
 }
 
 /*
@@ -1614,7 +1450,7 @@ struct db_i	*dbip;
 
 	if( op != ip && !free )
 	{
-		RT_CK_DB_INTERNAL( op );
+		RT_INIT_DB_INTERNAL( op );
 		botop = (struct rt_bot_internal *)bu_malloc( sizeof( struct rt_bot_internal ), "botop" );
 		botop->magic = RT_BOT_INTERNAL_MAGIC;
 		botop->mode = botip->mode;

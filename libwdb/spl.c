@@ -20,19 +20,13 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
 
 #include <stdio.h>
 #include <math.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-
 #include "machine.h"
 #include "bu.h"
 #include "db.h"
@@ -60,9 +54,6 @@ int	nsurf;
 double	res;
 {
 	union record rec;
-
-	/* if caller has an rt_nurb_internal struct, should use mk_export_fwrite or mk_fwrite_internal */
-	BU_ASSERT_LONG( mk_version, <=, 4 );
 
 	bzero( (char *)&rec, sizeof(rec) );
 	rec.d.d_id = ID_BSOLID;
@@ -94,9 +85,6 @@ struct face_g_snurb * srf;
 	register fastf_t	*fp;
 	register int	i;
 	int		n;
-
-	/* if caller has an rt_nurb_internal struct, should use mk_export_fwrite or mk_fwrite_internal */
-	BU_ASSERT_LONG( mk_version, <=, 4 );
 
 	if( srf->u.k_size != srf->s_size[RT_NURB_SPLIT_COL] + srf->order[0] ||
 	    srf->v.k_size != srf->s_size[RT_NURB_SPLIT_ROW] + srf->order[1]) {

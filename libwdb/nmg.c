@@ -16,7 +16,7 @@
  *	All rights reserved.
  */
 #ifndef lint
-static const char RCSid[] = "@(#)$Header$ (BRL)";
+static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "conf.h"
@@ -35,18 +35,21 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 /*
  *			M K _ N M G
  *
- *  The NMG is freed after being written.
+ *  Caller is responsible for freeing the NMG, if desired.
  *
  *  Returns -
  *	<0	error
  *	 0	OK
  */
 int
-mk_nmg( struct rt_wdb *filep, const char *name, struct model *m )
+mk_nmg( filep, name, m )
+FILE		*filep;
+char		*name;
+struct model	*m;
 {
 	NMG_CK_MODEL( m );
 
-	return wdb_export( filep, name, (genptr_t)m, ID_NMG, mk_conv2mm );
+	return mk_export_fwrite( filep, name, (genptr_t)m, ID_NMG );
 }
 
 /*	W R I T E _ S H E L L _ A S _ P O L Y S O L I D
@@ -60,8 +63,6 @@ mk_nmg( struct rt_wdb *filep, const char *name, struct model *m )
  *
  *	XXX Since the nmg_triangulate_fu needs a tolerance structure, we
  *		have to invent one for the moment.  This is bogus.
- *
- *	XXX This should really write the shell as a BoT solid.
  */
 void
 write_shell_as_polysolid( out_fp, name, s)
@@ -78,13 +79,7 @@ struct shell *s;
 	int i;
 	struct bn_tol tol;
 
-bu_bomb("write_shell_as_polysolid -- use nmg_to_bot converter routine\n");
-
-#if 0
 	NMG_CK_SHELL( s );
-
-	/* XXX Need support for v5 here */
-	BU_ASSERT_LONG( mk_version, <=, 4 );
 
 	/* XXX Yet another tol structure is "faked" */
 	tol.magic = BN_TOL_MAGIC;
@@ -171,5 +166,4 @@ bu_bomb("write_shell_as_polysolid -- use nmg_to_bot converter routine\n");
 			}
 		}
 	}
-#endif
 }

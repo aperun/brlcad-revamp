@@ -1588,12 +1588,14 @@ dgo_wireframe_region_end(tsp, pathp, curtree, client_data)
  *  This routine must be prepared to run in parallel.
  */
 static union tree *
-dgo_wireframe_leaf(tsp, pathp, ip, client_data)
+dgo_wireframe_leaf(tsp, pathp, ep, id, client_data)
      struct db_tree_state	*tsp;
      struct db_full_path	*pathp;
-     struct rt_db_internal	*ip;
+     struct bu_external		*ep;
+     int			id;
      genptr_t			client_data;
 {
+	struct rt_db_internal	intern;
 	union tree	*curtree;
 	int		dashflag;		/* draw with dashed lines */
 	struct bu_list	vhead;
@@ -1607,8 +1609,7 @@ dgo_wireframe_leaf(tsp, pathp, ip, client_data)
 	if (rt_g.debug&DEBUG_TREEWALK) {
 		char	*sofar = db_path_to_string(pathp);
 
-		Tcl_AppendResult(dgcdp->interp, "dgo_wireframe_leaf(",
-				 ip->idb_meth->ft_name,
+		Tcl_AppendResult(dgcdp->interp, "dgo_wireframe_leaf(", rt_functab[id].ft_name,
 				 ") path='", sofar, "'\n", (char *)NULL);
 		bu_free((genptr_t)sofar, "path string");
 	}
@@ -1618,13 +1619,24 @@ dgo_wireframe_leaf(tsp, pathp, ip, client_data)
 	else
 		dashflag = (tsp->ts_sofar & (TS_SOFAR_MINUS|TS_SOFAR_INTER));
 
-	RT_CK_DB_INTERNAL(ip);
+	RT_INIT_DB_INTERNAL(&intern);
+	if (rt_functab[id].ft_import(&intern, ep, tsp->ts_mat, dgcdp->dgop->dgo_wdbp->dbip) < 0) {
+		Tcl_AppendResult(dgcdp->interp, DB_FULL_PATH_CUR_DIR(pathp)->d_namep,
+				 ":  solid import failure\n", (char *)NULL);
 
-	if (ip->idb_meth->ft_plot(&vhead, ip,
+		if (intern.idb_ptr)
+			rt_functab[id].ft_ifree( &intern );
+		return (TREE_NULL);		/* ERROR */
+	}
+	RT_CK_DB_INTERNAL(&intern);
+
+	if (rt_functab[id].ft_plot(&vhead,
+				   &intern,
 				   tsp->ts_ttol,
 				   tsp->ts_tol) < 0) {
 		Tcl_AppendResult(dgcdp->interp, DB_FULL_PATH_CUR_DIR(pathp)->d_namep,
 				 ": plot failure\n", (char *)NULL);
+		rt_functab[id].ft_ifree(&intern);
 		return (TREE_NULL);		/* ERROR */
 	}
 
@@ -1634,7 +1646,7 @@ dgo_wireframe_leaf(tsp, pathp, ip, client_data)
 	 * solids, this needs to be something different and drawH
 	 * has no idea or need to know what type of solid this is.
 	 */
-	if (ip->idb_type == ID_GRIP) {
+	if (intern.idb_type == ID_GRIP) {
 		int r,g,b;
 		r= tsp->ts_mater.ma_color[0];
 		g= tsp->ts_mater.ma_color[1];
@@ -1649,6 +1661,7 @@ dgo_wireframe_leaf(tsp, pathp, ip, client_data)
 	} else {
 		dgo_drawH_part2(dashflag, &vhead, pathp, tsp, SOLID_NULL, dgcdp);
 	}
+	rt_functab[id].ft_ifree(&intern);
 
 	/* Indicate success by returning something other than TREE_NULL */
 	BU_GETUNION(curtree, tree);

@@ -1,0 +1,440 @@
+/*
+	Author:		Gary S. Moss
+			U. S. Army Ballistic Research Laboratory
+			Aberdeen Proving Ground
+			Maryland 21005-5066
+			(301)278-6647 or AV-298-6647
+*/
+#ifndef lint
+static char RCSid[] = "@(#)$Header$ (BRL)";
+#endif
+#include <stdio.h>
+#include "machine.h"
+#include "vmath.h"
+#include "raytrace.h"
+#include "./vecmath.h"
+#include "./lgt.h"
+#include "./tree.h"
+#include "./screen.h"
+#include "./ascii.h"
+#include "./extern.h"
+
+static char	*usage[] =
+	{
+"",
+"Usage:",
+"",
+"lgt [-IOTovw file][-AGKXacefgiknps n][-b \"R G B\"][-dtD \"x y\"][-xy \"a b\"] file.g object...",
+"",
+"The options may appear in any order; however, their parameters must",
+"be present, are positional, and if there is more than one parameter",
+"for an option, they must be supplied as a single argument (e.g.,",
+"inside double-quotes as shown).",
+"",
+0
+	};
+static char	*lgt_menu[] =
+	{
+"                BRL Lighting Model (LGT) : global command set",
+"",
+"A factor             anti-aliasing thru over-sampling by factor",
+"a roll               specify roll (angle around viewing axis) rotation to grid",
+"B                    submit batch run using current context",
+"b R G B              specify background-color",
+"C                    use cursor input module",
+"c [flag]             enable or disable tracking cursor",
+"D x y                translate image when raytracing (WRT viewport)",
+"E                    clear display",
+"e bitmask            set debug flag (hexidecimal bitmask)",
+"F                    animate",
+"f distance           specify distance from origin of grid to model centroid",
+"G size               grid resolution (# of rays along edge of square grid)",
+"g fov                field of view (1.0 = entire model)",
+"H [file]             save frame buffer image",
+"h [file]             read frame buffer image",
+"J                    make a movie (prompts for parameters)",
+"j [file]             input key-frame from file (as output by mged(1B))",
+"K bounces            maximum level of recursion in raytracing",
+"k [flag]             enable or disable hidden line drawing",
+"L id                 modify light source entry id (0 to 10)",
+"l [id]               print light source entry id (0 to 10) or all",
+"M id                 modify material data base entry id (0 to 99)",
+"m [id]               print material data base entry id (0 to 99) or all",
+"n [processors]       number of processors to use (parallel environment)",
+"O [file]             re-direct errors to specified output file",
+"o [file]             image (output file for picture)",
+"p factor             adjust perspective (0.0 to infinity)",
+"q or ^D              quit",
+"R                    raytrace (generate image) within current rectangle",
+"r                    redraw screen",
+"S [file]             script (save current option settings in file) ",
+"s                    enter infrared module",
+"T [file]             read texture map file",
+"t x y                translate grid when raytracing (WRT model)",
+"V [file]             write light source data base",
+"v [file]             read light source data base",
+"W [file]             write material attribute data base",
+"w [file]             read material attribute data base",
+"X [flag]             enable or disable reporting of overlaps",
+"x start [finish]     set left and right border of current rectangle",
+"y start [finish]     set top and bottom border of current rectangle",
+"z ulen vlen [width]  size of texture map (plus width of padded lines)",
+"?                    print this menu",
+"! [arg(s)]           feed arg(s) to /bin/sh or $SHELL if set",
+". [flag]             set buffered pixel I/O flag",
+"# [anything]         comment or NOP (useful in preparing input files)",
+	NULL
+	};
+static char	*ir_menu[] =
+	{
+"",
+"                       Infrared Module: local commands",
+"",
+"d x y                specify automatic IR mapping offsets",
+"I [file]             read and display IR data",
+"i noise              specify noise threshold for IR data",
+"N [temperature]      specify temperature for IR painting",
+"P                    print GED regions and associated IR mappings",
+"Q                    enter temperature for GED region or group",
+"s                    exit IR module",
+"U [file]             write IR data base file",
+"u [file]             read IR data base file",
+"Z                    display pseudo-color IR mapping scale",
+	NULL
+	};
+
+char	screen[TOP_SCROLL_WIN+1][TEMPLATE_COLS+1];
+
+/*	pad_Strcpy -- WARNING: this routine does NOT nul-terminate the
+	destination buffer, but pads it with blanks.
+ */
+_LOCAL_ void
+pad_Strcpy( des, src, len )
+register char	*des, *src;
+register int	len;
+	{
+	while( len > 0 && *src != '\0' )
+		{
+		*des++ = *src++;
+		len--;
+		}
+	while( len-- > 0 )
+		*des++ = ' ';
+	return;
+	}
+
+/*	i n i t _ S t a t u s ( )					*/
+void
+init_Status()
+	{	register int	row, col;
+	for( row = 0; row <= TOP_SCROLL_WIN; row++ )
+		for( col = 0; col <= TEMPLATE_COLS; col++ )
+			screen[row][col] = '\0';
+	return;
+	}
+
+/*	p r n t _ S t a t u s ( )					*/
+void
+prnt_Status()
+	{	static char	scratchbuf[TEMPLATE_COLS+1];
+	pad_Strcpy( TITLE_PTR, title, TITLE_LEN - 1 );
+	pad_Strcpy( TIMER_PTR, timer, TIMER_LEN - 1 );
+	pad_Strcpy( F_SCRIPT_PTR, script_file, 32 );
+	(void) sprintf( scratchbuf, "%6.4f", grid_scale );
+	(void) strncpy( FIELD_OF_VU_PTR, scratchbuf, strlen( scratchbuf ) );
+	pad_Strcpy( F_ERRORS_PTR, err_file, 32 );
+	(void) sprintf( scratchbuf, "%11.4f", grid_dist );
+	(void) strncpy( GRID_DIS_PTR, scratchbuf, strlen( scratchbuf ) );
+	pad_Strcpy( F_MAT_DB_PTR, mat_db_file, 32 );
+	(void) sprintf( scratchbuf, "%11.4f", x_grid_offset );
+	(void) strncpy( GRID_XOF_PTR, scratchbuf, strlen( scratchbuf ) );
+	pad_Strcpy( F_LGT_DB_PTR, lgt_db_file, 32 );
+	(void) sprintf( scratchbuf, "%11.4f", y_grid_offset );
+	(void) strncpy( GRID_YOF_PTR, scratchbuf, strlen( scratchbuf ) );
+	pad_Strcpy( F_RASTER_PTR, fb_file, 32 );
+	(void) sprintf( scratchbuf, "%11.4f", modl_radius );
+	(void) strncpy( MODEL_RA_PTR, scratchbuf, strlen( scratchbuf ) );
+	pad_Strcpy( F_TEXTURE_PTR, txtr_file, 32 );
+	(void) sprintf( scratchbuf, "%3d %3d %3d", background[0], background[1], background[2] );
+	(void) strncpy( BACKGROU_PTR, scratchbuf, strlen( scratchbuf ) );
+	(void) sprintf( scratchbuf,
+			"%4s",	pix_buffered == B_PAGE ? "PAGE" :
+				pix_buffered == B_PIO ? "PIO" :
+				pix_buffered == B_LINE ? "LINE" : "?"
+				);
+	(void) strncpy( BUFFERED_PTR, scratchbuf, strlen( scratchbuf ) );
+	(void) sprintf( scratchbuf, "0x%06x", rt_g.debug );
+	(void) strncpy( DEBUGGER_PTR, scratchbuf, strlen( scratchbuf ) );
+	(void) sprintf( scratchbuf, "%-2d", max_bounce );
+	(void) strncpy( MAX_BOUN_PTR, scratchbuf, strlen( scratchbuf ) );
+	(void) sprintf( scratchbuf, " LGT %s", version );
+	(void) strncpy( PROGRAM_NM_PTR, scratchbuf, strlen( scratchbuf ) );
+	(void) sprintf( scratchbuf, " %s ", ged_file == NULL ? "(null)" : ged_file );
+	(void) strncpy( F_GED_DB_PTR, scratchbuf, strlen( scratchbuf ) );
+	(void) sprintf( scratchbuf, " [%04d-", grid_x_org );
+	(void) strncpy( GRID_PIX_PTR, scratchbuf, strlen( scratchbuf ) );
+	(void) sprintf( scratchbuf, "%04d,", grid_x_fin );
+	(void) strncpy( GRID_SIZ_PTR, scratchbuf, strlen( scratchbuf ) );
+	(void) sprintf( scratchbuf, "%04d-", grid_y_org );
+	(void) strncpy( GRID_SCN_PTR, scratchbuf, strlen( scratchbuf ) );
+	(void) sprintf( scratchbuf, "%04d] ", grid_y_fin );
+	(void) strncpy( GRID_FIN_PTR, scratchbuf, strlen( scratchbuf ) );
+	update_Screen();
+	return;
+	}
+
+void
+update_Screen()
+	{	register int	tem_co, row, col;
+	tem_co = Min( co, TEMPLATE_COLS );
+	for( row = 0; template[row] != NULL; row++ )
+		{	register int	lastcol = -2;
+		if( template[row+1] == NULL )
+			(void) SetStandout();
+		for( col = 0; col < tem_co; col++ )
+			if( screen[row][col] != template[row][col] )
+				{
+				if( col != lastcol+1 )
+					MvCursor( col+1, row+1 );
+				lastcol = col;
+				(void) putchar( template[row][col] );
+				screen[row][col] = template[row][col];
+				}
+		}
+	(void) ClrStandout();
+	EVENT_MOVE();
+	(void) fflush( stdout );
+	return;
+	}
+
+/*	p r n t _ P a g e d _ M e n u ( )				*/
+void
+prnt_Paged_Menu( menu )
+register char	**menu;
+	{	register int	done = FALSE;
+		int		lines =	(PROMPT_LINE-TOP_SCROLL_WIN);
+	if( ! tty )
+		{
+		for( ; *menu != NULL; menu++ )
+			rt_log( "%s\n", *menu );
+		return;
+		}
+	for( ; *menu != NULL && ! done;  )
+		{
+		for( ; lines > 0 && *menu != NULL; menu++, --lines )
+			prnt_Scroll( "%-*s\n", co, *menu );
+		if( *menu != NULL )
+			done = ! do_More( &lines );
+		prnt_Prompt( "" );
+		}
+	(void) fflush( stdout );
+	return;
+	}
+
+int
+do_More( linesp )
+int	*linesp;
+	{	register int	ret = TRUE;
+	if( ! tty )
+		return	TRUE;
+	save_Tty( 0 );
+	set_Raw( 0 );
+	clr_Echo( 0 );
+	SetStandout();
+	prnt_Prompt( "-- More -- " );
+	ClrStandout();
+	(void) fflush( stdout );
+	switch( hm_getchar() )
+		{
+	case 'q' :
+	case 'n' :
+		ret = FALSE;
+		break;
+	case LF :
+	case CR :
+		*linesp = 1;
+		break;
+	default :
+		*linesp = (PROMPT_LINE-TOP_SCROLL_WIN);
+		break;
+		}
+	reset_Tty( 0 );
+	return	ret;
+	}
+
+
+/*	p r n t _ M e n u ( )						*/
+void
+prnt_Menu()
+	{
+	prnt_Paged_Menu( lgt_menu );
+	if( ir_mapping )
+		prnt_Paged_Menu( ir_menu );
+	hmredraw();
+	return;
+	}
+
+/*	p r n t _ P r o m p t ( )					*/
+void
+prnt_Prompt( prompt )
+char	*prompt;
+	{
+	if( tty )
+		{
+		PROMPT_MOVE();
+		(void) ClrEOL();
+		(void) SetStandout();
+		(void) printf( "%s", prompt );
+		(void) ClrStandout();
+		(void) fflush( stdout );
+		}
+	return;
+	}
+
+/*	p r n t _ T i m e r ( )						*/
+void
+prnt_Timer( eventstr )
+char	*eventstr;
+	{
+	(void) rt_read_timer( timer, TIMER_LEN-1 );
+	if( tty )
+		{
+		pad_Strcpy( TIMER_PTR, timer, TIMER_LEN-1 );
+		update_Screen();
+		}
+	else
+		rt_log( "(%s) %s\n", eventstr == NULL ? "(null)" : eventstr, timer );
+	return;
+	}
+
+/*	p r n t _ E v e n t ( )						*/
+void
+prnt_Event( s )
+char	*s;
+	{
+	if( ! tty )
+		return;
+	EVENT_MOVE();
+	(void) ClrEOL();
+	if( s != NULL )
+		(void) fputs( s, stdout );
+	IDLE_MOVE();
+	(void) fflush( stdout );
+	return;
+	}
+
+/*	p r n t _ T i t l e ( )						*/
+void
+prnt_Title( titleptr )
+char	*titleptr;
+	{
+	if( ! tty || rt_g.debug )
+		rt_log( "%s\n", titleptr == NULL ? "(null)" : titleptr );
+	return;
+	}
+
+/*	p r n t _ U s a g e ( )
+	Print usage message.
+ */
+void
+prnt_Usage()
+	{	register char	**p = usage;
+	while( *p != NULL )
+		(void) fprintf( stderr, "%s\n", *p++ );
+	return;
+	}
+
+#include <varargs.h>
+#if defined( cray ) && ! defined( CRAY2 )
+/* VARARGS */
+void
+prnt_Scroll(fmt, a,b,c,d,e,f,g,h,i)
+char *fmt;
+{
+	RES_ACQUIRE( &rt_g.res_syscall );		/* lock */
+	if( tty )
+		{ /* Only move cursor and scroll if newline is output.	*/
+			static int	newline = 1;
+		if( CS != NULL )
+			{
+			(void) SetScrlReg( TOP_SCROLL_WIN, PROMPT_LINE - 1 );
+			if( newline )
+				{
+				SCROLL_PR_MOVE();
+				(void) ClrEOL();
+				}
+			(void) fprintf( stdout, fmt, a,b,c,d,e,f,g,h,i );
+			(void) ResetScrlReg();
+			}
+		else
+		if( DL != NULL )
+			{
+			if( newline )
+				{
+				SCROLL_DL_MOVE();
+				(void) DeleteLn();
+				SCROLL_PR_MOVE();
+				(void) ClrEOL();
+				}
+			(void) fprintf( stdout, fmt, a,b,c,d,e,f,g,h,i );
+			}
+		else
+			(void) fprintf( stdout, fmt, a,b,c,d,e,f,g,h,i );
+		/* End of line detected by existance of a newline.	*/
+		newline = fmt[strlen( fmt )-1] == '\n';
+		hmredraw();
+		}
+	else
+		(void) fprintf( stdout, fmt, a,b,c,d,e,f,g,h,i );
+	RES_RELEASE( &rt_g.res_syscall );		/* unlock */
+}
+#else
+/*	p r n t _ S c r o l l ( )					*/
+/* VARARGS */
+void
+prnt_Scroll( fmt, va_alist )
+char	*fmt;
+va_dcl
+	{	va_list		ap;
+	/* We use the same lock as malloc.  Sys-call or mem lock, really */
+	RES_ACQUIRE( &rt_g.res_syscall );		/* lock */
+	va_start( ap );
+	if( tty )
+		{ /* Only move cursor and scroll if newline is output.	*/
+			static int	newline = 1;
+		if( CS != NULL )
+			{
+			(void) SetScrlReg( TOP_SCROLL_WIN, PROMPT_LINE - 1 );
+			if( newline )
+				{
+				SCROLL_PR_MOVE();
+				(void) ClrEOL();
+				}
+			(void) _doprnt( fmt, ap, stdout );
+			(void) ResetScrlReg();
+			}
+		else
+		if( DL != NULL )
+			{
+			if( newline )
+				{
+				SCROLL_DL_MOVE();
+				(void) DeleteLn();
+				SCROLL_PR_MOVE();
+				(void) ClrEOL();
+				}
+			(void) _doprnt( fmt, ap, stdout );
+			}
+		else
+			(void) _doprnt( fmt, ap, stdout );
+		/* End of line detected by existance of a newline.	*/
+		newline = fmt[strlen( fmt )-1] == '\n';
+		hmredraw();
+		}
+	else
+		(void) _doprnt( fmt, ap, stderr );
+	va_end( ap );
+	RES_RELEASE( &rt_g.res_syscall );		/* unlock */
+	return;
+	}
+#endif

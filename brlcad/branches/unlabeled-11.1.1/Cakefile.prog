@@ -14,7 +14,7 @@
  *  Distribution Status -
  *	Public Domain, Distribution Unlimitied.
  *
- *  $Header: /usr/Backup/upgrade/brlcad/brlcad/Cakefile.prog,v 11.1 1995-01-04 09:43:30 mike Exp $
+ *  $Header: /usr/Backup/upgrade/brlcad/brlcad/Cakefile.prog,v 11.1.1.1 1998-01-29 06:15:07 mike Exp $
  */
 
 /* Default rule */

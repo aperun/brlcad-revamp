@@ -15,7 +15,7 @@
  *  Distribution Status -
  *	Public Domain, Distribution Unlimitied.
  *
- *  $Header: /usr/Backup/upgrade/brlcad/brlcad/Cakefile.lib,v 11.1 1995-01-04 09:43:30 mike Exp $
+ *  $Header: /usr/Backup/upgrade/brlcad/brlcad/Cakefile.lib,v 11.1.1.1 1998-01-29 06:15:07 mike Exp $
  */
 
 #ifndef PRODUCTS
@@ -46,12 +46,16 @@
 #	define EXTRA_OBJ_NO_DEPENDENCY	/**/
 #endif
 
+#ifndef RM_BEFORE_BUILD
+#	define RM_BEFORE_BUILD	/**/
+#endif
+
 #if !defined(BUILD_LIBRARY)
 PRODUCTS::	EXTRA_OBJ OBJ
 	../newvers.sh VERSION_VARIABLE LIBRARY_TITLE
 	CC CFLAGS -c vers.c
-	rm -f PRODUCTS; EXTRA_SETUP
-	AR r PRODUCTS OBJ EXTRA_OBJ EXTRA_OBJ_NO_DEPENDENCY vers.o
+	rm -f PRODUCTS RM_BEFORE_BUILD; EXTRA_SETUP
+	AR r PRODUCTS \*.o
 	RANLIB PRODUCTS
 
 	/* If RANLIB is specified, be sure it is run when installing libraries */
@@ -68,8 +72,8 @@ PRODUCTS::	EXTRA_OBJ OBJ
 PRODUCTS&::	EXTRA_OBJ OBJ
 	../newvers.sh VERSION_VARIABLE LIBRARY_TITLE
 	CC CFLAGS -c vers.c
-	rm -f PRODUCTS*; EXTRA_SETUP
-	BUILD_LIBRARY SHARED_PRODUCT OBJ EXTRA_OBJ EXTRA_OBJ_NO_DEPENDENCY vers.o
+	rm -f PRODUCTS* RM_BEFORE_BUILD; EXTRA_SETUP
+	BUILD_LIBRARY SHARED_PRODUCT \*.o
 	../sharedliblink.sh SHARED_PRODUCT
 
 	/* Use this opportunity to build the symlink on install */

@@ -11,7 +11,7 @@
  *	The U. S. Army Ballistic Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *
- *  $Header: /usr/Backup/upgrade/brlcad/brlcad/Cakefile.defs,v 11.1 1995-01-04 09:43:27 mike Exp $
+ *  $Header: /usr/Backup/upgrade/brlcad/brlcad/Cakefile.defs,v 11.1.1.1 1998-01-29 06:15:07 mike Exp $
  *
  *  For those unfamiliar with CAKE, one important hint:
  *  When a rule includes an ampersand ('&') before the colon,
@@ -165,7 +165,6 @@ set -S2 "/bin/sh"
 /*	Silicon Graphics 4D, running IRIX 4.0 "Cypress" and X-windows */
 #	undef	sgi
 #	define	MTYPE	5d
-/*** WARNING WARNING:  *not* using -O2 on Irix 4.0.4 gives bad code ***/
 #	if 1	/* PRODUCTION=1 */
 /*		This version for production: optimization & shared libraries */
 #		define	OPTIMIZER	-O2
@@ -183,7 +182,6 @@ set -S2 "/bin/sh"
 #	define	STANDARD_LIBES	-lm -lmalloc -lc''SHARED
 #	define	LIBRT_LIBES	-lmpc
 #	define	LGT_CONFIG	GFLAG -lmpc
-/*	X11 Configuration is standard in IRIX 4.0 */
 #	define	XINCDIR	/usr/X11/include
 #	define	XLIBDIR	/usr/X11/lib
 
@@ -223,7 +221,7 @@ set -S2 "/bin/sh"
 #	endif
 #endif
 
-#if defined(__CAKE__irix5)
+#if defined(__CAKE__6d) || defined(__CAKE__irix5)
 /*	Silicon Graphics 4D, running IRIX 5.0 */
 #	undef	sgi
 #	define	MTYPE	6d
@@ -281,43 +279,41 @@ set -S2 "/bin/sh"
 #	define	LIBRT_TIMER	timer42
 #endif
 
-#if defined(__CAKE__irix6)
+#if defined(__CAKE__7d) || defined(__CAKE__irix6)
 /*	Silicon Graphics 4D, running IRIX 6.0 (on a 64-bit machine) */
 #	undef	sgi
 #	define	MTYPE	7d
 #	if 1	/* PRODUCTION=1 */
 /*		This version for production: optimization & shared libraries */
+/*		Warning 799 is "'long long' is not standard ANSI" (from time.h) */
 /*		Warning 1174 is "variable declared but never referenced". */
 /*		Warning 1032 is "expression must have arithmetic type". */
-#		define	OPTIMIZER	-O2 -OPT:fold_arith_limit=16000 \
-					-OPT:const_copy_limit=16000 \
-					-use_readonly_const \
-					-woff 1032,1174 -Wl,-w
+#		define	OPTIMIZER	-O2 -use_readonly_const \
+					-woff 799,1032,1174 -Wl,-w
 /*		-Wl,-S doesn't work! use -Wl,-w.  SGI case #0390575. */
 #	else
 /*		This version for debugging with DBX */
 /*		-fullwarn is pretty verbose */
 #		define	OPTIMIZER	-g -use_readonly_const
 #	endif
-#	define	GFLAG		-64 -KPIC -G 7
-#	define	XLIBDIR		/usr/lib64
+#	define	GFLAG		-KPIC -G 0
+#	define	XLIBDIR		/usr/lib
 #	if 1	/* PRODUCTION=1 */
 /*		Shared library version support */
 #		define	ARCH_SUF	so
 #		define	LIBVERS ../sharedlibvers.sh
 #		define	BUILD_LIBRARY	ld -shared -o
 #		define	RANLIB	true
-#		define	STANDARD_LIBES	-lm -lmalloc -lc -rpath /usr/lib64:LIBDIR
+#		define	STANDARD_LIBES	-lm -lmalloc -lc -rpath /usr/lib:LIBDIR
 /*		When debugging libraries, -m and -v are helpful LD_OPTS */
-#		define	LD_OPTS		GFLAG
+#		define	LD_OPTS		GFLAG -Wl,-woff,85 -Wl,-woff,134 -Wl,-woff,84 -Wl,-woff,133
 #	else
 /*		Static linked executables */
 #		define	RANLIB	ranlib5.sh
 #		define	STANDARD_LIBES	-lm -lmalloc -lc
-#		define	LD_OPTS		GFLAG
+#		define	LD_OPTS		GFLAG -Wl,-woff,85 -Wl,-woff,134 -Wl,-woff,84 -Wl,-woff,133
 #	endif
-/* -ansiposix	ANSI+POSIX mode is used over ANSI, to get fdopen(), etc, defined. */
-#	define  CC_OPTS		GFLAG -ansiposix -DIRIX=6
+#	define  CC_OPTS		GFLAG -xansi -DIRIX=6
 #	define	IRIX	6
 #	define	LGT_CONFIG	GFLAG
 
@@ -328,6 +324,9 @@ set -S2 "/bin/sh"
 #	define	MGED_OBJS	dm-X
 #	define	MGED_CONFIG	GFLAG -DIR_KNOBS=8 -DIR_BUTTONS=32 -DDM_X -I''XINCDIR
 #	define	MGED_LIBES	-L''XLIBDIR -lX11
+#    if 1	/* PRODUCTION=1 */
+/*		Still some porting issues, XMGED won't compile yet */
+#    else
 #       define  XMGED_ALLOCA    alloca
 #	define	XMGED_OBJS	dm-X
 #	define	XMGED_CONFIG	GFLAG -DIR_KNOBS=8 -DIR_BUTTONS=32 -DDM_4D \
@@ -335,6 +334,202 @@ set -S2 "/bin/sh"
 #	define	XMGED_LIBES	-L''XLIBDIR -lXm_s \
 				-lXt_s -lXi -lXext -lX11_s -lsun -lPW \
 				-lxmalloc -ll
+#    endif
+#	define	HAS_TCP	1
+#	define	CC	cc
+#	define	GETHOST	hostname
+#	define	LIBPKG_CONFIG	-DBSD=43
+#	define	RFBD_CONFIG	-DBSD=43
+#	define	LIBRT_TIMER	timer42
+#endif
+
+#if defined(__CAKE__m4i64)
+/*	Silicon Graphics 4D, running IRIX64 6.4 (on a mips4 machine) */
+#	undef	sgi
+#	define	MTYPE	m4i64
+#	if 1	/* PRODUCTION=1 */
+/*		This version for production: optimization & shared libraries */
+/*		Warning 799 is "'long long' is not standard ANSI" (from time.h) */
+/*		Warning 1174 is "variable declared but never referenced". */
+/*		Warning 1032 is "expression must have arithmetic type". */
+#		define	OPTIMIZER	-O2 -use_readonly_const \
+					-woff 1116,1164,1048,1233,1183,1177,1551,1110,1167,1155,1009,1171
+/*		-Wl,-S doesn't work! use -Wl,-w.  SGI case #0390575. */
+#	else
+/*		This version for debugging with DBX */
+/*		-fullwarn is pretty verbose */
+#		define	OPTIMIZER	-g -use_readonly_const \
+					-woff 1116,1164,1048,1233,1183,1177,1551,1110,1167,1155,1009,1171
+#	endif
+#	define	GFLAG		-n32 -KPIC -G 0
+#	define	XLIBDIR		/usr/lib32
+#	if 1	/* PRODUCTION=1 */
+/*		Shared library version support */
+#		define	ARCH_SUF	so
+#		define	LIBVERS ../sharedlibvers.sh
+#		define	BUILD_LIBRARY	ld -shared -o
+#		define	RANLIB	true
+#		define	STANDARD_LIBES	-lm -lmalloc -lc -rpath /usr/lib32:LIBDIR
+/*		When debugging libraries, -m and -v are helpful LD_OPTS */
+#		define	LD_OPTS		GFLAG -Wl,-woff,85 -Wl,-woff,134 -Wl,-woff,84 -Wl,-woff,133
+#	else
+/*		Static linked executables */
+#		define	RANLIB	ranlib5.sh
+#		define	STANDARD_LIBES	-lm -lmalloc -lc
+#		define	LD_OPTS		GFLAG -Wl,-woff,85 -Wl,-woff,134 -Wl,-woff,84 -Wl,-woff,133
+#	endif
+#	define  CC_OPTS		GFLAG -xansi -DIRIX=6
+#	define	IRIX	6
+#	define	LGT_CONFIG	GFLAG
+
+/* GAK!  No GL library in 64-bit mode, only OpenGL!  ARRRRGH! */
+#	define	LIBFB_OBJS	if_remote if_ab if_X if_X24
+#	define	LIBFB_CONFIG	-DIF_REMOTE -DIF_AB -DBSD=43 -DIF_X -I''XINCDIR
+#	define	LIBFB_LIBES	LIBPKG -L''XLIBDIR -lX11
+#	define	MGED_OBJS	dm-X
+#	define	MGED_CONFIG	GFLAG -DIR_KNOBS=8 -DIR_BUTTONS=32 -DDM_X -I''XINCDIR
+#	define	MGED_LIBES	-L''XLIBDIR -lX11
+#    if 1	/* PRODUCTION=1 */
+/*		Still some porting issues, XMGED won't compile yet */
+#    else
+#       define  XMGED_ALLOCA    alloca
+#	define	XMGED_OBJS	dm-X
+#	define	XMGED_CONFIG	GFLAG -DIR_KNOBS=8 -DIR_BUTTONS=32 -DDM_4D \
+				-DDM_X -DDMX_SIGNALS -I/usr/include/X11
+#	define	XMGED_LIBES	-L''XLIBDIR -lXm_s \
+				-lXt_s -lXi -lXext -lX11_s -lsun -lPW \
+				-lxmalloc -ll
+#    endif
+#	define	HAS_TCP	1
+#	define	CC	cc
+#	define	GETHOST	hostname
+#	define	LIBPKG_CONFIG	-DBSD=43
+#	define	RFBD_CONFIG	-DBSD=43
+#	define	LIBRT_TIMER	timer42
+#endif
+
+#if defined(__CAKE__m3i62)
+/*	Silicon Graphics 4D, running IRIX64 6.2 (on a MIPS3 machine) */
+#	undef	sgi
+#	define	MTYPE	m3i62
+#	if 1	/* PRODUCTION=1 */
+/*		This version for production: optimization & shared libraries */
+/*		Warning 799 is "'long long' is not standard ANSI" (from time.h) */
+/*		Warning 1174 is "variable declared but never referenced". */
+/*		Warning 1032 is "expression must have arithmetic type". */
+#		define	OPTIMIZER	-O2 -use_readonly_const \
+					-woff 1116,1164,1048,1233,1183,1177,1551,1110,1167,1155,1009,1171
+/*		-Wl,-S doesn't work! use -Wl,-w.  SGI case #0390575. */
+#	else
+/*		This version for debugging with DBX */
+/*		-fullwarn is pretty verbose */
+#		define	OPTIMIZER	-g -use_readonly_const \
+					-woff 1116,1164,1048,1233,1183,1177,1551,1110,1167,1155,1009,1171
+#	endif
+#	define	GFLAG		-n32 -KPIC -G 0
+#	define	XLIBDIR		/usr/lib32
+#	if 1	/* PRODUCTION=1 */
+/*		Shared library version support */
+#		define	ARCH_SUF	so
+#		define	LIBVERS ../sharedlibvers.sh
+#		define	BUILD_LIBRARY	ld -n32 -shared -o
+#		define	RANLIB	true
+#		define	STANDARD_LIBES	-lm -lmalloc -lc -rpath /usr/lib32:LIBDIR
+/*		When debugging libraries, -m and -v are helpful LD_OPTS */
+#		define	LD_OPTS		GFLAG -Wl,-woff,85 -Wl,-woff,84 -Wl,-woff,133
+#	else
+/*		Static linked executables */
+#		define	RANLIB	ranlib5.sh
+#		define	STANDARD_LIBES	-lm -lmalloc -lc
+#		define	LD_OPTS		GFLAG -Wl,-woff,85 -Wl,-woff,84 -Wl,-woff,133
+#	endif
+#	define  CC_OPTS		GFLAG -xansi -DIRIX=6
+#	define	IRIX	6
+#	define	LGT_CONFIG	GFLAG
+
+/* GAK!  No GL library in 64-bit mode, only OpenGL!  ARRRRGH! */
+#	define	LIBFB_OBJS	if_remote if_ab if_X if_X24
+#	define	LIBFB_CONFIG	-DIF_REMOTE -DIF_AB -DBSD=43 -DIF_X -I''XINCDIR
+#	define	LIBFB_LIBES	LIBPKG -L''XLIBDIR -lX11
+#	define	MGED_OBJS	dm-X
+#	define	MGED_CONFIG	GFLAG -DIR_KNOBS=8 -DIR_BUTTONS=32 -DDM_X -I''XINCDIR
+#	define	MGED_LIBES	-L''XLIBDIR -lX11
+#    if 1	/* PRODUCTION=1 */
+/*		Still some porting issues, XMGED won't compile yet */
+#    else
+#       define  XMGED_ALLOCA    alloca
+#	define	XMGED_OBJS	dm-X
+#	define	XMGED_CONFIG	GFLAG -DIR_KNOBS=8 -DIR_BUTTONS=32 -DDM_4D \
+				-DDM_X -DDMX_SIGNALS -I/usr/include/X11
+#	define	XMGED_LIBES	-L''XLIBDIR -lXm_s \
+				-lXt_s -lXi -lXext -lX11_s -lsun -lPW \
+				-lxmalloc -ll
+#    endif
+#	define	HAS_TCP	1
+#	define	CC	cc
+#	define	GETHOST	hostname
+#	define	LIBPKG_CONFIG	-DBSD=43
+#	define	RFBD_CONFIG	-DBSD=43
+#	define	LIBRT_TIMER	timer42
+#endif
+
+#if defined(__CAKE__m4i62)
+/*	Silicon Graphics 4D, running IRIX64 6.2 (on a MIPS4 machine) */
+#	undef	sgi
+#	define	MTYPE	m4i62
+#	if 1	/* PRODUCTION=1 */
+/*		This version for production: optimization & shared libraries */
+/*		Warning 799 is "'long long' is not standard ANSI" (from time.h) */
+/*		Warning 1174 is "variable declared but never referenced". */
+/*		Warning 1032 is "expression must have arithmetic type". */
+#		define	OPTIMIZER	-O2 -use_readonly_const \
+					-woff 1116,1164,1048,1233,1183,1177,1551,1110,1167,1155,1009,1171
+/*		-Wl,-S doesn't work! use -Wl,-w.  SGI case #0390575. */
+#	else
+/*		This version for debugging with DBX */
+/*		-fullwarn is pretty verbose */
+#		define	OPTIMIZER	-g -use_readonly_const \
+					-woff 1116,1164,1048,1233,1183,1177,1551,1110,1167,1155,1009,1171
+#	endif
+#	define	GFLAG		-n32 -KPIC -G 0
+#	define	XLIBDIR		/usr/lib32
+#	if 1	/* PRODUCTION=1 */
+/*		Shared library version support */
+#		define	ARCH_SUF	so
+#		define	LIBVERS ../sharedlibvers.sh
+#		define	BUILD_LIBRARY	ld -n32 -shared -o
+#		define	RANLIB	true
+#		define	STANDARD_LIBES	-lm -lmalloc -lc -rpath /usr/lib32:LIBDIR
+/*		When debugging libraries, -m and -v are helpful LD_OPTS */
+#		define	LD_OPTS		GFLAG -Wl,-woff,85 -Wl,-woff,84 -Wl,-woff,133
+#	else
+/*		Static linked executables */
+#		define	RANLIB	ranlib5.sh
+#		define	STANDARD_LIBES	-lm -lmalloc -lc
+#		define	LD_OPTS		GFLAG -Wl,-woff,85 -Wl,-woff,84 -Wl,-woff,133
+#	endif
+#	define  CC_OPTS		GFLAG -xansi -DIRIX=6
+#	define	IRIX	6
+#	define	LGT_CONFIG	GFLAG
+
+/* GAK!  No GL library in 64-bit mode, only OpenGL!  ARRRRGH! */
+#	define	LIBFB_OBJS	if_remote if_ab if_X if_X24
+#	define	LIBFB_CONFIG	-DIF_REMOTE -DIF_AB -DBSD=43 -DIF_X -I''XINCDIR
+#	define	LIBFB_LIBES	LIBPKG -L''XLIBDIR -lX11
+#	define	MGED_OBJS	dm-X
+#	define	MGED_CONFIG	GFLAG -DIR_KNOBS=8 -DIR_BUTTONS=32 -DDM_X -I''XINCDIR
+#	define	MGED_LIBES	-L''XLIBDIR -lX11
+#    if 1	/* PRODUCTION=1 */
+/*		Still some porting issues, XMGED won't compile yet */
+#    else
+#       define  XMGED_ALLOCA    alloca
+#	define	XMGED_OBJS	dm-X
+#	define	XMGED_CONFIG	GFLAG -DIR_KNOBS=8 -DIR_BUTTONS=32 -DDM_4D \
+				-DDM_X -DDMX_SIGNALS -I/usr/include/X11
+#	define	XMGED_LIBES	-L''XLIBDIR -lXm_s \
+				-lXt_s -lXi -lXext -lX11_s -lsun -lPW \
+				-lxmalloc -ll
+#    endif
 #	define	HAS_TCP	1
 #	define	CC	cc
 #	define	GETHOST	hostname
@@ -514,47 +709,61 @@ set -S2 "/bin/sh"
 #   endif
 #endif
 
-#if defined(sparc) && defined(__CAKE__SunOS5)
+#if defined(sparc) && (defined(__CAKE__sun5) || defined(__CAKE__SunOS5))
 /*	Sun "SparcStation" hardware, running Solaris (SunOS 5) */
 /*	SunOS 5, aka Solaris 2 support.  Looks like a SysV.  */
 #	undef	sun
 #	undef	sun5
 #	define	MTYPE	sun5
-/*	For now, we expect /opt/SUNWspro/bin ANSI compiler to be used */
-#	define	CC		/opt/SUNWspro/bin/cc
-
 #	define	HAS_TCP		1
-
-#	if 1	/* PRODUCTION=1 */
-#		define	OPTIMIZER	-dalign -xcg92 -xO4
-#	else
-#		define	OPTIMIZER	-g
-#	endif
-#	define	CC_OPTS		-Xc -K PIC 
-/*	SunPro C 2.0.1 does not define __sparc or sparc.  3.0 on does */
-#	define	CC_DEFS		-D_REENTRANT -D__sparc -DSUNOS=53
-
-/*	Shared library support */
-#	define	ARCH_SUF	so
-#	define	LIBVERS		../sharedlibvers.sh
-#	define	BUILD_LIBRARY	ld -Bdynamic -G -h PRODUCTS[[LIBVERS]] -o
-#	define	RANLIB		true
-#	define	STANDARD_LIBES	-lm -R /usr/lib:LIBDIR
 
 #	define	XINCDIR		/usr/openwin/include
 #	define	XLIBDIR		/usr/openwin/lib
+
+#	if defined( __GNUC__ )	/* Using the GNU compiler */
+#		define	CC		gcc
+#		if 1	/* PRODUCTION=1 */
+#			define	OPTIMIZER	-O2 -fwritable-strings
+#		else
+#			define	OPTIMIZER	-g -fwritable-strings
+#		endif
+#		define	CC_DEFS		-D_REENTRANT -DSUNOS=53
+#		define	CC_OPTS		-I''XINCDIR
+#	else
+/*		For now, we expect /opt/SUNWspro/bin ANSI compiler to be used */
+#		define	CC		/opt/SUNWspro/bin/cc
+#		if 1	/* PRODUCTION=1 */
+#			define	OPTIMIZER	-dalign -xcg92 -xO4
+#		else
+#			define	OPTIMIZER	-g
+#		endif
+#		define	CC_OPTS		-Xc -K PIC -I''XINCDIR
+/*		SunPro C 2.0.1 does not define __sparc or sparc.  3.0 on does */
+#		define	CC_DEFS		-D_REENTRANT -D__sparc -DSUNOS=53
+#	endif
+
+/*	Shared library support */
+#	if 1 /* PRODUCTION=1 */
+#		define	ARCH_SUF	so
+#		define	LIBVERS		../sharedlibvers.sh
+#		define	BUILD_LIBRARY	ld -Bdynamic -G -h PRODUCTS[[LIBVERS]] -o
+#	endif
+#	define	RANLIB		true
+
+#	define	STANDARD_LIBES	-lm -lnsl -lsocket -ldl -lthread -R /usr/lib:LIBDIR
 
 #	define	LIBPKG_CONFIG	-DBSD=43 -D_KERNEL
 #	define	LIBPKG_LIBES	-lnsl -lsocket
 
 #	define	LIBRT_TIMER	timerunix
-#	define	LIBRT_LIBES	-lthread
+#	define	LIBBU_LIBES	-lthread
 
 #	define	LIBFB_OBJS	if_remote if_ab if_X if_X24
 #	define	LIBFB_CONFIG	-DIF_REMOTE -DIF_AB -I''XINCDIR -DIF_X
 #	define	LIBFB_LIBES	LIBPKG -L''XLIBDIR -R''XLIBDIR -lX11 -lnsl -lsocket
 
 #  if 1	/* PRODUCTION=1 */
+#	define	LIBMESA_CONFIG	-DFBIND=2
 #	define	MGED_OBJS	dm-X
 #	define	MGED_CONFIG	-DDM_X -I''XINCDIR
 #	define	MGED_LIBES	-L''XLIBDIR -R''XLIBDIR -lX11 -lnsl -lsocket
@@ -567,15 +776,6 @@ set -S2 "/bin/sh"
 				-R''XGLHOME/lib \
 				-lX11 -lxgl -lnsl -lsocket -lXi
 #  endif
-
-/*	XMGED requires a Motif license and include/X11/Xm/Xm.h */
-/*	/usr/dt is where Motif lives, starting with SunOS 5.4 */
-#	define  XMGED_ALLOCA
-#	define	XMGED_OBJS	dm-X
-#	define	XMGED_CONFIG	-DDM_X -DDMX_SIGNALS -I''XINCDIR -I/usr/dt/include
-#	define	XMGED_LIBES	-L/usr/dt/lib -R/usr/dt/lib -lXm \
-				-L''XLIBDIR -R''XLIBDIR -lXt -lXi -lXext \
-				-lX11 -ll -lnsl -lsocket
 
 #endif
 
@@ -672,8 +872,8 @@ set -S2 "/bin/sh"
 #	define	BSD	43
 #	define	HAS_TCP	1
 
-#	define	XINCDIR		/usr/X11/include
-#	define	XLIBDIR		/usr/X11/lib
+#	define	XINCDIR	/usr/X11/include
+#	define	XLIBDIR	/usr/X11/lib
 
 #	define	LIBFB_CONFIG	-DIF_REMOTE -DIF_AB -DIF_X -I''XINCDIR
 #	define	LIBFB_OBJS	if_remote if_ab if_X if_X24
@@ -695,7 +895,7 @@ set -S2 "/bin/sh"
 #	endif
 #endif
 
-#if defined(__CAKE__linux)
+#if defined(__CAKE__li)
 /*	IBM PC or clone running Linux */
 #	undef	li
 #	define	MTYPE	li
@@ -708,27 +908,27 @@ set -S2 "/bin/sh"
 #		define	OPTIMIZER	-g
 #	endif
 #	if 1	/* PRODUCTION=1 */
+/*		Static linked executables */
+#		define	CC	gcc
+#		define	RANLIB	ar -s
+/*		Don't use -ansi, that gives __STRICT_ANSI__.  Default is _GNU_SOURCE. */
+#		define	CC_OPTS -w
+#	else
 /*		Shared library version support.  Requires ELF for Linux. */
 #		define	CC	gcc
-#		define	CC_OPTS -b i486-linuxelf -fPIC
+#		define	CC_OPTS -w -b i486-linuxelf -fPIC
 #		define	ARCH_SUF	so
 #		define	LIBVERS ../sharedlibvers.sh
 #		define	BUILD_LIBRARY	gcc -b i486-linuxelf -shared -o
 #		define	RANLIB	true
 #		define	STANDARD_LIBES	-lm -lc -Wl,-rpath -Wl,/usr/lib:LIBDIR
-#	else
-/*		Static linked executables */
-#		define	CC	gcc
-#		define	RANLIB	ar -s
-/*		Don't use -ansi, that gives __STRICT_ANSI__.  Default is _GNU_SOURCE. */
-#		define	CC_OPTS /**/
 #	endif
 #	define	XINCDIR	/usr/X11/include
-#	define	XLIBDIR	/usr/X11/lib
+#	define	XLIBDIR	/usr/X11/lib -L''/usr/X11R6/lib 
 
 #	define	LIBRT_TIMER	timer42
-#	define	LIBTERMLIB	-lcurses -ltermcap
-#	define	LIBFB_CONFIG	-DIF_REMOTE -I''XINCDIR -DIF_X
+#	define	LIBTERMLIB	-lncurses -ltermcap
+#	define	LIBFB_CONFIG	-DIF_REMOTE -I''XINCDIR -I/usr/X11R6/include -DIF_X
 #	define	LIBFB_LIBES	LIBPKG -L''XLIBDIR -lX11
 #	define	LIBFB_OBJS	if_remote if_ab if_X if_X24
 #	define	MGED_OBJS	dm-X
@@ -1399,6 +1599,11 @@ set -S2 "/bin/sh"
 #ifndef LIBVERS
 #	define	LIBVERS	echo
 #endif
+
+#ifndef RM_BEFORE_BUILD
+#	define RM_BEFORE_BUILD	/**/
+#endif
+
 
 /*
  *  Provide paths for programs, etc.

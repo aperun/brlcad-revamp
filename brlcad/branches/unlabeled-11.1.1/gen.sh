@@ -29,8 +29,9 @@ NFS=0
 # Label number for this CAD Release,
 # RCS main Revision number, and date.
 #RELEASE=M.N;	RCS_REVISION=X;		REL=DATE=dd-mmm-yy
-#RELEASE=4.8;	RCS_REVISION=11;	REL_DATE=Today
-RELEASE=4.4;	RCS_REVISION=11;	REL_DATE=4-Jan-95
+#RELEASE=4.6;	RCS_REVISION=11;	REL_DATE=Today
+RELEASE=4.5;	RCS_REVISION=11;	REL_DATE=28-Jan-98	# 4.4 Maint release
+#RELEASE=4.4;	RCS_REVISION=11;	REL_DATE=5-Jan-95
 #RELEASE=4.3;	RCS_REVISION=10;	REL_DATE=2-Jan-95	# Beta6
 #RELEASE=4.3;	RCS_REVISION=10;	REL_DATE=29-Dec-94	# Beta5
 #RELEASE=4.3;	RCS_REVISION=10;	REL_DATE=27-Dec-94	# Beta4
@@ -127,7 +128,7 @@ do
 	fi
 done
 
-# This will set Shell variables MACHINE, UNIXTYPE, and HAS_TCP
+# This will set Shell variables MACHINE, UNIXTYPE, and HAS_TCP, and BASDIR
 eval `machinetype.sh -b`
 
 DISTDIR=/m/dist/.
@@ -214,7 +215,8 @@ fi
 # The 7d platform (R8000 TFP with Irix 6) does not have GL.
 if test "${MACHINE}" != "4d" -a "${MACHINE}" != "5d" -a "${MACHINE}" != "6d"
 then
-	BDIRS=`echo ${BDIRS} | sed -e  's/edpix//'`
+	BDIRS=`echo ${BDIRS} | sed -e  's/edpix//
+				        s/canon//'`
 fi
 
 if test "$1" = ""
@@ -240,6 +242,7 @@ echo "   UNIX Type = ${UNIXTYPE}"
 echo "     Has TCP = ${HAS_TCP}"
 echo "     Machine = ${MACHINE}"
 echo "         NFS = ${NFS}"
+echo "     BASEDIR = ${BASEDIR}"
 echo
 
 # Now, actually work on making the target
@@ -270,20 +273,20 @@ benchmark)
 	if test x$NFS = x1
 	then	sh $0 relink
 	fi
-	(cd ${DIRPRE}libsysv${DIRSUF};  cake -k)
-	(cd ${DIRPRE}bench${DIRSUF};  cake -k)
-	(cd ${DIRPRE}libwdb${DIRSUF};  cake -k)
-	(cd ${DIRPRE}libplot3${DIRSUF};  cake -k)
+	(cd ${DIRPRE}libsysv${DIRSUF} && cake -k)
+	(cd ${DIRPRE}bench${DIRSUF} && cake -k)
+	(cd ${DIRPRE}libwdb${DIRSUF} && cake -k)
+	(cd ${DIRPRE}libplot3${DIRSUF} && cake -k)
 	if test ${HAS_TCP} = 1
 	then
-		(cd ${DIRPRE}libpkg${DIRSUF};  cake -k)  # needed for IF_REMOTE
+		(cd ${DIRPRE}libpkg${DIRSUF} && cake -k)  # needed for IF_REMOTE
 	fi
-	(cd ${DIRPRE}libfb${DIRSUF};  cake -k)
-	(cd ${DIRPRE}libnurb${DIRSUF};  cake -k)
-	(cd ${DIRPRE}librt${DIRSUF};  cake -k)
-	(cd ${DIRPRE}conv${DIRSUF}; cake -k)
-	(cd ${DIRPRE}db${DIRSUF}; cake -k)
-	(cd ${DIRPRE}rt${DIRSUF};  cake -k)
+	(cd ${DIRPRE}libfb${DIRSUF} && cake -k)
+	(cd ${DIRPRE}libnurb${DIRSUF} && cake -k)
+	(cd ${DIRPRE}librt${DIRSUF} && cake -k)
+	(cd ${DIRPRE}conv${DIRSUF} && cake -k)
+	(cd ${DIRPRE}db${DIRSUF} && cake -k)
+	(cd ${DIRPRE}rt${DIRSUF} && cake -k)
 	;;
 
 #  These directives operate in the machine-specific directories
@@ -297,13 +300,13 @@ benchmark)
 all)
 	for dir in ${BDIRS}; do
 		echo -------------------------------- ${DIRPRE}${dir}${DIRSUF};
-		( cd ${DIRPRE}${dir}${DIRSUF}; cake -k )
+		( cd ${DIRPRE}${dir}${DIRSUF} && cake -k )
 	done;;
 
 clean|noprod|clobber|lint)
 	for dir in ${BDIRS}; do
 		echo -------------------------------- ${DIRPRE}${dir}${DIRSUF};
-		( cd ${DIRPRE}${dir}${DIRSUF}; cake -k ${TARGET} )
+		( cd ${DIRPRE}${dir}${DIRSUF} && cake -k ${TARGET} )
 	done;;
 
 # Listing of source directories
@@ -324,11 +327,11 @@ ls-bin)
 install|install-nobak|uninstall)
 	for dir in ${ADIRS}; do
 		echo -------------------------------- ${dir};
-		( cd ${dir}; cake -k ${TARGET} )
+		( cd ${dir} && cake -k ${TARGET} )
 	done
 	for dir in ${BDIRS}; do
 		echo -------------------------------- ${DIRPRE}${dir}${DIRSUF};
-		( cd ${DIRPRE}${dir}${DIRSUF}; cake -k ${TARGET} )
+		( cd ${DIRPRE}${dir}${DIRSUF} && cake -k ${TARGET} )
 	done;;
 
 #  These directives operate in the source directory
@@ -338,7 +341,7 @@ install|install-nobak|uninstall)
 install-man|inst-dist|print|typeset|nroff)
 	for dir in ${ADIRS} ${BDIRS}; do
 		echo -------------------------------- ${dir};
-		( cd ${dir}; cake -k ${TARGET} )
+		( cd ${dir} && cake -k ${TARGET} )
 	done;;
 
 #  These directives are for managing the multi-machine objects.
@@ -385,15 +388,15 @@ wc)
 tcl)
 	for dir in ${TDIRS}; do
 		echo -------------------------------- ${DIRPRE}${dir}${DIRSUF};
-		( cd ${DIRPRE}${dir}${DIRSUF}; cake -k )
+		( cd ${DIRPRE}${dir}${DIRSUF} && cake -k )
 	done;;
 
 install-tcl)
-	cp libtcl/library/* /usr/brlcad/tcl
+	cp -r libtcl/library/* /usr/brlcad/tcl
 	cp -r libtk/library/* /usr/brlcad/tk
 	for dir in ${TDIRS}; do
 		echo -------------------------------- ${DIRPRE}${dir}${DIRSUF};
-		( cd ${DIRPRE}${dir}${DIRSUF}; cake -k install )
+		( cd ${DIRPRE}${dir}${DIRSUF} && cake -k install )
 	done;;
 
 shell)
@@ -402,25 +405,26 @@ shell)
 	done;;
 
 rcs-lock)
-	rcs -l ${TOP_FILES}
+	rcs -l${RCS_REVISION}.1 ${TOP_FILES}
 	rcs -u ${TOP_FILES}
 	for dir in ${ADIRS} ${BDIRS}; do
 		echo -------------------------------- $dir;
 		(cd $dir; \
-		rcs -l *.[cshf1-9] Cakefile; \
+		rcs -l${RCS_REVISION}.1 *.[cshf1-9] Cakefile; \
 		rcs -u *.[cshf1-9] Cakefile )
 	done;;
 
 checkin)
 	echo " RCS_Revision ${RCS_REVISION}"
 	REL_NODOT=`echo ${RELEASE}|tr . _`
-	CI_ARGS="-f -r${RCS_REVISION} -sRel${REL_NODOT} -mRelease_${RELEASE}"
-	rcs -l ${TOP_FILES}
+	CI_ARGS="-f -r${RCS_REVISION}.1.1 -sRel${REL_NODOT} -mRelease_${RELEASE}"
+	rcs -l11.1 ${TOP_FILES}
 	ci -u ${CI_ARGS} ${TOP_FILES}
 	for dir in ${ADIRS} ${BDIRS}; do
 		echo -------------------------------- $dir;
-		(cd $dir; rm -f vers.c version \
-		rcs -l *.[cshf1-9] Cakefile; \
+		(cd $dir; rm -f vers.c version; \
+		co RCS/*; \
+		rcs -l11.1 *.[cshf1-9] Cakefile; \
 		ci -u ${CI_ARGS} *.[cshf1-9] Cakefile )
 	done;;
 
@@ -494,7 +498,7 @@ arch)
 	echo "${ARCHIVE} created"
 
 	# The FTP images:
-	FTP_ARCHIVE=/usr/spool/ftp/brl-cad/Rel4.3/src/cad${RELEASE}.tar
+	FTP_ARCHIVE=/n/wolf/usr/spool/ftp/brl-cad/Rel${RELEASE}/src/cad${RELEASE}.tar
 	echo "Enter encryption key:"
 	read KEY
 	echo "encryption key is /$KEY/"

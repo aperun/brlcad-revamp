@@ -10,12 +10,11 @@
 #  while preserving the tree structure below there.
 #
 #  Once this script is run, the "master" definition of BASEDIR is
-#  kept in "setup.sh".
-#  XXX It would be smarter to put it in machinetype.sh
+#  kept in "machinetype.sh"
 #
 #  $Header$
 
-eval `grep "^BASEDIR=" setup.sh`		# sets BASEDIR
+eval `grep "^BASEDIR=" machinetype.sh`		# sets BASEDIR
 
 echo "Current BASEDIR is $BASEDIR"
 echo
@@ -39,11 +38,13 @@ echo
 #  Replace one path with another, in all the files that matter.
 
 for i in \
-	Cakefile.defs setup.sh gen.sh cray.sh machinetype.sh \
+	machinetype.sh \
+	Cakefile.defs \
 	cake/Makefile cakeaux/Makefile \
 	remrt/remrt.c libfont/vfont.c \
 	fb/cat-fb.c canon/canonserver.c \
 	h/tcl.h libtk/tkInt.h \
+	mged/cmd.c \
 	brlman/awf brlman/brlman
 do
 	chmod 775 $i

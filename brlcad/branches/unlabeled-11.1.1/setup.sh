@@ -13,11 +13,14 @@
 SHELL=/bin/sh
 export SHELL
 
-# Confirm that the installation directory is correct.
-# newbindir.sh can be run to edit all relevant files (including this one).
-
-# This is the "master" definition of where BRL-CAD is to installed.
-BASEDIR=/usr/brlcad
+############################################################################
+#
+# Acquire current machine type, BASEDIR, etc.
+#
+# newbindir.sh can be run to edit all relevant files (esp. machinetype.sh).
+#
+############################################################################
+eval `sh machinetype.sh -v`
 
 BINDIR=$BASEDIR/bin
 MANDIR=$BASEDIR/man/man1

@@ -1,3 +1,7 @@
+/* This is the 13-March-91 version of viewg3.c,
+ * back-ported to operate in the environment of BRL-CAD Release 3.7
+ */
+
 /*
  *			V I E W G 3
  *
@@ -49,13 +53,14 @@ static char RCSrayg3[] = "@(#)$Header$ (BRL)";
 #define	MM2IN	0.03937008		/* mm times MM2IN gives inches */
 
 extern double	mat_radtodeg;
+extern int	npsw;			/* number of worker PSWs to run */
 
 int		use_air = 1;		/* Handling of air in librt */
 int		using_mlib = 0;		/* Material routines NOT used */
 
 /* Viewing module specific "set" variables */
 struct structparse view_parse[] = {
-	(char *)0,(char *)0,	0,			FUNC_NULL
+	"",	(char *)0,	0,		FUNC_NULL
 };
 
 static FILE	*plotfp;		/* optional plotting file */
@@ -107,6 +112,10 @@ char *file, *obj;
 
 	if(rdebug & RDEBUG_RAYPLOT) {
 		plotfp = fopen("rtg3.pl", "w");
+		if( npsw > 1 )  {
+			rt_log("Note: writing rtg3.pl file can only be done using only 1 processor\n");
+			npsw = 1;
+		}
 	}
 
 
@@ -148,9 +157,13 @@ struct application	*ap;
 	 * FT, MM, and CM.  However, GIFT  output is expected to be IN.
 	 * NOTE that variables "azimuth and elevation" are not valid
 	 * when the -M flag is used.
+	 * NOTE:  %10g was changed to %10f so that a decimal point is generated
+	 * even when the number is an integer.  Otherwise the client codes
+	 * get confused get confused and are unable to convert the number to
+	 * scientific notation.
 	 */
 	fprintf(outfp,
-		"     %-15.8f     %-15.8f                              %10g\n",
+		"     %-15.8f     %-15.8f                              %10f\n",
 		azimuth, elevation, MAGNITUDE(dx_model)*MM2IN );
 
 	regionfix( ap, "rtray.regexp" );		/* XXX */
@@ -213,7 +226,7 @@ register struct partition *PartHeadp;
 	fastf_t			h, v;		/* h,v actual ray pos */
 	fastf_t			hcen, vcen;	/* h,v cell center */
 	fastf_t			dfirst, dlast;	/* ray distances */
-	fastf_t			dcorrection;	/* RT to GIFT dist corr */
+	fastf_t			dcorrection = 0; /* RT to GIFT dist corr */
 	int			card_count;	/* # comp. on this card */
 	char			*fmt;		/* printf() format string */
 
@@ -224,6 +237,12 @@ register struct partition *PartHeadp;
 	comp_count = 0;
 	for( pp=PartHeadp->pt_forw; pp!=PartHeadp; pp=pp->pt_forw )
 		comp_count++;
+
+	/* Set up variable length string, to buffer this shotline in.
+	 * Note that there is one component per card, and that each card
+	 * (line) is 80 characters long.  Hence the parameters given to
+	 * rt-vls-extend().
+	 */
 
 	/*
 	 *  GIFT format wants grid coordinates, which are the
@@ -248,13 +267,6 @@ register struct partition *PartHeadp;
 		h = ap->a_x * MAGNITUDE(dx_model);
 		v = ap->a_y * MAGNITUDE(dy_model);
 	}
-
-	/* Single-thread through the printf()s.
-	 * COVART will accept non-sequential ray data provided the
-	 * ray header and its associated data are not separated.  CAVEAT:
-	 * COVART will not accept headers out of sequence.
-	 */
-	RES_ACQUIRE( &rt_g.res_syscall );
 
 	/*
 	 *  In RT, rays are launched from the plain of the screen,
@@ -284,22 +296,38 @@ register struct partition *PartHeadp;
 	dfirst = PartHeadp->pt_forw->pt_inhit->hit_dist + dcorrection;
 	dlast = PartHeadp->pt_back->pt_outhit->hit_dist + dcorrection;
 
+/* This code is to note any occurances of negative distances. */
+		if( dfirst < 0)  {
+			rt_log("ERROR: dfirst=%g\n", dfirst);
+			rt_pr_partitions(ap->a_rt_i, PartHeadp, "Defective partion:");
+		}
+/* End of bug trap. */
 	/*
 	 *  Output the ray header.  The GIFT statements that
 	 *  would have generated this are:
 	 *  410	write(1,411) hcen,vcen,h,v,ncomp,dfirst,dlast,a,e
 	 *  411	format(2f7.1,2f9.3,i3,2f8.2,' A',f6.1,' E',f6.1)
 	 */
+
 #define	SHOT_FMT	"%7.1f%7.1f%9.3f%9.3f%3d%8.2f%8.2f A%6.1f E%6.1f\n"
+
 	if( rt_perspective > 0 )  {
 		ae_vec( &azimuth, &elevation, ap->a_ray.r_dir );
 	}
+
+#ifdef SYSV
+	/* On SysV, sprintf() is not parallel! ^%@#&^@^&#% */
+	RES_ACQUIRE( &rt_g.res_syscall );
+#endif
 	fprintf(outfp, SHOT_FMT,
 		hcen * MM2IN, vcen * MM2IN,
 		h * MM2IN, v * MM2IN,
 		comp_count,
 		dfirst * MM2IN, dlast * MM2IN,
 		azimuth, elevation );
+#ifdef SYSV
+	RES_RELEASE( &rt_g.res_syscall );
+#endif
 
 	/* loop here to deal with individual components */
 	card_count = 0;
@@ -324,6 +352,7 @@ register struct partition *PartHeadp;
 		int	region_id;	/* solid region's id */
 		int	air_id;		/* air id */
 		fastf_t	air_thickness;	/* air line of sight thickness */
+		vect_t	normal;		/* surface normal */
 		register struct partition	*nextpp = pp->pt_forw;
 
 		if( (region_id = pp->pt_regionp->reg_regionid) <= 0 )  {
@@ -332,6 +361,18 @@ register struct partition *PartHeadp;
 		}
 		comp_thickness = pp->pt_outhit->hit_dist -
 				 pp->pt_inhit->hit_dist;
+
+		/* The below code is meant to catch components with zero or
+		 * negative thicknesses.  This is not supposed to be possible,
+		 * but the condition has been seen.
+		 */
+		if( comp_thickness <= 0 )  {
+			rt_log("ERROR: comp_thickness=%g at h=%g, v=%g (x=%d, y=%d)\n",
+				comp_thickness, h , v, ap->a_x, ap->a_y);
+			rt_pr_partitions(ap->a_rt_i, PartHeadp, "Defective partion:");
+			rt_log("Send this output to Sue Muuss (sue@brl.mil)\n");
+		}
+
 		if( nextpp == PartHeadp )  {
 			/* Last partition, no air follows, use code 9 */
 			air_id = 9;
@@ -368,28 +409,43 @@ register struct partition *PartHeadp;
 		/* next macro must be on one line for 3d compiler */
 		RT_HIT_NORM( pp->pt_inhit, pp->pt_inseg->seg_stp, &(ap->a_ray) );
 		if( pp->pt_inflip )  {
-			VREVERSE( pp->pt_inhit->hit_normal,
-				  pp->pt_inhit->hit_normal );
-			pp->pt_inflip = 0;
+			VREVERSE( normal, pp->pt_inhit->hit_normal );
+		} else {
+			VMOVE( normal, pp->pt_inhit->hit_normal );
 		}
-		in_obliq = acos( -VDOT( ap->a_ray.r_dir,
-			pp->pt_inhit->hit_normal ) ) * mat_radtodeg;
+		in_obliq = acos( -VDOT( ap->a_ray.r_dir, normal ) ) *
+			mat_radtodeg;
 		/* next macro must be on one line for 3d compiler */
 		RT_HIT_NORM( pp->pt_outhit, pp->pt_outseg->seg_stp, &(ap->a_ray) );
 		if( pp->pt_outflip )  {
-			VREVERSE( pp->pt_outhit->hit_normal,
-				  pp->pt_outhit->hit_normal );
-			pp->pt_outflip = 0;
+			VREVERSE( normal, pp->pt_outhit->hit_normal );
+		} else {
+			VMOVE( normal, pp->pt_outhit->hit_normal );
 		}
-		out_obliq = acos( VDOT( ap->a_ray.r_dir,
-			pp->pt_outhit->hit_normal ) ) * mat_radtodeg;
+		out_obliq = acos( VDOT( ap->a_ray.r_dir, normal ) ) *
+			mat_radtodeg;
+
+		/* Check for exit obliquties greater than 90 degrees. */
+		if( in_obliq > 90 || in_obliq < 0 )  {
+			rt_log("ERROR: in_obliquity=%g\n", in_obliq);
+			rt_pr_partitions(ap->a_rt_i, PartHeadp, "Defective partion:");
+		}
+		if( out_obliq > 90 || out_obliq < 0 )  {
+			rt_log("ERROR: out_obliquity=%g\n", out_obliq);
+			VPRINT(" r_dir", ap->a_ray.r_dir);
+			VPRINT("normal", normal);
+			rt_log("dot=%g, acos(dot)=%g\n",
+				VDOT( ap->a_ray.r_dir, normal ),
+				acos( VDOT( ap->a_ray.r_dir, normal ) ) );
+			rt_pr_partitions(ap->a_rt_i, PartHeadp, "Defective partion:");
+		}
 
 		/*
 		 *  Handle 3-components per card output format, with
 		 *  a leading space in front of the first component.
 		 */
 		if( card_count == 0 )  {
-			putc( ' ', outfp );
+			fprintf(outfp," ");
 		}
 		comp_thickness *= MM2IN;
 		/* Check thickness fields for format overflow */
@@ -397,14 +453,20 @@ register struct partition *PartHeadp;
 			fmt = "%4d%6.1f%5.1f%5.1f%1d%5.0f";
 		else
 			fmt = "%4d%6.2f%5.1f%5.1f%1d%5.1f";
+#ifdef SYSV
+		RES_ACQUIRE( &rt_g.res_syscall );
+#endif
 		fprintf(outfp, fmt,
 			region_id,
 			comp_thickness,
 			in_obliq, out_obliq,
 			air_id, air_thickness*MM2IN );
+#ifdef SYSV
+		RES_RELEASE( &rt_g.res_syscall );
+#endif
 		card_count++;
 		if( card_count >= 3 )  {
-			putc( '\n', outfp );
+			fprintf(outfp, "\n");
 			card_count = 0;
 		}
 
@@ -414,8 +476,9 @@ register struct partition *PartHeadp;
 		 * Portions of a ray passing through air within the
 		 * model are represented in blue, while portions 
 		 * passing through a solid are assigned green.
+		 * This will always be done single CPU,
+		 * to prevent output garbling.  (See view_init).
 		 */
-
 		if(rdebug & RDEBUG_RAYPLOT) {
 			vect_t     inpt;
 			vect_t     outpt;
@@ -444,8 +507,15 @@ register struct partition *PartHeadp;
 		 *  but neither COVART II nor COVART III require it,
 		 *  so just end the line here.
 		 */
-		putc( '\n', outfp );
+		fprintf(outfp, "\n");
 	}
+
+	/* Single-thread through file output.
+	 * COVART will accept non-sequential ray data provided the
+	 * ray header and its associated data are not separated.  CAVEAT:
+	 * COVART will not accept headers out of sequence.
+	 */
+	RES_ACQUIRE( &rt_g.res_syscall );
 
 	/* End of single-thread region */
 	RES_RELEASE( &rt_g.res_syscall );
@@ -469,7 +539,8 @@ void	view_eol()
  *  View_end() is called by rt_shootray in do_run().  It
  *  outputs a special 999.9 "end of view" marker, composed of
  *  a "999.9" shotline header, with one
- *  all-zero component record.
+ *  all-zero component record.  Note that the component count must also
+ *  be zero on this shotline, or else the client codes get confused.
  */
 void
 view_end()
@@ -477,10 +548,13 @@ view_end()
 	fprintf(outfp, SHOT_FMT,
 		999.9, 999.9,
 		999.9, 999.9,
-		1,			/* component count */
+		0,			/* component count */
 		0.0, 0.0,
 		azimuth, elevation );
 	/* An abbreviated component record:  just give item code 0 */
 	fprintf(outfp, " %4d\n", 0 );
 	fflush(outfp);
 }
+
+void view_setup() {}
+void view_cleanup() {}

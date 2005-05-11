@@ -1,0 +1,78 @@
+BRL-CAD to do list
+==================
+
+Included below is a list of things that are scheduled or desireable to
+be done at some point.  Most recently added items are on top, older
+topics are on the bottom.  This is not an official list, it's more a
+scratch pad for the developers to use for tracking development ideas.
+
+
+THESE SHOULD HAPPEN BEFORE THE NEXT RELEASE
+
+* make opengl optional via configure without editing files
+
+* make sure sgi knobs work
+
+* variance/deviation to benchmarks
+
+
+THESE ARE LOWER PRIORITY
+
+* write scripts that parse the sf.net tracker data and generate
+  automatic reports for release.
+
+* add benchmark support to compute a stability/error metric to
+  continue raytracing until the mean variance is below some threshold
+  (to get stable values).
+
+* add dynamic geometry support. i.e. the ability to modify the parsed
+  in-memory geometry tree on the fly via api calls (e.g. to add holes)
+
+* convert the documentation to docbook and integrate their generation
+  with the build system.
+
+* investigate why g-iges followed by iges-g on a single box results in
+  permuted vertex lists
+
+* have x11/tk mged output a helpful message when DISPLAY is unset
+
+* need non-generic installation instructions
+
+* consider providing installation and post configuration support
+  scripts
+
+* fix reference to a "Create Solid" submenu on pdf page 18 (page 6) of
+  volume II
+
+* recheck AquaTk useability so we can decouple mac build from X11
+
+* write up the history of brlcad
+
+* ensure successful build on windows 
+
+* handle multiple threading models (irix) via configure
+
+* obliterate compilation warnings
+
+* add support for subgeometry support to the geometry syndicator
+
+* add xml, nff, bzw, pov, blend geometry import and export support
+
+* add support for filesystem-based geometry collections
+
+* add support for levels of detail
+
+
+THESE BREAK PROTOCOL AND ARE BACKWARDS INCOMPATIBLE
+
+* fix the database I/O writing to properly support the addition of new
+  primitive types.  this includes modifying the major/minor code or
+  combinations/regions and binary objects
+
+---
+
+See the project task tracker for more to do items and future planning
+efforts.  http://sf.net/pm/?group_id=105292
+
+TODO items should be formated to column 70 (M-q in emacs), no tabs
+

@@ -1,0 +1,31 @@
+# $Id$
+
+bin_PROGRAMS = \
+	g_lint \
+	g_diff \
+	solshoot \
+	testfree
+
+g_diff_SOURCES = g_diff.c
+g_diff_LDADD = ${LIBRT} ${TCL}
+
+g_lint_SOURCES = g_lint.c
+g_lint_LDADD = ${LIBRT}  
+
+solshoot_SOURCES = solshoot.c
+solshoot_LDADD = ${LIBRT} 
+
+testfree_SOURCES = testfree.c
+testfree_LDADD = ${LIBRT} 
+
+man_MANS = g_diff.1 g_lint.1
+EXTRA_DIST = $(man_MANS)
+
+include $(top_srcdir)/misc/Makefile.defs
+
+FAST_OBJECTS = \
+	$(g_lint_OBJECTS) \
+	$(g_diff_OBJECTS) \
+	$(solshoot_OBJECTS) \
+	$(testfree_OBJECTS) \
+	$(bin_PROGRAMS)

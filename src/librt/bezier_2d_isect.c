@@ -18,9 +18,6 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \defgroup librt librt */
-/*@{*/
 /** @file bezier_2d_isect.c
  *	The following routines are for 2D Bezier curves
  *
@@ -33,7 +30,7 @@
  *		to generalize the codes for finding intersections with any 2D line
  *		rather than just the X-axis.
  */
-/*@}*/
+
 
 #include "common.h"
 

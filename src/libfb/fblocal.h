@@ -18,9 +18,6 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup fb */
-/*@{*/
 /** @file fblocal.h
  *
  *  Author -
@@ -34,7 +31,6 @@
  *
  *  $Header$
  */
-/*@}*/
 
 #ifndef INCL_FBLOCAL
 #define INCL_FBLOCAL

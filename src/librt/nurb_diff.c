@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup nurb */
-/*@{*/
 /** @file nurb_diff.c
+ *  Function -
  *	Differentiate a Non Uniform Rational B-Spline (NURB) Surface.
  *  Author -
  *	Paul Randal Stay
@@ -32,7 +30,6 @@
  * 	Aberdeen Proving Ground, Maryland 21005
  *
  */
-/*@}*/
 
 #include "common.h"
 

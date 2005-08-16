@@ -18,10 +18,6 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libfb */
-/*@{*/
-
 /** @file dmdfb.h
  *
  *  Author -
@@ -35,7 +31,6 @@
  *
  *  $Header$
  */
-/*@}*/
 
 #define BLACK		0
 #define WHITE		1

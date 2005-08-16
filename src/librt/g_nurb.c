@@ -18,11 +18,10 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** \addtogroup g */
-
-/*@{*/
 /** @file g_nurb.c
- *	Intersect a ray with a Non Uniform Rational B-Spline.
+ *
+ *  Purpose -
+ *	Intersect a ray with a Non Uniform Rational B-Spline
  *
  *  Authors -
  *	Paul R. Stay
@@ -33,8 +32,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSnurb[] = "@(#)$Header$ (BRL)";
 #endif
@@ -89,7 +86,7 @@ RT_EXTERN(void		rt_nurb_add_hit, (struct nurb_hit *head,
 			struct nurb_hit * hit, const struct bn_tol *tol));
 
 
-/**
+/*
  *  			R T _ N U R B _ P R E P
  *  
  *  Given a pointer of a GED database record, and a transformation matrix,
@@ -157,7 +154,7 @@ rt_nurb_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip)
 	return 0;
 }
 
-/**
+/*
  *			R T _ N U R B _ P R I N T
  */
 void
@@ -179,7 +176,7 @@ rt_nurb_print(register const struct soltab *stp)
 	}
 }
 
-/**
+/*
  *  			R T _ N U R B _ S H O T
  *  
  *  Intersect a ray with a nurb.
@@ -331,7 +328,7 @@ rt_nurb_shot(struct soltab *stp, register struct xray *rp, struct application *a
 
 #define SEG_MISS(SEG)		(SEG).seg_stp=(struct soltab *) 0;	
 
-/**
+/*
  *			R T _ N U R B _ V S H O T
  *
  *  Vectorized version.
@@ -347,7 +344,7 @@ rt_nurb_vshot(struct soltab **stp, struct xray **rp, struct seg *segp, int n, st
 	rt_vstub( stp, rp, segp, n, ap );
 }
 
-/**
+/*
  *  			R T _ N U R B _ N O R M
  *  
  *  Given ONE ray distance, return the normal and entry/exit point.
@@ -375,7 +372,7 @@ rt_nurb_norm(register struct hit *hitp, struct soltab *stp, register struct xray
 	return;
 }
 
-/**
+/*
  *			R T _ N U R B _ C U R V E
  *
  *  Return the curvature of the nurb.
@@ -403,7 +400,7 @@ rt_nurb_curve(register struct curvature *cvp, register struct hit *hitp, struct 
 	rt_nurb_curvature( cvp, srf, u, v );
 }
 
-/**
+/*
  *  			R T _ N U R B _ U V
  *  
  *  For a hit on the surface of an nurb, return the (u,v) coordinates
@@ -421,7 +418,7 @@ rt_nurb_uv(struct application *ap, struct soltab *stp, register struct hit *hitp
 	return;
 }
 
-/**
+/*
  *		R T _ N U R B _ F R E E
  */
 void
@@ -450,7 +447,7 @@ rt_nurb_free(register struct soltab *stp)
 	}
 }
 
-/**
+/*
  *			R T _ N U R B _ C L A S S
  */
 int
@@ -459,7 +456,7 @@ rt_nurb_class(void)
 	return(0);
 }
 
-/**
+/*
  *			R T _ N U R B _ P L O T
  */
 int
@@ -589,7 +586,7 @@ rt_nurb_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct rt_t
 	return(0);
 }
 
-/**
+/*
  *			R T _ N U R B _ T E S S
  */
 int
@@ -598,7 +595,7 @@ rt_nurb_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, c
 	return(-1);
 }
 
-/**
+/*
  *			R T _ N U R B _ I M P O R T
  */
 int
@@ -817,7 +814,7 @@ rt_return_nurb_hit(struct nurb_hit *head)
 	return (struct nurb_hit *) ret;
 }
 
-/**
+/*
  *			R T _ N U R B _ E X P O R T
  */
 int
@@ -923,7 +920,7 @@ rt_nurb_bytes(struct face_g_snurb *srf)
 	return total_bytes;
 }
 
-/**
+/*
  *			R T _ N U R B _ E X P O R T 5
  */
 int
@@ -992,7 +989,7 @@ rt_nurb_export5(struct bu_external *ep, const struct rt_db_internal *ip, double 
 }
 
 
-/**
+/*
  *			R T _ N U R B _ I M P O R T 5
  */
 int
@@ -1117,7 +1114,7 @@ rt_nurb_grans(struct face_g_snurb *srf)
 	return 1 + k_gran + p_gran;
 }
 
-/**
+/*
  *			R T _ N U R B _ I F R E E
  */
 void
@@ -1142,7 +1139,7 @@ rt_nurb_ifree(struct rt_db_internal *ip)
 	ip->idb_ptr = GENPTR_NULL;
 }
 
-/**
+/*
  *			R T _ N U R B _ D E S C R I B E
  */
 int

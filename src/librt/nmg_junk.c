@@ -18,15 +18,12 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup nmg */
-/*@{*/
 /** @file nmg_junk.c
+ *
  *  This module is a resting place for unfinished subroutines
  *  that are NOT a part of the current NMG library, but which
  *  were sufficiently far along as to be worth saving.
  */
-/*@}*/
 
 
 
@@ -126,7 +123,7 @@ struct bu_list *head;
 #endif
 
 #if 0
-/**			N M G _ E U _ S Q
+/*			N M G _ E U _ S Q
  *
  *	squeeze an edgeuse out of a list
  *
@@ -157,7 +154,7 @@ struct edgeuse *eu;
 }
 #endif
 
-/**
+/*
  *			N M G _ P O L Y T O N M G
  *
  *	Read a polygon file and convert it to an NMG shell
@@ -293,7 +290,7 @@ main()
 }
 
 
-/**
+/*
 *	I N I T _ H E A P
 *
 *	Initialize an array-based implementation of a heap of vertex structs.
@@ -316,7 +313,7 @@ int	n;
 	return(heap);
 }
 
-/**
+/*
 *	H E A P _ I N C R E A S E
 *
 *	Make a heap bigger to make room for new entries.
@@ -340,7 +337,7 @@ int	*n;
 	h[0] = big_heap;
 }
 
-/**
+/*
 *	H E A P _ I N S E R T
 *
 *	Insert a vertex struct into the heap (only if it is
@@ -379,7 +376,7 @@ struct vertex	*i;	/* Item to insert. */
 	return(heap_cur_sz);
 }
 
-/**
+/*
 *	H E A P _ F I N D
 *
 *	See if a given vertex struct is in the heap.  If so,
@@ -409,7 +406,7 @@ int		loc;	/* Location to start search at. */
 
 
 
-/**
+/*
  *			N M G _ I S E C T _ F A C E 3 P _ S H E L L _ I N T
  *
  *  Intersect all the edges in fu1 that don't lie on any of the faces

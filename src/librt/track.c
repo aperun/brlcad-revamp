@@ -18,12 +18,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup librt */
-
-/*@{*/
 /** @file track.c
- * f_amtrack():	Adds "tracks" to the data file given the required info
+ *
+ *	f_amtrack():	Adds "tracks" to the data file given the required info
  *
  *  Author -
  *	Keith A. Applin
@@ -41,8 +38,6 @@
  *       *- removed signal catching
  *       *- added basename parameter
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (ARL)";
 #endif

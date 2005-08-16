@@ -18,10 +18,6 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup db*/
-
-/*@{*/
 /** @file db_match.c
  *
  * Functions -
@@ -39,7 +35,6 @@
  *	The U. S. Army Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  */
-/*@}*/
 
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (ARL)";
@@ -59,7 +54,7 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 
 #include "./debug.h"
 
-/**
+/*
  *			D B _ R E G E X P _ M A T C H
  *
  *	If string matches pattern, return 1, else return 0
@@ -129,7 +124,7 @@ db_regexp_match(register const char *pattern, register const char *string)
 
 
 
-/**
+/*
  *			D B _ R E G E X P _ M A T C H _ A L L
  *
  * Appends a list of all database matches to the given vls, or the pattern
@@ -173,7 +168,7 @@ db_count_refs(struct db_i *dbip, struct rt_comb_internal *comb, union tree *comb
 }
 
 
-/**
+/*
  *			D B _ U P D A T E _ N R E F
  *
  * Updates the d_nref fields (which count the number of times a given entry

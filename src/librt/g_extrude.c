@@ -18,12 +18,10 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup g */
-
-/*@{*/
 /** @file g_extrude.c
- *	Provide support for solids of extrusion.
+ *
+ *  Purpose -
+ *	Provide support for solids of extrusion
  *
  * Adding a new solid type:
  *	Design disk record
@@ -55,8 +53,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSextrude[] = "@(#)$Header$ (BRL)";
 #endif
@@ -125,7 +121,7 @@ static struct bn_tol extr_tol={			/* a fake tolerance structure for the intersec
 #define LOOPA		1
 #define LOOPB		2
 
-/**
+/*
  *  			R T _ E X T R U D E _ P R E P
  *  
  *  Given a pointer to a GED database record, and a transformation matrix,
@@ -373,7 +369,7 @@ rt_extrude_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip
 	return(0);              /* OK */
 }
 
-/**
+/*
  *			R T _ E X T R U D E _ P R I N T
  */
 void
@@ -611,7 +607,7 @@ isect_line_earc(fastf_t *dist, fastf_t *ray_start, fastf_t *ray_dir, fastf_t *ce
 
 
 
-/**
+/*
  *  			R T _ E X T R U D E _ S H O T
  *  
  *  Intersect a ray with a extrude.
@@ -1048,7 +1044,7 @@ rt_extrude_shot(struct soltab *stp, register struct xray *rp, struct application
 
 #define RT_EXTRUDE_SEG_MISS(SEG)	(SEG).seg_stp=RT_SOLTAB_NULL
 
-/**
+/*
  *			R T _ E X T R U D E _ V S H O T
  *
  *  Vectorized version.
@@ -1064,7 +1060,7 @@ rt_extrude_vshot(struct soltab **stp, struct xray **rp, struct seg *segp, int n,
 	rt_vstub( stp, rp, segp, n, ap );
 }
 
-/**
+/*
  *  			R T _ E X T R U D E _ N O R M
  *  
  *  Given ONE ray distance, return the normal and entry/exit point.
@@ -1127,7 +1123,7 @@ rt_extrude_norm(register struct hit *hitp, struct soltab *stp, register struct x
 
 }
 
-/**
+/*
  *			R T _ E X T R U D E _ C U R V E
  *
  *  Return the curvature of the extrude.
@@ -1184,7 +1180,7 @@ rt_extrude_curve(register struct curvature *cvp, register struct hit *hitp, stru
 	}
 }
 
-/**
+/*
  *  			R T _ E X T R U D E _ U V
  *  
  *  For a hit on the surface of an extrude, return the (u,v) coordinates
@@ -1197,7 +1193,7 @@ rt_extrude_uv(struct application *ap, struct soltab *stp, register struct hit *h
 {
 }
 
-/**
+/*
  *		R T _ E X T R U D E _ F R E E
  */
 void
@@ -1212,7 +1208,7 @@ rt_extrude_free(register struct soltab *stp)
 	bu_free( (char *)extrude, "extrude_specific" );
 }
 
-/**
+/*
  *			R T _ E X T R U D E _ C L A S S
  */
 int
@@ -1221,7 +1217,7 @@ rt_extrude_class(void)
 	return(0);
 }
 
-/**
+/*
  *			R T _ E X T R U D E _ P L O T
  */
 int
@@ -2152,7 +2148,7 @@ rt_extrude_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip
 #endif
 }
 
-/**
+/*
  *			R T _ E X T R U D E _ I M P O R T
  *
  *  Import an EXTRUDE from the database format to the internal format.
@@ -2225,7 +2221,7 @@ rt_extrude_import(struct rt_db_internal *ip, const struct bu_external *ep, regis
 	return(0);			/* OK */
 }
 
-/**
+/*
  *			R T _ E X T R U D E _ E X P O R T
  *
  *  The name is added by the caller, in the usual place.
@@ -2270,7 +2266,7 @@ rt_extrude_export(struct bu_external *ep, const struct rt_db_internal *ip, doubl
 }
 
 
-/**
+/*
  *			R T _ E X T R U D E _ E X P O R T 5
  *
  *  The name is added by the caller, in the usual place.
@@ -2307,7 +2303,7 @@ rt_extrude_export5(struct bu_external *ep, const struct rt_db_internal *ip, doub
 }
 
 
-/**
+/*
  *			R T _ E X T R U D E _ I M P O R T 5
  *
  *  Import an EXTRUDE from the database format to the internal format.
@@ -2375,7 +2371,7 @@ rt_extrude_import5(
 	return(0);			/* OK */
 }
 
-/*8
+/*
  *			R T _ E X T R U D E _ D E S C R I B E
  *
  *  Make human-readable formatted presentation of this solid.
@@ -2411,7 +2407,7 @@ rt_extrude_describe(struct bu_vls *str, const struct rt_db_internal *ip, int ver
 	return(0);
 }
 
-/**
+/*
  *			R T _ E X T R U D E _ I F R E E
  *
  *  Free the storage associated with the rt_db_internal version of this solid.

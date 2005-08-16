@@ -18,11 +18,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup g */
-
-/*@{*/
 /** @file g_bot_include.c
+ *
+ *  Purpose -
  *	This file contains all the routines for "g_bot.c" that contain references to
  *	"tri_specific" structs. This file is included in "g_bot.c" twice. Each time
  *	the macro TRI_TYPE is defined to reflect the desired version of the
@@ -38,13 +36,11 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char XGLUE(RCSbot_inc_,TRI_TYPE)[] = "@(#)$Header$ (BRL)";
 #endif
 
-/**
+/*
  *			R T _ B O T F A C E
  *
  *  This function is called with pointers to 3 points,
@@ -228,7 +224,7 @@ XGLUE(rt_bot_prep_pieces_,TRI_TYPE)(struct bot_specific	*bot,
 
 }
 
-/**
+/*
  *  			R T _ B O T _ P R E P
  *  
  *  Given a pointer to a GED database record, and a transformation matrix,
@@ -557,7 +553,7 @@ XGLUE(rt_bot_unoriented_segs_,TRI_TYPE)(struct hit		*hits,
 
 
 
-/**
+/*
  *			R T _ B O T _ M A K E S E G S
  *
  *  Given an array of hits, make segments out of them.
@@ -940,7 +936,7 @@ struct rt_piecestate	*psp;
     return(nhits);			/* HIT */
 }
 
-/**
+/*
  *  			R T _ B O T _ S H O T
  *  
  *  Intersect a ray with a bot.
@@ -1047,7 +1043,7 @@ struct seg		*seghead;
 	return rt_bot_makesegs( hits, nhits, stp, rp, ap, seghead, NULL );
 }
 
-/**
+/*
  *			R T _ B O T _ P I E C E _ S H O T
  *
  *  Intersect a ray with a list of "pieces" of a BoT.
@@ -1215,7 +1211,7 @@ struct seg		*seghead;
 	return psp->htab.end - starting_hits;
 }
 
-/**
+/*
  *  			R T _ B O T _ N O R M
  *  
  *  Given ONE ray distance, return the normal and entry/exit point.
@@ -1281,7 +1277,7 @@ register struct xray	*rp;
 	}
 }
 
-/**
+/*
  *		R T _ B O T _ F R E E
  */
 void

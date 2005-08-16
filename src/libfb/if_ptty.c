@@ -18,12 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup if */
-/*@{*/
 /** @file if_ptty.c
- 
-   Author -
+  Author -
 	Gary S. Moss
 
   Source -
@@ -34,8 +30,6 @@
 
 	$Header$ (BRL)
  */
-/*@}*/
-
 #ifndef lint
 static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif

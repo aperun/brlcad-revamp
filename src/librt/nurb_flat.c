@@ -18,12 +18,16 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup nurb */
-/*@{*/
 /** @file nurb_flat.c
- *  Tests the NURB surface to see if its flat depending
- *  on the epsilon passed.
+ *
+ */
+
+/* 
+ *       N U R B _ F L A T . C
+ *
+ * Function -
+ *     Tests the NURB surface to see if its flat depending
+ *     on the epsilon passed.
  * 
  * Author -
  *     Paul R. Stay
@@ -34,7 +38,6 @@
  *     Aberdeen Proving Ground, Maryland 21005
  *
  */
-/*@}*/
 
 #include "common.h"
 

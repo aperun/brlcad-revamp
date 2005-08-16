@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup db5 */
-/*@{*/
 /** @file db5_scan.c
+ *
  *  Scan a v5 database, sending each object off to a handler.
  *
  *  Author -
@@ -32,8 +30,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
@@ -58,7 +54,7 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 
 #include "./debug.h"
 
-/**
+/*
  *			D B 5 _ S C A N
  *
  * Returns -
@@ -288,7 +284,7 @@ db5_diradd(struct db_i			*dbip,
 	return( dp );
 }
 
-/**
+/*
  *			D B 5 _ D I R A D D _ H A N D L E R
  *
  * In support of db5_scan, add a named entry to the directory.
@@ -322,7 +318,7 @@ db5_diradd_handler(
 	return;
 }
 
-/**
+/*
  *			D B _ D I R B U I L D
  *
  *  A generic routine to determine the type of the database,

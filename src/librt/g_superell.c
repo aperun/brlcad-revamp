@@ -18,18 +18,15 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup g */
-
-/*@{*/
 /** @file g_superell.c
- * Intersect a ray with a Superquadratic Ellipsoid.
+ *
+ *  Purpose -
  *
  *      NOTICE: this primitive is incomplete and should beconsidered
  *              experimental.  this primitive will exhibit several
  *              instabilities in the existing root solver method.
  *       
- *	
+ *	Intersect a ray with a Superquadratic Ellipsoid
  *
  *  Authors -
  *      Christopher Sean Morrison (Programming)
@@ -41,8 +38,6 @@
  *	Aberdeen Proving Ground, Maryland  21005
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSsuperell[] = "@(#)$Header$ (BRL)";
 #endif
@@ -186,7 +181,7 @@ struct superell_specific {
 };
 #define SUPERELL_NULL	((struct superell_specific *)0)
 
-/**
+/*
  *  			R T _ S U P E R E L L _ P R E P
  *  
  *  Given a pointer to a GED database record, and a transformation matrix,
@@ -346,7 +341,7 @@ rt_superell_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rti
   return(0);			/* OK */
 }
 
-/**
+/*
  *			R T _ S U P E R E L L _ P R I N T
  */
 void
@@ -548,7 +543,7 @@ rt_superell_shot(struct soltab *stp, register struct xray *rp, struct applicatio
 }
 
 
-/**
+/*
  *			R T _ S U P E R E L L _ V S H O T
  *
  *  This is the Becker vector version.
@@ -565,7 +560,7 @@ rt_superell_vshot(struct soltab **stp, struct xray **rp, struct seg *segp, int n
 }
 
 
-/**
+/*
  *  			R T _ S U P E R E L L _ N O R M
  *  
  *  Given ONE ray distance, return the normal and entry/exit point.
@@ -589,7 +584,7 @@ rt_superell_norm(register struct hit *hitp, struct soltab *stp, register struct 
 }
 
 
-/**
+/*
  *			R T _ S U P E R E L L _ C U R V E
  *
  *  Return the curvature of the superellipsoid.
@@ -602,7 +597,7 @@ rt_superell_curve(register struct curvature *cvp, register struct hit *hitp, str
 }
 
 
-/**
+/*
  *  			R T _ S U P E R E L L _ U V
  *  
  *  For a hit on the surface of an SUPERELL, return the (u,v) coordinates
@@ -617,7 +612,7 @@ rt_superell_uv(struct application *ap, struct soltab *stp, register struct hit *
   return;
 }
 
-/**
+/*
  *			R T _ S U P E R E L L _ F R E E
  */
 void
@@ -637,7 +632,7 @@ rt_superell_class(void)
 }
 
 
-/**
+/*
  *			R T _ S U P E R E L L _ 1 6 P T S
  *
  * Also used by the TGC code
@@ -681,7 +676,7 @@ rt_superell_16pts(register fastf_t *ov,
 	VJOIN2( SUPERELLOUT(16), V, e, A, -f, B );
 }
 
-/**
+/*
  *			R T _ S U P E R E L L _ P L O T
  */
 int
@@ -770,7 +765,7 @@ struct superell_vert_strip {
 	struct faceuse	**fu;
 };
 
-/**
+/*
  *			R T _ S U P E R E L L _ T E S S
  *
  *  Tesssuperellate an superellipsoid.
@@ -810,7 +805,7 @@ rt_superell_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *i
   return -1;
 }
 
-/**
+/*
  *			R T _ S U P E R E L L _ I M P O R T
  *
  *  Import an superellipsoid/sphere from the database format to
@@ -854,7 +849,7 @@ rt_superell_import(struct rt_db_internal *ip, const struct bu_external *ep, regi
 	return(0);		/* OK */
 }
 
-/**
+/*
  *			R T _ S U P E R E L L _ E X P O R T
  */
 int
@@ -890,7 +885,7 @@ rt_superell_export(struct bu_external *ep, const struct rt_db_internal *ip, doub
 	return(0);
 }
 
-/**
+/*
  *			R T _ S U P E R E L L _ I M P O R T 5
  *
  *  Import an superellipsoid/sphere from the database format to
@@ -930,7 +925,7 @@ rt_superell_import5(struct rt_db_internal *ip, const struct bu_external *ep, reg
 	return 0;		/* OK */
 }
 
-/**
+/*
  *			R T _ S U P E R E L L _ E X P O R T 5
  *
  *  The external format is:
@@ -969,7 +964,7 @@ rt_superell_export5(struct bu_external *ep, const struct rt_db_internal *ip, dou
 	return 0;
 }
 
-/**
+/*
  *			R T _ S U P E R E L L _ D E S C R I B E
  *
  *  Make human-readable formatted presentation of this solid.
@@ -1040,7 +1035,7 @@ rt_superell_describe(struct bu_vls *str, const struct rt_db_internal *ip, int ve
 	return(0);
 }
 
-/**
+/*
  *			R T _ S U P E R E L L _ I F R E E
  *
  *  Free the storage associated with the rt_db_internal version of this solid.
@@ -1065,7 +1060,7 @@ static const fastf_t rt_superell_uvw[5*ELEMENTS_PER_VECT] = {
 	0, 1, 0
 };
 
-/**
+/*
  *			R T _ S U P E R E L L _ T N U R B
  */
 int

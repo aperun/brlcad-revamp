@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libbu */
-/*@{*/
 /** @file magic.c
+ *
  *  Routines involved with handling "magic numbers" used to identify
  *  various in-memory data structures.
  *
@@ -40,8 +38,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSmagic[] = "@(#)$Header$ (BRL)";
 #endif

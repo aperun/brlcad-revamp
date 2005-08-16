@@ -1,8 +1,6 @@
-.PHONY : regression regress test moss.pix lights.pix solids.pix shaders.pix spdi.pix iges weight \
-	gqa.log
+.PHONY : regression regress test moss.pix lights.pix solids.pix shaders.pix spdi.pix iges weight
 
-regression: solids.pix shaders.pix spdi.pix moss.pix lights.pix Makefile iges weight \
-	gqa.log
+regression: solids.pix shaders.pix spdi.pix moss.pix lights.pix Makefile iges weight
 
 regress: regression
 
@@ -29,12 +27,8 @@ iges:$(top_srcdir)/regress/iges.sh
 weight: $(top_srcdir)/regress/weight.sh
 	${SH} $(top_srcdir)/regress/weight.sh $(prefix) $(top_srcdir)
 
-gqa.log: $(top_srcdir)/regress/gqa.sh
-	${SH} $(top_srcdir)/regress/gqa.sh
-
 # these are here because they go in the distribution but are not installed
 EXTRA_DIST = \
-	gqa.sh \
 	iges.sh \
 	lights.sh \
 	lights_ref.asc \
@@ -95,12 +89,7 @@ CLEANFILES = \
 	weight.g \
 	weight.out \
 	weight.ref \
-	wgt.out \
-	gqa.g \
-	overlaps.pl \
-	gaps.pl \
-	volume.pl \
-	density_table.txt
+	wgt.out
 
 MOSTLYCLEANFILES = \
 	lights.log \
@@ -111,8 +100,7 @@ MOSTLYCLEANFILES = \
 	moss.log \
 	solids.log \
 	spdi.log \
-	weight.log \
-	gqa.log
+	weight.log
 
 MAINTAINERCLEANFILES = Makefile.in
 

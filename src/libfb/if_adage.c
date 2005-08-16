@@ -18,10 +18,24 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup if */
-/*@{*/
 /** @file if_adage.c
+ *
+ *  Authors -
+ *	Phil Dykstra
+ *	Gary S. Moss
+ *	Mike J. Muuss
+ *
+ *  Source -
+ *	SECAD/VLD Computing Consortium, Bldg 394
+ *	The U. S. Army Ballistic Research Laboratory
+ *	Aberdeen Proving Ground, Maryland  21005-5066
+ *
+ */
+#ifndef lint
+static char RCSid[] = "@(#)$Header$ (BRL)";
+#endif
+
+/*
  * This module is used when pre-setting the Ikonas FBC
  * (Frame Buffer Controller) to a known state.
  * The values for this table are derived from the
@@ -36,25 +50,6 @@
  * All that is provided is a prototype for the FBC registers;
  * the user is responsible for changing them (zooming, etc),
  * and writing them to the FBC.
-
- *  Authors -
- *	Phil Dykstra
- *	Gary S. Moss
- *	Mike J. Muuss
- *
- *  Source -
- *	SECAD/VLD Computing Consortium, Bldg 394
- *	The U. S. Army Ballistic Research Laboratory
- *	Aberdeen Proving Ground, Maryland  21005-5066
- *
- */
-/*@}*/
-
-#ifndef lint
-static char RCSid[] = "@(#)$Header$ (BRL)";
-#endif
-
-/*
  */
 #include "common.h"
 

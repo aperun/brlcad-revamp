@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libbu */
-/*@{*/
-/** @file ./libbu/bomb.c
+/** @file bomb.c
+ *
  *  This routine is called on a fatal
  *  error, where no recovery is possible.
  *
@@ -36,8 +34,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSbomb[] = "@(#)$Header$ (ARL)";
 #endif

@@ -18,11 +18,7 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup fb */
-/*@{*/
 /** @file fb_log.c
- * Log a framebuffer library event in the Standard way.
     Author -
     Gary S. Moss
 
@@ -34,8 +30,6 @@
 
     $Header$ (BRL)
 */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif

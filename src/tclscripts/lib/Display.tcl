@@ -731,6 +731,7 @@
     }
 
     set v_obj [View::get_viewname]
+
     eval $geo nirt $v_obj $args
 }
 
@@ -765,7 +766,9 @@
 }
 
 ::itcl::body Display::rt {args} {
-    global tcl_platform
+#    if {$itk_option(-listen) < 0} {
+#	return "rt: not listening"
+#    }
 
     set len [llength $args]
 
@@ -782,11 +785,7 @@
     }
 
     set v_obj [View::get_viewname]
-    if {$tcl_platform(os) != "Windows NT"} {
-	eval $geo rt $v_obj -F $itk_option(-listen) -w $width -n $height -V $aspect $args
-    } else {
-	eval $geo rt $v_obj $args
-    }
+    eval $geo rt $v_obj -F $itk_option(-listen) -w $width -n $height -V $aspect $args
 }
 
 ::itcl::body Display::rtabort {{gi 0}} {
@@ -800,7 +799,9 @@
 }
 
 ::itcl::body Display::rtcheck {args} {
-    global tcl_platform
+    if {$itk_option(-listen) < 0} {
+	return "rtcheck: not listening"
+    }
 
     set len [llength $args]
 
@@ -817,7 +818,7 @@
     }
 
     set v_obj [View::get_viewname]
-    eval $geo rtcheck $v_obj $args
+    eval $geo rtcheck $v_obj -F $itk_option(-listen) $args
 }
 
 ::itcl::body Display::rtarea {args} {
@@ -840,8 +841,6 @@
 }
 
 ::itcl::body Display::rtedge {args} {
-    global tcl_platform
-
     set len [llength $args]
 
     if {$len > 1 && [lindex $args 0] == "-geo"} {
@@ -857,11 +856,7 @@
     }
 
     set v_obj [View::get_viewname]
-    if {$tcl_platform(os) != "Windows NT"} {
-	eval $geo rtedge $v_obj -F $itk_option(-listen) -w $width -n $height -V $aspect $args
-    } else {
-	eval $geo rtedge $v_obj $args
-    }
+    eval $geo rtedge $v_obj -F $itk_option(-listen) -w $width -n $height -V $aspect $args
 }
 
 ::itcl::body Display::rtweight {args} {

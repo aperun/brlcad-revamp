@@ -18,9 +18,6 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libbu */
-/*@{*/
 /** @file lex.c
  *  Author -
  *	Christopher T. Johnson
@@ -29,8 +26,6 @@
  *	Geometric Solutions, Inc.
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (ARL)";
 #endif

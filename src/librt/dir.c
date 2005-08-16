@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup librt */
-/*@{*/
 /** @file dir.c
+ *
  * Ray Tracing program, GED database directory manager.
  *
  *  Functions -
@@ -36,8 +34,6 @@
  *	Aberdeen Proving Ground, Maryland  21005
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSdir[] = "@(#)$Header$";
 #endif

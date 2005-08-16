@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup cmd */
-/*@{*/
 /** @file cmdhist.c
+ *
  * The history routines were borrowed from mged/history.c
  * and modified to work with command history objects.
  *
@@ -37,7 +35,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  *  
  */
-/*@}*/
 
 #include "common.h"
 

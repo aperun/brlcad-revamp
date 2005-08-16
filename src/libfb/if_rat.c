@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup if */
-/*@{*/
 /** @file if_rat.c
+ *
  *  FrameBuffer library interface for Raster Technology One/80 with
  *  24-bit RGB memory.
  *
@@ -38,8 +36,6 @@
  *   may not even compile any longer.  If you make changes to this
  *   please let us know.
  */
-/*@}*/
-
 #ifndef lint
 static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif

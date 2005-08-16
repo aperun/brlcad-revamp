@@ -18,11 +18,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libbn */
-/*@{*/
-
 /** @file htester.c
+ *			H T E S T E R  . C
+ *
  *  Test network float conversion.
  *  Expected to be used in pipes, or with TTCP links to other machines,
  *  or with files RCP'ed between machines.
@@ -36,8 +34,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
-
 #ifndef lint
 static char RCSid[] = "@(#)$Header$ (BRL)";
 #endif

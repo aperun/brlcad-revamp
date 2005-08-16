@@ -18,12 +18,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup nurb */
-
-/*@{*/
 /** @file nurb_plot.c
- *	Utilities for spline debuging.
+ *  Function -
+ *	Utilities for spline debuging
  *
  *  Author -
  *	Paul Randal Stay
@@ -35,7 +32,6 @@
  * 	Aberdeen Proving Ground, Maryland 21005
  *
  */
-/*@}*/
 
 #include "common.h"
 

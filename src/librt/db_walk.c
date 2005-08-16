@@ -18,10 +18,6 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup db */
-
-/*@{*/
 /** @file db_walk.c
  *
  * Functions -
@@ -39,8 +35,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
@@ -63,18 +57,8 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "./debug.h"
 
-/*	D B _ F U N C T R E E _ S U B T R E E
- *
- *	The only reason for this to be broken out is that 
- *	2 separate locations in db_functree() call it.
- */
 void
-db_functree_subtree(struct db_i *dbip,
-		    union tree *tp,
-		    void (*comb_func) (struct db_i *, struct directory *, genptr_t),
-		    void (*leaf_func) (struct db_i *, struct directory *, genptr_t),
-		    struct resource *resp,
-		    genptr_t client_data)
+db_functree_subtree(struct db_i *dbip, union tree *tp, void (*comb_func) (struct db_i *, struct directory *, genptr_t), void (*leaf_func) (struct db_i *, struct directory *, genptr_t), struct resource *resp, genptr_t client_data)
 {
 	struct directory *dp;
 
@@ -106,7 +90,7 @@ db_functree_subtree(struct db_i *dbip,
 	}
 }
 
-/**
+/*
  *			D B _ F U N C T R E E
  *
  *  This subroutine is called for a no-frills tree-walk,
@@ -117,12 +101,7 @@ db_functree_subtree(struct db_i *dbip,
  *  
  */
 void
-db_functree(struct db_i *dbip,
-	    struct directory *dp,
-	    void (*comb_func) (struct db_i *, struct directory *, genptr_t),
-	    void (*leaf_func) (struct db_i *, struct directory *, genptr_t),
-	    struct resource *resp,
-	    genptr_t client_data)
+db_functree(struct db_i *dbip, struct directory *dp, void (*comb_func) (struct db_i *, struct directory *, genptr_t), void (*leaf_func) (struct db_i *, struct directory *, genptr_t), struct resource *resp, genptr_t client_data)
 {
 	register int		i;
 
@@ -157,7 +136,8 @@ db_functree(struct db_i *dbip,
 				return;
 
 			comb = (struct rt_comb_internal *)in.idb_ptr;
-			db_functree_subtree( dbip, comb->tree, comb_func, leaf_func, resp, client_data );
+			db_functree_subtree( dbip, comb->tree, comb_func,
+				leaf_func, resp, client_data );
 			rt_db_free_internal( &in, resp );
 		}
 

@@ -18,12 +18,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libbu */
-/*@{*/
-
-/** @file ./libbu/list.c
- *  Generic bu_list routines.
+/** @file list.c
+ *
+ *  Generic bu_list routines
  *
  *  Authors -
  *	Michael John Muuss
@@ -34,8 +31,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char libbu_list_RCSid[] = "@(#)$Header$ (ARL)";
 #endif

@@ -18,11 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup nmg */
-
-/*@{*/
 /** @file nmg_fuse.c
+ *
  *  Routines to "fuse" entities together that are geometrically identical
  *  (within tolerance) into entities that share underlying geometry
  *  structures, so that the relationship is explicit.
@@ -35,8 +32,6 @@
  *	The U. S. Army Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
@@ -73,7 +68,7 @@ BU_EXTERN(void			nmg_split_trim,
 				struct pt_list *pt0, struct pt_list *pt1,
 				const struct bn_tol *tol));
 
-/**
+/*
  *			N M G _ I S _ C O M M O N _ B I G L O O P
  *
  *  Do two faces share by topology at least one loop of 3 or more vertices?
@@ -134,7 +129,7 @@ nmg_is_common_bigloop(const struct face *f1, const struct face *f2)
 	return 0;
 }
 
-/**
+/*
  *			N M G _ R E G I O N _ V _ U N I Q U E
  *
  *  Ensure that all the vertices in r1 are still geometricaly unique.
@@ -176,7 +171,7 @@ nmg_region_v_unique(struct nmgregion *r1, const struct bn_tol *tol)
 	bu_ptbl_free( &t);
 }
 
-/**
+/*
  *			N M G _ P T B L _ V F U S E
  *
  *  Working from the end to the front, scan for geometric duplications
@@ -214,7 +209,7 @@ nmg_ptbl_vfuse(struct bu_ptbl *t, const struct bn_tol *tol)
 	return count;
 }
 
-/**
+/*
  *			N M G _ R E G I O N _ B O T H _ V F U S E
  *
  *  For every element in t1, scan t2 for geometric duplications.
@@ -263,7 +258,7 @@ nmg_region_both_vfuse(struct bu_ptbl *t1, struct bu_ptbl *t2, const struct bn_to
 }
 
 #if 0
-/**
+/*
  *			N M G _ T W O _ R E G I O N _ V E R T E X _ F U S E
  *
  *  This routine should not be used.  Instead, call nmg_model_vertex_fuse().
@@ -297,7 +292,7 @@ const struct bn_tol	*tol;
 }
 #endif
 
-/**
+/*
  *			N M G _ M O D E L _ V E R T E X _ F U S E
  *
  *  Fuse together any vertices in the nmgmodel that are geometricly
@@ -323,7 +318,7 @@ nmg_model_vertex_fuse(struct model *m, const struct bn_tol *tol)
 	return total;
 }
 
-/**
+/*
  *		N M G _ C N U R B _ I S _ L I N E A R
  *
  *	Checks if cnurb is linear
@@ -387,7 +382,7 @@ out:
 	return( linear );
 }
 
-/**
+/*
  *			N M G _ S N U R B _ I S _ P L A N A R
  *
  *	Checks if snurb surface is planar
@@ -830,7 +825,7 @@ nmg_eval_linear_trim_to_tol(const struct edge_g_cnurb *cnrb, const struct face_g
 /* check for coincidence at twenty interior points along a cnurb */
 #define		CHECK_NUMBER	20
 
-/**		N M G _ C N U R B _ L S E G _ C O I N C I D E N T
+/*		N M G _ C N U R B _ L S E G _ C O I N C I D E N T
  *
  *	Checks if CNURB is coincident with line segment from pt1 to pt2
  *	by calculating a number of points along the CNURB and checking
@@ -969,7 +964,7 @@ nmg_cnurb_lseg_coincident(const struct edgeuse *eu1, const struct edge_g_cnurb *
 	return( coincident );
 }
 
-/**		N M G _ C N U R B _ I S _ O N _ C R V
+/*		N M G _ C N U R B _ I S _ O N _ C R V
  *
  *	Checks if CNURB eu lies on curve contained in list headed at "head"
  *	"Head" must contain a list of points (struct pt_list) each within
@@ -1114,7 +1109,7 @@ nmg_cnurb_is_on_crv(const struct edgeuse *eu, const struct edge_g_cnurb *cnrb, c
 	return( coincident );
 }
 
-/**
+/*
  *			N M G _ M O D E L _ E D G E _ F U S E
  */
 #if 0
@@ -1308,7 +1303,7 @@ nmg_model_edge_fuse(struct model *m, const struct bn_tol *tol)
 #endif
 
 
-/**
+/*
  *			N M G _ M O D E L _ E D G E _ G _ F U S E
  *
  *  The present algorithm is a consequence of the old edge geom ptr structure.
@@ -1377,7 +1372,7 @@ nmg_model_edge_g_fuse(struct model *m, const struct bn_tol *tol)
 }
 
 #define TOL_MULTIPLES	1.0
-/**
+/*
  *			N M G _ C K _ F U _ V E R T S
  *
  *  Check that all the vertices in fu1 are within tol->dist of fu2's surface.
@@ -1476,7 +1471,7 @@ nmg_ck_fu_verts(struct faceuse *fu1, struct face *f2, const struct bn_tol *tol)
 	}
 }
 
-/**			N M G _ C K _ F G _ V E R T S
+/*			N M G _ C K _ F G _ V E R T S
  *
  * Similar to nmg_ck_fu_verts, but checks all vertices that use the same
  * face geometry as fu1
@@ -1519,7 +1514,7 @@ nmg_ck_fg_verts(struct faceuse *fu1, struct face *f2, const struct bn_tol *tol)
 	return( count );
 }
 
-/**
+/*
  *			N M G _ T W O _ F A C E _ F U S E
  *
  *  XXX A better algorithm would be to compare loop by loop.
@@ -1668,7 +1663,7 @@ must_fuse:
 	return 1;
 }
 
-/**
+/*
  *			N M G _ M O D E L _ F A C E _ F U S E
  *
  *  A routine to find all face geometry structures in an nmg model that
@@ -1815,7 +1810,7 @@ nmg_break_all_es_on_v(long int *magic_p, struct vertex *v, const struct bn_tol *
 	return( count );
 }
 
-/**
+/*
  *			N M G _ M O D E L _ B R E A K _ E _ O N _ V
  *
  *  As the first step in evaluating a boolean formula,
@@ -1916,7 +1911,7 @@ nmg_model_break_e_on_v(struct model *m, const struct bn_tol *tol)
 	return count;
 }
 
-/**
+/*
  *			N M G _ M O D E L _ F U S E
  *
  *  This is the primary application interface to the geometry fusing support.
@@ -2001,7 +1996,7 @@ nmg_model_fuse(struct model *m, const struct bn_tol *tol)
 
 /* -------------------- RADIAL -------------------- */
 
-/**
+/*
  *			N M G _ R A D I A L _ S O R T E D _ L I S T _ I N S E R T
  *
  *  Build sorted list, with 'ang' running from zero to 2*pi.
@@ -2054,7 +2049,7 @@ nmg_radial_sorted_list_insert(struct bu_list *hd, struct nmg_radial *rad)
 	BU_LIST_APPEND( hd, &rad->l );
 }
 
-/**
+/*
  *  Not only verity that list is monotone increasing, but that
  *  pointer integrity still exists.
  */
@@ -2094,7 +2089,7 @@ nmg_radial_verify_pointers(const struct bu_list *hd, const struct bn_tol *tol)
 	}
 }
 
-/**
+/*
  *
  *  Verify that the angles are monotone increasing.
  *  Wire edgeuses are ignored.
@@ -2121,7 +2116,7 @@ nmg_radial_verify_monotone(const struct bu_list *hd, const struct bn_tol *tol)
 	}
 }
 
-/**		N M G _ I N S U R E _ L I S T _ I S _ I N C R E A S I N G
+/*		N M G _ I N S U R E _ L I S T _ I S _ I N C R E A S I N G
  *
  *	Check if the passed bu_list is in increasing order. If not,
  *	reverse the order of the list.
@@ -2181,7 +2176,7 @@ nmg_insure_radial_list_is_increasing(struct bu_list *hd, fastf_t amin, fastf_t a
 	}
 }
 
-/**
+/*
  *			N M G _ R A D I A L _ B U I L D _ L I S T
  *
  *  The coordinate system is expected to have been chosen in such a
@@ -2367,7 +2362,7 @@ nmg_radial_build_list(struct bu_list *hd, struct bu_ptbl *shell_tbl, int existin
 	}
 }
 
-/**
+/*
  *			N M G _ R A D I A L _ M E R G E _ L I S T S
  *
  *  Merge all of the src list into the dest list, sorting by angles.
@@ -2387,7 +2382,7 @@ nmg_radial_merge_lists(struct bu_list *dest, struct bu_list *src, const struct b
 	}
 }
 
-/**
+/*
  *			N M G _ I S _ C R A C K _ O U T I E
  *
  *  If there is more than one edgeuse of a loopuse along an edge, then
@@ -2531,7 +2526,7 @@ nmg_is_crack_outie(const struct edgeuse *eu, const struct bn_tol *tol)
 	return( -1 ); /* make the compiler happy */
 }
 
-/**
+/*
  *			N M G _ F I N D _ R A D I A L _ E U
  */
 struct nmg_radial *
@@ -2552,7 +2547,7 @@ nmg_find_radial_eu(const struct bu_list *hd, const struct edgeuse *eu)
 	return( (struct nmg_radial *)NULL );
 }
 
-/**
+/*
  *			N M G _ F I N D _ N E X T _ U S E _ O F _ 2 E _ I N _ L U
  *
  *  Find the next use of either of two edges in the loopuse.
@@ -2579,7 +2574,7 @@ nmg_find_next_use_of_2e_in_lu(const struct edgeuse *eu, const struct edge *e1, c
 
 }
 
-/**
+/*
  *			N M G _ R A D I A L _ M A R K _ C R A C K S
  *
  *  For every edgeuse, if there are other edgeuses around this edge
@@ -2710,7 +2705,7 @@ nmg_radial_mark_cracks(struct bu_list *hd, const struct edge *e1, const struct e
 	}
 }
 
-/**
+/*
  *			N M G _ R A D I A L _ F I N D _ A N _ O R I G I N A L
  *
  *  Returns -
@@ -2780,7 +2775,7 @@ nmg_radial_find_an_original(const struct bu_list *hd, const struct shell *s, con
 	return( (struct nmg_radial *)NULL );
 }
 
-/**
+/*
  *			N M G _ R A D I A L _ M A R K _ F L I P S
  *
  *  For a given shell, find an original edgeuse from that shell,
@@ -2880,7 +2875,7 @@ nmg_radial_mark_flips(struct bu_list *hd, const struct shell *s, const struct bn
 	return( 0 ); /* for compiler */
 }
 
-/**
+/*
  *			N M G _ R A D I A L _ C H E C K _ P A R I T Y
  *
  *  For each shell, check orientation parity of edgeuses within that shell.
@@ -2937,7 +2932,7 @@ nmg_radial_check_parity(const struct bu_list *hd, const struct bu_ptbl *shells, 
 	return count;
 }
 
-/**
+/*
  *			N M G _ R A D I A L _ I M P L E M E N T _ D E C I S I O N S
  *
  *  For all non-original edgeuses in the list, place them in the proper
@@ -3010,7 +3005,7 @@ again:
 		bu_log("nmg_radial_implement_decisions() END\n");
 }
 
-/**
+/*
  *			N M G _ P R _ R A D I A L
  */
 void
@@ -3044,7 +3039,7 @@ nmg_pr_radial(const char *title, const struct nmg_radial *rad)
 	);
 }
 
-/**
+/*
  *			N M G _ P R _ R A D I A L _ L I S T
  *
  *  Patterned after nmg_pr_fu_around_eu_vecs(), with similar format.
@@ -3068,7 +3063,7 @@ nmg_pr_radial_list(const struct bu_list *hd, const struct bn_tol *tol)
 }
 
 
-/**		N M G _ D O _ R A D I A L _ F L I P S
+/*		N M G _ D O _ R A D I A L _ F L I P S
  *
  *	This routine looks for nmg_radial structures with the same angle,
  *	and sorts them to match the order of nmg_radial structures that
@@ -3170,7 +3165,7 @@ nmg_do_radial_flips(struct bu_list *hd)
 	}
 }
 
-/**              N M G _ D O _ R A D I A L _ J O I N
+/*              N M G _ D O _ R A D I A L _ J O I N
  *
  *      Perform radial join of edges in list "hd" based on direction with respect
  *      to "eu1ref"
@@ -3279,7 +3274,7 @@ top:
 		bu_log( "nmg_do_radial_join() DONE\n\n" );
 }
 
-/**
+/*
  *			N M G _ R A D I A L _ J O I N _ E U _ N E W
  *
  *  A new routine, that uses "global information" about the edge
@@ -3459,7 +3454,7 @@ nmg_radial_join_eu_NEW(struct edgeuse *eu1, struct edgeuse *eu2, const struct bn
 #endif
 }
 
-/**
+/*
  *			N M G _ R A D I A L _ E X C H A N G E _ M A R K E D
  *
  *  Exchange eu and eu->eumate_p on the radial list, where marked.
@@ -3507,7 +3502,7 @@ nmg_radial_exchange_marked(struct bu_list *hd, const struct bn_tol *tol)
 	}
 }
 
-/**
+/*
  *			N M G _ S _ R A D I A L _ H A R M O N I Z E
  *
  *  Visit each edge in this shell exactly once.
@@ -3568,7 +3563,7 @@ nmg_s_radial_harmonize(struct shell *s, const struct bn_tol *tol)
 		bu_log("nmg_s_radial_harmonize( s=x%x ) END\n", s);
 }
 
-/**
+/*
  *			N M G  _ E U _ R A D I A L _ C H E C K
  *
  *  Where the radial edgeuse parity has become disrupted, note it.
@@ -3638,7 +3633,7 @@ nmg_eu_radial_check(const struct edgeuse *eu, const struct shell *s, const struc
 #endif
 }
 
-/**
+/*
  *			N M G _ S _ R A D I A L _ C H E C K
  *
  *  Visit each edge in this shell exactly once, and check it.
@@ -3671,7 +3666,7 @@ nmg_s_radial_check(struct shell *s, const struct bn_tol *tol)
 		bu_log("nmg_s_radial_check( s=x%x ) END\n", s);
 }
 
-/**
+/*
  *			N M G _ R _ R A D I A L _ C H E C K
  */
 void

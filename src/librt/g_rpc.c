@@ -18,11 +18,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup cc */
-
-/*@{*/
 /** @file g_rpc.c
+ *
+ *  Purpose -
  *	Intersect a ray with a Right Parabolic Cylinder.
  *
  *  Algorithm -
@@ -163,8 +161,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSrpc[] = "@(#)$Header$ (BRL)";
 #endif
@@ -205,7 +201,7 @@ const struct bu_structparse rt_rpc_parse[] = {
     { {'\0','\0','\0','\0'}, 0, (char *)NULL, 0, BU_STRUCTPARSE_FUNC_NULL }
  };
 	    
-/**
+/*
  *  			R T _ R P C _ P R E P
  *  
  *  Given a pointer to a GED database record, and a transformation matrix,
@@ -318,7 +314,7 @@ rt_rpc_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip)
 	return(0);			/* OK */
 }
 
-/**
+/*
  *			R T _ R P C _ P R I N T
  */
 void
@@ -341,7 +337,7 @@ rt_rpc_print(register const struct soltab *stp)
 #define	RPC_NORM_FRT	(3)		/* copy reverse tgc_N */
 #define RPC_NORM_BACK	(4)
 
-/**
+/*
  *  			R T _ R P C _ S H O T
  *  
  *  Intersect a ray with a rpc.
@@ -496,7 +492,7 @@ check_plates:
 
 #define RT_RPC_SEG_MISS(SEG)	(SEG).seg_stp=RT_SOLTAB_NULL
 
-/**
+/*
  *			R T _ R P C _ V S H O T
  *
  *  Vectorized version.
@@ -512,7 +508,7 @@ rt_rpc_vshot(struct soltab **stp, struct xray **rp, struct seg *segp, int n, str
 	rt_vstub( stp, rp, segp, n, ap );
 }
 
-/**
+/*
  *  			R T _ R P C _ N O R M	
  *  
  *  Given ONE ray distance, return the normal and entry/exit point.
@@ -546,7 +542,7 @@ rt_rpc_norm(register struct hit *hitp, struct soltab *stp, register struct xray 
 	}
 }
 
-/**
+/*
  *			R T _ R P C _ C U R V E
  *
  *  Return the curvature of the rpc.
@@ -578,7 +574,7 @@ rt_rpc_curve(register struct curvature *cvp, register struct hit *hitp, struct s
 	}
 }
 
-/**
+/*
  *  			R T _ R P C _ U V
  *  
  *  For a hit on the surface of an rpc, return the (u,v) coordinates
@@ -626,7 +622,7 @@ rt_rpc_uv(struct application *ap, struct soltab *stp, register struct hit *hitp,
 	uvp->uv_du = uvp->uv_dv = 0;
 }
 
-/**
+/*
  *		R T _ R P C _ F R E E
  */
 void
@@ -638,7 +634,7 @@ rt_rpc_free(register struct soltab *stp)
 	bu_free( (char *)rpc, "rpc_specific" );
 }
 
-/**
+/*
  *			R T _ R P C _ C L A S S
  */
 int
@@ -647,7 +643,7 @@ rt_rpc_class(void)
 	return(0);
 }
 
-/**
+/*
  *			R T _ R P C _ P L O T
  */
 int
@@ -831,7 +827,7 @@ rt_rpc_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct rt_te
 	return(0);
 }
 
-/**
+/*
  *	R T _ M K _ P A R A B O L A
  *
  *	Approximate a parabola with line segments.  The initial single
@@ -909,7 +905,7 @@ rt_ptalloc(void)
 	return(mem);
 }
 
-/**
+/*
  *			R T _ R P C _ T E S S
  *
  *  Returns -
@@ -1187,7 +1183,7 @@ rt_rpc_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
 	return(0);
 }
 
-/**
+/*
  *			R T _ R P C _ I M P O R T
  *
  *  Import an RPC from the database format to the internal format.
@@ -1231,7 +1227,7 @@ rt_rpc_import(struct rt_db_internal *ip, const struct bu_external *ep, register 
 	return(0);			/* OK */
 }
 
-/**
+/*
  *			R T _ R P C _ E X P O R T
  *
  *  The name is added by the caller, in the usual place.
@@ -1279,7 +1275,7 @@ rt_rpc_export(struct bu_external *ep, const struct rt_db_internal *ip, double lo
 	return(0);
 }
 
-/**
+/*
  *			R T _ R P C _ I M P O R T 5
  *
  *  Import an RPC from the database format to the internal format.
@@ -1323,7 +1319,7 @@ rt_rpc_import5(struct rt_db_internal *ip, const struct bu_external *ep, register
 	return(0);			/* OK */
 }
 
-/**
+/*
  *			R T _ R P C _ E X P O R T 5
  *
  *  The name is added by the caller, in the usual place.
@@ -1370,7 +1366,7 @@ rt_rpc_export5(struct bu_external *ep, const struct rt_db_internal *ip, double l
 	return(0);
 }
 
-/**
+/*
  *			R T _ R P C _ D E S C R I B E
  *
  *  Make human-readable formatted presentation of this solid.
@@ -1413,7 +1409,7 @@ rt_rpc_describe(struct bu_vls *str, const struct rt_db_internal *ip, int verbose
 	return(0);
 }
 
-/**
+/*
  *			R T _ R P C _ I F R E E
  *
  *  Free the storage associated with the rt_db_internal version of this solid.

@@ -18,9 +18,6 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libbn */
-/*@{*/
 /** @file font.c
  *
  *  Author -
@@ -32,8 +29,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (ARL)";
 #endif

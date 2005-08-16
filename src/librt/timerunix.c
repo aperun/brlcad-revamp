@@ -18,11 +18,10 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup librt */
-/*@{*/
 /** @file timerunix.c
- * To provide timing information for RT.
+ *
+ * Function -
+ *	To provide timing information for RT.
  *	This version for any non-BSD UNIX system, including
  *	System III, Vr1, Vr2.
  *	Version 6 & 7 should also be able to use this (untested).
@@ -37,8 +36,6 @@
  *	Aberdeen Proving Ground, Maryland  21005
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCStimer[] = "@(#)$Header$ (BRL)";
 #endif

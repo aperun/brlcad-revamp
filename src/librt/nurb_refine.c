@@ -18,10 +18,14 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup nurb */
-/*@{*/
 /** @file nurb_refine.c
+ *
+ */
+
+/* 
+ *       R E F I N E _ S R F . C
+ *
+ * Function -
  *     Refines a surface by inserting knots with respect to the row or
  *     columns of the control points resulting in the same surface with new
  *     control points.
@@ -35,7 +39,6 @@
  *     Aberdeen Proving Ground, Maryland 21005
  *
  */
-/*@}*/
 
 #include "common.h"
 

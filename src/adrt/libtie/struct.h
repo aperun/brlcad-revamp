@@ -127,7 +127,7 @@ typedef struct tie_s {
   TIE_3		min, max;
   int		tri_num;
   tie_tri_t	*tri_list;
-  int		stat;		/* used for testing various statistics */
+  int		max_tri;
 } tie_t;
 
 #endif

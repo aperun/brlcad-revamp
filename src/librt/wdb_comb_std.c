@@ -18,13 +18,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \defgroup wdb WriteDatabase
- * \ingroup librt */
-
-/*@{*/
 /** @file wdb_comb_std.c
- *	Code to implement the database objects "c" command.
+ *
+ *	Code to implement the database objects "c" command
  *
  *  Author -
  *      John R. Anderson
@@ -33,7 +29,6 @@
  *      The U. S. Army Research Laboratory
  *      Aberdeen Proving Ground, Maryland  21005-5068  USA
  */
-/*@}*/
 
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (BRL)";

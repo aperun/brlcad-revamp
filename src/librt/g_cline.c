@@ -18,12 +18,10 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup g */
-
-/*@{*/
 /** @file g_cline.c
- *	Intersect a ray with a FASTGEN4 CLINE element.
+ *
+ *  Purpose -
+ *	Intersect a ray with a FASTGEN4 CLINE element
  *
  *  Authors -
  *  	John Anderson
@@ -34,8 +32,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCScline[] = "@(#)$Header$ (BRL)";
 #endif
@@ -77,7 +73,7 @@ const struct bu_structparse rt_cline_parse[] = {
 /* shared with do.c */
 fastf_t rt_cline_radius=-1.0;
 
-/**
+/*
  *  			R T _ C L I N E _ P R E P
  *  
  *  Given a pointer to a GED database record,
@@ -140,7 +136,7 @@ rt_cline_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip)
 	return( 0 );
 }
 
-/**
+/*
  *			R T _ C L I N E _ P R I N T
  */
 void
@@ -159,7 +155,7 @@ rt_cline_print(register const struct soltab *stp)
 		bu_log( "Volume mode\n" );
 }
 
-/**
+/*
  *  			R T _ C L I N E _ S H O T
  *  
  *  Intersect a ray with a cline mode solid.
@@ -349,7 +345,7 @@ rt_cline_shot(struct soltab *stp, register struct xray *rp, struct application *
 
 #define RT_CLINE_SEG_MISS(SEG)	(SEG).seg_stp=RT_SOLTAB_NULL
 
-/**
+/*
  *			R T _ C L I N E _ V S H O T
  *
  *  Vectorized version.
@@ -365,7 +361,7 @@ rt_cline_vshot(struct soltab **stp, struct xray **rp, struct seg *segp, int n, s
 	rt_vstub( stp, rp, segp, n, ap );
 }
 
-/**
+/*
  *  			R T _ C L I N E _ N O R M
  *  
  *  Given ONE ray distance, return the normal and entry/exit point.
@@ -399,7 +395,7 @@ rt_cline_norm(register struct hit *hitp, struct soltab *stp, register struct xra
     	VJOIN1( hitp->hit_point, rp->r_pt, hitp->hit_dist, rp->r_dir );
 }
 
-/**
+/*
  *			R T _ C L I N E _ C U R V E
  *
  *  Return the curvature of the cline.
@@ -415,7 +411,7 @@ rt_cline_curve(register struct curvature *cvp, register struct hit *hitp, struct
  	bn_vec_ortho( cvp->crv_pdir, hitp->hit_normal );
 }
 
-/**
+/*
  *  			R T _ C L I N E_ U V
  *  
  *  For a hit on the surface of an cline, return the (u,v) coordinates
@@ -430,7 +426,7 @@ rt_cline_uv(struct application *ap, struct soltab *stp, register struct hit *hit
 	uvp->uv_dv = 0.0;
 }
 
-/**
+/*
  *		R T _ C L I N E _ F R E E
  */
 void
@@ -442,7 +438,7 @@ rt_cline_free(register struct soltab *stp)
 	bu_free( (char *)cline, "cline_specific" );
 }
 
-/**
+/*
  *			R T _ C L I N E _ C L A S S
  */
 int
@@ -452,7 +448,7 @@ rt_cline_class(const struct soltab *stp, const fastf_t *min, const fastf_t *max,
 	return( 0 );
 }
 
-/**
+/*
  *			R T _ C L I N E _ P L O T
  */
 int
@@ -539,7 +535,7 @@ struct cline_vert {
 	struct vertex *v;
 };
 
-/**
+/*
  *			R T _ C L I N E _ T E S S
  *
  *  Returns -
@@ -832,7 +828,7 @@ rt_cline_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, 
 	return(0);
 }
 
-/**
+/*
  *			R T _ C L I N E _ I M P O R T
  *
  *  Import an cline from the database format to the internal format.
@@ -873,7 +869,7 @@ rt_cline_import(struct rt_db_internal *ip, const struct bu_external *ep, registe
 	return(0);			/* OK */
 }
 
-/**
+/*
  *			R T _ C L I N E _ E X P O R T
  *
  *  The name is added by the caller, in the usual place.
@@ -911,7 +907,7 @@ rt_cline_export(struct bu_external *ep, const struct rt_db_internal *ip, double 
 	return(0);
 }
 
-/**
+/*
  *			R T _ C L I N E _ I M P O R T 5
  *
  *  Import an cline from the database format to the internal format.
@@ -947,7 +943,7 @@ rt_cline_import5(struct rt_db_internal *ip, const struct bu_external *ep, regist
 	return(0);			/* OK */
 }
 
-/**
+/*
  *			R T _ C L I N E _ E X P O R T 5
  *
  *  The name is added by the caller, in the usual place.
@@ -978,7 +974,7 @@ rt_cline_export5(struct bu_external *ep, const struct rt_db_internal *ip, double
 	return(0);
 }
 
-/**
+/*
  *			R T _ C L I N E _ D E S C R I B E
  *
  *  Make human-readable formatted presentation of this solid.
@@ -1015,7 +1011,7 @@ rt_cline_describe(struct bu_vls *str, const struct rt_db_internal *ip, int verbo
 	return(0);
 }
 
-/**
+/*
  *			R T _ C L I N E _ I F R E E
  *
  *  Free the storage associated with the rt_db_internal version of this solid.

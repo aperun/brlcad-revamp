@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup librt */
-/*@{*/
 /** @file vlist.c
+ *
  *  Routines for the import and export of vlist chains as:
  *	Network independent binary,
  *	BRL-extended UNIX-Plot files.
@@ -35,7 +33,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
@@ -636,73 +633,48 @@ getshort(FILE *fp)
 }
 
 static void
-rt_uplot_get_args(FILE *fp, const struct uplot *up, char *carg, fastf_t *arg )
+rt_uplot_get_args(FILE *fp, const struct uplot *up, char *carg, fastf_t *arg)
 {
 	int	i, j;
 	int	cc;
 	char	inbuf[8];
 
-	for ( i = 0; i < up->narg; i++ ) {
-	    switch( up->targ ) {
-	    case TSHORT:
-		arg[i] = getshort( fp );
-		break;
-	    case TIEEE:
-		fread(inbuf, 8, 1, fp);
-		ntohd( (unsigned char *)&arg[i],
-		       (unsigned char *)inbuf, 1 );
-		break;
-	    case TSTRING:
-		j = 0;
-		while (!feof(fp) &&
-		       (cc = getc(fp)) != '\n')
-		    carg[j++] = cc;
-		carg[j] = '\0';
-		break;
-	    case TCHAR:
-		carg[i] = getc(fp);
-		arg[i] = 0;
-		break;
-	    case TNONE:
-	    default:
-		arg[i] = 0;	/* ? */
-		break;
-	    }
-	}
-}
-
-static void
-rt_uplot_get_text_args(FILE *fp, const struct uplot *up, char *carg, fastf_t *arg )
-{
-	int	i, j;
-	int	cc;
-	char	inbuf[8];
-
-	for ( i = 0; i < up->narg; i++ ) {
-	    switch ( up->targ ) {
-	    case TSHORT:
-		fscanf(fp, "%lf", &arg[i]);
-		break;
-	    case TIEEE:
-		fscanf(fp, "%lf", &arg[i]);
-		break;
-	    case TSTRING:
-		fscanf(fp, "%s\n", &carg[0]);
-		break;
-	    case TCHAR:
-		fscanf(fp, "%u", &carg[i]);
-		arg[i] = 0;
-		break;
-	    case TNONE:
-	    default:
-		arg[i] = 0;	/* ? */
-		break;
-	    }
+	for( i = 0; i < up->narg; i++ ) {
+	switch( up->targ ){
+		case TSHORT:
+			arg[i] = getshort( fp );
+			break;
+		case TIEEE:
+			fread( inbuf, 8, 1, fp );
+			ntohd( (unsigned char *)&arg[i],
+			       (unsigned char *)inbuf, 1 );
+	       		break;
+		case TSTRING:
+			j = 0;
+			while( (cc = getc(fp)) != '\n'
+			    && cc != EOF )
+				carg[j++] = cc;
+			carg[j] = '\0';
+			break;
+		case TCHAR:
+			carg[i] = getc(fp);
+			arg[i] = 0;
+			break;
+		case TNONE:
+		default:
+			arg[i] = 0;	/* ? */
+			break;
+		}
 	}
 }
 
 int
-rt_process_uplot_value(register struct bu_list **vhead, struct bn_vlblock *vbp, FILE *fp, register int c, double char_size, int mode)
+rt_process_uplot_value(register struct bu_list **vhead, struct bn_vlblock *vbp, FILE *fp, register int c, double char_size)
+                       	        
+                 	     
+    			    
+            		  		/* the value to process */
+      			          
 {
 	mat_t			mat;
 	const struct uplot	*up;
@@ -726,10 +698,7 @@ rt_process_uplot_value(register struct bu_list **vhead, struct bn_vlblock *vbp, 
 	}
 
 	if( up->narg > 0 )  {
-	    if (mode == PL_OUTPUT_MODE_BINARY)
 		rt_uplot_get_args( fp, up, carg, arg );
-	    else
-		rt_uplot_get_text_args( fp, up, carg, arg );
 	}
 
 	switch( c ) {
@@ -846,30 +815,22 @@ rt_process_uplot_value(register struct bu_list **vhead, struct bn_vlblock *vbp, 
  *  This might be more naturally located in mged/plot.c
  */
 int
-rt_uplot_to_vlist(struct bn_vlblock *vbp, register FILE *fp, double char_size, int mode)
+rt_uplot_to_vlist(struct bn_vlblock *vbp, register FILE *fp, double char_size)
 {
 	struct bu_list	*vhead;
 	register int	c;
 
 	vhead = rt_vlblock_find( vbp, 0xFF, 0xFF, 0x00 );	/* Yellow */
 
-#if 1
-	while(!feof(fp)) {
-	    int ret;
-
-	    c = getc(fp);
-#else
 	while( (c = getc(fp)) != EOF ) {
 	       int ret;
-#endif
 
 	       /* pass the address of vhead so it can be updated */
 	       ret = rt_process_uplot_value( &vhead,
 					     vbp,
 					     fp,
 					     c,
-					     char_size,
-					     mode );
+					     char_size );
 	       if ( ret )
 		  return(ret);
 	}

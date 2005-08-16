@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** \addtogroup nmg */
-/*@{*/
 /** @file nmg_tri.c
- *  Triangulate the faces of a polygonal NMG.
+ *  Triangulate the faces of a polygonal NMG
  * 
  *  Author -
  *	Lee A. Butler
@@ -30,8 +28,6 @@
  *	The U. S. Army Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
@@ -279,7 +275,7 @@ nmg_tri_plfu(struct faceuse *fu, struct bu_list *tbl2d)
 
 
 
-/**	P T 2 D _ P N
+/*	P T 2 D _ P N
  *
  *	Return Prev/Next 2D pt about loop from given 2D pt.
  *	if vertex is child of loopuse, return parameter 2D pt.
@@ -330,7 +326,7 @@ pt2d_pn(struct bu_list *tbl, struct pt2d *pt, int dir)
 
 
 
-/**	M A P _ V U _ T O _ 2 D
+/*	M A P _ V U _ T O _ 2 D
  *
  *	Add a vertex to the 2D table if it isn't already there.
  */
@@ -425,7 +421,7 @@ map_vu_to_2d(struct vertexuse *vu, struct bu_list *tbl2d, fastf_t *mat, struct f
 		(void)bu_log( "Done.\n");
 }
 
-/**	N M G _ F L A T T E N _ F A C E
+/*	N M G _ F L A T T E N _ F A C E
  *
  *	Create the 2D coordinate table for the vertexuses of a face.
  *
@@ -549,7 +545,7 @@ is_convex(struct pt2d *a, struct pt2d *b, struct pt2d *c, const struct bn_tol *t
 
 
 
-/**
+/*
  *
  *	characterize the edges which meet at this vertex.
  *
@@ -664,7 +660,7 @@ vtype2d(struct pt2d *v, struct bu_list *tbl2d, const struct bn_tol *tol)
 	return(0);
 }
 
-/**	Polygon point start.
+/*	Polygon point start.
  *
  *	  O
  *	 /-\
@@ -696,7 +692,7 @@ poly_start_vertex(struct pt2d *pt, struct bu_list *tbl2d, struct bu_list *tlist)
 	NMG_CK_TRAP(new_trap);
 }
 
-/**
+/*
  *		^
  *	  /-	-\
  *	 /--	--\
@@ -782,7 +778,7 @@ poly_side_vertex(struct pt2d *pt, struct pt2d *tbl2d, struct bu_list *tlist)
 }
 
 
-/**	Polygon point end.
+/*	Polygon point end.
  *
  *	     ^
  *	\---/
@@ -842,7 +838,7 @@ trap_found:
 
 
 
-/**	Hole Start in polygon
+/*	Hole Start in polygon
  *
  *	-------
  *	---O---
@@ -977,7 +973,7 @@ gotit:
 }
 
 
-/**	Close hole
+/*	Close hole
  *
  *	^
  *	-\   /-
@@ -1074,7 +1070,7 @@ gotem:
 }
 
 
-/**
+/*
  *	N M G _ T R A P _ F A C E 
  *
  *	Produce the trapezoidal decomposition of a face from the set of
@@ -1153,7 +1149,7 @@ map_new_vertexuse(struct bu_list *tbl2d, struct vertexuse *vu_p)
 	rt_bomb("Couldn't find mapped vertexuse of vertex!\n");
 }
 
-/** Support routine for 
+/* Support routine for 
  * nmg_find_first_last_use_of_v_in_fu
  *
  * The object of the game here is to find uses of the given vertex whose
@@ -1310,7 +1306,7 @@ pick_edges(struct vertex *v, struct vertexuse **vu_first, int *min_dir, struct v
 
 }
 
-/** Support routine for 
+/* Support routine for 
  * nmg_find_first_last_use_of_v_in_fu
  * 
  * Given and edgeuse and a faceuse, pick the use of the edge in the faceuse
@@ -1400,7 +1396,7 @@ pick_eu(struct edgeuse *eu_p, struct faceuse *fu, fastf_t *dir, int find_max)
 
 
 
-/**
+/*
  *	Given a pointer to a vertexuse in a face and a ray, find the
  *	"first" and "last" uses of the vertex along the ray in the face.
  *	Consider the diagram below where 4 OT_SAME loopuses meet at a single
@@ -1672,7 +1668,7 @@ pick_pt2d_for_cutjoin(struct bu_list *tbl2d, struct pt2d **p1, struct pt2d **p2,
 
 
 
-/**
+/*
  *
  *  Cut a loop which has a 2D mapping.  Since this entails the creation
  *  of new vertexuses, it is necessary to add a 2D mapping for the new
@@ -1860,7 +1856,7 @@ cut_mapped_loop(struct bu_list *tbl2d, struct pt2d *p1, struct pt2d *p2, const i
 	return find_pt2d(tbl2d, eu->vu_p);
 }
 
-/**
+/*
  *
  *	Join 2 loops (one forms a hole in the other usually )
  *
@@ -1987,7 +1983,7 @@ join_mapped_loops(struct bu_list *tbl2d, struct pt2d *p1, struct pt2d *p2, const
 			map_new_vertexuse(tbl2d, eu->vu_p);
 	}
 }
-/**
+/*
  *  Check to see if the edge between the top/bottom of the trapezoid
  * already exists.
  */
@@ -2285,7 +2281,7 @@ cut_diagonals(struct bu_list *tbl2d, struct bu_list *tlist, const struct faceuse
 }
 
 
-/**	C U T _ U N I M O N O T O N E
+/*	C U T _ U N I M O N O T O N E
  *
  *	Given a unimonotone loopuse, triangulate it into multiple loopuses
  */

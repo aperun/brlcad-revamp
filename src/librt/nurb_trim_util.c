@@ -18,11 +18,14 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup nurb */
-/*@{*/
 /** @file nurb_trim_util.c
- * Trimming curve Utilities.
+ *
+ */
+
+/* 
+ *	N U R B _ T R I M _ U T I L . C
+ *
+ * nurb_trim.c - trimming curve Utilities.
  * 
  * Author:  Paul R. Stay
  * Source
@@ -32,8 +35,6 @@
  * 
  * Date: Mon July 3, 1995
  */
-/*@}*/
-
 #ifndef lint
 static const char rcs_ident[] = "$Header$";
 #endif

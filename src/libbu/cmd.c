@@ -18,11 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \defgroup cmd command
- * \ingroup libbu */
-/*@{*/
-/** @file ./librt/cmd.c
+/** @file cmd.c
+ *
  *	Utility routines for handling commands.
  *
  * Author -
@@ -34,8 +31,6 @@
  *	Aberdeen Proving Ground, Maryland  21005
  *
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "";
 #endif
@@ -53,7 +48,7 @@ static const char RCSid[] = "";
 #include "machine.h"
 #include "cmd.h"			/* includes bu.h */
 
-/****** libbu/cmd.c
+/*****f* libbu/cmd.c
  *
  * NAME
  *	bu_cmd

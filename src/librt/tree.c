@@ -18,12 +18,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup librt */
-/*@{*/
-
 /** @file tree.c
- * Ray Tracing library database tree walker.
+ *
+ *  Ray Tracing library database tree walker.
  *  Collect and prepare regions and solids for subsequent ray-tracing.
  *
  *  Author -
@@ -33,7 +30,6 @@
  *	The U. S. Army Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  */
-/*@}*/
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (ARL)";
 #endif

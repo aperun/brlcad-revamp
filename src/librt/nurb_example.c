@@ -18,11 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup nurb */
-
-/*@{*/
 /** @file nurb_example.c
+ *			E X A M P L E . C
  *
  *  Author -
  *	Paul R. Stay
@@ -32,8 +29,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (ARL)";
 #endif

@@ -18,13 +18,10 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libbu */
-/*@{*/
 /** @file hash.c
- *	An implimentation of hash tables.
+ *
+ *	An implimentation of hash tables
  */
-/*@}*/
 
 #ifndef lint
 static const char libbu_hash_RCSid[] = "@(#) $Header$";

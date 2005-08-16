@@ -18,12 +18,6 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \defgroup nmg NonManifoldGeometry 
- * \ingroup librt
- */
-
-/*@{*/
 /** @file nmg_bool.c
  *	Support for boolean operations on NMG objects.  Most of the routines
  *	in here are static/local to this file.  The interfaces here are the
@@ -39,8 +33,6 @@
  *	The U. S. Army Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
@@ -85,7 +77,7 @@ nmg_dangling_handler(long int *longp, genptr_t state, int first)
 	}
 }
 
-/**
+/*
  *			N M G _ H A S _ D A N G L I N G _ F A C E S
  *
  *  Argument is expected to be model, region, shell, or faceuse pointer.
@@ -118,7 +110,7 @@ nmg_has_dangling_faces(long int *magic_p, const char *manifolds)
 	return st.count;
 }
 
-/**
+/*
  *			N M G _ S H O W _ E A C H _ L O O P
  *
  *  Within a shell, show each loop as a separate display.
@@ -357,7 +349,7 @@ crack_top:
 	}
 }
 
-/**			N M G _ C L A S S I F Y _ S H A R E D _ E D G E S _ V E R T S
+/*			N M G _ C L A S S I F Y _ S H A R E D _ E D G E S _ V E R T S
  *
  *	Preprocessor routine for classifier to get all the easy shared edges and
  *	vertices marked as shared.
@@ -439,7 +431,7 @@ nmg_classify_shared_edges_verts(struct shell *sA, struct shell *sB, long int **c
 	bu_ptbl_free( &edges);
 }
 
-/**		N M G _ K I L L _ A N T I _ L O O P S
+/*		N M G _ K I L L _ A N T I _ L O O P S
  *
  *	Look for same loop in opposite direction in shell "s",
  *	Kill them.
@@ -573,7 +565,7 @@ nmg_kill_wire_edges(struct shell *s)
 	}
 }
 
-/**
+/*
  *			N M G _ B O O L
  *
  *	Perform boolean operations on a pair of shells.
@@ -1131,7 +1123,7 @@ nmg_region_v_unique( rB, tol );
 /* XXX move to ??? Everything from here on down needs to go into another module */
 
 
-/**
+/*
  *			N M G _ B O O L T R E E _ L E A F _ T E S S
  *
  *  Called from db_walk_tree() each time a tree leaf is encountered.
@@ -1192,7 +1184,7 @@ nmg_booltree_leaf_tess(struct db_tree_state *tsp, struct db_full_path *pathp, st
 	return(curtree);
 }
 
-/**
+/*
  *			N M G _ B O O L T R E E _ L E A F _ T N U R B
  *
  *  Called from db_walk_tree() each time a tree leaf is encountered.
@@ -1250,7 +1242,7 @@ nmg_booltree_leaf_tnurb(struct db_tree_state *tsp, struct db_full_path *pathp, s
 	return(curtree);
 }
 
-/**
+/*
  *			N M G _ B O O L T R E E _ E V A L U A T E
  *
  *  Given a tree of leaf nodes tesselated earlier by nmg_booltree_leaf_tess(),
@@ -1400,7 +1392,7 @@ nmg_r_radial_check( tl->tr_d.td_r, tol );
 	return tp;
 }
 
-/**
+/*
  *			N M G _ B O O L E A N
  *
  *  This is the main application interface to the NMG Boolean Evaluator.

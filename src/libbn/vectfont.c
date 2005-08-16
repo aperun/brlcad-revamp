@@ -18,12 +18,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libbn */
-/*@{*/
-
 /** @file vectfont.c
- *	Terminal Independant Graphics Display Package.
+ *
+ *	Terminal Independant Graphics Display Package
  *		Mike Muuss  July 31, 1978
  *
  *	This routine is used to plot a string of ASCII symbols
@@ -52,8 +49,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char tp_RCSid[] = "@(#)$Header$ (ARL)";
 #endif

@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup librt */
-/*@{*/
 /** @file qray.c
+ *
  * Routines to set and get "Query Ray" variables.
  *
  * Source -
@@ -33,7 +31,6 @@
  *      Robert G. Parker
  *
  */
-/*@}*/
 
 #include "common.h"
 

@@ -18,11 +18,7 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libbn */
-/*@{*/
 /** @file vector.c
- *  
  *  Author -
  *	Michael John Muuss
  *  
@@ -32,8 +28,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif

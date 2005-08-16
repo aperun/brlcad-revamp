@@ -1,6 +1,6 @@
-/** \addtogroup if */
-/*@{*/
-/** \file if_ap.c
+/*
+*			I F _ A P . C
+*
 *  Apollo display interface using GPR.  This interface runs under the
 *  display manager(direct mode).
 *
@@ -22,7 +22,7 @@
 *   code may not even compile any longer.  If you make improvements to
 *   this please let us know.
 */
-/*@}*/
+
 
 #include "common.h"
 

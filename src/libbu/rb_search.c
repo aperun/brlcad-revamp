@@ -18,9 +18,6 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup rb */
-/*@{*/
 /** @file rb_search.c
  *	Routines to search for a node in a red-black tree
  *
@@ -31,8 +28,6 @@
  *	The U. S. Army Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  */
-/*@}*/
-
 #ifndef lint
 static const char libbu_rb_search_RCSid[] = "@(#) $Header$";
 #endif

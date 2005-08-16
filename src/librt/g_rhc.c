@@ -18,11 +18,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup cc */
-
-/*@{*/
 /** @file g_rhc.c
+ *
+ *  Purpose -
  *	Intersect a ray with a Right Hyperbolic Cylinder.
  *
  *  Algorithm -
@@ -166,8 +164,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSrhc[] = "@(#)$Header$ (BRL)";
 #endif
@@ -211,7 +207,7 @@ const struct bu_structparse rt_rhc_parse[] = {
     { {'\0','\0','\0','\0'}, 0, (char *)NULL, 0, BU_STRUCTPARSE_FUNC_NULL }
  };
 
-/**
+/*
  *  			R T _ R H C _ P R E P
  *  
  *  Given a pointer to a GED database record, and a transformation matrix,
@@ -323,7 +319,7 @@ rt_rhc_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip)
 	return(0);			/* OK */
 }
 
-/**
+/*
  *			R T _ R H C _ P R I N T
  */
 void
@@ -346,7 +342,7 @@ rt_rhc_print(register const struct soltab *stp)
 #define	RHC_NORM_FRT	(3)		/* copy reverse rhc_N */
 #define RHC_NORM_BACK	(4)
 
-/**
+/*
  *  			R T _ R H C _ S H O T
  *  
  *  Intersect a ray with a rhc.
@@ -522,7 +518,7 @@ check_plates:
 
 #define RT_RHC_SEG_MISS(SEG)	(SEG).seg_stp=RT_SOLTAB_NULL
 
-/**
+/*
  *			R T _ R H C _ V S H O T
  *
  *  Vectorized version.
@@ -538,7 +534,7 @@ rt_rhc_vshot(struct soltab **stp, struct xray **rp, struct seg *segp, int n, str
 	rt_vstub( stp, rp, segp, n, ap );
 }
 
-/**
+/*
  *  			R T _ R H C _ N O R M
  *  
  *  Given ONE ray distance, return the normal and entry/exit point.
@@ -577,7 +573,7 @@ rt_rhc_norm(register struct hit *hitp, struct soltab *stp, register struct xray 
 	}
 }
 
-/**
+/*
  *			R T _ R H C _ C U R V E
  *
  *  Return the curvature of the rhc.
@@ -615,7 +611,7 @@ rt_rhc_curve(register struct curvature *cvp, register struct hit *hitp, struct s
 	}
 }
 
-/**
+/*
  *  			R T _ R H C _ U V
  *  
  *  For a hit on the surface of an rhc, return the (u,v) coordinates
@@ -663,7 +659,7 @@ rt_rhc_uv(struct application *ap, struct soltab *stp, register struct hit *hitp,
 	uvp->uv_du = uvp->uv_dv = 0;
 }
 
-/**
+/*
  *		R T _ R H C _ F R E E
  */
 void
@@ -675,7 +671,7 @@ rt_rhc_free(register struct soltab *stp)
 	bu_free( (char *)rhc, "rhc_specific" );
 }
 
-/**
+/*
  *			R T _ R H C _ C L A S S
  */
 int
@@ -685,7 +681,7 @@ rt_rhc_class(void)
 }
 
 
-/**
+/*
  *			R T _ R H C _ P L O T
  */
 int
@@ -830,7 +826,7 @@ rt_rhc_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct rt_te
 	return(0);
 }
 
-/**
+/*
  *	R T _ M K _ H Y P E R B O L A
  */
 int
@@ -899,7 +895,7 @@ rt_mk_hyperbola(struct rt_pt_node *pts, fastf_t r, fastf_t b, fastf_t c, fastf_t
 	return( n );
 }
 
-/**
+/*
  *			R T _ R H C _ T E S S
  *
  *  Returns -
@@ -1176,7 +1172,7 @@ fail:
 	return( failure );
 }
 
-/**
+/*
  *			R T _ R H C _ I M P O R T
  *
  *  Import an RHC from the database format to the internal format.
@@ -1221,7 +1217,7 @@ rt_rhc_import(struct rt_db_internal *ip, const struct bu_external *ep, register 
 	return(0);			/* OK */
 }
 
-/**
+/*
  *			R T _ R H C _ E X P O R T
  *
  *  The name is added by the caller, in the usual place.
@@ -1276,7 +1272,7 @@ rt_rhc_export(struct bu_external *ep, const struct rt_db_internal *ip, double lo
 	return(0);
 }
 
-/**
+/*
  *			R T _ R H C _ I M P O R T 5
  *
  *  Import an RHC from the database format to the internal format.
@@ -1321,7 +1317,7 @@ rt_rhc_import5(struct rt_db_internal *ip, const struct bu_external *ep, register
 	return(0);			/* OK */
 }
 
-/**
+/*
  *			R T _ R H C _ E X P O R T 5
  *
  *  The name is added by the caller, in the usual place.
@@ -1375,7 +1371,7 @@ rt_rhc_export5(struct bu_external *ep, const struct rt_db_internal *ip, double l
 	return(0);
 }
 
-/**
+/*
  *			R T _ R H C _ D E S C R I B E
  *
  *  Make human-readable formatted presentation of this solid.
@@ -1421,7 +1417,7 @@ rt_rhc_describe(struct bu_vls *str, const struct rt_db_internal *ip, int verbose
 	return(0);
 }
 
-/**
+/*
  *			R T _ R H C _ I F R E E
  *
  *  Free the storage associated with the rt_db_internal version of this solid.

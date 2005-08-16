@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup librt */
-/*@{*/
 /** @file spectrum.c
+ *
  *  An application of the 'tabdata' package to spectral data.
  *
  *  (Note that there is also a rttherm/spectrum.c)
@@ -41,8 +39,6 @@
  *
  *  With thanks to Russ Moulton Jr, EOSoft Inc. for his "rad.c" module.
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (ARL)";
 #endif

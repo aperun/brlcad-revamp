@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup librt */
-/*@{*/
 /** @file fortray.c
+ *
  *  A general-purpose set of FORTRAN-callable interface routines to
  *  permit any FORTRAN program to use LIBRT, the ray-tracing library
  *  of the BRL CAD Package.
@@ -36,7 +34,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$";
 #endif

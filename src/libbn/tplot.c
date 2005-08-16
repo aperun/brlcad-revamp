@@ -18,13 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libbn */
-/*@{*/
-
 /** @file tplot.c
- *	This routine is designed to simplify the creation of 
- *  X,Y plots for user.
+ *			T P _ P L O T
  *
  *
  *			George W. Hartwig, Jr.
@@ -60,7 +55,6 @@
  *				fact that fortran arrays start at one
  *				and not zero as with c.
  */
-/*@}*/
 #include "common.h"
 
 

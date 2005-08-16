@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup nurb */
-/*@{*/
 /** @file nurb_ray.c
+ *  Function-
  *  	Functions which support the ray intersection
  *	for surfaces.
  *
@@ -34,7 +32,6 @@
  *     Aberdeen Proving Ground, Maryland 21005
  *
  */
-/*@}*/
 
 #include "common.h"
 

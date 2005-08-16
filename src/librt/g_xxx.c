@@ -18,11 +18,10 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** \addtogroup g */
-
-/*@{*/
 /** @file g_xxx.c
- *	Intersect a ray with a. 
+ *
+ *  Purpose -
+ *	Intersect a ray with a 
  *
  * Adding a new solid type:
  *	Design disk record
@@ -59,8 +58,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSxxx[] = "@(#)$Header$ (BRL)";
 #endif
@@ -97,7 +94,7 @@ struct xxx_specific {
 	vect_t	xxx_V;
 };
 
-/**
+/*
  *  			R T _ X X X _ P R E P
  *  
  *  Given a pointer to a GED database record, and a transformation matrix,
@@ -127,7 +124,7 @@ struct rt_i		*rtip;
 	RT_XXX_CK_MAGIC(xxx_ip);
 }
 
-/**
+/*
  *			R T _ X X X _ P R I N T
  */
 void
@@ -138,7 +135,7 @@ register const struct soltab *stp;
 		(struct xxx_specific *)stp->st_specific;
 }
 
-/**
+/*
  *  			R T _ X X X _ S H O T
  *  
  *  Intersect a ray with a xxx.
@@ -166,7 +163,7 @@ struct seg		*seghead;
 
 #define RT_XXX_SEG_MISS(SEG)	(SEG).seg_stp=RT_SOLTAB_NULL
 
-/**
+/*
  *			R T _ X X X _ V S H O T
  *
  *  Vectorized version.
@@ -182,7 +179,7 @@ struct application	*ap;
 	rt_vstub( stp, rp, segp, n, ap );
 }
 
-/**
+/*
  *  			R T _ X X X _ N O R M
  *  
  *  Given ONE ray distance, return the normal and entry/exit point.
@@ -199,7 +196,7 @@ register struct xray	*rp;
 	VJOIN1( hitp->hit_point, rp->r_pt, hitp->hit_dist, rp->r_dir );
 }
 
-/**
+/*
  *			R T _ X X X _ C U R V E
  *
  *  Return the curvature of the xxx.
@@ -219,7 +216,7 @@ struct soltab		*stp;
  	bn_vec_ortho( cvp->crv_pdir, hitp->hit_normal );
 }
 
-/**
+/*
  *  			R T _ X X X _ U V
  *  
  *  For a hit on the surface of an xxx, return the (u,v) coordinates
@@ -238,7 +235,7 @@ register struct uvcoord	*uvp;
 		(struct xxx_specific *)stp->st_specific;
 }
 
-/**
+/*
  *		R T _ X X X _ F R E E
  */
 void
@@ -251,7 +248,7 @@ register struct soltab *stp;
 	bu_free( (char *)xxx, "xxx_specific" );
 }
 
-/**
+/*
  *			R T _ X X X _ C L A S S
  */
 int
@@ -263,7 +260,7 @@ const struct bn_tol    *tol;
 	return RT_CLASSIFY_UNIMPLEMENTED;
 }
 
-/**
+/*
  *			R T _ X X X _ P L O T
  */
 int
@@ -282,7 +279,7 @@ const struct bn_tol	*tol;
 	return(-1);
 }
 
-/**
+/*
  *			R T _ X X X _ T E S S
  *
  *  Returns -
@@ -306,7 +303,7 @@ const struct bn_tol	*tol;
 	return(-1);
 }
 
-/**
+/*
  *			R T _ X X X _ I M P O R T
  *
  *  Import an XXX from the database format to the internal format.
@@ -343,7 +340,7 @@ const struct db_i		*dbip;
 	return(0);			/* OK */
 }
 
-/**
+/*
  *			R T _ X X X _ E X P O R T
  *
  *  The name is added by the caller, in the usual place.
@@ -390,7 +387,7 @@ const struct db_i		*dbip;
 
 
 
-/**
+/*
  *			R T _ X X X _ I M P O R T 5
  *
  *  Import an XXX from the database format to the internal format.
@@ -436,7 +433,7 @@ const struct db_i		*dbip;
 	return(0);			/* OK */
 }
 
-/**
+/*
  *			R T _ X X X _ E X P O R T 5
  *
  *  Export an XXX from internal form to external format.
@@ -477,7 +474,7 @@ const struct db_i		*dbip;
 	return 0;
 }
 
-/**
+/*
  *			R T _ X X X _ D E S C R I B E
  *
  *  Make human-readable formatted presentation of this solid.
@@ -507,7 +504,7 @@ double			mm2local;
 	return(0);
 }
 
-/**
+/*
  *			R T _ X X X _ I F R E E
  *
  *  Free the storage associated with the rt_db_internal version of this solid.
@@ -527,7 +524,7 @@ struct rt_db_internal	*ip;
 	ip->idb_ptr = GENPTR_NULL;	/* sanity */
 }
 
-/**
+/*
  *			R T _ X X X _ X F O R M
  *
  *  Create transformed version of internal form.  Free *ip if requested.

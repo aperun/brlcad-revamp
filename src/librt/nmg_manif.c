@@ -18,11 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup nmg */
-
-/*@{*/
 /** @file nmg_manif.c
+ *
  *  Routines for assessing the manifold dimension of an object.
  *
  *  Author -
@@ -32,8 +29,6 @@
  *	The U. S. Army Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
@@ -68,7 +63,7 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 	}
 	    
 
-/**	N M G _ D A N G L I N G _ F A C E
+/*	N M G _ D A N G L I N G _ F A C E
  *
  *	Determine if a face has any "dangling" edges.
  *
@@ -145,7 +140,7 @@ out:
 	return eur != (const struct edgeuse *)NULL;
 }
 
-/**
+/*
  *	"Paint" the elements of a face with a meaning.  For example
  *	mark everything in a face as being part of a 2-manifold
  */

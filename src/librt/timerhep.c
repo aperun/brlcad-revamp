@@ -18,17 +18,12 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup librt */
-
-/*@{*/
-
 /** @file timerhep.c
- * To provide timing information for RT.
+ *
+ * Function -
+ *	To provide timing information for RT.
  *	THIS VERSION FOR Denelcor HEP/UPX (System III-like)
  */
-/*@}*/
-
 #ifndef lint
 static const char RCShep[] = "@(#)$Header$ (BRL)";
 #endif

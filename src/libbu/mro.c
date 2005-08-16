@@ -18,11 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libbu */
-/*@{*/
-
 /** @file mro.c
+ *
  *  The Multiply Represented Object package.
  *
  *  Author -
@@ -32,8 +29,6 @@
  *      The U. S. Army Research Laboratory
  *      Aberdeen Proving Ground, Maryland  21005-5068  USA
  */
-/*@}*/
-
 static const char libbu_vls_RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "common.h"

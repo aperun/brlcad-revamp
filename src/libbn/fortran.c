@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libbn */
-/*@{*/
 /** @file fortran.c
+ *
  *  A FORTRAN-callable interface to libplot3, which is
  *  a public-domain UNIX plot library, for 2-D and 3-D plotting in
  *  16-bit signed integer spaces, and in floating point.
@@ -68,8 +66,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif

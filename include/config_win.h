@@ -43,7 +43,7 @@
 #	error "STDC is not properly set on WIN32 build, add /Za to Project Settings / Project Options"
 # endif
 
-#define BRLCAD_VERSION    "7.4.1"
+#define BRLCAD_VERSION    "7.4.2"
 #define BRLCAD_ROOT       ""
 #define BRLCAD_DATA       ""
 #define INSTALL_DIRECTORY "C:/brlcad7_2"
@@ -126,11 +126,11 @@
 #define popen _popen
 #define read _read
 #define setmode _setmode
-#define snprintf _snprintf
 #define sopen _sopen
 #define stat _stat
 #define strcasecmp _stricmp
 #define strdup _strdup
+#define strncmp _strncmp
 #define sys_errlist _sys_errlist
 #define umask _umask
 #define unlink _unlink

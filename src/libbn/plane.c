@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libbn */
-/*@{*/
 /** @file plane.c
+ *
  *  Some useful routines for dealing with planes and lines.
  *
  *  Author -
@@ -33,8 +31,6 @@
  *	Aberdeen Proving Ground, Maryland  21005
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSplane[] = "@(#)$Header$ (BRL)";
 #endif

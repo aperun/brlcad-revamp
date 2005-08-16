@@ -37,7 +37,7 @@
 #       by user interaction or via the programmatic interface. The number of
 #       viewable rows also changes dynamically when the viewing height changes
 #       in order to maintain a constant size row height. This widget contains
-#       built-in scrollbars for scrolling the view.
+#       a built-in scrollbar for scrolling the view.
 #
 
 ::itk::usual TableView {
@@ -56,15 +56,8 @@
     constructor {_labels args} {}
     destructor {}
 
-	variable font 
-    itk_option define -colfont colfont Font {SystemWindowText 8}
-    itk_option define -rowfont rowfont Font {SystemWindowText 8}
-    itk_option define -useTextEntry useTextEntry UseTextEntry 0
-    itk_option define -textEntryWidth textEntryWidth TextEntryWidth 20
-    itk_option define -textEntryHeight textEntryHeight TextEntryHeight 3
-    itk_option define -lastRowLabelIndex lastRowLabelIndex LastRowLabelIndex 0
-    itk_option define -scrollLimit scrollLimit ScrollLimit 0
-    itk_option define -lostFocusCallback lostFocusCallback LostFocusCallback ""
+    itk_option define -colfont colfont Font "Helvetica 12"
+    itk_option define -rowfont rowfont Font "Helvetica 12"
 
     public {
 	# methods that change/query table values
@@ -168,6 +161,8 @@
     }
 
     protected {
+	variable lastRowLabelIndex 0
+
 	# This has been moved to Table.tcl
 	# string marking this row as a separator
 	#common SEP_MARK "XXX_SEP"
@@ -220,9 +215,8 @@
 	variable colColors
 
 	# entry options
-	variable entryOptionsList { \
-	       -bg -cursor -disabledbackground -disabledforeground \
-               -exportselection -fg -font \
+	variable entryOptionList { \
+	       -bg -cursor -disabledforeground -exportselection -fg -font \
 	       -highlightbackground -highlightcolor -highlightthickness \
 	       -insertborderwidth -insertofftime -insertbackground \
 	       -insertontime -insertwidth -invcmd -justify -relief \
@@ -236,8 +230,6 @@
 	    -highlightbackground -highlightcolor -highlightthickness
 	    -justify -padx -pady -relief -state}
 
-	variable allColumnsDisabled 0
-
 	method updateTable {{offset 0}}
 	method updateDrows {}
 	method updateVscroll {}
@@ -250,19 +242,10 @@
 	method hscroll {first last}
 	method configureCanvas {} 
 	method configureTable {} 
-	method checkIfAllColumnsDisabled {}
     }
 
     private {
 #	variable watchingTables 0
-	variable doingInit 1
-	variable useTextEntry 0
-	variable textEntryWidth 20
-	variable textEntryHeight 3
-	variable textRowLabelPad "\n"
-	variable doingConfigure 0
-	variable doBreak 0
-	variable savedColState {}
 
 	method packRow {i}
 	method packAll {}
@@ -275,74 +258,20 @@
 	method destroyRow {i}
 	method buildTable {}
 	method watchTable {var index op}
-	method doTextEntryKeyPress {w k}
-	method handleTextEntryKeyPress {w k}
-	method handleTextEntryShiftKeyPress {w k}
-	method handleTextEntryReturn {w}
-	method handleTextEntryShiftReturn {w}
-	method handleTextEntryTab {w}
-	method handleTextEntryShiftTab {w}
-	method handleLostFocus {w}
-	method setTextRow {w val}
-	method setTextEntry {w val}
-	method getStack {}
-	method enableColState {}
-	method resetColState {}
     }
 }
 
 ::itcl::configbody TableView::colfont {
-    if {$doingInit} {
-	return
-    }
-
 #    after idle [::itcl::code $this handleConfigure]
     after idle [::itcl::code catch [list $this handleConfigure]]
 }
 
 ::itcl::configbody TableView::rowfont {
-    if {$doingInit} {
-	return
-    }
-
 #    after idle [::itcl::code $this handleConfigure]
     after idle [::itcl::code catch [list $this handleConfigure]]
 }
 
-::itcl::configbody TableView::useTextEntry {
-    # The useTextEntry variable gets set only during initialization
-    if {$doingInit} {
-	set useTextEntry $itk_option(-useTextEntry)
-    }
-}
-
-::itcl::configbody TableView::textEntryWidth {
-    # The textEntryWidth variable gets set only during initialization
-    if {$doingInit} {
-	set textEntryWidth $itk_option(-textEntryWidth)
-    }
-}
-
-::itcl::configbody TableView::textEntryHeight {
-    # The textEntryHeight variable gets set only during initialization
-    if {$doingInit} {
-	set textEntryHeight $itk_option(-textEntryHeight)
-	set n [expr {int(0.5 * ($textEntryHeight + 1) - 1)}]
-	set textRowLabelPad ""
-	for {} {0 < $n} {incr n -1} {
-	    set textRowLabelPad "\n$textRowLabelPad"
-	}
-    }
-}
-
 ::itcl::body TableView::constructor {_labels args} {
-    # process options
-    eval itk_initialize $args
-
-    if {$useTextEntry} {
-	set entryOptionsList {}
-    }
-
     set vcols [llength $_labels]
     if {$vcols < 1} {
 	error "TableView::constructor: the number of column labels must be greater than 0"
@@ -358,17 +287,15 @@
 
     # build vertical scrollbar
     itk_component add vscroll {
-	::scrollbar $itk_interior.vscroll \
-	    -orient vertical \
-	    -command [::itcl::code $this yview]
+	::scrollbar $itk_interior.vscroll -orient vertical \
+		-command [::itcl::code $this yview]
     } {}
     grid $itk_component(vscroll) -row 0 -column 2 -sticky ns
 
     # build horizontal scrollbar
     itk_component add hscroll {
-	::scrollbar $itk_interior.hscroll \
-	    -orient horizontal \
-	    -command [::itcl::code $this xview]
+	::scrollbar $itk_interior.hscroll -orient horizontal \
+		-command [::itcl::code $this xview]
     } {}
     grid $itk_component(hscroll) -row 1 -column 1 -sticky ew
 
@@ -380,16 +307,8 @@
 
     bind [namespace tail $this] <Configure> [::itcl::code $this handleConfigure]
 
-    set doingInit 0
-
-    # process options again
+    # process options
     eval itk_initialize $args
-
-    if {$useTextEntry} {
-	updateRowLabels 1
-    }
-
-    scroll 0
 }
 
 ::itcl::body TableView::destructor {} {
@@ -484,8 +403,6 @@
     }
 
     $table configure -table $t
-    set firstrow 1
-    focus $itk_component(e1,1)
     scroll 0
 }
 
@@ -603,7 +520,7 @@
 	    }
 
 	    # shift entry configuration options from j2 to j1
-	    foreach o $entryOptionsList {
+	    foreach o $entryOptionList {
 		configCol $j1 $o [$itk_component($trow,$j2) cget $o]
 	    }
 
@@ -688,7 +605,7 @@
 	}
 
 	# shift entry configuration options from j1 to j2
-	foreach o $entryOptionsList {
+	foreach o $entryOptionList {
 	    configCol $j2 $o [$itk_component($trow,$j1) cget $o]
 	}
 
@@ -954,7 +871,6 @@
     }
 
     initColColors
-    checkIfAllColumnsDisabled
 }
 
 ::itcl::body TableView::bindRowLabel {i args} {
@@ -1006,11 +922,11 @@
 }
 
 ::itcl::body TableView::getLastRowLabelIndex {} {
-    return $itk_option(-lastRowLabelIndex)
+    return $lastRowLabelIndex
 }
 
 ::itcl::body TableView::setLastRowLabelIndex {i} {
-    set itk_option(-lastRowLabelIndex) $i
+    set lastRowLabelIndex $i
 }
 
 ::itcl::body TableView::bindColLabel {j args} {
@@ -1057,16 +973,8 @@
 	error "TableView::scroll: bad scroll value - $n"
     }
 
-    if {$n != 0 && 0 < $itk_option(-scrollLimit)} {
-	set maxRow [expr {$firstrow + $vrows + $n - 1}]
-	if {$itk_option(-scrollLimit) < $maxRow} {
-	    return
-	}
-    }
-
-    # Just in case the table has been modified behind our backs
+    # just in case table has been modified
     updateDrows
-
     incr firstrow $n
     set lastrow [expr {$firstrow + $vrows - 1}]
     if {$lastrow < $vrows} {
@@ -1090,11 +998,9 @@
 	updateVscroll
     }
 
-    enableColState
     deactivateTraces
     updateTable [expr {$firstrow - 1}]
     activateTraces
-    resetColState
 }
 
 ::itcl::body TableView::xview {cmd args} {
@@ -1175,14 +1081,8 @@
     }
 
     # update row labels
-    if {$useTextEntry} {
-	for {set i 1; set li $firstrow} {$i <= $vrows} {incr i; incr li} {
-	    setTextRow $itk_component(rl$i) $li
-	}
-    } else {
-	for {set i 1; set li $firstrow} {$i <= $vrows} {incr i; incr li} {
-	    $itk_component(rl$i) configure -text $li
-	}
+    for {set i 1; set li $firstrow} {$i <= $vrows} {incr i; incr li} {
+	$itk_component(rl$i) configure -text $li
     }
 }
 
@@ -1470,10 +1370,6 @@
 		    raise $itk_component(e$gi,$j)
 
 		    set evar($gi,$j) $val
-		    if {$useTextEntry} {
-			setTextEntry $itk_component(e$gi,$j) $val
-		    }
-
 		    incr j
 		}
 
@@ -1482,10 +1378,6 @@
 		set j 1
 		foreach val $row {
 		    set evar($gi,$j) $val
-		    if {$useTextEntry} {
-			setTextEntry $itk_component(e$gi,$j) $val
-		    }
-
 		    incr j
 		}
 	    }
@@ -1509,8 +1401,8 @@
 	    }
 
 	    # update row label
-	    if {$itk_option(-lastRowLabelIndex)} {
-		if {$di <= $itk_option(-lastRowLabelIndex)} {
+	    if {$lastRowLabelIndex} {
+		if {$di <= $lastRowLabelIndex} {
 		    set rlvar($gi) $di
 		} else {
 		    set rlvar($gi) ""
@@ -1520,10 +1412,6 @@
 	    }
 
 	    incr di
-	}
-
-	if {$useTextEntry} {
-	    setTextRow $itk_component(rl$gi) $rlvar($gi)
 	}
 
 	incr gi
@@ -1607,37 +1495,23 @@
 }
 
 ::itcl::body TableView::handleConfigure {} {
-    if {$doingConfigure} {
-	return
-    }
-
-    set doingConfigure 1
-    update idletasks
-
-    # horizontal scroll bar height
-    set hsh [winfo height $itk_component(hscroll)]
-
     # column label height
     set clh [winfo height $itk_component(cl1)]
 
-    # entry row height
-    set erh [winfo height $itk_component(e1,1)]
+    set elh [winfo height $itk_component(e1,1)]
 
     # total height of the table
     set winh [winfo height [namespace tail $this]]
 
-    # height of visable rows
-    set height [expr {$winh - $clh - $hsh}]
+    set height [expr {$winh - $clh}]
 
-#    set nrows [expr {int($height / double($erh))}]
-    set nrows [expr {$height / $erh}]
+    set nrows [expr {int($height / double($elh)) - 1}]
 
     if {$nrows < 3} {
 	set nrows 3
     }
 
     if {$nrows == $vrows} {
-	set doingConfigure 0
 	return
     }
 
@@ -1667,7 +1541,7 @@
 		}
 
 		# set configure options for entry e$i,$j using e1,$j
-		foreach o $entryOptionsList {
+		foreach o $entryOptionList {
 		    $itk_component(e$i,$j) configure $o [$itk_component(e1,$j) cget $o]
 		}
 	    }
@@ -1690,7 +1564,7 @@
 	    }
 
 	    # set configure options for row label i using rl1
-	    foreach o $entryOptionsList {
+	    foreach o $entryOptionList {
 		$itk_component(rl$i) configure $o [$itk_component(rl1) cget $o]
 	    }
 	}
@@ -1723,8 +1597,6 @@
     # Scroll to top so that empty rows will get removed.
     set firstrow 1
     scroll 0
-
-    set doingConfigure 0
 }
 
 ::itcl::body TableView::initColColors {} {
@@ -1763,16 +1635,6 @@
 ::itcl::body TableView::configureTable {} {
     $itk_component(canvas) configure \
 	    -scrollregion [$itk_component(canvas) bbox tableTag] 
-}
-
-::itcl::body TableView::checkIfAllColumnsDisabled {} {
-    set allColumnsDisabled 1
-    for {set j 1} {$j <= $vcols} {incr j} {
-	if {[$itk_component(e1,$j) cget -state] != "disabled"} {
-	    set allColumnsDisabled 0
-	    return
-	}
-    }
 }
 
 ################################ Private Methods ################################
@@ -1825,89 +1687,38 @@
     # deactivate the text variable
 #    unset evar($i,$j)
 
-    grid forget $itk_component(table).e$i,$j
     itk_component delete e$i,$j
     destroy $itk_component(table).e$i,$j
 }
 
 ::itcl::body TableView::buildEntry {i j} {
-    if {$useTextEntry} {
-	itk_component add e$i,$j {
-	    # activate the text variable
-	    set evar($i,$j) ""
+    itk_component add e$i,$j {
+	# activate the text variable
+	set evar($i,$j) ""
 
-	    ::text $itk_component(table).e$i,$j \
-		-wrap word \
-		-width $textEntryWidth \
-		-height $textEntryHeight
-	} {
-#	    keep -borderwidth -cursor -foreground -highlightcolor \
-		-highlightthickness -insertbackground -insertborderwidth \
-		-insertofftime -insertontime -insertwidth -justify \
-		-relief -selectbackground -selectborderwidth \
-		-selectforeground -show
+	::entry $itk_component(table).e$i,$j -textvariable [::itcl::scope evar($i,$j)]
+    } {
+	keep -borderwidth -cursor -foreground -highlightcolor \
+	    -highlightthickness -insertbackground -insertborderwidth \
+	    -insertofftime -insertontime -insertwidth -justify \
+	    -relief -selectbackground -selectborderwidth \
+	    -selectforeground -show
 
-	    rename -font -rowfont rowfont Font
-	    rename -highlightbackground -background background Background
-	    rename -background -entrybackground entryBackground Background
-	}
-
-	# Is this ugly or what?
-	::bind $itk_component(e$i,$j) <KeyPress> \
-	    "[::itcl::code $this handleTextEntryKeyPress %W %K]; \
-             if [list \$[list [::itcl::scope doBreak]]] break"
-	::bind $itk_component(e$i,$j) <Shift-KeyPress> \
-	    "[::itcl::code $this handleTextEntryShiftKeyPress %W %K]; \
-             if [list \$[list [::itcl::scope doBreak]]] break"
-	::bind $itk_component(e$i,$j) <FocusOut> [::itcl::code $this handleLostFocus %W]
-    } else {
-	itk_component add e$i,$j {
-	    # activate the text variable
-	    set evar($i,$j) ""
-
-	    ::entry $itk_component(table).e$i,$j \
-		-textvariable [::itcl::scope evar($i,$j)]
-	} {
-	    keep -borderwidth -cursor -foreground -highlightcolor \
-		-highlightthickness -insertbackground -insertborderwidth \
-		-insertofftime -insertontime -insertwidth -justify \
-		-relief -selectbackground -selectborderwidth \
-		-selectforeground -show
-
-	    rename -font -rowfont rowfont Font
-	    rename -highlightbackground -background background Background
-	    rename -background -entrybackground entryBackground Background
-	}
+	rename -font -rowfont rowfont Font
+	rename -highlightbackground -background background Background
+	rename -background -entrybackground entryBackground Background
     }
 }
 
 ::itcl::body TableView::buildRow {i} {
-#    if {$doingConfigure} {
-#	return
-#    }
-
     # create row label
     itk_component add rl$i {
 	# activate the text variable
 	set rlvar($i) $i
-	if {$useTextEntry} {
-	    ::text $itk_component(rowLabels).rl$i \
-		-width 4 \
-		-height $textEntryHeight \
-		-state disabled \
-		-relief flat \
-		-background SystemButtonFace \
-		-foreground SystemButtonText
-	} else {
-	    ::entry $itk_component(rowLabels).rl$i \
-		-textvariable [::itcl::scope rlvar($i)] \
-		-width 4 \
-		-justify right \
-		-state disabled \
-		-relief flat \
-		-disabledbackground SystemButtonFace \
-		-disabledforeground SystemButtonText
-	}
+	::entry $itk_component(rowLabels).rl$i -textvariable [::itcl::scope rlvar($i)] \
+		-width 4 -justify right -state disabled -relief flat
+
+	#::label $itk_component(rowLabels).rl$i -text $i
     } {
 	rename -borderwidth -rlborderwidth rlborderwidth Rlborderwidth
 	#rename -width -rlwidth rlwidth Rlwidth
@@ -1930,12 +1741,10 @@
 
 ::itcl::body TableView::destroyRow {i} {
     # destroy row label
-    grid forget $itk_component(rowLabels).rl$i
     itk_component delete rl$i
     destroy $itk_component(rowLabels).rl$i
 
     # destroy separator label
-    grid forget $itk_component(table).sl$i
     itk_component delete sl$i
     destroy $itk_component(table).sl$i
 
@@ -2046,389 +1855,10 @@
     set i [expr {[lindex $tindex 0] + $firstrow - 1}]
     set j [lindex $tindex 1]
 
-    # update entry i,j in table
+    # update row i in table
     $table setEntry $i $j $evar($index)
 
 #    set watchingTables 0
-}
-
-::itcl::body TableView::doTextEntryKeyPress {W K} {
-    if {[catch {getRowIndex $W} ri]} {
-	return
-    }
-
-    set i [expr {$ri - $firstrow + 1}]
-    set j [getColIndex $W]
-    set val [string trim [$W get 1.0 end]]
-    set evar($i,$j) $val
-}
-
-::itcl::body TableView::handleTextEntryKeyPress {W K} {
-    switch -- $K {
-	"Return" {
-	    handleTextEntryReturn $W
-	    set doBreak 1
-	}
-	"Tab" {
-	    handleTextEntryTab $W
-	    set doBreak 1
-	}
-	"Shift_L" -
-	"Shift_R" {
-	    set doBreak 0
-	}
-	default {
-	    after idle [::itcl::code $this doTextEntryKeyPress $W $K]
-	    set doBreak 0
-	}
-    }
-}
-
-::itcl::body TableView::handleTextEntryShiftKeyPress {W K} {
-    switch -- $K {
-	"Return" {
-	    handleTextEntryShiftReturn $W
-	    set doBreak 1
-	}
-	"Tab" {
-	    handleTextEntryShiftTab $W
-	    set doBreak 1
-	}
-	"Shift_L" -
-	"Shift_R" {
-	    set doBreak 0
-	}
-	default {
-	    after idle [::itcl::code $this doTextEntryKeyPress $W $K]
-	    set doBreak 0
-	}
-    }
-}
-
-
-::itcl::body TableView::handleTextEntryReturn {w} {
-    if {[catch {expr {[getDataRowIndex $w] + 1}} ri]} {
-	return
-    }
-
-    set i [expr {$ri - $firstrow + 1}]
-    set j [getColIndex $w]
-
-    if {$itk_option(-lostFocusCallback) != ""} {
-	set prevRi [expr {$ri - 1}]
-	set prevData $evar([expr {$i - 1}],$j)
-
-	set ret [$itk_option(-lostFocusCallback) $prevRi $j $prevData]
-	if {$ret == "1"} {
-	    if {$ri <= $lastrow} {
-		focus $itk_component(e$i,$j)
-	    } else {
-		scroll 1
-	    }
-	} else {
-	    if {($itk_option(-scrollLimit) <= 0 && $ri <= $drows) ||
-		($itk_option(-scrollLimit) != 0 && $ri <= $itk_option(-scrollLimit))} {
-		if {$ri <= $lastrow} {
-		    focus $itk_component(e$i,$j)
-		} else {
-		    scroll 1
-		}
-	    } else {
-		set firstrow 1
-		scroll 0
-		focus $itk_component(e1,$j)
-	    }
-	}
-    } else {
-	if {($itk_option(-scrollLimit) <= 0 && $ri <= $drows) ||
-	    ($itk_option(-scrollLimit) != 0 && $ri <= $itk_option(-scrollLimit))} {
-	    if {$ri <= $lastrow} {
-		focus $itk_component(e$i,$j)
-	    } else {
-		scroll 1
-	    }
-	} else {
-	    set firstrow 1
-	    scroll 0
-	    focus $itk_component(e1,$j)
-	}
-    }
-}
-
-::itcl::body TableView::handleTextEntryShiftReturn {w} {
-    if {[catch {expr {[getDataRowIndex $w] - 1}} ri]} {
-	return
-    }
-
-    set i [expr {$ri - $firstrow + 1}]
-    set j [getColIndex $w]
-
-    if {$itk_option(-lostFocusCallback) != ""} {
-	set prevRi [expr {$ri + 1}]
-	set prevData $evar([expr {$i + 1}],$j)
-    }
-
-
-    if {$firstrow <= $ri} {
-	focus $itk_component(e$i,$j)
-    } elseif {1 <= $ri} {
-	scroll -1
-    } else {
-	if {$itk_option(-scrollLimit) <= 0} {
-	    set firstrow [expr {$drows - $vrows + 1}]
-	} else {
-	    set firstrow [expr {$itk_option(-scrollLimit) - $vrows + 1}]
-	}
-
-	scroll 0
-
-	if {$itk_option(-scrollLimit) <= 0 ||
-	    $vrows < $itk_option(-scrollLimit)} {
-	    focus $itk_component(e$vrows,$j)
-	} else {
-	    focus $itk_component(e$itk_option(-scrollLimit),$j)
-	}
-    }
-
-    if {$itk_option(-lostFocusCallback) != ""} {
-	$itk_option(-lostFocusCallback) $prevRi $j $prevData
-    }
-}
-
-##
-#
-#    The use of allColumnsDisabled allows this algorithm to
-#    prevent an infinite loop when skipping disabled entries
-#    in the case where all entries have been disabled.
-#
-::itcl::body TableView::handleTextEntryTab {w} {
-    if {[catch {getDataRowIndex $w} ri]} {
-	return
-    }
-
-    set i [expr {$ri - $firstrow + 1}]
-    set j [expr {[getColIndex $w] + 1}]
-
-    if {$itk_option(-lostFocusCallback) != ""} {
-	set prevRi $ri
-	set prevJ [expr {$j - 1}]
-	set prevData $evar($i,$prevJ)
-
-	set ret [$itk_option(-lostFocusCallback) $prevRi $prevJ $prevData]
-	if {$j <= $vcols} {
-	    if {!$allColumnsDisabled &&
-		[$itk_component(e$i,$j) cget -state] == "disabled"} {
-		handleTextEntryTab $itk_component(e$i,$j)
-	    } else {
-		focus $itk_component(e$i,$j)
-	    }
-	} elseif {$ret == "1"} {
-	    incr ri
-	    if {$ri <= $lastrow} {
-		if {!$allColumnsDisabled &&
-		    [$itk_component(e$i,$j) cget -state] == "disabled"} {
-		    handleTextEntryTab $itk_component(e$i,$j)
-		} else {
-		    focus $itk_component(e$i,$j)
-		}
-	    } else {
-		scroll 1
-	    }
-	} else {
-	    incr ri
-	    if {($itk_option(-scrollLimit) <= 0 && $ri <= $drows) || 
-		($itk_option(-scrollLimit) != 0 && $ri <= $itk_option(-scrollLimit))} {
-		if {$ri <= $lastrow} {
-		    incr i
-		} else {
-		    scroll 1
-		}
-
-		if {!$allColumnsDisabled &&
-		    [$itk_component(e$i,1) cget -state] == "disabled"} {
-		    handleTextEntryTab $itk_component(e$i,1)
-		} else {
-		    focus $itk_component(e$i,1)
-		}
-	    } else {
-		set firstrow 1
-
-		if {!$allColumnsDisabled &&
-		    [$itk_component(e1,1) cget -state] == "disabled"} {
-		    scroll 0
-		    handleTextEntryTab $itk_component(e1,1)
-		} else {
-		    focus $itk_component(e1,1)
-		    scroll 0
-		}
-	    }
-	}
-    } else {
-	if {$j <= $vcols} {
-	    if {!$allColumnsDisabled &&
-		[$itk_component(e$i,$j) cget -state] == "disabled"} {
-		handleTextEntryTab $itk_component(e$i,$j)
-	    } else {
-		focus $itk_component(e$i,$j)
-	    }
-	} else {
-	    incr ri
-	    if {($itk_option(-scrollLimit) <= 0 && $ri <= $drows) || 
-		($itk_option(-scrollLimit) != 0 && $ri <= $itk_option(-scrollLimit))} {
-		if {$ri <= $lastrow} {
-		    incr i
-		} else {
-		    scroll 1
-		}
-
-		if {!$allColumnsDisabled &&
-		    [$itk_component(e$i,1) cget -state] == "disabled"} {
-		    handleTextEntryTab $itk_component(e$i,1)
-		} else {
-		    focus $itk_component(e$i,1)
-		}
-	    } else {
-		set firstrow 1
-
-		if {!$allColumnsDisabled &&
-		    [$itk_component(e1,1) cget -state] == "disabled"} {
-		    scroll 0
-		    handleTextEntryTab $itk_component(e1,1)
-		} else {
-		    focus $itk_component(e1,1)
-		    scroll 0
-		}
-	    }
-	}
-    }
-}
-
-##
-#
-#    The use of allColumnsDisabled allows this algorithm to
-#    prevent an infinite loop when skipping disabled entries
-#    in the case where all entries have been disabled.
-#
-::itcl::body TableView::handleTextEntryShiftTab {w} {
-    if {[catch {getDataRowIndex $w} ri]} {
-	return
-    }
-
-    set i [expr {$ri - $firstrow + 1}]
-    set j [expr {[getColIndex $w] - 1}]
-
-    if {$itk_option(-lostFocusCallback) != ""} {
-	set prevRi $ri
-	set prevJ [expr {$j + 1}]
-	set prevData $evar($i,$prevJ)
-    }
-
-    if {1 <= $j} {
-	if {!$allColumnsDisabled &&
-	    [$itk_component(e$i,$j) cget -state] == "disabled"} {
-	    handleTextEntryShiftTab $itk_component(e$i,$j)
-	} else {
-	    focus $itk_component(e$i,$j)
-	}
-    } else {
-	incr ri -1
-	if {$firstrow <= $ri} {
-	    incr i -1
-	    if {!$allColumnsDisabled &&
-		[$itk_component(e$i,$vcols) cget -state] == "disabled"} {
-		handleTextEntryShiftTab $itk_component(e$i,$vcols)
-	    } else {
-		focus $itk_component(e$i,$vcols)
-	    }
-	} elseif {1 <= $ri} {
-	    if {!$allColumnsDisabled &&
-		[$itk_component(e$i,$vcols) cget -state] == "disabled"} {
-		handleTextEntryShiftTab $itk_component(e$i,$vcols)
-	    } else {
-		focus $itk_component(e$i,$vcols)
-		scroll -1
-	    }
-	} else {
-	    if {$itk_option(-scrollLimit) <= 0} {
-		set firstrow [expr {$drows - $vrows + 1}]
-	    } else {
-		set firstrow [expr {$itk_option(-scrollLimit) - $vrows + 1}]
-	    }
-
-	    scroll 0
-
-	    if {$itk_option(-scrollLimit) <= 0 ||
-		$vrows < $itk_option(-scrollLimit)} {
-		if {!$allColumnsDisabled &&
-		    [$itk_component(e$vrows,$vcols) cget -state] == "disabled"} {
-		    handleTextEntryShiftTab $itk_component(e$vrows,$vcols)
-		} else {
-		    focus $itk_component(e$vrows,$vcols)
-		}
-	    } else {
-		if {!$allColumnsDisabled &&
-		    [$itk_component(e$itk_option(-scrollLimit),$vcols) cget -state] == "disabled"} {
-		    handleTextEntryShiftTab $itk_component(e$itk_option(-scrollLimit),$vcols)
-		} else {
-		    focus $itk_component(e$itk_option(-scrollLimit),$vcols)
-		}
-	    }
-	}
-    }
-
-    if {$itk_option(-lostFocusCallback) != ""} {
-	$itk_option(-lostFocusCallback) $prevRi $prevJ $prevData
-    }
-}
-
-::itcl::body TableView::handleLostFocus {w} {
-    if {$itk_option(-lostFocusCallback) != ""} {
-	if {[catch {getDataRowIndex $w} ri]} {
-	    return
-	}
-
-	set i [expr {$ri - $firstrow + 1}]
-	set j [getColIndex $w]
-	$itk_option(-lostFocusCallback) $i $j $evar($i,$j)
-    }
-}
-
-::itcl::body TableView::setTextRow {w val} {
-    set val $textRowLabelPad$val
-    $w configure -state normal
-    $w delete 1.0 end
-    $w insert end $val
-    $w configure -state disabled
-}
-
-::itcl::body TableView::setTextEntry {w val} {
-    $w delete 1.0 end
-    $w insert end $val
-}
-
-::itcl::body TableView::getStack {} {
-    set stack {}
-    set lvl [info level]
-    incr lvl -1
-    for {} {$lvl > 0} {incr lvl -1} {
-	lappend stack [info level -$lvl]
-    }
-
-    return $stack
-}
-
-::itcl::body TableView::enableColState {} {
-    set savedColState {{}}
-    for {set j 1} {$j <= $vcols} {incr j} {
-	lappend savedColState [$itk_component(e1,$j) cget -state]
-	configCol $j -state normal
-    }
-}
-
-::itcl::body TableView::resetColState {} {
-    for {set j 1} {$j <= $vcols} {incr j} {
-	configCol $j -state [lindex $savedColState $j]
-    }
 }
 
 # Local Variables:

@@ -18,11 +18,11 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup oslo */
-/*@{*/
 /** @file oslo_map.c
- * Map the olso matrix with the old curve resulting in a new one.
+ *       M A P _ O S L O . C
+ *
+ * Function -
+ *     Map the olso matrix with the old curve resulting in a new one.
  * 
  * Author -
  *     Paul R. Stay
@@ -33,7 +33,6 @@
  *     Aberdeen Proving Ground, Maryland 21005
  *
  */
-/*@}*/
 
 #include "common.h"
 

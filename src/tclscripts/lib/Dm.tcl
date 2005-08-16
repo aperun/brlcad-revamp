@@ -126,26 +126,15 @@
     private method helpInit {}
 
     private variable initializing 1
+    private variable priv_type X
     private variable tkwin
-
-    if {$tcl_platform(os) != "Windows NT"} {
-	private variable priv_type X
-    } else {
-	private variable priv_type ogl
-    }
 
     private variable help
 }
 
 ::itcl::body Dm::constructor {args} {
-    global tcl_platform
-
     if {[catch {dm_bestXType :0} priv_type]} {
-	if {$tcl_platform(os) != "Windows NT"} {
-	    set priv_type X
-	} else {
-	    set priv_type ogl
-	}
+	set priv_type X
     }
 
     # process options now (i.e. -type may have been specified)
@@ -624,9 +613,9 @@ if {$tcl_platform(os) != "Windows NT"} {
 
     eval Dm::dmsize $itk_option(-dmsize)
     if {$tcl_platform(os) != "Windows NT"} {
+	Dm::listen $itk_option(-listen)
 	Dm::fb_active $itk_option(-fb_active)
 	Dm::fb_observe $itk_option(-fb_observe)
-	Dm::listen $itk_option(-listen)
     }
     eval Dm::bg $itk_option(-bg)
     Dm::light $itk_option(-light)

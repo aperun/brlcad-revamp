@@ -18,11 +18,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup librt */
-/*@{*/
 /** @file vdraw.c
- * Edit vector lists and display them as pseudosolids.
+ *
+ edit vector lists and display them as pseudosolids.
 
 OPEN COMMAND
 vdraw	open			- with no argument, asks if there is
@@ -99,7 +97,7 @@ Acknowledgements:
 	*- build separate vdraw commands
 
 ********************************************************************/
-/*@}*/
+
 #include "common.h"
 
 #include <stdio.h>

@@ -18,12 +18,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup librt */
-/*@{*/
-
 /** @file pr.c
- *  Routines to print LIBRT data structures using bu_log().
+ * 
+ *  Routines to print LIBRT data structures using bu_log()
  *
  *  Author -
  *	Michael John Muuss
@@ -32,8 +29,6 @@
  *	The U. S. Army Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  */
-/*@}*/
-
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (ARL)";
 #endif

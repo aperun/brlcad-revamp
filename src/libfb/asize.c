@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libfb */
-/*@{*/
-/** @file ./libfb/asize.c
+/** @file asize.c
+ *
  * Image file AutoSizing code.
  *
  *  Author -
@@ -33,7 +31,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
 
 #ifndef lint
 static char RCSid[] = "@(#)$Header$ (BRL)";
@@ -49,7 +46,7 @@ static char RCSid[] = "@(#)$Header$ (BRL)";
 #else
 #  include <strings.h>
 #endif
-#include "fb.h"
+
 
 /* This table does not need to include any square sizes */
 struct sizes {

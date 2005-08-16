@@ -18,10 +18,14 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup nurb */
-/*@{*/
 /** @file nurb_poly.c
+ *
+ */
+
+/* 
+ *      N U R B _ T O _P O L Y . C
+ *
+ * Function -
  *     Returns two polygons from a NURB surface.
  *     Asumes that the surface is flat.
  * 
@@ -34,7 +38,6 @@
  *     Aberdeen Proving Ground, Maryland 21005
  *
  */
-/*@}*/
 
 #include "common.h"
 

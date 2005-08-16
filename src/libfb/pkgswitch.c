@@ -18,14 +18,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup libfb */
-/*@{*/
-
 /** @file pkgswitch.c
- * Package Handlers.
+ *
  */
-/*@}*/
 
 #include "./pkg.h"
 #include "./pkgtypes.h"

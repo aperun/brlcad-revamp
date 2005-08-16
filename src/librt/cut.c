@@ -18,10 +18,8 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup librt */
-/*@{*/
 /** @file cut.c
+ *  
  *  Cut space into lots of small boxes (RPPs actually).
  *  
  *  Call tree for default path through the code:
@@ -43,8 +41,6 @@
  *	Aberdeen Proving Ground, Maryland  21005-5066
  *  
  */
-/*@}*/
-
 #ifndef lint
 static const char RCScut[] = "@(#)$Header$ (BRL)";
 #endif

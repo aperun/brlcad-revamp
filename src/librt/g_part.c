@@ -18,11 +18,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-/** \addtogroup g */
-
-/*@{*/
 /** @file g_part.c
+ *
+ *  Purpose -
  *	Intersect a ray with a "particle" solid, which can have
  *	three main forms:  sphere, hemisphere-tipped cylinder (lozenge),
  *	and hemisphere-tipped cone.
@@ -183,7 +181,6 @@
  *  This makes the cone end where it is tangent to the hemisphere.
  *  The calculation for theta come from a diagram drawn by PJT on 18-Nov-99.
  */
-/*@}*/
 #ifndef lint
 static const char RCSpart[] = "@(#)$Header$ (BRL)";
 #endif
@@ -233,7 +230,7 @@ const struct bu_structparse rt_part_parse[] = {
 	    
 RT_EXTERN( void rt_part_ifree, (struct rt_db_internal *ip) );
 
-/**
+/*
  *  			R T _ P A R T _ P R E P
  *  
  *  Given a pointer to a GED database record, and a transformation matrix,
@@ -404,7 +401,7 @@ rt_part_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip)
 	return(0);			/* OK */
 }
 
-/**
+/*
  *			R T _ P A R T _ P R I N T
  */
 void
@@ -438,7 +435,7 @@ rt_part_print(register const struct soltab *stp)
 	}
 }
 
-/**
+/*
  *  			R T _ P A R T _ S H O T
  *  
  *  Intersect a ray with a part.
@@ -742,7 +739,7 @@ out:
 
 #define SEG_MISS(SEG)		(SEG).seg_stp=(struct soltab *) 0;	
 
-/**
+/*
  *			R T _ P A R T _ V S H O T
  *
  *  Vectorized version.
@@ -758,7 +755,7 @@ rt_part_vshot(struct soltab **stp, struct xray **rp, struct seg *segp, int n, st
 	rt_vstub( stp, rp, segp, n, ap ); 
 }
 
-/**
+/*
  *  			R T _ P A R T _ N O R M
  *  
  *  Given ONE ray distance, return the normal and entry/exit point.
@@ -807,7 +804,7 @@ rt_part_norm(register struct hit *hitp, struct soltab *stp, register struct xray
 	}
 }
 
-/**
+/*
  *			R T _ P A R T _ C U R V E
  *
  *  Return the curvature of the particle.
@@ -846,7 +843,7 @@ rt_part_curve(register struct curvature *cvp, register struct hit *hitp, struct 
 	}
 }
 
-/**
+/*
  *  			R T _ P A R T _ U V
  *  
  *  For a hit on the surface of a particle, return the (u,v) coordinates
@@ -898,7 +895,7 @@ rt_part_uv(struct application *ap, struct soltab *stp, register struct hit *hitp
 		bn_inv2pi * r / minrad;
 }
 
-/**
+/*
  *		R T _ P A R T _ F R E E
  */
 void
@@ -911,7 +908,7 @@ rt_part_free(register struct soltab *stp)
 	stp->st_specific = GENPTR_NULL;
 }
 
-/**
+/*
  *			R T _ P A R T _ C L A S S
  */
 int
@@ -920,7 +917,7 @@ rt_part_class(void)
 	return(0);
 }
 
-/**
+/*
  *			R T _ P A R T _ H E M I S P H E R E 8
  *
  *  Produce a crude approximation to a hemisphere,
@@ -957,7 +954,7 @@ rt_part_hemisphere(register point_t (*ov), register fastf_t *v, fastf_t *a, fast
 	/* Obviously, this could be optimized quite a lot more */
 }
 
-/**
+/*
  *			R T _ P A R T _ P L O T
  */
 int
@@ -1082,7 +1079,7 @@ struct part_vert_strip {
 	struct faceuse	**fu;
 };
 
-/**
+/*
  *			R T _ P A R T _ T E S S
  *
  *  Based upon the tesselator for the ellipsoid.
@@ -1472,7 +1469,7 @@ fail:
 	return(-1);
 }
 
-/**
+/*
  *			R T _ P A R T _ I M P O R T
  */
 int
@@ -1557,7 +1554,7 @@ rt_part_import(struct rt_db_internal *ip, const struct bu_external *ep, register
 	return(0);		/* OK */
 }
 
-/**
+/*
  *			R T _ P A R T _ E X P O R T
  */
 int
@@ -1597,7 +1594,7 @@ rt_part_export(struct bu_external *ep, const struct rt_db_internal *ip, double l
 }
 
 
-/**
+/*
  *			R T _ P A R T _ I M P O R T 5
  */
 int
@@ -1672,7 +1669,7 @@ rt_part_import5(struct rt_db_internal *ip, const struct bu_external *ep, registe
 	return(0);		/* OK */
 }
 
-/**
+/*
  *			R T _ P A R T _ E X P O R T 5
  */
 int
@@ -1704,7 +1701,7 @@ rt_part_export5(struct bu_external *ep, const struct rt_db_internal *ip, double 
 	return(0);
 }
 
-/**
+/*
  *			R T _ P A R T _ D E S C R I B E
  *
  *  Make human-readable formatted presentation of this solid.
@@ -1773,7 +1770,7 @@ rt_part_describe(struct bu_vls *str, const struct rt_db_internal *ip, int verbos
 	return(0);
 }
 
-/**
+/*
  *			R T _ P A R T _ I F R E E
  *
  *  Free the storage associated with the rt_db_internal version of this solid.

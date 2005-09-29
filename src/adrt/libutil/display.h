@@ -59,6 +59,5 @@ void util_display_flip(void);
 void util_display_editor(char **content_buffer, int *content_lines, char **console_buffer, int *console_lines, void (*fcb_process)(char *content, char *response));
 
 extern SDL_Surface *util_display_screen;
-extern SDL_Surface *util_display_buffer;
 
 #endif

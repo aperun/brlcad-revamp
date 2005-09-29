@@ -65,8 +65,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <errno.h>
 
 #include "machine.h"
-#include "bu.h"
-
 
 char	Yes_Response[] = "y";
 int	Verbose=0;
@@ -83,13 +81,13 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "t:r:vl" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "t:r:vl" )) != EOF )  {
 		switch( c )  {
 		case 't':
-			Timeout = atoi(bu_optarg);
+			Timeout = atoi(optarg);
 			break;
 		case 'r':
-			Response = bu_optarg;
+			Response = optarg;
 			break;
 		case 'v':
 			Verbose = 1 - Verbose;

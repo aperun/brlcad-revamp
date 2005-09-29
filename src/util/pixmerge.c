@@ -56,7 +56,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "machine.h"
-#include "bu.h"
 
 
 static char	*f1_name;
@@ -93,7 +92,7 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "glenw:C:c:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "glenw:C:c:" )) != EOF )  {
 		switch( c )  {
 		case 'g':
 			wanted |= GT;
@@ -112,14 +111,14 @@ get_args(int argc, register char **argv)
 			seen_formula = 1;
 			break;
 		case 'w':
-			c = atoi(bu_optarg);
+			c = atoi(optarg);
 			if( c > 1 && c < sizeof(pconst) )
 				width = c;
 			break;
 		case 'C':
 		case 'c':	/* backword compatability */
 			{
-				register char *cp = bu_optarg;
+				register char *cp = optarg;
 				register unsigned char *conp = pconst;
 
 				/* premature null => atoi gives zeros */
@@ -136,10 +135,10 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if( bu_optind+2 > argc )
+	if( optind+2 > argc )
 		return(0);
 
-	f1_name = argv[bu_optind++];
+	f1_name = argv[optind++];
 	if( strcmp( f1_name, "-" ) == 0 )
 		f1 = stdin;
 	else if( (f1 = fopen(f1_name, "r")) == NULL )  {
@@ -150,7 +149,7 @@ get_args(int argc, register char **argv)
 		return(0);
 	}
 
-	f2_name = argv[bu_optind++];
+	f2_name = argv[optind++];
 	if( strcmp( f2_name, "-" ) == 0 )
 		f2 = stdin;
 	else if( (f2 = fopen(f2_name, "r")) == NULL )  {
@@ -161,7 +160,7 @@ get_args(int argc, register char **argv)
 		return(0);
 	}
 
-	if ( argc > bu_optind )
+	if ( argc > optind )
 		(void)fprintf( stderr, "pixmerge: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

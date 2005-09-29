@@ -49,7 +49,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <time.h>	/* for ctime() */
 
 #include "machine.h"
-#include "bu.h"
 
 #define	DEFAULT_SIZE	6.75		/* default output size in inches */
 #define	MAX_BYTES	(64*128)	/* max bytes per image chunk */
@@ -83,7 +82,7 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "ehcLs:w:n:S:W:N:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "ehcLs:w:n:S:W:N:" )) != EOF )  {
 		switch( c )  {
 		case 'e':
 			/* Encapsulated PostScript */
@@ -101,23 +100,23 @@ get_args(int argc, register char **argv)
 			break;
 		case 's':
 			/* square file size */
-			height = width = atoi(bu_optarg);
+			height = width = atoi(optarg);
 			break;
 		case 'w':
-			width = atoi(bu_optarg);
+			width = atoi(optarg);
 			break;
 		case 'n':
-			height = atoi(bu_optarg);
+			height = atoi(optarg);
 			break;
 		case 'S':
 			/* square file size */
-			outheight = outwidth = atof(bu_optarg);
+			outheight = outwidth = atof(optarg);
 			break;
 		case 'W':
-			outwidth = atof(bu_optarg);
+			outwidth = atof(optarg);
 			break;
 		case 'N':
-			outheight = atof(bu_optarg);
+			outheight = atof(optarg);
 			break;
 
 		default:		/* '?' */
@@ -125,13 +124,13 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		if( isatty(fileno(stdin)) )
 			return(0);
 		file_name = "[stdin]";
 		infp = stdin;
 	} else {
-		file_name = argv[bu_optind];
+		file_name = argv[optind];
 		if( (infp = fopen(file_name, "r")) == NULL )  {
 			(void)fprintf( stderr,
 				"bw-ps: cannot open \"%s\" for reading\n",
@@ -141,7 +140,7 @@ get_args(int argc, register char **argv)
 		/*fileinput++;*/
 	}
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "bw-ps: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

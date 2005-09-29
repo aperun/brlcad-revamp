@@ -51,7 +51,6 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include <math.h>
 
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 
 char *options = "vf:F:";
@@ -143,16 +142,16 @@ main(int argc, char **argv)
 
 	/* check for flags */
 	opterr = 0;
-	while ((i=bu_getopt(argc, argv, options)) != EOF) {
+	while ((i=getopt(argc, argv, options)) != EOF) {
 		switch(i) {
 		case 'v':
 			verbose++;
 			break;
 		case 'F':
-			framebuffer = bu_optarg;
+			framebuffer = optarg;
 			break;
 		case 'f':
-			input_file = bu_optarg;
+			input_file = optarg;
 			break;
 		default:
 			fprintf( stderr, "fbgammamod: Unrecognized option '%c'\n%s",
@@ -161,28 +160,28 @@ main(int argc, char **argv)
 		}
 	}
 
-	if( bu_optind != argc - 13 )  {
+	if( optind != argc - 13 )  {
 		fprintf( stderr, usage );
 		exit(1);
 	}
 
 	/* Gobble 13 positional args */
-	ra = atof( argv[bu_optind+0] );
-	rm = atof( argv[bu_optind+1] );
-	rg = atof( argv[bu_optind+2] );
+	ra = atof( argv[optind+0] );
+	rm = atof( argv[optind+1] );
+	rg = atof( argv[optind+2] );
 
-	ga = atof( argv[bu_optind+3] );
-	gm = atof( argv[bu_optind+4] );
-	gg = atof( argv[bu_optind+5] );
+	ga = atof( argv[optind+3] );
+	gm = atof( argv[optind+4] );
+	gg = atof( argv[optind+5] );
 
-	ba = atof( argv[bu_optind+6] );
-	bm = atof( argv[bu_optind+7] );
-	bg = atof( argv[bu_optind+8] );
+	ba = atof( argv[optind+6] );
+	bm = atof( argv[optind+7] );
+	bg = atof( argv[optind+8] );
 
-	pre_gam = atof( argv[bu_optind+9] );
-	add = atof( argv[bu_optind+10] );
-	mul = atof( argv[bu_optind+11] );
-	post_gam = atof( argv[bu_optind+12] );
+	pre_gam = atof( argv[optind+9] );
+	add = atof( argv[optind+10] );
+	mul = atof( argv[optind+11] );
+	post_gam = atof( argv[optind+12] );
 
 	if( verbose )  {
 		fprintf(stderr, "r+ = %g, r* = %g, r gam=%g\n", ra, rm, rg);

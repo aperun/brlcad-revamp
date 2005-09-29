@@ -46,15 +46,11 @@ static const char RCSview[] = "@(#)$Header:";
 #include <math.h>
 
 #include "machine.h"
-#include "bu.h"
-#include "bn.h"
 #include "vmath.h"
 #include "raytrace.h"
-#include "optical.h"
 #include "rtprivate.h"
 #include "light.h"
 #include "plot3.h"
-
 
 
 /*
@@ -99,7 +95,7 @@ register const struct shadework *swp;
 	bu_log( " sw_xmitonly %d\n", swp->sw_xmitonly );
 	bu_log( "\n");
 	if( swp->sw_inputs & MFI_LIGHT ) for( i=0; i < SW_NLIGHTS; i++ )  {
-		if( swp->sw_visible[i] == (struct light_specific *)NULL )  continue;
+		if( swp->sw_visible[i] == (char *)0 )  continue;
 		RT_CK_LIGHT( swp->sw_visible[i] );
 #ifdef RT_MULTISPECTRAL
 		bu_log("   light %d visible, dir=(%g,%g,%g)\n",
@@ -133,7 +129,11 @@ register const struct shadework *swp;
  *  array is not needed, or has been handled elsewhere.
  */
 void
-shade_inputs( struct application *ap, const struct partition *pp, struct shadework *swp, int want )
+shade_inputs( ap, pp, swp, want )
+struct application *ap;
+register const struct partition *pp;
+register struct shadework *swp;
+register int	want;
 {
 	register int	have;
 
@@ -269,11 +269,14 @@ hit pt: %g %g %g end pt: %g %g %g\n",
  *	Everyone calls us as (void)viewshade()
  */
 int
-viewshade( struct application *ap, const struct partition *pp, struct shadework *swp )
+viewshade( ap, pp, swp )
+struct application *ap;
+register const struct partition *pp;
+register struct shadework *swp;
 {
 	register const struct mfuncs *mfp;
 	register const struct region *rp;
-	struct light_specific *lp;
+	register const struct light_specific *lp;
 	register int	want;
 
 	RT_AP_CHECK(ap);
@@ -329,10 +332,10 @@ viewshade( struct application *ap, const struct partition *pp, struct shadework 
 		i=0;
 		for( BU_LIST_FOR( lp, light_specific, &(LightHead.l) ) )  {
 			RT_CK_LIGHT(lp);
-			swp->sw_visible[i++] = lp;
+			swp->sw_visible[i++] = (char *)lp;
 		}
 		for( ; i < SW_NLIGHTS; i++ )  {
-			swp->sw_visible[i] = (struct light_specific *)NULL;
+			swp->sw_visible[i] = (char *)NULL;
 		}
 	}
 
@@ -349,7 +352,7 @@ viewshade( struct application *ap, const struct partition *pp, struct shadework 
 
 		/* sanity */
 		for( i = SW_NLIGHTS-1; i >= 0; i-- )  {
-			swp->sw_visible[i] = (struct light_specific *)NULL;
+			swp->sw_visible[i] = (char *)NULL;
 		}
 	}
 

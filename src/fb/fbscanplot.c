@@ -45,7 +45,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 
 unsigned char	*scan;		/* Scanline to be examined */
@@ -72,7 +71,7 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "cvhorW:F:" )) != EOF ) {
+	while ( (c = getopt( argc, argv, "cvhorW:F:" )) != EOF ) {
 		switch( c )  {
 		case 'c':
 			cmap_crunch++;
@@ -90,22 +89,22 @@ get_args(int argc, register char **argv)
 			reverse++;
 			break;
 		case 'W':
-			scr_width = atoi(bu_optarg);
+			scr_width = atoi(optarg);
 			break;
 		case 'F':
-			outframebuffer = bu_optarg;
+			outframebuffer = optarg;
 			break;
 		default:		/* '?' */
 			return(0);
 		}
 	}
 
-	if( bu_optind >= argc )
+	if( optind >= argc )
 		return(0);
 	else
-		yline = atoi( argv[bu_optind] );
+		yline = atoi( argv[optind] );
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		return(0);	/* too many args */
 
 	return(1);		/* OK */

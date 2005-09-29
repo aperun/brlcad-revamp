@@ -125,7 +125,7 @@ register char **argv;
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "aft:ns:S:1" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "aft:ns:S:1" )) != EOF )  {
 		switch( c )  {
 		case 'a':
 			axis++;
@@ -134,16 +134,16 @@ register char **argv;
 			fullscreen++;
 			break;
 		case 't':
-			thickness = atoi(bu_optarg);
+			thickness = atoi(optarg);
 			break;
 		case 'n':
 			ntsc = 1;
 			break;
 		case 's':
-			shellcmd = bu_optarg;
+			shellcmd = optarg;
 			break;
 		case 'S':
-			shellcmd = bu_optarg;
+			shellcmd = optarg;
 			shellexit++;
 			break;
 		case '1':
@@ -154,7 +154,7 @@ register char **argv;
 		}
 	}
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		if( isatty(fileno(stdin)) )
 			return(0);
 	}
@@ -190,13 +190,13 @@ main(int argc, char **argv)
 
 	init_display();
 
-	if( bu_optind >= argc ) {
+	if( optind >= argc ) {
 		makeobj( maxobj++ );
 		uplot( stdin, max, min );
 		closeobj();
 	}
-	while( bu_optind < argc ) {
-		file = argv[bu_optind];
+	while( optind < argc ) {
+		file = argv[optind];
 		if( (fp = fopen(file,"r")) == NULL ) {
 			fprintf(stderr,"pl-sgi: can't open \"%s\"\n", file);
 			exit( 3 );
@@ -208,7 +208,7 @@ main(int argc, char **argv)
 		closeobj();
 
 		fclose( fp );
-		bu_optind++;
+		optind++;
 	}
 
 	/* scale to the largest X, Y, or Z interval */

@@ -14,8 +14,8 @@
 void isst_slave(int port, char *host, int threads);
 void isst_slave_init(tie_t *tie, int socknum);
 void isst_slave_free(void);
-void isst_slave_work(tie_t *tie, void *data, unsigned int size, void **res_buf, unsigned int *res_len);
-void isst_slave_mesg(void *mesg, unsigned int mesg_len);
+void isst_slave_work(tie_t *tie, void *data, int size, void **res_buf, int *res_len);
+void isst_slave_mesg(void *mesg, int mesg_len);
 
 
 int isst_slave_threads;
@@ -52,9 +52,10 @@ void isst_slave_free() {
 }
 
 
-void isst_slave_work(tie_t *tie, void *data, unsigned int size, void **res_buf, unsigned int *res_len) {
+void isst_slave_work(tie_t *tie, void *data, int size, void **res_buf, int *res_len) {
   common_work_t work;
   int ind;
+  short frame_ind;
   TIE_3 pos, foc;
   unsigned char rm;
   char op;
@@ -146,6 +147,10 @@ void isst_slave_work(tie_t *tie, void *data, unsigned int size, void **res_buf, 
       break;
 
     case ISST_OP_RENDER:
+      /* Extract updated camera data */
+      memcpy(&frame_ind, &((char *)data)[ind], sizeof(short));
+      ind += sizeof(short);
+
       /* Camera position */
       memcpy(&pos.v, &((char *)data)[ind], sizeof(TIE_3));
       ind += sizeof(TIE_3);
@@ -233,6 +238,10 @@ void isst_slave_work(tie_t *tie, void *data, unsigned int size, void **res_buf, 
 
       util_camera_render(&camera, &db, tie, data, size, res_buf, res_len);
       *res_buf = (void *)realloc(*res_buf, *res_len + sizeof(short));
+
+      /* Tack on the frame index data */
+      memcpy(&((char *)*res_buf)[*res_len], &frame_ind, sizeof(short));
+      *res_len += sizeof(short);
       break;
 
     default:
@@ -247,7 +256,7 @@ void isst_slave_work(tie_t *tie, void *data, unsigned int size, void **res_buf, 
 }
 
 
-void isst_slave_mesg(void *mesg, unsigned int mesg_len) {
+void isst_slave_mesg(void *mesg, int mesg_len) {
   short		op;
   TIE_3		foo;
 
@@ -260,9 +269,9 @@ void isst_slave_mesg(void *mesg, unsigned int mesg_len) {
       char name[256];
       unsigned char c;
 
-      /* Reset all meshes hit flag */
+      /* Reset all meshes */
       for(i = 0; i < db.mesh_num; i++)
-        db.mesh_list[i]->flags &= 0x2;
+        db.mesh_list[i]->flags = 0;
 
       /* Read the data */
       ind = sizeof(short);
@@ -276,10 +285,11 @@ void isst_slave_mesg(void *mesg, unsigned int mesg_len) {
         memcpy(name, &((unsigned char *)mesg)[ind], c);
         ind += c;
 
-        /* set hit flag */
+/*        printf("trying to assign: -%s-\n", name); */
         for(n = 0; n < db.mesh_num; n++) {
           if(!strcmp(db.mesh_list[n]->name, name)) {
-            db.mesh_list[n]->flags |= 1;
+/*            printf("  assigned[%d]: %s\n", i, name); */
+            db.mesh_list[n]->flags = 1;
             continue;
           }
         }
@@ -287,24 +297,6 @@ void isst_slave_mesg(void *mesg, unsigned int mesg_len) {
     }
     break;
 
-    case ISST_OP_SELECT:
-    {
-      uint8_t c, t;
-      char string[256];
-      uint32_t n;
-
-      /* select or deslect */
-      memcpy(&t, &((uint8_t *)mesg)[2], 1);
-      /* string */
-      memcpy(&c, &((uint8_t *)mesg)[3], 1);
-      memcpy(string, &((uint8_t *)mesg)[4], c);
-
-      /* set select flag */
-      for(n = 0; n < db.mesh_num; n++)
-        if(strstr(db.mesh_list[n]->name, string) || c == 1)
-          db.mesh_list[n]->flags = (db.mesh_list[n]->flags & 0x1) | t<<1;
-    }
-    break;
 
     default:
       break;

@@ -113,7 +113,7 @@ get_args (int argc, register char **argv)
 {
     register int c;
 
-    while ((c = bu_getopt( argc, argv, OPT_STRING)) != EOF)
+    while ((c = getopt( argc, argv, OPT_STRING)) != EOF)
     {
 	switch (c)
 	{
@@ -125,25 +125,25 @@ get_args (int argc, register char **argv)
 		autosize = 0;
 		break;
 	    case 'n':
-		file_height = atol(bu_optarg);
+		file_height = atol(optarg);
 		autosize = 0;
 		break;
 	    case 's':
-		file_height = file_width = atol(bu_optarg);
+		file_height = file_width = atol(optarg);
 		autosize = 0;
 		break;
 	    case 'w':
-		file_width = atol(bu_optarg);
+		file_width = atol(optarg);
 		autosize = 0;
 		break;
 	    case 'S':
 		solid_type = SPHERE;
 		break;
 	    case 'T':
-		if (! read_radii(&r1, &r2, bu_optarg))
+		if (! read_radii(&r1, &r2, optarg))
 		{
 		    (void) fprintf(stderr,
-			"Illegal torus radii: '%s'\n", bu_optarg);
+			"Illegal torus radii: '%s'\n", optarg);
 		    return (0);
 		}
 		solid_type = TORUS;
@@ -156,7 +156,7 @@ get_args (int argc, register char **argv)
 	}
     }
 
-    if (bu_optind >= argc)
+    if (optind >= argc)
     {
 	if(isatty(fileno(stdin)))
 	{
@@ -168,7 +168,7 @@ get_args (int argc, register char **argv)
     }
     else
     {
-	file_name = argv[bu_optind];
+	file_name = argv[optind];
 	if ((infp = fopen(file_name, "r")) == NULL)
 	{
 	    perror(file_name);
@@ -178,7 +178,7 @@ get_args (int argc, register char **argv)
 	++fileinput;
     }
 
-    if (argc > ++bu_optind)
+    if (argc > ++optind)
 	(void) fprintf(stderr, "texturescale: excess argument(s) ignored\n");
 
     return (1);

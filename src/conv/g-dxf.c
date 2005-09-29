@@ -468,7 +468,7 @@ char	*argv[];
 		}
 	}
 
-	/* Open BRL-CAD database */
+	/* Open brl-cad database */
 	argc -= optind;
 	argv += optind;
 	if ((dbip = db_open(argv[0], "r")) == DBI_NULL) {

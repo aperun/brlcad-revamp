@@ -81,11 +81,11 @@ struct nurb_hit {
 
 #define NULL_HIT  (struct nurb_hit *)0
 
-BU_EXTERN(int rt_nurb_grans, (struct face_g_snurb * srf));
-BU_EXTERN(struct nurb_hit *rt_conv_uv, (struct nurb_specific *n,
+RT_EXTERN(int rt_nurb_grans, (struct face_g_snurb * srf));
+RT_EXTERN(struct nurb_hit *rt_conv_uv, (struct nurb_specific *n,
 	struct xray *r, struct rt_nurb_uv_hit *h));
-BU_EXTERN(struct nurb_hit *rt_return_nurb_hit, (struct nurb_hit * head));
-BU_EXTERN(void		rt_nurb_add_hit, (struct nurb_hit *head,
+RT_EXTERN(struct nurb_hit *rt_return_nurb_hit, (struct nurb_hit * head));
+RT_EXTERN(void		rt_nurb_add_hit, (struct nurb_hit *head,
 			struct nurb_hit * hit, const struct bn_tol *tol));
 
 
@@ -226,7 +226,7 @@ rt_nurb_shot(struct soltab *stp, register struct xray *rp, struct application *a
 	VADD2(p3, rp->r_pt, dir1);
 	VADD2(p4, rp->r_pt, dir2);
 
-	/* Note: the equation of the plane in BRL-CAD is
+	/* Note: the equation of the plane in BRLCAD is
 	 * Ax + By + Cz = D represented by [A B C D]
 	 */
 	bn_mk_plane_3pts( plane1, p1, p3, p2, tol );

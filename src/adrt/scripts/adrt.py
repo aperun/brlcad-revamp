@@ -51,26 +51,18 @@ def export_meshes():
     if (obj.Layer & layer_mask) == obj.Layer:
       if(type(obj.getData()) == Types.NMeshType):
         ## Mesh Name Length
-        fh.write(pack('B', len(obj.getName())+1))
+        fh.write(pack('B', len(obj.getName())))
         ## Mesh Name
         fh.write(obj.getName())
-        fh.write(pack('B', 0))
         ## Vertice Total
         fh.write(pack('I', len(obj.getData().verts)))
         ## Write Vertices
         for v in obj.getData().verts:
           fh.write(pack('fff', v.co[0], v.co[1], v.co[2]))
         ## Write Faces
-        num = 0
-        for f in obj.getData().faces:
-          if len(f.v) == 4:
-            num = num + 2
-          if len(f.v) == 3:
-            num = num + 1
-
         if(len(obj.getData().faces) < 1<<16):
           fh.write(pack('B', 0))
-          fh.write(pack('H', num))
+          fh.write(pack('H', len(obj.getData().faces)))
           for f in obj.getData().faces:
             if len(f.v) >= 3:
               fh.write(pack('HHH', f.v[0].index, f.v[1].index, f.v[2].index))
@@ -78,7 +70,7 @@ def export_meshes():
               fh.write(pack('HHH', f.v[0].index, f.v[2].index, f.v[3].index))
         else:
           fh.write(pack('B', 1))
-          fh.write(pack('I', num))
+          fh.write(pack('I', len(obj.getData().faces)))
           for f in obj.getData().faces:
             if len(f.v) >= 3:
               fh.write(pack('III', f.v[0].index, f.v[1].index, f.v[2].index))
@@ -118,7 +110,7 @@ def export_textures():
 
 
 def export_mesh_map():
-  fh = open(framework_name + ".map", "wb")
+  fh = open(framework_name + ".map", "w")
 
   print "Writing Mesh Map..."
   obj_list = Blender.Object.Get()
@@ -126,22 +118,9 @@ def export_mesh_map():
     if (obj.Layer & layer_mask) == obj.Layer:
       if(type(obj.getData()) == Types.NMeshType):
         if(len(obj.getData().materials)) > 0:
-          fh.write(pack('B', len(obj.getName())+1))
-          fh.write(obj.getName());
-          fh.write(pack('B', 0))
-
-          fh.write(pack('B', len(obj.getData().materials[0].getName())+1))
-          fh.write(obj.getData().materials[0].getName());
-          fh.write(pack('B', 0))
+          fh.write(obj.getName() + "," + obj.getData().materials[0].getName() + "\n")
         else:
-          fh.write(pack('B', len(obj.getName())+1))
-          fh.write(obj.getName());
-          fh.write(pack('B', 0))
-
-          fh.write(pack('B', len("default")+1))
-          fh.write("default");
-          fh.write(pack('B', 0))
-
+          fh.write(obj.getName() + ",default\n")
 
 
   fh.close()
@@ -234,7 +213,7 @@ def export_environment():
   fh.write("textures_file," + framework_name + ".textures\n")
   fh.write("mesh_map_file," + framework_name + ".map\n")
   fh.write("frames_file," + framework_name + ".frames\n")
-  fh.write("image_size,512,384,128,128\n")
+  fh.write("image_size,1024,768,128,128\n")
   fh.write("rendering_method,normal\n")
   fh.close()
 
@@ -276,9 +255,6 @@ def button_event(evt):
     framework_name = framework_button.val
 
   if evt == 3:
-    layer_mask = 0xfffff
-
-  if evt == 4:
     layer_mask = 0
 
   if evt == 5:
@@ -302,6 +278,7 @@ def draw_gui():
   ##########
   Draw.Button("Select All", 3, 0, 60, 160, 20, "Deselect all Layers")
   Draw.Button("Select None", 4, 0, 40, 160, 20, "Select all Layers")
+
 
   layer_id = 0
   for row in range(2):

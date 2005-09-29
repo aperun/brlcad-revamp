@@ -48,7 +48,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 
 char *Usage="[-h] [-F framebuffer]\n\
@@ -73,19 +72,19 @@ main(int argc, char **argv)
 	static RGBpixel blue = { 0, 0, 255 };
 
 	xsize = ysize = 0;
-	while ( (c = bu_getopt( argc, argv, "ahF:s:w:n:S:W:N:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "ahF:s:w:n:S:W:N:" )) != EOF )  {
 		switch( c )  {
 		case 'h':
 			/* high-res */
 			xsize = ysize = 1024;
 			break;
 		case 'F':
-			framebuffer = bu_optarg;
+			framebuffer = optarg;
 			break;
 		case 's':
 		case 'S':
 			/* square file size */
-			if ((len=atoi(bu_optarg)) > 0)
+			if ((len=atoi(optarg)) > 0)
 				xsize = ysize = len;
 			else
 				USAGE_EXIT(*argv);
@@ -93,14 +92,14 @@ main(int argc, char **argv)
 			break;
 		case 'w':
 		case 'W':
-			if ((len=atoi(bu_optarg)) > 0)
+			if ((len=atoi(optarg)) > 0)
 				xsize = len;
 			else
 				USAGE_EXIT(*argv);
 			break;
 		case 'n':
 		case 'N':
-			if ((len=atoi(bu_optarg)) > 0)
+			if ((len=atoi(optarg)) > 0)
 				ysize = len;
 			else
 				USAGE_EXIT(*argv);

@@ -47,7 +47,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 
 
@@ -77,7 +76,7 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "hiX:Y:s:w:n:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "hiX:Y:s:w:n:" )) != EOF )  {
 		switch( c )  {
 		case 'h':
 			/* high-res */
@@ -87,20 +86,20 @@ get_args(int argc, register char **argv)
 			inverse = 1;
 			break;
 		case 'X':
-			scr_xoff = atoi(bu_optarg);
+			scr_xoff = atoi(optarg);
 			break;
 		case 'Y':
-			scr_yoff = atoi(bu_optarg);
+			scr_yoff = atoi(optarg);
 			break;
 		case 's':
 			/* square size */
-			height = width = atoi(bu_optarg);
+			height = width = atoi(optarg);
 			break;
 		case 'w':
-			width = atoi(bu_optarg);
+			width = atoi(optarg);
 			break;
 		case 'n':
-			height = atoi(bu_optarg);
+			height = atoi(optarg);
 			break;
 
 		default:		/* '?' */
@@ -108,13 +107,13 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if( bu_optind >= argc ) {
+	if( optind >= argc ) {
 		if( isatty(fileno(stdout)) )
 			return(0);
 		file_name = "-";
 		outfp = stdout;
 	} else {
-		file_name = argv[bu_optind];
+		file_name = argv[optind];
 		if( (outfp = fopen(file_name, "w")) == NULL )  {
 			(void)fprintf( stderr,
 				"fb-bw: cannot open \"%s\" for writing\n",
@@ -123,7 +122,7 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "fb-bw: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

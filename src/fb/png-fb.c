@@ -86,16 +86,16 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "1m:g:HhicvzF:s:x:y:X:Y:S:W:N:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "1m:g:HhicvzF:s:x:y:X:Y:S:W:N:" )) != EOF )  {
 		switch( c )  {
 		case '1':
 			one_line_only = 1;
 			break;
 		case 'm':
-			multiple_lines = atoi(bu_optarg);
+			multiple_lines = atoi(optarg);
 			break;
 		case 'g':
-			def_screen_gamma = atof(bu_optarg);
+			def_screen_gamma = atof(optarg);
 			break;
 		case 'H':
 			header_only = 1;
@@ -117,28 +117,28 @@ get_args(int argc, register char **argv)
 			zoom = 1;
 			break;
 		case 'F':
-			framebuffer = bu_optarg;
+			framebuffer = optarg;
 			break;
 		case 'x':
-			file_xoff = atoi(bu_optarg);
+			file_xoff = atoi(optarg);
 			break;
 		case 'y':
-			file_yoff = atoi(bu_optarg);
+			file_yoff = atoi(optarg);
 			break;
 		case 'X':
-			scr_xoff = atoi(bu_optarg);
+			scr_xoff = atoi(optarg);
 			break;
 		case 'Y':
-			scr_yoff = atoi(bu_optarg);
+			scr_yoff = atoi(optarg);
 			break;
 		case 'S':
-			scr_height = scr_width = atoi(bu_optarg);
+			scr_height = scr_width = atoi(optarg);
 			break;
 		case 'W':
-			scr_width = atoi(bu_optarg);
+			scr_width = atoi(optarg);
 			break;
 		case 'N':
-			scr_height = atoi(bu_optarg);
+			scr_height = atoi(optarg);
 			break;
 
 		default:		/* '?' */
@@ -146,13 +146,13 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		if( isatty(fileno(stdin)) )
 			return(0);
 		file_name = "-";
 		fp_in = stdin;
 	} else {
-		file_name = argv[bu_optind];
+		file_name = argv[optind];
 		if( (fp_in = fopen(file_name, "r")) == NULL )  {
 			perror(file_name);
 			(void)fprintf( stderr,
@@ -163,7 +163,7 @@ get_args(int argc, register char **argv)
 		fileinput++;
 	}
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "png-fb: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

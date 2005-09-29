@@ -77,7 +77,8 @@ extern void light_cleanup(void);
 extern void light_maker(int num, mat_t v2m);
 extern int light_init(struct application *ap);
 
-BU_EXTERN(void light_obs, (struct application *ap, struct shadework *swp, int have) );
+RT_EXTERN(void light_obs, (struct application *ap,
+				  struct shadework *swp, int have) );
 
 
 

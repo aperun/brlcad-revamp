@@ -1,7 +1,5 @@
 # $Id$
 
-SUBDIRS = Dll
-
 EXTRA_DIST = \
 	brlcad.dsw \
 	vers.vbs

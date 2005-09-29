@@ -39,6 +39,8 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "common.h"
 
+
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -52,6 +54,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "./titles.h"
 #include "./mged_dm.h"
 
+#include "./mgedtcl.h"
 #include "./sedit.h"
 
 extern int mged_svbase(void);   /* defined in chgview.c */

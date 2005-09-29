@@ -69,23 +69,23 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "b:f:l:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "b:f:l:" )) != EOF )  {
 		switch( c )  {
 		case 'b':
-			bytes_per_sample = atoi(bu_optarg);
+			bytes_per_sample = atoi(optarg);
 			break;
 		case 'f':
-			file_name = bu_optarg;
+			file_name = optarg;
 			break;
 		case 'l':
-			file_length = atoi(bu_optarg);
+			file_length = atoi(optarg);
 			break;
 		default:		/* '?' */
 			return(0);
 		}
 	}
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "pixautosize: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

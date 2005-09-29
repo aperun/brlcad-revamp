@@ -45,16 +45,17 @@ static const char RCSrev[] = "$Revision$";
 #include "common.h"
 
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+# include <unistd.h>
 #endif
-#include <sys/types.h>
-#include <sys/stat.h>
+                                                                                                                                                                            
+extern char	version[];
+
 #include <stdio.h>
 #include <math.h>
 #ifdef HAVE_STRING_H
-#  include <string.h>
+#include <string.h>
 #else
-#  include <strings.h>
+#include <strings.h>
 #endif
 
 #include "machine.h"
@@ -66,9 +67,8 @@ static const char RCSrev[] = "$Revision$";
 #include "rtgeom.h"
 #include "../iges/iges.h"
 #include "../librt/debug.h"
-
-                                                                                                                                                                            
-extern char	version[];
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define	CP_BUF_SIZE	1024	/* size of buffer for file copy */
 #define SUFFIX_LEN	10	/* max size of suffix for 'part' files (-m option) */
@@ -147,7 +147,7 @@ BU_EXTERN( void Print_stats , ( FILE *fp ) );
 
 struct iges_functab
 {
-	int (*do_iges_write) BU_ARGS(( struct rt_db_internal *ip , char *name , FILE *fp_dir , FILE *fp_param ));
+	int (*do_iges_write) RT_ARGS(( struct rt_db_internal *ip , char *name , FILE *fp_dir , FILE *fp_param ));
 };
 
 struct iges_functab iges_write[ID_MAXIMUM+1]={
@@ -297,7 +297,7 @@ char	*argv[];
 		exit(1);
 	}
 
-	/* Open BRL-CAD database */
+	/* Open brl-cad database */
 	argc -= optind;
 	argv += optind;
 	db_name = argv[0];

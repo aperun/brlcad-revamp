@@ -96,16 +96,16 @@ char	*argv[];
 	RT_LIST_INIT( &rt_g.rtg_vlfree );	/* for vlist macros */
 
 	/* Get command line arguments. */
-	while ((c = bu_getopt(argc, argv, "vx:X:")) != EOF) {
+	while ((c = getopt(argc, argv, "vx:X:")) != EOF) {
 		switch (c) {
 		case 'v':
 			verbose++;
 			break;
 		case 'x':
-			sscanf( bu_optarg, "%x", &rt_g.debug );
+			sscanf( optarg, "%x", &rt_g.debug );
 			break;
 		case 'X':
-			sscanf( bu_optarg, "%x", &rt_g.NMG_debug );
+			sscanf( optarg, "%x", &rt_g.NMG_debug );
 			break;
 		default:
 			fprintf(stderr, usage, argv[0]);

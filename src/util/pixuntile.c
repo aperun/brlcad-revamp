@@ -52,8 +52,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "machine.h"
-#include "bu.h"
-
 
 int out_width = 64;	/* width of input sub-images in pixels (64) */
 int out_height = 64;	/* height of input sub-images in scanlines (64) */
@@ -73,7 +71,7 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "hs:w:n:S:W:N:o:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "hs:w:n:S:W:N:o:" )) != EOF )  {
 		switch( c )  {
 		case 'h':
 			/* high-res */
@@ -81,25 +79,25 @@ get_args(int argc, register char **argv)
 			break;
 		case 's':
 			/* square input file size */
-			in_height = in_width = atoi(bu_optarg);
+			in_height = in_width = atoi(optarg);
 			break;
 		case 'w':
-			in_width = atoi(bu_optarg);
+			in_width = atoi(optarg);
 			break;
 		case 'n':
-			in_height = atoi(bu_optarg);
+			in_height = atoi(optarg);
 			break;
 		case 'S':
-			out_height = out_width = atoi(bu_optarg);
+			out_height = out_width = atoi(optarg);
 			break;
 		case 'W':
-			out_width = atoi(bu_optarg);
+			out_width = atoi(optarg);
 			break;
 		case 'N':
-			out_height = atoi(bu_optarg);
+			out_height = atoi(optarg);
 			break;
 		case 'o':
-			framenumber = atoi(bu_optarg);
+			framenumber = atoi(optarg);
 			break;
 		default:		/* '?' */
 			return(0);	/* Bad */
@@ -110,7 +108,7 @@ get_args(int argc, register char **argv)
 		return(0);	/* Bad */
 	}
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		fprintf(stderr, "pixuntile: basename or filename(s) missing\n");
 		return(0);	/* Bad */
 	}
@@ -134,8 +132,8 @@ main(int argc, char **argv)
 		exit( 1);
 	}
 
-	if( bu_optind+1 == argc )  {
-		base_name = argv[bu_optind];
+	if( optind+1 == argc )  {
+		base_name = argv[optind];
 		islist = 0;
 	} else {
 		islist = 1;
@@ -159,9 +157,9 @@ main(int argc, char **argv)
 				fprintf(stderr,"%d ", framenumber);  fflush(stdout);
 				if( islist )  {
 					/* See if we read all the files */
-					if( bu_optind >= argc )
+					if( optind >= argc )
 						goto done;
-					strcpy( name, argv[bu_optind++] );
+					strcpy( name, argv[optind++] );
 				} else {
 					sprintf( name, "%s.%d", base_name, framenumber );
 				}

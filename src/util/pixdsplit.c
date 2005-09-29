@@ -91,29 +91,29 @@ main (int argc, char *argv[])
     int			cfd = -1;		/*   "       "     */
     int			dfd = -1;		/*   "       "     */
 
-    extern int	bu_optind;			/* index from bu_getopt(3C) */
-    extern char	*bu_optarg;		/* argument from bu_getopt(3C) */
+    extern int	optind;			/* index from getopt(3C) */
+    extern char	*optarg;		/* argument from getopt(3C) */
 
     c_per_p = 3; cf_name = "-";
     d_per_p = 1; df_name = "";
-    while ((ch = bu_getopt(argc, argv, OPT_STRING)) != EOF)
+    while ((ch = getopt(argc, argv, OPT_STRING)) != EOF)
 	switch (ch)
 	{
 	    case 'd':
-		df_name = (char *) bu_malloc(strlen(bu_optarg) + 1, "df_name");
-		(void) strcpy(df_name, bu_optarg);
+		df_name = (char *) bu_malloc(strlen(optarg) + 1, "df_name");
+		(void) strcpy(df_name, optarg);
 		break;
 	    case 'c':
-		cf_name = (char *) bu_malloc(strlen(bu_optarg) + 1, "cf_name");
-		(void) strcpy(cf_name, bu_optarg);
+		cf_name = (char *) bu_malloc(strlen(optarg) + 1, "cf_name");
+		(void) strcpy(cf_name, optarg);
 		break;
 	    case '#':
-		if ((sscanf(bu_optarg, "%d.%d", &c_per_p, &d_per_p) != 2)
-		 && (sscanf(bu_optarg, ".%d", &d_per_p) != 1)
-		 && (sscanf(bu_optarg, "%d", &c_per_p) != 1))
+		if ((sscanf(optarg, "%d.%d", &c_per_p, &d_per_p) != 2)
+		 && (sscanf(optarg, ".%d", &d_per_p) != 1)
+		 && (sscanf(optarg, "%d", &c_per_p) != 1))
 		{
 		    bu_log("Invalid pixel-size specification: '%s'\n",
-			bu_optarg);
+			optarg);
 		    print_usage();
 		    exit (1);
 		}
@@ -138,14 +138,14 @@ main (int argc, char *argv[])
     /*
      *	Establish the input stream
      */
-    switch (argc - bu_optind)
+    switch (argc - optind)
     {
 	case 0:
 	    inf_name = "stdin";
 	    infd = 0;
 	    break;
 	case 1:
-	    inf_name = argv[bu_optind++];
+	    inf_name = argv[optind++];
 	    if ((infd = open(inf_name, O_RDONLY)) == -1)
 	    {
 		bu_log ("Cannot open file '%s'\n", inf_name);

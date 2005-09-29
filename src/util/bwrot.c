@@ -61,7 +61,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <math.h>
 
 #include "machine.h"
-#include "bu.h"
 
 
 #define	MAXBUFBYTES	(1280*1024)
@@ -96,7 +95,7 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "fbrihs:w:n:S:W:N:a:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "fbrihs:w:n:S:W:N:a:" )) != EOF )  {
 		switch( c )  {
 		case 'f':
 			minus90++;
@@ -117,18 +116,18 @@ get_args(int argc, register char **argv)
 		case 'S':
 		case 's':
 			/* square size */
-			nxin = nyin = atoi(bu_optarg);
+			nxin = nyin = atoi(optarg);
 			break;
 		case 'W':
 		case 'w':
-			nxin = atoi(bu_optarg);
+			nxin = atoi(optarg);
 			break;
 		case 'N':
 		case 'n':
-			nyin = atoi(bu_optarg);
+			nyin = atoi(optarg);
 			break;
 		case 'a':
-			angle = atof(bu_optarg);
+			angle = atof(optarg);
 			break;
 
 		default:		/* '?' */
@@ -137,17 +136,17 @@ get_args(int argc, register char **argv)
 	}
 
 	/* XXX - backward compatability hack */
-	if( bu_optind+2 == argc ) {
-		nxin = atoi(argv[bu_optind++]);
-		nyin = atoi(argv[bu_optind++]);
+	if( optind+2 == argc ) {
+		nxin = atoi(argv[optind++]);
+		nyin = atoi(argv[optind++]);
 	}
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		if( isatty(fileno(stdin)) )
 			return(0);
 		file_name = "-";
 		ifp = stdin;
 	} else {
-		file_name = argv[bu_optind];
+		file_name = argv[optind];
 		if( (ifp = fopen(file_name, "r")) == NULL )  {
 			(void)fprintf( stderr,
 				"bwrot: cannot open \"%s\" for reading\n",
@@ -156,7 +155,7 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "bwrot: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

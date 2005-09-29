@@ -52,7 +52,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <math.h>
 
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 
 char *options = "ihoF:";
@@ -147,31 +146,31 @@ main(int argc, char **argv)
 
 	/* check for flags */
 	opterr = 0;
-	while ((i=bu_getopt(argc, argv, options)) != EOF) {
+	while ((i=getopt(argc, argv, options)) != EOF) {
 		switch(i) {
 		case 'h'	: fbsize = 1024; break;
 		case 'o'	: overlay++; break;
 		case 'i'	: image = !image; break;
-		case 'F'	: framebuffer = bu_optarg; break;
+		case 'F'	: framebuffer = optarg; break;
 		default		: break;
 		}
 	}
 
-	if (bu_optind == argc - 1) {
+	if (optind == argc - 1) {
 		/* single value for all channels */
-		f = atof( argv[bu_optind] );
+		f = atof( argv[optind] );
 		checkgamma( f );
 		gamr = gamg = gamb = 1.0 / f;
 		onegamma++;
-	} else if (bu_optind == argc - 4 ) {
+	} else if (optind == argc - 4 ) {
 		/* different RGB values */
-		f = atof( argv[bu_optind] );
+		f = atof( argv[optind] );
 		checkgamma( f );
 		gamr = 1.0 / f;
-		f = atof( argv[bu_optind+1] );
+		f = atof( argv[optind+1] );
 		checkgamma( f );
 		gamg = 1.0 / f;
-		f = atof( argv[bu_optind+2] );
+		f = atof( argv[optind+2] );
 		checkgamma( f );
 		gamb = 1.0 / f;
 	} else {

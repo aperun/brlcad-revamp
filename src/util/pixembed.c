@@ -45,7 +45,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 
 #include "machine.h"
-#include "bu.h"
 
 
 unsigned char	*obuf;
@@ -77,10 +76,10 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "b:hs:w:n:S:W:N:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "b:hs:w:n:S:W:N:" )) != EOF )  {
 		switch( c )  {
 		case 'b':
-			border_inset = atoi(bu_optarg);
+			border_inset = atoi(optarg);
 			break;
 		case 'h':
 			/* high-res */
@@ -88,23 +87,23 @@ get_args(int argc, register char **argv)
 			break;
 		case 'S':
 			/* square size */
-			xout = yout = atoi(bu_optarg);
+			xout = yout = atoi(optarg);
 			break;
 		case 's':
 			/* square size */
-			xin = yin = atoi(bu_optarg);
+			xin = yin = atoi(optarg);
 			break;
 		case 'W':
-			xout = atoi(bu_optarg);
+			xout = atoi(optarg);
 			break;
 		case 'w':
-			xin = atoi(bu_optarg);
+			xin = atoi(optarg);
 			break;
 		case 'N':
-			yout = atoi(bu_optarg);
+			yout = atoi(optarg);
 			break;
 		case 'n':
-			yin = atoi(bu_optarg);
+			yin = atoi(optarg);
 			break;
 
 		default:		/* '?' */
@@ -112,13 +111,13 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		if( isatty(fileno(stdin)) )
 			return(0);
 		file_name = "-";
 		buffp = stdin;
 	} else {
-		file_name = argv[bu_optind];
+		file_name = argv[optind];
 		if( (buffp = fopen(file_name, "r")) == NULL )  {
 			(void)fprintf( stderr,
 				"pixembed: cannot open \"%s\" for reading\n",
@@ -127,7 +126,7 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "pixembed: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

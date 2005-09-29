@@ -44,7 +44,6 @@ static const char RCSid[] = "@(#)$Id$ (BRL)";
 #include <stdio.h>
 
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 #include "orle.h"
 
@@ -74,7 +73,7 @@ get_args(int argc, register char **argv)
 {
 	register int	c;
 
-	while( (c = bu_getopt( argc, argv, "dhs:w:n:vC:" )) != EOF )  {
+	while( (c = getopt( argc, argv, "dhs:w:n:vC:" )) != EOF )  {
 		switch( c )  {
 		case 'd':
 			/* For debugging RLE library */
@@ -90,17 +89,17 @@ get_args(int argc, register char **argv)
 			break;
 		case 's':
 			/* square file size */
-			file_height = file_width = atoi(bu_optarg);
+			file_height = file_width = atoi(optarg);
 			break;
 		case 'w':
-			file_width = atoi(bu_optarg);
+			file_width = atoi(optarg);
 			break;
 		case 'n':
-			file_height = atoi(bu_optarg);
+			file_height = atoi(optarg);
 			break;
 		case 'C':
 			{
-				register char *cp = bu_optarg;
+				register char *cp = optarg;
 				register int *conp = background;
 
 				/* premature null => atoi gives zeros */
@@ -114,28 +113,28 @@ get_args(int argc, register char **argv)
 			return	0;
 		}
 	}
-	if( argv[bu_optind] != NULL )  {
-		if( (infp = fopen( (infile=argv[bu_optind]), "r" )) == NULL )  {
+	if( argv[optind] != NULL )  {
+		if( (infp = fopen( (infile=argv[optind]), "r" )) == NULL )  {
 			perror(infile);
 			return	0;
 		}
-		bu_optind++;
+		optind++;
 	} else {
 		infile = "-";
 	}
-	if( argv[bu_optind] != NULL )  {
-		if( access( argv[bu_optind], 0 ) == 0 )  {
+	if( argv[optind] != NULL )  {
+		if( access( argv[optind], 0 ) == 0 )  {
 			(void) fprintf( stderr,
 				"\"%s\" already exists.\n",
-				argv[bu_optind] );
+				argv[optind] );
 			exit( 1 );
 		}
-		if( (outfp = fopen( argv[bu_optind], "w" )) == NULL )  {
-			perror(argv[bu_optind]);
+		if( (outfp = fopen( argv[optind], "w" )) == NULL )  {
+			perror(argv[optind]);
 			return	0;
 		}
 	}
-	if( argc > ++bu_optind )
+	if( argc > ++optind )
 		(void) fprintf( stderr, "Excess arguments ignored\n" );
 
 	if( isatty(fileno(infp)) || isatty(fileno(outfp)) )

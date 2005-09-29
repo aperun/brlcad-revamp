@@ -87,7 +87,6 @@ brlcadinclude_wanted = \
 	dm_color.h \
 	dm_xvars.h \
 	fb.h \
-	fbio.h \
 	fbserv_obj.h \
 	forms.h \
 	libtermio.h \

@@ -57,7 +57,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "plot3.h"
 #include "../librt/debug.h"
 
-BU_EXTERN(union tree *do_region_end, (struct db_tree_state *tsp, struct db_full_path *pathp, union tree *curtree, genptr_t client_data));
+RT_EXTERN(union tree *do_region_end, (struct db_tree_state *tsp, struct db_full_path *pathp, union tree *curtree, genptr_t client_data));
 void	nmg_to_psurf(struct nmgregion *r, FILE *fp_psurf);
 void	jack_faces(struct nmgregion *r, FILE *fp_psurf, int *map);
 
@@ -189,7 +189,7 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	/* Open BRL-CAD database */
+	/* Open brl-cad database */
 	argc -= optind;
 	argv += optind;
 	if ((dbip = db_open(argv[0], "r")) == DBI_NULL) {
@@ -270,6 +270,7 @@ RT_CK_TESS_TOL(jack_tree_state.ts_ttol);
 */
 union tree *do_region_end(register struct db_tree_state *tsp, struct db_full_path *pathp, union tree *curtree, genptr_t client_data)
 {
+	extern FILE		*fp_fig;
 	union tree		*ret_tree;
 	struct rt_list		vhead;
 	struct nmgregion	*r;

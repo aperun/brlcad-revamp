@@ -95,13 +95,13 @@ get_args(int argc, register char **argv)
 {
 	register int	c;
 
-	while( (c = bu_getopt( argc, argv, "cF:hds:w:n:S:W:N:X:Y:C:" )) != EOF )  {
+	while( (c = getopt( argc, argv, "cF:hds:w:n:S:W:N:X:Y:C:" )) != EOF )  {
 		switch( c )  {
 		case 'c':
 			crunch = 1;
 			break;
 		case 'F':
-			framebuffer = bu_optarg;
+			framebuffer = optarg;
 			break;
 		case 'h':
 			/* high-res */
@@ -109,32 +109,32 @@ get_args(int argc, register char **argv)
 			break;
 		case 's':
 			/* square file size */
-			file_height = file_width = atoi(bu_optarg);
+			file_height = file_width = atoi(optarg);
 			break;
 		case 'S':
-			screen_height = screen_width = atoi(bu_optarg);
+			screen_height = screen_width = atoi(optarg);
 			break;
 		case 'w':
-			file_width = atoi(bu_optarg);
+			file_width = atoi(optarg);
 			break;
 		case 'W':
-			screen_width = atoi(bu_optarg);
+			screen_width = atoi(optarg);
 			break;
 		case 'n':
-			file_height = atoi(bu_optarg);
+			file_height = atoi(optarg);
 			break;
 		case 'N':
-			screen_height = atoi(bu_optarg);
+			screen_height = atoi(optarg);
 			break;
 		case 'X':
-			screen_xoff = atoi(bu_optarg);
+			screen_xoff = atoi(optarg);
 			break;
 		case 'Y':
-			screen_yoff = atoi(bu_optarg);
+			screen_yoff = atoi(optarg);
 			break;
 		case 'C':
 			{
-				register char *cp = bu_optarg;
+				register char *cp = optarg;
 				register int *conp = background;
 
 				/* premature null => atoi gives zeros */
@@ -149,19 +149,19 @@ get_args(int argc, register char **argv)
 			return	0;
 		}
 	}
-	if( argv[bu_optind] != NULL )  {
-		if( access( argv[bu_optind], 0 ) == 0 )  {
+	if( argv[optind] != NULL )  {
+		if( access( argv[optind], 0 ) == 0 )  {
 			(void) fprintf( stderr,
 				"\"%s\" already exists.\n",
-				argv[bu_optind] );
+				argv[optind] );
 			exit( 1 );
 		}
-		if( (outfp = fopen( argv[bu_optind], "w" )) == NULL )  {
-			perror(argv[bu_optind]);
+		if( (outfp = fopen( argv[optind], "w" )) == NULL )  {
+			perror(argv[optind]);
 			return	0;
 		}
 	}
-	if( argc > ++bu_optind )
+	if( argc > ++optind )
 		(void) fprintf( stderr, "fb-rle: Excess arguments ignored\n" );
 
 	if( isatty(fileno(outfp)) )

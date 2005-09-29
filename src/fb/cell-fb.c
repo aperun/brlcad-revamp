@@ -51,7 +51,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "machine.h"
 #include "vmath.h"
 #include "raytrace.h"
-#include "bu.h"
 #include "fb.h"
 
 /* Macros without arguments */
@@ -724,11 +723,11 @@ STATIC struct locrec *mk_locrec (fastf_t h, fastf_t v)
 STATIC bool pars_Argv (register int argc, register char **argv)
 {	
     register int	c;
-    extern int		bu_optind;
-    extern char		*bu_optarg;
+    extern int		optind;
+    extern char		*optarg;
 
     /* Parse options. */
-    while ((c = bu_getopt(argc, argv, OPT_STRING)) != EOF)
+    while ((c = getopt(argc, argv, OPT_STRING)) != EOF)
     {
 	switch (c)
 	{
@@ -741,13 +740,13 @@ STATIC bool pars_Argv (register int argc, register char **argv)
 		    int		lo_red, lo_grn, lo_blu;
 		    int		hi_red, hi_grn, hi_blu;
 
-		    if (sscanf(bu_optarg, "%d %d %d %d %d %d",
+		    if (sscanf(optarg, "%d %d %d %d %d %d",
 			    &lo_red, &lo_grn, &lo_blu,
 			    &hi_red, &hi_grn, &hi_blu)
 			< 3)
 		    {
 			bu_log("Invalid color-mapping: '%s'\n",
-			    bu_optarg);
+			    optarg);
 			return (false);
 		    }
 		    lo_rgb[RED] = lo_red;
@@ -760,12 +759,12 @@ STATIC bool pars_Argv (register int argc, register char **argv)
 		    break;
 		}
 	    case 'F':
-		(void) strncpy(fbfile, bu_optarg, MAX_LINE);
+		(void) strncpy(fbfile, optarg, MAX_LINE);
 		break;
 	    case 'N':
-		if (sscanf(bu_optarg, "%d", &fb_height) < 1)
+		if (sscanf(optarg, "%d", &fb_height) < 1)
 		{
-		    bu_log("Invalid frame-buffer height: '%s'\n", bu_optarg);
+		    bu_log("Invalid frame-buffer height: '%s'\n", optarg);
 		    return (false);
 		}
 		if (fb_height < -1)
@@ -775,9 +774,9 @@ STATIC bool pars_Argv (register int argc, register char **argv)
 		}
 		break;
 	    case 'W':
-		if (sscanf(bu_optarg, "%d", &fb_width) < 1)
+		if (sscanf(optarg, "%d", &fb_width) < 1)
 		{
-		    bu_log("Invalid frame-buffer width: '%s'\n", bu_optarg);
+		    bu_log("Invalid frame-buffer width: '%s'\n", optarg);
 		    return (false);
 		}
 		if (fb_width < -1)
@@ -787,9 +786,9 @@ STATIC bool pars_Argv (register int argc, register char **argv)
 		}
 		break;
 	    case 'S':
-		if (sscanf(bu_optarg, "%d", &fb_height) < 1)
+		if (sscanf(optarg, "%d", &fb_height) < 1)
 		{
-		    bu_log("Invalid frame-buffer dimension: '%s'\n", bu_optarg);
+		    bu_log("Invalid frame-buffer dimension: '%s'\n", optarg);
 		    return (false);
 		}
 		if (fb_height < -1)
@@ -801,9 +800,9 @@ STATIC bool pars_Argv (register int argc, register char **argv)
 		fb_width = fb_height;
 		break;
 	    case 'X':
-		if (sscanf(bu_optarg, "%x", &debug_flag) < 1)
+		if (sscanf(optarg, "%x", &debug_flag) < 1)
 		{
-		    bu_log("Invalid debug flag: '%s'\n", bu_optarg);
+		    bu_log("Invalid debug flag: '%s'\n", optarg);
 		    return (false);
 		}
 		break;
@@ -813,9 +812,9 @@ STATIC bool pars_Argv (register int argc, register char **argv)
 		    fastf_t		v;
 		    struct locrec	*lrp;
 
-		    if (sscanf(bu_optarg, "%lf %lf", &h, &v) != 2)
+		    if (sscanf(optarg, "%lf %lf", &h, &v) != 2)
 		    {
-			bu_log("Invalid grid-plane location: '%s'\n", bu_optarg);
+			bu_log("Invalid grid-plane location: '%s'\n", optarg);
 			return (false);
 		    }
 		    lrp = mk_locrec(h, v);
@@ -823,17 +822,17 @@ STATIC bool pars_Argv (register int argc, register char **argv)
 		}
 		break;
 	    case 'b':
-		if (sscanf(bu_optarg, "%lf", &bool_val) != 1)
+		if (sscanf(optarg, "%lf", &bool_val) != 1)
 		{
-		    bu_log("Invalid boolean value: '%s'\n", bu_optarg);
+		    bu_log("Invalid boolean value: '%s'\n", optarg);
 		    return (false);
 		}
 		boolean_flag = true;
 		break;
 	    case 'c':
-		if (sscanf(bu_optarg, "%lf", &cell_size) != 1)
+		if (sscanf(optarg, "%lf", &cell_size) != 1)
 		{
-		    bu_log("Invalid cell size: '%s'\n", bu_optarg);
+		    bu_log("Invalid cell size: '%s'\n", optarg);
 		    return (false);
 		}
 		if (cell_size <= 0)
@@ -843,9 +842,9 @@ STATIC bool pars_Argv (register int argc, register char **argv)
 		}
 		break;
 	    case 'd':
-		if (sscanf(bu_optarg, "%lf %lf", &dom_min, &dom_max) < 2)
+		if (sscanf(optarg, "%lf %lf", &dom_min, &dom_max) < 2)
 		{
-		    bu_log("Invalid domain for input: '%s'\n", bu_optarg);
+		    bu_log("Invalid domain for input: '%s'\n", optarg);
 		    return (false);
 		}
 		if (dom_min >= dom_max)
@@ -860,9 +859,9 @@ STATIC bool pars_Argv (register int argc, register char **argv)
 		erase_flag = true;
 		break;
 	    case 'f':
-		if (sscanf(bu_optarg, "%d", &field) != 1)
+		if (sscanf(optarg, "%d", &field) != 1)
 		{
-		    bu_log("Invalid field: '%s'\n", bu_optarg);
+		    bu_log("Invalid field: '%s'\n", optarg);
 		    return (false);
 		}
 		break;
@@ -880,9 +879,9 @@ STATIC bool pars_Argv (register int argc, register char **argv)
 		key_height = 2.5;
 		break;
 	    case 'l':
-		if (sscanf(bu_optarg, "%lf%lf", &az, &el) != 2)
+		if (sscanf(optarg, "%lf%lf", &az, &el) != 2)
 		{
-		    bu_log("Invalid view: '%s'\n", bu_optarg);
+		    bu_log("Invalid view: '%s'\n", optarg);
 		    return (false);
 		}
 		log_flag = true;
@@ -896,18 +895,18 @@ STATIC bool pars_Argv (register int argc, register char **argv)
 		    int		red, grn, blu;
 		    int		index;
 
-		    if (sscanf(bu_optarg, "%lf %d %d %d", &value, &red, &grn, &blu)
+		    if (sscanf(optarg, "%lf %d %d %d", &value, &red, &grn, &blu)
 			< 4)
 		    {
 			bu_log("Invalid color-mapping: '%s'\n",
-			    bu_optarg);
+			    optarg);
 			return (false);
 		    }
 		    value *= 10.0;
 		    index = value + 0.01;
 		    if (index < 0 || index > MAX_COLORTBL)
 		    {
-			bu_log("Value out of range (%s)\n", bu_optarg);
+			bu_log("Value out of range (%s)\n", optarg);
 			return (false);
 		    }
 		    rgb[RED] = red;
@@ -917,38 +916,38 @@ STATIC bool pars_Argv (register int argc, register char **argv)
 		    break;
 		}
 	    case 'p':
-		switch (sscanf(bu_optarg, "%d %d", &xorigin, &yorigin))
+		switch (sscanf(optarg, "%d %d", &xorigin, &yorigin))
 		{
 		    case 2: break;
 		    case 1: yorigin = xorigin; break;
 		    default:
-			bu_log("Invalid offset: '%s'\n", bu_optarg);
+			bu_log("Invalid offset: '%s'\n", optarg);
 			return (false);
 		}
 		break;
 	    case 's':
-		switch (sscanf(bu_optarg, "%d %d", &wid, &hgt))
+		switch (sscanf(optarg, "%d %d", &wid, &hgt))
 		{
 		    case 2: break;
 		    case 1: hgt = wid; break;
 		    default:
-			bu_log("Invalid cell scale: '%s'\n", bu_optarg);
+			bu_log("Invalid cell scale: '%s'\n", optarg);
 			return (false);
 		}
 		break;
 	    case 'v':
-		if (sscanf(bu_optarg, "%d", &view_flag) < 1)
+		if (sscanf(optarg, "%d", &view_flag) < 1)
 		{
-		    bu_log("Invalid view number: '%s'\n", bu_optarg);
+		    bu_log("Invalid view number: '%s'\n", optarg);
 		    return (false);
 		}
 		if (view_flag == 0)
 		    log_flag = false;
 		break;
             case 'x':
-		if (sscanf(bu_optarg, "%x", (unsigned int *)&bu_debug) < 1)
+		if (sscanf(optarg, "%x", (unsigned int *)&bu_debug) < 1)
 		{
-		    bu_log("Invalid debug flag: '%s'\n", bu_optarg);
+		    bu_log("Invalid debug flag: '%s'\n", optarg);
 		    return (false);
 		}
 		break;
@@ -957,15 +956,15 @@ STATIC bool pars_Argv (register int argc, register char **argv)
 	}
     }
 
-    if (argc == bu_optind + 1)
+    if (argc == optind + 1)
     {
-	if ((filep = fopen(argv[bu_optind], "r")) == NULL)
+	if ((filep = fopen(argv[optind], "r")) == NULL)
 	{
-	    bu_log("Cannot open file '%s'\n", argv[bu_optind]);
+	    bu_log("Cannot open file '%s'\n", argv[optind]);
 	    return (false);
 	}
     }
-    else if (argc != bu_optind)
+    else if (argc != optind)
     {
 	bu_log("Too many arguments!\n");
 	return (false);

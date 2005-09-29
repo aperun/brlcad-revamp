@@ -41,15 +41,14 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "common.h"
 
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+# include <unistd.h>
 #endif
-
+                                                                                                                                                                            
 #include <stdlib.h>	
 #include <stdio.h>	
 #include <math.h>
 
 #include "machine.h"
-#include "bu.h"
 
 
 double col[3] = {128,128,128};		/* r,g,b */
@@ -78,7 +77,7 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "his:w:n:t:a:b:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "his:w:n:t:a:b:" )) != EOF )  {
 		switch( c )  {
 		case 'i':
 			invert = 1;
@@ -90,44 +89,44 @@ get_args(int argc, register char **argv)
 			break;
 		case 's':
 			/* square file size */
-			file_height = file_width = atoi(bu_optarg);
+			file_height = file_width = atoi(optarg);
 			break;
 		case 'w':
-			file_width = atoi(bu_optarg);
+			file_width = atoi(optarg);
 			break;
 		case 'n':
-			file_height = atoi(bu_optarg);
+			file_height = atoi(optarg);
 			break;
 		case 't':
 			/* Title area size */
-			title_height = atoi( bu_optarg );
+			title_height = atoi( optarg );
 			break;
 		case 'a':
-			h_start = atoi(bu_optarg);
+			h_start = atoi(optarg);
 			break;
 		case 'b':
-			h_end = atoi(bu_optarg);
+			h_end = atoi(optarg);
 			break;
 
 		default:		/* '?' */
 			return(0);
 		}
 	}
-	/* when bu_optind >= argc, we have run out of args */
-	if( bu_optind+1 >= argc )
+	/* when optind >= argc, we have run out of args */
+	if( optind+1 >= argc )
 		return(0);		/* only 0 or 1 args */
-	if( bu_optind+2 == argc )  {
+	if( optind+2 == argc )  {
 		/* Paramaters are H S */
-		hsv[0] = atof(argv[bu_optind++]);
-		hsv[1] = atof(argv[bu_optind]);
+		hsv[0] = atof(argv[optind++]);
+		hsv[1] = atof(argv[optind]);
 		hsv[2] = h_start;
 
 		hsvrgb( hsv, col );
 	} else {
 		/* parameters are R G B */
-		col[0] = atof(argv[bu_optind++]);
-		col[1] = atof(argv[bu_optind++]);
-		col[2] = atof(argv[bu_optind++]);
+		col[0] = atof(argv[optind++]);
+		col[1] = atof(argv[optind++]);
+		col[2] = atof(argv[optind++]);
 
 		rgbhsv( col, hsv );
 		hsv[2] = h_start;	/* Change given RGB to starting inten */

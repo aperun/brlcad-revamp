@@ -50,7 +50,6 @@
 #include <ctype.h>
 
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 #include "vfont-if.h"
 
@@ -97,7 +96,7 @@ get_args(int argc, register char **argv)
 	pixcolor[GRN]  = 255;
 	pixcolor[BLU]  = 255;
 
-	while ( (c = bu_getopt( argc, argv, "adhcF:f:r:g:b:C:s:S:w:W:n:N:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "adhcF:f:r:g:b:C:s:S:w:W:n:N:" )) != EOF )  {
 		switch( c )  {
 		case 'a':
 			alias_off = 1;
@@ -112,28 +111,28 @@ get_args(int argc, register char **argv)
 		case 's':
 		case 'S':
 			/* square size */
-			scr_height = scr_width = atoi( bu_optarg );
+			scr_height = scr_width = atoi( optarg );
 			break;
 		case 'w':
 		case 'W':
-			scr_width = atoi( bu_optarg );
+			scr_width = atoi( optarg );
 			break;
 		case 'n':
 		case 'N':
-			scr_height = atoi( bu_optarg );
+			scr_height = atoi( optarg );
 			break;
 		case 'c':
 			clear = 1;
 			break;
 		case 'F':
-			framebuffer = bu_optarg;
+			framebuffer = optarg;
 			break;
 		case 'f':
-			font1 = bu_optarg;
+			font1 = optarg;
 			break;
 		case 'C':
 			{
-				register char *cp = bu_optarg;
+				register char *cp = optarg;
 				register unsigned char *conp
 					= (unsigned char *)pixcolor;
 
@@ -146,27 +145,27 @@ get_args(int argc, register char **argv)
 			break;
 		/* backword compatability */
 		case 'r':
-		        pixcolor[RED] = atoi( bu_optarg );
+		        pixcolor[RED] = atoi( optarg );
 			break;
 		case 'g':
-		        pixcolor[GRN] = atoi( bu_optarg );
+		        pixcolor[GRN] = atoi( optarg );
 			break;
 		case 'b':
-		        pixcolor[BLU] = atoi( bu_optarg );
+		        pixcolor[BLU] = atoi( optarg );
 			break;
 		default:		/* '?' */
 			return(0);
 		}
 	}
 
-	if( bu_optind+3 > argc )
+	if( optind+3 > argc )
 		return(0);
-	xpos = atoi( argv[bu_optind++]);
-	ypos = atoi( argv[bu_optind++]);
-	textstring = argv[bu_optind++];
+	xpos = atoi( argv[optind++]);
+	ypos = atoi( argv[optind++]);
+	textstring = argv[optind++];
 	if(debug) (void)fprintf(stderr,"fblabel %d %d %s\n", xpos, ypos, textstring);
 
-	if ( argc > bu_optind )
+	if ( argc > optind )
 		(void)fprintf( stderr, "fblabel: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

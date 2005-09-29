@@ -367,7 +367,7 @@ void* tie_work(tie_t *tie, tie_ray_t *ray, tie_id_t *id, void *(*hitfunc)(tie_ra
         continue;
 
       /* Triangle Intersected, append it in the list */
-      if(hit_count < 0xff) {
+      if(hit_count < 250) {
         hit_list[hit_count] = tri;
         id_list[hit_count] = t;
         hit_count++;
@@ -438,7 +438,7 @@ void tie_push(tie_t *tie, TIE_3 *tlist, int tnum, void *plist, int pstride) {
     tie->tri_list[tie->tri_num].data[2] = tlist[i*3+2];
     if(plist) {
       tie->tri_list[tie->tri_num].ptr = plist;
-      plist = (void *)((intptr_t)plist + pstride);
+      plist += pstride;
     } else {
       tie->tri_list[tie->tri_num].ptr = NULL;
     }

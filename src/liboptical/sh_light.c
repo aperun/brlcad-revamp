@@ -36,12 +36,13 @@ static const char RCSsh_light[] = "@(#)$Header$ (ARL)";
 
 #include "common.h"
 
+
+
 #include <stdio.h>
 #ifdef HAVE_STRING_H
-#  include <string.h>
+# include <string.h>
 #endif
 #include <math.h>
-
 #include "machine.h"
 #include "vmath.h"
 #include "raytrace.h"
@@ -64,7 +65,7 @@ extern const struct bn_table	*spectrum;
 #define LIGHT_O(m)	offsetof(struct light_specific, m)
 #define LIGHT_OA(m)	bu_offsetofarray(struct light_specific, m)
 
-BU_EXTERN(void	aim_set, (const struct bu_structparse *sdp, const char *name,
+RT_EXTERN(void	aim_set, (const struct bu_structparse *sdp, const char *name,
 			  const char *base, char *value));
 
 /***********************************************************************
@@ -1022,13 +1023,11 @@ light_hit(struct application *ap, struct partition *PartHeadp, struct seg *finis
 #else
     vect_t	filter_color;
 #endif
-    int	light_visible = 0;
+    int	light_visible;
     int	air_sols_seen = 0;
     int 	is_proc;
     char	*reason = "???";
 
-    RT_CK_PT_HD(PartHeadp);
-    
     memset(&sw, 0, sizeof(sw));		/* make sure nothing nasty on the stack */
     if (rdebug&RDEBUG_LIGHT)
 	bu_log("light_hit level %d %d\n", ap->a_level, __LINE__);
@@ -1050,15 +1049,6 @@ light_hit(struct application *ap, struct partition *PartHeadp, struct seg *finis
 #else
     VSETALL( filter_color, 1 );
 #endif
-
-    /* anything to do? */
-    if (PartHeadp->pt_forw == PartHeadp) {
-	bu_log("light_hit:  ERROR, EMPTY PARTITION sxy=(%d, %d)\n", ap->a_x, ap->a_y);
-	light_visible = 0;
-	reason = "ERROR: EMPTY PARTITION";
-	goto out;
-    }
-
     /*XXX Bogus with Air.  We should check to see if it is the same 
      * surface.
      *
@@ -1775,7 +1765,7 @@ light_obs(struct application *ap, struct shadework *swp, int have)
     int visibility;
     struct light_obs_stuff los;
     static int rand_idx;
-    char flags[MAX_LIGHT_SAMPLES] = {0};
+    char flags[MAX_LIGHT_SAMPLES];
 
     if (rdebug & RDEBUG_LIGHT )
 	bu_log("computing Light obscuration: start\n");
@@ -1871,11 +1861,11 @@ light_obs(struct application *ap, struct shadework *swp, int have)
 	    }
 	}
 	if (visibility) {
-	    swp->sw_visible[i] = lsp;
+	    swp->sw_visible[i] = (char *)lsp;
 	    swp->sw_lightfract[i] =
 		(fastf_t)visibility / (fastf_t)tot_vis_rays;
 	} else {
-	    swp->sw_visible[i] = (struct light_specific *)NULL;
+	    swp->sw_visible[i] = (char *)0;
 	}
 
 	/* Advance to next light */

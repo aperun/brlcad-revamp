@@ -46,7 +46,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 
 static unsigned char *scanline;		/* 1 scanline pixel buffer */
@@ -70,10 +69,10 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "vF:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "vF:" )) != EOF )  {
 		switch( c )  {
 		case 'F':
-			out_fb_name = bu_optarg;
+			out_fb_name = optarg;
 			break;
 		case 'v':
 			verbose++;
@@ -84,17 +83,17 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		return(0);		/* missing input framebuffer */
 	}
-	in_fb_name = argv[bu_optind++];
+	in_fb_name = argv[optind++];
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		return(1);	/* OK */
 	}
-	out_fb_name = argv[bu_optind++];
+	out_fb_name = argv[optind++];
 
-	if ( argc > bu_optind )
+	if ( argc > optind )
 		(void)fprintf( stderr, "fb-fb: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

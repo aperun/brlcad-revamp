@@ -35,14 +35,11 @@
 
 #include "common.h"
 
+
 #ifdef HAVE_STRING_H
 #include <string.h>
 #else
 #include <strings.h>
-#endif
-
-#ifdef HAVE_X11_XLIB_H
-#  include <X11/Xlib.h>
 #endif
 
 #ifdef DM_X
@@ -54,13 +51,11 @@
 #include "machine.h"
 #include "bu.h"
 
-#include "./mgedtcl.h"
-
-
 /* defined in ged.c */
 extern void refresh();
 extern int event_check();
 
+extern Tk_Window tkwin;
 
 void
 mged_update(int	non_blocking)
@@ -156,9 +151,11 @@ f_wait(ClientData	clientData,	/* Main window associated with interpreter. */
        int		argc,		/* Number of arguments. */
        char		**argv)		/* Argument strings. */
 {
+#if 0
+	Tk_Window tkwin = (Tk_Window) clientData;
+#endif
 	int c, done;
 	size_t length;
-	Tk_Window window;
 
 	if (argc != 3) {
 		Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -185,6 +182,7 @@ f_wait(ClientData	clientData,	/* Main window associated with interpreter. */
 			       (ClientData) &done);
 	} else if ((c == 'v') && (strncmp(argv[1], "visibility", length) == 0)
 		   && (length >= 2)) {
+		Tk_Window window;
 
 		window = Tk_NameToWindow(interp, argv[2], tkwin);
 		if (window == NULL) {
@@ -211,6 +209,8 @@ f_wait(ClientData	clientData,	/* Main window associated with interpreter. */
 		Tk_DeleteEventHandler(window, VisibilityChangeMask|StructureNotifyMask,
 				      WaitVisibilityProc, (ClientData) &done);
 	} else if ((c == 'w') && (strncmp(argv[1], "window", length) == 0)) {
+		Tk_Window window;
+
 		window = Tk_NameToWindow(interp, argv[2], tkwin);
 		if (window == NULL) {
 			return TCL_ERROR;

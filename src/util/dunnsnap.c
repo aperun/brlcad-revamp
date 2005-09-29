@@ -41,15 +41,14 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "common.h"
 
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+# include <unistd.h>
 #endif
+                                                                                                                                                                            
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
-
 
 /* Shared with dunncomm.c */
 extern int	fd;
@@ -77,26 +76,26 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "hF:s:S:w:W:n:N:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "hF:s:S:w:W:n:N:" )) != EOF )  {
 		switch( c )  {
 		case 'h':
 			/* high-res */
 			scr_height = scr_width = 1024;
 			break;
 		case 'F':
-			framebuffer = bu_optarg;
+			framebuffer = optarg;
 			break;
 		case 's':
 		case 'S':
-			scr_height = scr_width = atoi(bu_optarg);
+			scr_height = scr_width = atoi(optarg);
 			break;
 		case 'w':
 		case 'W':
-			scr_width = atoi(bu_optarg);
+			scr_width = atoi(optarg);
 			break;
 		case 'n':
 		case 'N':
-			scr_height = atoi(bu_optarg);
+			scr_height = atoi(optarg);
 			break;
 
 		default:		/* '?' */
@@ -104,10 +103,10 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if( bu_optind < argc )  {
-		nframes = atoi( argv[bu_optind] );
+	if( optind < argc )  {
+		nframes = atoi( argv[optind] );
 	}
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "dunnsnap: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

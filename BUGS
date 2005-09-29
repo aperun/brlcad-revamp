@@ -15,16 +15,6 @@ on-going issues.
 Recent Bugs
 -----------
 
-* on os x, the -fast option results in an odd optimization/aliasing
-  bug where rtip contents are lost in rt after returning from
-  rt_gettrees().
-
-* report of rtwizard hanging at 40% on Debian (from binary distro)
-
-* make extrude crashes
-
-* tra in console mode outputs a warning about mged_players
-
 * mged primitive editor doesn't accept/apply values to disk for
   certain primitives (e.g. sph)
 

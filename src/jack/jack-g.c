@@ -71,7 +71,7 @@ static struct rt_tol	tol;
 
 static char	usage[] = "Usage: %s [-r region] [-g group] [jack_db] [brlcad_db]\n";
 
-BU_EXTERN( fastf_t nmg_loop_plane_area, (const struct loopuse *lu, plane_t pl ) );
+RT_EXTERN( fastf_t nmg_loop_plane_area, (const struct loopuse *lu, plane_t pl ) );
 
 int	psurf_to_nmg(struct model *m, FILE *fp, char *jfile);
 int	create_brlcad_db(struct rt_wdb *fpout, struct model *m, char *reg_name, char *grp_name);
@@ -328,7 +328,7 @@ psurf_to_nmg(struct model *m, FILE *fp, char *jfile)
 /*
  *	C R E A T E _ B R L C A D _ D B
  *
- *	Write the nmg to a BRL-CAD style data base.
+ *	Write the nmg to a brl-cad style data base.
  */
 int
 create_brlcad_db(struct rt_wdb *fpout, struct model *m, char *reg_name, char *grp_name)

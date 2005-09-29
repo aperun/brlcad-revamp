@@ -52,12 +52,11 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "machine.h"
-#include "bu.h"
 
 
 #define UCHAR unsigned char
 
-/* declarations to support use of bu_getopt() system call */
+/* declarations to support use of getopt() system call */
 char *options = "uhs:w:n:f:";
 
 char *progname = "(noname)";
@@ -207,23 +206,23 @@ void parse_args(int ac, char **av)
 	if (!(progname = strrchr(*av, '/')))
 		progname = *av;
 	
-	/* Turn off bu_getopt's error messages */
+	/* Turn off getopt's error messages */
 	opterr = 0;
 
 	/* get all the option flags from the command line */
-	while ((c=bu_getopt(ac,av,options)) != EOF)
+	while ((c=getopt(ac,av,options)) != EOF)
 		switch (c) {
-		case 'f'	: if ((c = atoi(bu_optarg)) > 1)
+		case 'f'	: if ((c = atoi(optarg)) > 1)
 					factor = c;
 				  break;
 		case 'h'	: width = height = 1024; break;
-		case 'n'	: if ((c=atoi(bu_optarg)) > 0)
+		case 'n'	: if ((c=atoi(optarg)) > 0)
 					height = c;
 				  break;
-		case 'w'	: if ((c=atoi(bu_optarg)) > 0)
+		case 'w'	: if ((c=atoi(optarg)) > 0)
 					width = c;
 				  break;
-		case 's'	: if ((c=atoi(bu_optarg)) > 0)
+		case 's'	: if ((c=atoi(optarg)) > 0)
 					height = width = c;
 				  break;
 		case 'u'	: method = METH_UNDERSAMPLE; break; 
@@ -231,18 +230,18 @@ void parse_args(int ac, char **av)
 		default		: usage(); break;
 		}
 
-	if (bu_optind >= ac) {
+	if (optind >= ac) {
 		if (isatty(fileno(stdout)) )
 			usage();
 	}
-	if (bu_optind < ac) {
-		if (freopen(av[bu_optind], "r", stdin) == (FILE *)NULL) {
-			perror(av[bu_optind]);
+	if (optind < ac) {
+		if (freopen(av[optind], "r", stdin) == (FILE *)NULL) {
+			perror(av[optind]);
 			exit(-1);
 		} else
-			filename = av[bu_optind];
+			filename = av[optind];
 	}
-	if (bu_optind+1 < ac)
+	if (optind+1 < ac)
 		(void)fprintf(stderr, "%s: Excess arguments ignored\n", progname);
 
 }

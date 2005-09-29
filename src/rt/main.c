@@ -165,10 +165,10 @@ memory_summary(void)
  */
 int main(int argc, char **argv)
 {
-	struct rt_i *rtip;
+	static struct rt_i *rtip;
 	char *title_file, *title_obj;	/* name of file and first object */
 	register int	x;
-	char idbuf[RT_BUFSIZE] = {0};		/* First ID record info */
+	char idbuf[132];		/* First ID record info */
 	void	application_init();
 	struct bu_vls	times;
 	int i;

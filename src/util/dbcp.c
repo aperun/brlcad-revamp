@@ -48,7 +48,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <errno.h>
 
 #include "machine.h"
-#include "bu.h"
 
 
 int mread(int fd, char *bufp, int n );
@@ -94,7 +93,7 @@ char	**argv;
 	pipefds par2chld, chld2par;
 	int	c;
 
-	while ( (c = bu_getopt( argc, argv, "v" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "v" )) != EOF )  {
 		switch( c )  {
 		case 'v':
 			verbose++;
@@ -105,11 +104,11 @@ char	**argv;
 		}
 	}
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		(void)fputs(usage, stderr);
 		exit(2);
 	}
-	size = 512 * atoi(argv[bu_optind]);
+	size = 512 * atoi(argv[optind]);
 
 	setbuf (stderr, errbuf);
 	if ((buffer = (char *)malloc(size)) == NULL) {

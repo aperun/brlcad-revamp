@@ -136,6 +136,10 @@ extern void predictor_init(void);
 /* defined in cmd.c */
 extern Tcl_Interp *interp;
 
+#ifdef DM_X
+extern Tk_Window tkwin;
+#endif
+
 /* defined in attach.c */
 extern int mged_link_vars(struct dm_list *p);
 
@@ -215,8 +219,7 @@ static int	do_rc(void);
 static void	log_event(char *event, char *arg);
 extern char	version[];		/* from vers.c */
 
-struct bn_tol		mged_tol;	/* calculation tolerance */
-struct rt_tess_tol	mged_ttol;	/* XXX needs to replace mged_abs_tol, et.al. */
+struct bn_tol	mged_tol;		/* calculation tolerance */
 
 struct bu_vls mged_prompt;
 void pr_prompt(void), pr_beep(void);

@@ -400,7 +400,7 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "odhcOF:s:S:w:W:n:N:C:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "odhcOF:s:S:w:W:n:N:C:" )) != EOF )  {
 		switch( c )  {
 		case 'o':
 			output_pix = 1;
@@ -419,23 +419,23 @@ get_args(int argc, register char **argv)
 			clear = 1;
 			break;
 		case 'F':
-			framebuffer = bu_optarg;
+			framebuffer = optarg;
 			break;
 		case 's':
 		case 'S':
-			scr_height = scr_width = atoi(bu_optarg);
+			scr_height = scr_width = atoi(optarg);
 			break;
 		case 'w':
 		case 'W':
-			scr_width = atoi(bu_optarg);
+			scr_width = atoi(optarg);
 			break;
 		case 'n':
 		case 'N':
-			scr_height = atoi(bu_optarg);
+			scr_height = atoi(optarg);
 			break;
 		case 'C':
 			{
-				register char *cp = bu_optarg;
+				register char *cp = optarg;
 				register unsigned char *conp = writing_color;
 
 				/* premature null => atoi gives zeros */
@@ -451,7 +451,7 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		/* No file name args */
 		if( isatty(fileno(stdin)) )
 			return(0);
@@ -487,7 +487,7 @@ main(int argc, char **argv)
 
 	readrailmag();
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		/* Process one TROFF file from stdin */
 		if( overlay_from_stdin )  {
 			fprintf(stderr,"cat-fb: -O ignored, stdin used for C/A/T code\n");
@@ -495,10 +495,10 @@ main(int argc, char **argv)
 		}
 		ofile(stdin);
 	} else {
-		for( ; bu_optind < argc; bu_optind++ )  {
+		for( ; optind < argc; optind++ )  {
 			register FILE *fp;
-			if( (fp = fopen(argv[bu_optind], "r")) == NULL )  {
-				perror(argv[bu_optind]);
+			if( (fp = fopen(argv[optind], "r")) == NULL )  {
+				perror(argv[optind]);
 				continue;
 			}
 			ofile(fp);

@@ -44,7 +44,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <math.h>
 
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 #include "spm.h"
 
@@ -71,26 +70,26 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "hF:sS:W:N:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "hF:sS:W:N:" )) != EOF )  {
 		switch( c )  {
 		case 'h':
 			/* high-res */
 			scr_height = scr_width = 1024;
 			break;
 		case 'F':
-			framebuffer = bu_optarg;
+			framebuffer = optarg;
 			break;
 		case 's':
 			square = 1;
 			break;
 		case 'S':
-			scr_height = scr_width = atoi(bu_optarg);
+			scr_height = scr_width = atoi(optarg);
 			break;
 		case 'W':
-			scr_width = atoi(bu_optarg);
+			scr_width = atoi(optarg);
 			break;
 		case 'N':
-			scr_height = atoi(bu_optarg);
+			scr_height = atoi(optarg);
 			break;
 
 		default:		/* '?' */
@@ -98,19 +97,19 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if( bu_optind >= argc )
+	if( optind >= argc )
 		return(0);		/* missing positional arg */
-	vsize = atoi( argv[bu_optind++] );
+	vsize = atoi( argv[optind++] );
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		if( isatty(fileno(stdin)) )
 			return(0);
 		file_name = "-";
 	} else {
-		file_name = argv[bu_optind];
+		file_name = argv[optind];
 	}
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "spm-fb: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

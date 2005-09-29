@@ -52,7 +52,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
                                                                                                                                                                             
 #include <stdio.h>
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 
 void		usage(char **argv);
@@ -254,35 +253,35 @@ int
 pars_Argv(int argc, register char **argv)
 {
 	register int	c;
-	extern int	bu_optind;
+	extern int	optind;
 
-	while( (c = bu_getopt( argc, argv, "hF:s:S:w:W:n:N:" )) != EOF ) {
+	while( (c = getopt( argc, argv, "hF:s:S:w:W:n:N:" )) != EOF ) {
 		switch( c ) {
 		case 'h' :
 			scr_width = scr_height = 1024;
 			break;
 		case 'F':
-			framebuffer = bu_optarg;
+			framebuffer = optarg;
 			break;
 		case 'S':
 		case 's':
 			/* square file size */
-			scr_height = scr_width = atoi(bu_optarg);
+			scr_height = scr_width = atoi(optarg);
 			break;
 		case 'w':
 		case 'W':
-			scr_width = atoi(bu_optarg);
+			scr_width = atoi(optarg);
 			break;
 		case 'n':
 		case 'N':
-			scr_height = atoi(bu_optarg);
+			scr_height = atoi(optarg);
 			break;
 		case '?' :
 			return	0;
 		}
 	}
-	if( argv[bu_optind] != NULL )
-		flavor = atoi( argv[bu_optind] );
+	if( argv[optind] != NULL )
+		flavor = atoi( argv[optind] );
 	return	1;
 }
 

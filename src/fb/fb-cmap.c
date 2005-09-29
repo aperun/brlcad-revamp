@@ -49,7 +49,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <strings.h>
 #endif
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 
 ColorMap cm;

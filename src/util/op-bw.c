@@ -60,9 +60,9 @@ int	width = 512;
 int	nlines = 512;
 char	*buf;
 
-extern int	bu_getopt();
-extern char	*bu_optarg;
-extern int	bu_optind;
+extern int	getopt();
+extern char	*optarg;
+extern int	optind;
 
 static char usage[] = "\
 Usage: op-bw [-hv] [-S step] [-x xoffset] [-y yoffset]\n\
@@ -77,7 +77,7 @@ register char **argv;
 
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "hvx:y:o:r:S:w:n:s:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "hvx:y:o:r:S:w:n:s:" )) != EOF )  {
 		switch( c )  {
 		case 'v':
 			verbose++;
@@ -87,30 +87,30 @@ register char **argv;
 			break;
 		case 'y':
 		case 'o':
-			offset = atoi( bu_optarg );
+			offset = atoi( optarg );
 			break;
 		case 'x':
 		case 'r':
-			roffset = atoi( bu_optarg );
+			roffset = atoi( optarg );
 			break;
 		case 'S':
-			step = atoi( bu_optarg );
+			step = atoi( optarg );
 			break;
 		case 'w':
-			width = atoi( bu_optarg );
+			width = atoi( optarg );
 			break;
 		case 'n':
-			nlines = atoi( bu_optarg );
+			nlines = atoi( optarg );
 			break;
 		case 's':
-			width = nlines = atoi( bu_optarg );
+			width = nlines = atoi( optarg );
 			break;
 		default:		/* '?' */
 			return(0);
 		}
 	}
 
-	if ( argc > bu_optind )
+	if ( argc > optind )
 		(void)fprintf( stderr, "fbline: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

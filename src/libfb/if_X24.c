@@ -43,15 +43,6 @@
  */
 /*@}*/
 
-#ifndef lint
-static const char sccsid[] = "@(#)if_X24.c version 1.40 (22 Nov 1994)";
-static const char RCSid[] = "@(#)$Header$ (ARL)";
-#endif
-
-#include "common.h"
-
-#ifdef IF_X
-
 #define X_DBG	0
 #define UPD_DBG 0
 #define BLIT_DBG 0
@@ -64,6 +55,13 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #else
 # define DEBUG1(str)	/*NIL*/
 #endif
+
+#ifndef lint
+static const char sccsid[] = "@(#)if_X24.c version 1.40 (22 Nov 1994)";
+static const char RCSid[] = "@(#)$Header$ (ARL)";
+#endif
+
+#include "common.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -151,7 +149,6 @@ static	int	xsetup();
 static	void	print_display_info();	/* debug */
 static	void	X24_createColorCube();
 static	void	X24_createColorTables();
-
 
 static void X24_handle_event FB_ARGS((FBIO *ifp, XEvent *event));
 void X24_configureWindow FB_ARGS((FBIO *ifp, int width, int height));
@@ -3851,8 +3848,6 @@ int x, y, w, h;
 
   return 0;
 }
-
-#endif /* IF_X */
 
 /*
  * Local Variables:

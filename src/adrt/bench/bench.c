@@ -189,7 +189,6 @@ void bench(char *proj, int cache, int image) {
   util_camera_free(&camera);
   free(app_data);
   free(bench_frame);
-  common_unpack_free();
 
   if(cache) {
     void *kdcache;

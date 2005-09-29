@@ -75,7 +75,7 @@ void render_util_shotline_list(tie_t *tie, tie_ray_t *ray, void **data, int *dle
   shotline_t shotline;
   tie_id_t id;
   int i, ind;
-  unsigned char c;
+  char c;
  
 
   shotline.mesh_list = NULL;
@@ -88,6 +88,7 @@ void render_util_shotline_list(tie_t *tie, tie_ray_t *ray, void **data, int *dle
   shotline.out.v[0] = 0;
   shotline.out.v[1] = 0;
   shotline.out.v[2] = 0;
+
 
   tie_work(tie, ray, &id, shot_hit, &shotline);
 
@@ -139,7 +140,7 @@ void render_util_spall_list(tie_t *tie, tie_ray_t *ray, tfloat angle, void **dat
   tie_ray_t sray;
   tie_id_t id;
   int i, ind;
-  unsigned char c;
+  char c;
   TIE_3 *vec_list, in, out;
  
 

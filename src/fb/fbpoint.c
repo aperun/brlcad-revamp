@@ -48,7 +48,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 #include "libtermio.h"
 

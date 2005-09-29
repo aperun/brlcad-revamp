@@ -7,14 +7,16 @@ see that file and the CVS log for more historic information.  The
 entire history of the project is available through CVS.
 
 ----------------------------------------------------------------------
---- 2005-10-XX  Release 7.6.1                                      ---
+--- 2005-09-29  Release 7.6.2                                      ---
 ----------------------------------------------------------------------
 
-* optional build support checks for X11 and OpenGL - Sean Morrison
-* improved Windows build support - Bob Parker, Daniel Ro§berg
-* isst observer 2x screen magnification - Justin Shumaker
-* improved 64bit support for ADRT - Justin Shumaker
-* updated manual page documentation - Sean Morrison
+In order to resolve an integration issue with the MUVES-S2
+vulnerability analysis code, this special release of BRL-CAD was put
+together providing updated tclscripts that work correctly when
+embedded into MUVES-S2.  This release also facilitates BRL-CAD's
+integration with AJEM as well for their corresponding release.
+
+* fixed 'embedded mged' tclscript files - Karen Murray, Sean Morrison
 
 
 ----------------------------------------------------------------------

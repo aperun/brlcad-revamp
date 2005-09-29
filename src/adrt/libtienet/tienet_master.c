@@ -133,7 +133,7 @@ pthread_mutex_t			tienet_master_broadcast_mut;
 
 #if TN_COMPRESSION
 void				*tienet_master_comp_buf;
-unsigned int			tienet_master_comp_max;
+int				tienet_master_comp_max;
 #endif
 
 /* result data callback */
@@ -699,8 +699,9 @@ void tienet_master_send_work(tienet_master_socket_t *sock) {
 
 
 void tienet_master_result(tienet_master_socket_t *sock) {
-  unsigned int res_len, comp_len;
+  int		res_len;
 #if TN_COMPRESSION
+  long		comp_len;
   unsigned long	dest_len;
 #endif
 
@@ -717,20 +718,20 @@ void tienet_master_result(tienet_master_socket_t *sock) {
   tienet_recv(sock->num, &sock->rays, sizeof(uint64_t), 0);
 
   /* receive result length */
-  tienet_recv(sock->num, &res_len, sizeof(unsigned int), 0);
-  tienet_master_transfer += sizeof(unsigned int);
+  tienet_recv(sock->num, &res_len, sizeof(int), 0);
+  tienet_master_transfer += sizeof(int);
 
+#if TN_COMPRESSION
   /* allocate memory for result buffer if more is needed */
   if(res_len+32 > tienet_master_res_max) {
     tienet_master_res_max = res_len+32;
     tienet_master_res_buf = realloc(tienet_master_res_buf, tienet_master_res_max);
   }
 
-#if TN_COMPRESSION
   dest_len = res_len+32;
 
   /* receive compressed length */
-  tienet_recv(sock->num, &comp_len, sizeof(unsigned int), 0);
+  tienet_recv(sock->num, &comp_len, sizeof(long), 0);
 
   /* receive compressed result data */
   if(comp_len > tienet_master_comp_max) {
@@ -744,8 +745,14 @@ void tienet_master_result(tienet_master_socket_t *sock) {
   dest_len = res_len+32;	/* some extra padding for zlib to work with */
   uncompress(tienet_master_res_buf, &dest_len, tienet_master_comp_buf, comp_len);
 
-  tienet_master_transfer += comp_len + sizeof(unsigned int);
+  tienet_master_transfer += comp_len + sizeof(long);
 #else
+  /* allocate memory for result buffer if more is needed */
+  if(res_len+32 > tienet_master_res_max) {
+    tienet_master_res_max = res_len+32;
+    tienet_master_res_buf = realloc(tienet_master_res_buf, tienet_master_res_max);
+  }
+
   /* receive result data */
   tienet_recv(sock->num, tienet_master_res_buf, res_len, 0);
   tienet_master_transfer += res_len;

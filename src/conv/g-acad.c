@@ -212,7 +212,7 @@ main(int argc, char **argv)
 		exit( 1 );
 	}
 
-	/* Open BRL-CAD database */
+	/* Open brl-cad database */
 	argc -= optind;
 	argv += optind;
 	if ((dbip = db_open(argv[0], "r")) == DBI_NULL) {

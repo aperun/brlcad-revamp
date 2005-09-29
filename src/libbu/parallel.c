@@ -47,9 +47,6 @@ static const char RCSparallel[] = "@(#)$Header$ (ARL)";
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#ifdef HAVE_SIGNAL_H
-#  include <signal.h>
-#endif
 #ifdef HAVE_STRING_H
 #  include <string.h>
 #else
@@ -77,6 +74,7 @@ static const char RCSparallel[] = "@(#)$Header$ (ARL)";
 #    include <sys/wait.h>
 #  endif
 #  include <sys/stat.h>
+#  include <signal.h>
 #endif
 
 #ifdef __ppc__
@@ -87,6 +85,7 @@ static const char RCSparallel[] = "@(#)$Header$ (ARL)";
 #    include <sys/wait.h>
 #  endif
 #  include <sys/stat.h>
+#  include <signal.h>
 #  ifdef BSD
 #    define __BSDbackup BSD
 #    undef BSD
@@ -1184,9 +1183,9 @@ genptr_t	arg;
 			bu_log("bu_parallel(): thread_tbl[%d] = %d\n",
 			       i, thread_tbl[i]);
 		}
-#    if defined(HAVE_RAISE) && defined(SIGINFO)
-		/* may be BSD-only (calls _thread_dump_info()) */
-		raise(SIGINFO);
+#    if defined(__FreeBSD__)
+		/* Is this FreeBSD-only? */
+		_thread_dump_info();
 #    endif
 	}
 

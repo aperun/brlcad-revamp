@@ -52,7 +52,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <sys/time.h>		/* For struct timeval */
 
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 
 ColorMap cm1, cm2;
@@ -73,7 +72,7 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "hi:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "hi:" )) != EOF )  {
 		switch( c )  {
 		case 'h':
 			/* high-res */
@@ -81,7 +80,7 @@ get_args(int argc, register char **argv)
 			break;
 		case 'i':
 			/* increment */
-			increment = atoi(bu_optarg);
+			increment = atoi(optarg);
 			break;
 
 		default:		/* '?' */
@@ -89,16 +88,16 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		/* no fps specified */
 		fps = 0;
 	} else {
-		fps = atof(argv[bu_optind]);
+		fps = atof(argv[optind]);
 		if( fps == 0 )
 			onestep++;
 	}
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "fbcmrot: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

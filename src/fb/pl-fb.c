@@ -101,7 +101,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 #include <ctype.h>
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 #include "plot3.h"
 
@@ -405,10 +404,10 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while( (c = bu_getopt( argc, argv, "hdoOit:F:s:S:w:W:n:N:" )) != EOF ) {
+	while( (c = getopt( argc, argv, "hdoOit:F:s:S:w:W:n:N:" )) != EOF ) {
 		switch( c ) {
 		case 't':
-			line_thickness = atoi(bu_optarg);
+			line_thickness = atoi(optarg);
 			if( line_thickness <= 0 )
 				line_thickness = 1;
 			break;
@@ -424,29 +423,29 @@ get_args(int argc, register char **argv)
 			over = 1;
 			break;
 		case 'F':
-			framebuffer = bu_optarg;
+			framebuffer = optarg;
 			break;
 		case 'h':
 			Nscanlines = Npixels = 1024;
 			break;
 		case 'S':
 		case 's':
-			Nscanlines = Npixels = atoi(bu_optarg);
+			Nscanlines = Npixels = atoi(optarg);
 			break;
 		case 'W':
 		case 'w':
-			Npixels = atoi(bu_optarg);
+			Npixels = atoi(optarg);
 			break;
 		case 'N':
 		case 'n':
-			Nscanlines = atoi(bu_optarg);
+			Nscanlines = atoi(optarg);
 			break;
 		default:		/* '?' */
 			return(0);
 		}
 	}
 
-	if( bu_optind >= argc ) {
+	if( optind >= argc ) {
 		/* no file name given, use stdin */
 		if( isatty(fileno(stdin)) )
 			return(0);
@@ -454,7 +453,7 @@ get_args(int argc, register char **argv)
 		pfin = stdin;
 	} else {
 		/* open file */
-		filename = argv[bu_optind];
+		filename = argv[optind];
 		if( (pfin = fopen(filename, "r")) == NULL ) {
 			fprintf( stderr,
 			   "pl-fb: Can't open file \"%s\"\n", filename );
@@ -462,7 +461,7 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if( argc > ++bu_optind )
+	if( argc > ++optind )
 		(void)fprintf( stderr, "pl-fb: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

@@ -3,25 +3,25 @@
 lib_LTLIBRARIES = libdm.la
 
 if WITH_OPENGL
-DM_OGL_CFLAGS = -DDM_OGL
+OGL_SRCS = dm-ogl.c
 else
-DM_OGL_CFLAGS =
+OGL_SRCS =
 endif
 
 if WITH_X11
-DM_X_CFLAGS = -DDM_X
+X11_SRCS = dm-X.c
 else
-DM_X_CFLAGS =
+X11_SRCS =
 endif
 
 SRCS = \
 	axes.c \
 	clip.c \
 	color.c \
+	$(OGL_SRCS) \
+	$(X11_SRCS) \
 	dm-Null.c \
-	dm-X.c \
 	dm-generic.c \
-	dm-ogl.c \
 	dm-plot.c \
 	dm-ps.c \
 	dm_obj.c \
@@ -30,25 +30,22 @@ SRCS = \
 	query.c \
 	tcl.c 
 
-libdm_la_SOURCES = \
-	$(SRCS) \
-	vers.c
-
-libdm_la_LDFLAGS = -version-info 19:1
-libdm_la_CFLAGS = ${X_CFLAGS} ${DM_X_CFLAGS} ${DM_OGL_CFLAGS}
-libdm_la_LIBADD = \
-	${TCL} \
-	${TK} \
-	${LIBRT} \
-	${PNG} \
-	${X_LIBS}
-
 # need to test dm-ogl_win.c as a dm-ogl.c replacement
 EXTRA_DIST = \
 	dm-glx.c \
 	dm-ogl_win.c \
 	dm-pex.c \
 	libdm.dsp
+
+libdm_la_SOURCES = \
+	$(SRCS) \
+	vers.c
+
+libdm_la_LDFLAGS = -version-info 19:1
+libdm_la_CFLAGS = ${X_CFLAGS}
+libdm_la_LIBADD = ${TCL} ${TK} ${LIBRT} ${PNG} ${X_LIBS}
+
+AM_CFLAGS = ${X_CFLAGS}
 
 BUILT_SOURCES = vers.c
 

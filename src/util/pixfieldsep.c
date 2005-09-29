@@ -36,14 +36,13 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "common.h"
 
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+# include <unistd.h>
 #endif
 
 #include <stdlib.h>
 #include <stdio.h>
 
 #include "machine.h"
-#include "bu.h"
 
 
 FILE	*out1;
@@ -66,20 +65,20 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "ds:w:#:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "ds:w:#:" )) != EOF )  {
 		switch( c )  {
 		case 'd':
 			doubleit = 1;
 			break;
 		case '#':
-			bytes_per_sample = atoi(bu_optarg);
+			bytes_per_sample = atoi(optarg);
 			break;
 		case 's':
 			/* square file size */
-			file_width = atoi(bu_optarg);
+			file_width = atoi(optarg);
 			break;
 		case 'w':
-			file_width = atoi(bu_optarg);
+			file_width = atoi(optarg);
 			break;
 
 		default:		/* '?' */
@@ -87,14 +86,14 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if( bu_optind < argc )  {
-		even_file = argv[bu_optind++];
+	if( optind < argc )  {
+		even_file = argv[optind++];
 	}
-	if( bu_optind < argc )  {
-		odd_file = argv[bu_optind++];
+	if( optind < argc )  {
+		odd_file = argv[optind++];
 	}
 
-	if( ++bu_optind <= argc )
+	if( ++optind <= argc )
 		(void)fprintf( stderr, "pixfieldsep: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

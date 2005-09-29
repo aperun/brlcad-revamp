@@ -46,8 +46,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdlib.h>
 
 #include "machine.h"
-#include "bu.h"
-
 
 /*
  * Description of Sun header for files containing raster images
@@ -131,7 +129,7 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "bhiPvC" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "bhiPvC" )) != EOF )  {
 		switch( c )  {
 		case 'b':
 			pixout = 0;	/* bw(5) */
@@ -157,13 +155,13 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		if( isatty(fileno(stdin)) )
 			return(0);
 		file_name = "-";
 		fp = stdin;
 	} else {
-		file_name = argv[bu_optind];
+		file_name = argv[optind];
 		if( (fp = fopen(file_name, "r")) == NULL )  {
 			(void)fprintf( stderr,
 				"sun-pix: cannot open \"%s\" for reading\n",
@@ -172,7 +170,7 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "sun-pix: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

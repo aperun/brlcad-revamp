@@ -47,7 +47,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 
 
@@ -68,7 +67,7 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "hcF:s:w:n:S:W:N:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "hcF:s:w:n:S:W:N:" )) != EOF )  {
 		switch( c )  {
 		case 'h':
 			/* high-res */
@@ -79,19 +78,19 @@ get_args(int argc, register char **argv)
 			clear_and_reset++;
 			break;
 		case 'F':
-			framebuffer = bu_optarg;
+			framebuffer = optarg;
 			break;
 		case 's':
 		case 'S':
-			scr_height = scr_width = atoi(bu_optarg);
+			scr_height = scr_width = atoi(optarg);
 			break;
 		case 'w':
 		case 'W':
-			scr_width = atoi(bu_optarg);
+			scr_width = atoi(optarg);
 			break;
 		case 'n':
 		case 'N':
-			scr_height = atoi(bu_optarg);
+			scr_height = atoi(optarg);
 			break;
 
 		default:		/* '?' */
@@ -134,19 +133,19 @@ main(int argc, char **argv)
 		}
 	}
 
-	if( bu_optind+3 == argc ) {
+	if( optind+3 == argc ) {
 		static RGBpixel	pixel;
-		pixel[RED] = (u_char) atoi( argv[bu_optind+0] );
-		pixel[GRN] = (u_char) atoi( argv[bu_optind+1] );
-		pixel[BLU] = (u_char) atoi( argv[bu_optind+2] );
+		pixel[RED] = (u_char) atoi( argv[optind+0] );
+		pixel[GRN] = (u_char) atoi( argv[optind+1] );
+		pixel[BLU] = (u_char) atoi( argv[optind+2] );
 		fb_clear( fbp, pixel );
-	} else if( bu_optind+1 == argc ) {
+	} else if( optind+1 == argc ) {
 		static RGBpixel	pixel;
 		pixel[RED] = pixel[GRN] = pixel[BLU]
-			= (u_char) atoi( argv[bu_optind+0] );
+			= (u_char) atoi( argv[optind+0] );
 		fb_clear( fbp, pixel );
 	} else {
-		if( bu_optind != argc )
+		if( optind != argc )
 			fprintf(stderr, "fbclear: extra arguments ignored\n");
 		fb_clear( fbp, PIXEL_NULL );
 	}

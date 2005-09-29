@@ -40,10 +40,9 @@
 
 static void Initastack(),Apush();
 static void Initsstack(),Spush();
-static void Afreestack(),Sfreestack();
-
-static char *Apop();
 static struct node *Spop();
+static void Afreestack(),Sfreestack();
+static char *Apop();
 
 /* Some junk for this routines private node stack */
 struct node **sstk_p;
@@ -57,8 +56,8 @@ void
 Showtree( root )
 struct node *root;
 {
-	struct node *ptr;
-	char *opa,*opb,*tmp,oper[4];
+	struct node *ptr,*Spop();
+	char *opa,*opb,*tmp,*Apop(),oper[4];
 
 	strcpy( oper , "   " );
 

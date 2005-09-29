@@ -19,7 +19,7 @@
  * information.
  */
 /** @file pix-sun.c
- *	Program to take a BRL-CAD PIX format image file and convert the
+ *	Program to take a BRLCAD PIX format image file and convert the
  *	image to a Sun Microsystems 8-bit deep color "rasterfile" format
  *	image.
  *
@@ -48,10 +48,9 @@
 #endif
 
 #include "machine.h"
-#include "bu.h"
 
 
-/* declarations to support use of bu_getopt() system call */
+/* declarations to support use of getopt() system call */
 char *options = "hs:w:n:d";
 char optflags[sizeof(options)];
 char *progname = "(noname)";
@@ -333,22 +332,22 @@ int main(int ac, char **av)
 
     for (c=0 ; c < optlen ; optflags[c++] = '\0');
     
-    /* Turn off bu_getopt's error messages */
+    /* Turn off getopt's error messages */
     opterr = 0;
 
     /* get all the option flags from the command line
     */
-    while ((c=bu_getopt(ac,av,options)) != EOF)
+    while ((c=getopt(ac,av,options)) != EOF)
 	switch (c) {
 	case 'd'    : dither = !dither; break;
-	case 'w'    : ras.ras_width = atoi(bu_optarg); break;
-	case 'n'    : ras.ras_height = atoi(bu_optarg); break;
-	case 's'    : ras.ras_width = ras.ras_height = atoi(bu_optarg); break;
+	case 'w'    : ras.ras_width = atoi(optarg); break;
+	case 'n'    : ras.ras_height = atoi(optarg); break;
+	case 's'    : ras.ras_width = ras.ras_height = atoi(optarg); break;
 	default     : usage(); break;
 	}
 
 
-    if (bu_optind < ac) usage();
+    if (optind < ac) usage();
 
     doit();
     return (0);

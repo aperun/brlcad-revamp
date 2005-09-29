@@ -23,7 +23,7 @@
 /*@{*/
 /** @file wdb_obj.c
  *  A database object contains the attributes and
- *  methods for controlling a BRL-CAD database.
+ *  methods for controlling a BRLCAD database.
  * 
  *  Authors -
  *	Michael John Muuss
@@ -727,7 +727,7 @@ wdb_close_cmd(struct rt_wdb	*wdbp,
 }
 
 /*
- * Close a BRL-CAD database object.
+ * Close a BRLCAD database object.
  *
  * USAGE:
  *	  procname close

@@ -51,10 +51,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
 #include "machine.h"
-#include "bu.h"
-
 
 char *progname = "(noname)";
 
@@ -90,24 +87,24 @@ get_args(int argc, register char **argv)
 	register int c = 0;
 	double	d = 0.0;
 
-	while ( (c = bu_getopt( argc, argv, "a:s:m:d:Ae:r:cS:O:M:X:t:" )) != EOF )
+	while ( (c = getopt( argc, argv, "a:s:m:d:Ae:r:cS:O:M:X:t:" )) != EOF )
 	{
 		switch( c )  {
 		case 'a':
 			op[ numop ] = ADD;
-			val[ numop++ ] = atof(bu_optarg);
+			val[ numop++ ] = atof(optarg);
 			break;
 		case 's':
 			op[ numop ] = ADD;
-			val[ numop++ ] = - atof(bu_optarg);
+			val[ numop++ ] = - atof(optarg);
 			break;
 		case 'm':
 			op[ numop ] = MULT;
-			val[ numop++ ] = atof(bu_optarg);
+			val[ numop++ ] = atof(optarg);
 			break;
 		case 'd':
 			op[ numop ] = MULT;
-			d = atof(bu_optarg);
+			d = atof(optarg);
 
 			if( d == 0.0 ) {
 				(void)fprintf( stderr, "bwmod: divide by zero!\n" );
@@ -121,11 +118,11 @@ get_args(int argc, register char **argv)
 			break;
 		case 'e':
 			op[ numop ] = POW;
-			val[ numop++ ] = atof(bu_optarg);
+			val[ numop++ ] = atof(optarg);
 			break;
 		case 'r':
 			op[ numop ] = POW;
-			d = atof(bu_optarg);
+			d = atof(optarg);
 			if( d == 0.0 ) {
 				(void)fprintf( stderr, "bwmod: zero root!\n" );
 				exit( 2 );
@@ -136,35 +133,35 @@ get_args(int argc, register char **argv)
 			char_arith = !char_arith; break;
 		case 'S':
 			op[ numop ] = SHIFT;
-			val[ numop++] = atof(bu_optarg);
+			val[ numop++] = atof(optarg);
 			break;
 		case 'M':
 			op[ numop ] = AND;
-			val[ numop++] = atof(bu_optarg);
+			val[ numop++] = atof(optarg);
 			break;
 		case 'O':
 			op[ numop ] = OR;
-			val[ numop++ ] = atof(bu_optarg);
+			val[ numop++ ] = atof(optarg);
 			break;
 		case 'X':
 			op[ numop ] = XOR;
-			val[ numop++ ] = atof(bu_optarg);
+			val[ numop++ ] = atof(optarg);
 			break;
 		case 't':
 			op[ numop ] = TRUNC;
-			val[ numop++ ] = atof(bu_optarg);
+			val[ numop++ ] = atof(optarg);
 			break;
 		default:		/* '?' */
 			return(0);
 		}
 	}
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		if( isatty((int)fileno(stdin)) )
 			return(0);
 		file_name = "-";
 	} else {
-		file_name = argv[bu_optind];
+		file_name = argv[optind];
 		if( freopen(file_name, "r", stdin) == NULL )  {
 			(void)fprintf( stderr,
 				"bwmod: cannot open \"%s\" for reading\n",
@@ -173,7 +170,7 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "bwmod: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

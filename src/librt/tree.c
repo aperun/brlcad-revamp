@@ -57,7 +57,7 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include "raytrace.h"
 #include "./debug.h"
 
-BU_EXTERN(void		rt_tree_kill_dead_solid_refs, (union tree *tp));
+RT_EXTERN(void		rt_tree_kill_dead_solid_refs, (union tree *tp));
 
 HIDDEN struct region *rt_getregion(struct rt_i *rtip, register const char *reg_name);
 HIDDEN void	rt_tree_region_assign(register union tree *tp, register const struct region *regionp);

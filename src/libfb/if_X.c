@@ -35,16 +35,15 @@
  */
 /*@}*/
 
+#define	DEBUGX	0
+#define	CURSOR	1
+
+
 #ifndef lint
 static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "common.h"
-
-#ifdef IF_X
-
-#define	DEBUGX	0
-#define	CURSOR	1
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -1750,8 +1749,6 @@ slowrect(FBIO *ifp, int xmin, int xmax, int ymin, int ymax)
 		X_scanwrite( ifp, sxmin, sy, &scanbuf[0][0], sxlen, 0 );
 	}
 }
-
-#endif /* II_X */
 
 /*
  * Local Variables:

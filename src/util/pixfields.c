@@ -40,18 +40,18 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "common.h"
 
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+# include <unistd.h>
 #endif
+                                                                                                                                                                            
 #include <stdlib.h>
 #include <stdio.h>
 #ifdef HAVE_STRING_H
-#  include	<string.h>
+#include	<string.h>
 #else
-#  include	<strings.h>
+#include	<strings.h>
 #endif
 
 #include "machine.h"
-#include "bu.h"
 
 
 #define DEFAULT_WIDTH	512
@@ -73,42 +73,42 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "vw:n:s:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "vw:n:s:" )) != EOF )  {
 		switch( c )  {
 		case 'v':
 			verbose++;
 			break;
 		case 'w':
-			width = atoi(bu_optarg);
+			width = atoi(optarg);
 			break;
 		case 'n':
-			height = atoi(bu_optarg);
+			height = atoi(optarg);
 			break;
 		case 's':
-			width = height = atoi(bu_optarg);
+			width = height = atoi(optarg);
 			break;
 		default:		/* '?' */
 			return(0);
 		}
 	}
 
-	if( bu_optind >= argc + 1 )  {
+	if( optind >= argc + 1 )  {
 		(void) fprintf( stderr,
 		    "pixfields: must supply two file names\n");
 		return(0);
 	} else {
 
-		if( (fldonefp = fopen(argv[bu_optind], "r")) == NULL )  {
+		if( (fldonefp = fopen(argv[optind], "r")) == NULL )  {
 			(void)fprintf( stderr,
 				"pixfields: cannot open \"%s\" for reading\n",
-				argv[bu_optind] );
+				argv[optind] );
 			return(0);
 		}
 
-		if( (fldtwofp = fopen(argv[++bu_optind], "r")) == NULL )  {
+		if( (fldtwofp = fopen(argv[++optind], "r")) == NULL )  {
 			(void)fprintf( stderr,
 				"pixfields: cannot open \"%s\" for reading\n",
-				argv[bu_optind] );
+				argv[optind] );
 			return(0);
 		}
 
@@ -117,7 +117,7 @@ get_args(int argc, register char **argv)
 	if( isatty(fileno(stdout)) )
 		return(0);
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "pixfields: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

@@ -66,7 +66,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "machine.h"
-#include "bu.h"
 
 
 #define NFILES		4		/* Two in, two out */
@@ -167,7 +166,7 @@ get_args(int argc, register char **argv)
 	register int	seen_formula = 0;
 	register int	i;
 
-	while ( (c = bu_getopt( argc, argv, "glenaw:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "glenaw:" )) != EOF )  {
 		switch( c )  {
 		case 'g':
 			wanted |= GT;
@@ -190,7 +189,7 @@ get_args(int argc, register char **argv)
 			/* Formula not seen */
 			break;
 		case 'w':
-			c = atoi(bu_optarg);
+			c = atoi(optarg);
 			if( c >= 1 && c < EL_WIDTH )
 				width = c;
 			else
@@ -206,16 +205,16 @@ get_args(int argc, register char **argv)
 		usage("No formula specified\n", 1);
 
 
-	if( bu_optind+NFILES > argc )
+	if( optind+NFILES > argc )
 		usage("insufficient number of input/output channels\n", 1);
 
 
 	for( i=0; i < NFILES; i++ )  {
-		if( open_file( i, argv[bu_optind++] ) < 0 )
+		if( open_file( i, argv[optind++] ) < 0 )
 			usage((char *)NULL, 1);
 	}
 
-	if ( argc > bu_optind )
+	if ( argc > optind )
 		(void)fprintf( stderr, "pixmatte: excess argument(s) ignored\n" );
 
 }

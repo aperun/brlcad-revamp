@@ -45,9 +45,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-extern int	bu_getopt(int, char *const *, const char *);
-extern char	*bu_optarg;
-extern int	bu_optind;
+extern int	getopt(int, char *const *, const char *);
+extern char	*optarg;
+extern int	optind;
 
 #define	MAXBUFBYTES	3*1024*1024	/* max bytes to malloc in buffer space */
 
@@ -78,7 +78,7 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "rhs:w:n:S:W:N:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "rhs:w:n:S:W:N:" )) != EOF )  {
 		switch( c )  {
 		case 'r':
 			/* pixel replication */
@@ -90,23 +90,23 @@ get_args(int argc, register char **argv)
 			break;
 		case 'S':
 			/* square size */
-			outx = outy = atoi(bu_optarg);
+			outx = outy = atoi(optarg);
 			break;
 		case 's':
 			/* square size */
-			inx = iny = atoi(bu_optarg);
+			inx = iny = atoi(optarg);
 			break;
 		case 'W':
-			outx = atoi(bu_optarg);
+			outx = atoi(optarg);
 			break;
 		case 'w':
-			inx = atoi(bu_optarg);
+			inx = atoi(optarg);
 			break;
 		case 'N':
-			outy = atoi(bu_optarg);
+			outy = atoi(optarg);
 			break;
 		case 'n':
-			iny = atoi(bu_optarg);
+			iny = atoi(optarg);
 			break;
 
 		default:		/* '?' */
@@ -115,27 +115,27 @@ get_args(int argc, register char **argv)
 	}
 
 	/* XXX - backward compatability hack */
-	if( bu_optind+5 == argc ) {
-		file_name = argv[bu_optind++];
+	if( optind+5 == argc ) {
+		file_name = argv[optind++];
 		if( (buffp = fopen(file_name, "r")) == NULL )  {
 			(void)fprintf( stderr,
 				"pixscale: cannot open \"%s\" for reading\n",
 				file_name );
 			return(0);
 		}
-		inx = atoi(argv[bu_optind++]);
-		iny = atoi(argv[bu_optind++]);
-		outx = atoi(argv[bu_optind++]);
-		outy = atoi(argv[bu_optind++]);
+		inx = atoi(argv[optind++]);
+		iny = atoi(argv[optind++]);
+		outx = atoi(argv[optind++]);
+		outy = atoi(argv[optind++]);
 		return(1);
 	}
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		if( isatty(fileno(stdin)) )
 			return(0);
 		file_name = "-";
 		buffp = stdin;
 	} else {
-		file_name = argv[bu_optind];
+		file_name = argv[optind];
 		if( (buffp = fopen(file_name, "r")) == NULL )  {
 			(void)fprintf( stderr,
 				"pixscale: cannot open \"%s\" for reading\n",
@@ -144,7 +144,7 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "pixscale: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

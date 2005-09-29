@@ -21,17 +21,9 @@
 /** @file mgedtcl.h
  *
  */
-#ifndef __MGEDTCL_H__
-#define __MGEDTCL_H__
-
-#include "common.h"
-
-#ifdef DM_X
-#include "tk.h"
-extern Tk_Window tkwin; /* in cmd.c */
+#ifndef MGEDTCL_H
+#define MGEDTCL_H seen
 #endif
-
-#endif  /* __MGEDTCL_H__ */
 
 /*
  * Local Variables:

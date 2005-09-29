@@ -79,7 +79,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 
 #include "machine.h"
-#include "bu.h"
 #include "fb.h"
 
 #define MAX_LINE	(8*1024)	/* Max pixels/line */
@@ -182,7 +181,7 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "efshF:S:W:N:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "efshF:S:W:N:" )) != EOF )  {
 		switch( c )  {
 		case 'e':
 			mode = M_EIA;
@@ -198,16 +197,16 @@ get_args(int argc, register char **argv)
 			scr_height = scr_width = 1024;
 			break;
 		case 'F':
-			framebuffer = bu_optarg;
+			framebuffer = optarg;
 			break;
 		case 'S':
-			scr_height = scr_width = atoi(bu_optarg);
+			scr_height = scr_width = atoi(optarg);
 			break;
 		case 'W':
-			scr_width = atoi(bu_optarg);
+			scr_width = atoi(optarg);
 			break;
 		case 'N':
-			scr_height = atoi(bu_optarg);
+			scr_height = atoi(optarg);
 			break;
 
 		default:		/* '?' */
@@ -215,7 +214,7 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "fbcbars: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

@@ -48,7 +48,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <ctype.h>
 
 #include "machine.h"
-#include "bu.h"
 
 
 #define	INTERACTIVE	0
@@ -78,25 +77,25 @@ get_args(register int argc, register char **argv)
 	register int inputmode = INTERACTIVE;
 
 	/* Get info from command line arguments */
-	while ((c = bu_getopt(argc, argv, "s:w:n:x:y:X:Y:S:W:N:#:")) != EOF) {
+	while ((c = getopt(argc, argv, "s:w:n:x:y:X:Y:S:W:N:#:")) != EOF) {
 		switch(c) {
 		case 's':
-			linelen   = atoi(bu_optarg);
+			linelen   = atoi(optarg);
 			inputmode = COMMAND_LINE;
 			break;
 		case 'w':
-			linelen   = atoi(bu_optarg);
+			linelen   = atoi(optarg);
 			inputmode = COMMAND_LINE;
 			break;
 		case 'n':
 			inputmode = COMMAND_LINE;
 			break;
 		case 'x':
-			xorig     = atoi(bu_optarg);
+			xorig     = atoi(optarg);
 			inputmode = COMMAND_LINE;
 			break;
 		case 'y':
-			yorig     = atoi(bu_optarg);
+			yorig     = atoi(optarg);
 			inputmode = COMMAND_LINE;
 			break;
 		case 'X':
@@ -106,19 +105,19 @@ get_args(register int argc, register char **argv)
 			inputmode = COMMAND_LINE;
 			break;
 		case 'S':
-			xnum = ynum = atoi(bu_optarg);
+			xnum = ynum = atoi(optarg);
 			inputmode = COMMAND_LINE;
 			break;
 		case 'W':
-			xnum      = atoi(bu_optarg);
+			xnum      = atoi(optarg);
 			inputmode = COMMAND_LINE;
 			break;
 		case 'N':
-			ynum      = atoi(bu_optarg);
+			ynum      = atoi(optarg);
 			inputmode = COMMAND_LINE;
 			break;
 		case '#':
-			bytes_per_pixel = atoi(bu_optarg);
+			bytes_per_pixel = atoi(optarg);
 			break;
 		default:		/* '?' */
 			return(0);
@@ -164,7 +163,7 @@ get_args(register int argc, register char **argv)
 	if (inputmode == COMMAND_LINE) {
 		/* Obtain file pointers */
 		ofp = stdout;
-		if (bu_optind >= argc) {
+		if (optind >= argc) {
 			if (isatty(fileno(stdin))) {
 				fprintf(stderr,
 					"pixrect: input from sdtin\n");
@@ -172,7 +171,7 @@ get_args(register int argc, register char **argv)
 			}
 			ifp = stdin;
 		} else {
-			file_name = argv[bu_optind];
+			file_name = argv[optind];
 			if ((ifp = fopen(file_name, "r")) == NULL) {
 				fprintf(stderr,
 					"pixrect: cannot open \"%s\" for reading\n",
@@ -188,7 +187,7 @@ get_args(register int argc, register char **argv)
 	}
 
 #if 0
-	if (argc > ++bu_optind)
+	if (argc > ++optind)
 		fprintf(stderr,"pixrect: excess argument(s) ignored\n");
 #endif
 

@@ -1,8 +1,7 @@
 '                         V E R S . V B S
 ' BRL-CAD
 '
-' Copyright (C) 2002-2005 United States Government as represented by
-' the U.S. Army Research Laboratory.
+' Copyright (C) 2005 IABG mbH
 '
 ' Redistribution and use in source and binary forms, with or without
 ' modification, are permitted provided that the following conditions
@@ -133,10 +132,10 @@ WScript.Echo("    """ + myUser + "@" + myComputer + ":" + myDirectory + "\n"";")
 
 
 ' Local Variables:
-' mode: vb
+' mode: sh
 ' tab-width: 8
-' vb-indentation: 4
-' vb-basic-offset: 4
+' sh-indentation: 4
+' sh-basic-offset: 4
 ' indent-tabs-mode: t
 ' End:
 ' ex: shiftwidth=4 tabstop=8

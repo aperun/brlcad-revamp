@@ -45,7 +45,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 
 #include "machine.h"
-#include "bu.h"
 
 
 FILE	*infp;
@@ -73,7 +72,7 @@ get_args(int argc, register char **argv)
 {
 	register int	c;
 
-	while( (c = bu_getopt( argc, argv, "hs:w:n:" )) != EOF )  {
+	while( (c = getopt( argc, argv, "hs:w:n:" )) != EOF )  {
 		switch( c )  {
 		case 'h':
 			/* high-res */
@@ -81,26 +80,26 @@ get_args(int argc, register char **argv)
 			break;
 		case 's':
 			/* square file size */
-			file_height = file_width = atoi(bu_optarg);
+			file_height = file_width = atoi(optarg);
 			break;
 		case 'w':
-			file_width = atoi(bu_optarg);
+			file_width = atoi(optarg);
 			break;
 		case 'n':
-			file_height = atoi(bu_optarg);
+			file_height = atoi(optarg);
 			break;
 		case '?':
 			return	0;
 		}
 	}
-	if( argv[bu_optind] != NULL )  {
-		if( (infp = fopen( argv[bu_optind], "r" )) == NULL )  {
-			perror(argv[bu_optind]);
+	if( argv[optind] != NULL )  {
+		if( (infp = fopen( argv[optind], "r" )) == NULL )  {
+			perror(argv[optind]);
 			return	0;
 		}
-		bu_optind++;
+		optind++;
 	}
-	if( argc > ++bu_optind )
+	if( argc > ++optind )
 		(void) fprintf( stderr, "Excess arguments ignored\n" );
 
 	if( isatty(fileno(infp)) || isatty(fileno(stdout)) )

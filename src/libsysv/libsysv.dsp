@@ -55,6 +55,11 @@ BSC32=bscmake.exe
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=force new vers.c
+PostBuild_Cmds=del vers.c
+# End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libsysv - Win32 Release Multithreaded"
 
@@ -78,6 +83,11 @@ BSC32=bscmake.exe
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=force new vers.c
+PostBuild_Cmds=del vers.c
+# End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libsysv - Win32 Release Multithreaded DLL"
 
@@ -101,6 +111,11 @@ BSC32=bscmake.exe
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=force new vers.c
+PostBuild_Cmds=del vers.c
+# End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libsysv - Win32 Debug"
 
@@ -124,6 +139,11 @@ BSC32=bscmake.exe
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=force new vers.c
+PostBuild_Cmds=del vers.c
+# End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libsysv - Win32 Debug Multithreaded"
 
@@ -147,6 +167,11 @@ BSC32=bscmake.exe
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=force new vers.c
+PostBuild_Cmds=del vers.c
+# End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libsysv - Win32 Debug Multithreaded DLL"
 
@@ -170,6 +195,11 @@ BSC32=bscmake.exe
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=force new vers.c
+PostBuild_Cmds=del vers.c
+# End Special Build Tool
 
 !ENDIF 
 

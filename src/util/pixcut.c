@@ -87,7 +87,7 @@ get_args(register int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt(argc, argv, "vahHC:s:w:n:S:W:N:x:y:#:" )) != EOF) {
+	while ( (c = getopt(argc, argv, "vahHC:s:w:n:S:W:N:x:y:#:" )) != EOF) {
 		switch (c) {
 		case 'v':
 			Verbose = 1;
@@ -103,48 +103,48 @@ get_args(register int argc, register char **argv)
 			new_width = new_height = 1024L;
 			break;
 		case 's':
-			org_width = org_height = atol(bu_optarg);
+			org_width = org_height = atol(optarg);
 			autosize = 0;
 			break;
 		case 'S':
-			new_width = new_height = atol(bu_optarg);
+			new_width = new_height = atol(optarg);
 			break;
 		case 'w':
-			org_width = atol(bu_optarg);
+			org_width = atol(optarg);
 			autosize = 0;
 			break;
 		case 'W':
-			new_width = atol(bu_optarg);
+			new_width = atol(optarg);
 			break;
 		case 'n':
-			org_height = atol(bu_optarg);
+			org_height = atol(optarg);
 			autosize = 0;
 			break;
 		case 'N':
-			new_height = atol(bu_optarg);
+			new_height = atol(optarg);
 			break;
 		case 'x':
-			base_x = atol(bu_optarg);
+			base_x = atol(optarg);
 			break;
 		case 'y':
-			base_y = atol(bu_optarg);
+			base_y = atol(optarg);
 			break;
 		case 'C':
-			parse_color(background, bu_optarg);
+			parse_color(background, optarg);
 			break;
 		case '#':
-			num_bytes = atol(bu_optarg);
+			num_bytes = atol(optarg);
 			break;
 		default:		/* '?' */
 			return(0);
 		}
 	}
-	if (bu_optind >= argc ) {
+	if (optind >= argc ) {
 		if ( isatty(fileno(stdin))) return(0);
 		in_name = "-";
 		input = stdin;
 	} else {
-		in_name = argv[bu_optind];
+		in_name = argv[optind];
 		if (strcmp(in_name,"-") == 0) {
 			if (isatty(fileno(stdin))) return(0);
 			input = stdin;
@@ -159,7 +159,7 @@ get_args(register int argc, register char **argv)
 			isfile = 1;
 		}
 	}
-	if (argc > ++bu_optind) {
+	if (argc > ++optind) {
 		(void)fprintf(stderr, "pixcut: excess argument(s) ignored\n");
 	}
 	return(1);	/* OK */

@@ -85,7 +85,7 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "ahs:w:n:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "ahs:w:n:" )) != EOF )  {
 		switch( c )  {
 		case 'a':
 			autosize = 1;
@@ -97,15 +97,15 @@ get_args(int argc, register char **argv)
 			break;
 		case 's':
 			/* square file size */
-			file_height = file_width = atol(bu_optarg);
+			file_height = file_width = atol(optarg);
 			autosize = 0;
 			break;
 		case 'w':
-			file_width = atol(bu_optarg);
+			file_width = atol(optarg);
 			autosize = 0;
 			break;
 		case 'n':
-			file_height = atol(bu_optarg);
+			file_height = atol(optarg);
 			autosize = 0;
 			break;
 
@@ -114,13 +114,13 @@ get_args(int argc, register char **argv)
 		}
 	}
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		if( isatty(fileno(stdin)) )
 			return(0);
 		file_name = "-";
 		infd = fileno(stdin);
 	} else {
-		file_name = argv[bu_optind];
+		file_name = argv[optind];
 		if( (infd = open(file_name, 0)) < 0 )  {
 			perror(file_name);
 			(void)fprintf( stderr,
@@ -131,7 +131,7 @@ get_args(int argc, register char **argv)
 		fileinput++;
 	}
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "yuv-pix: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

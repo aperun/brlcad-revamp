@@ -52,8 +52,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "machine.h"
-#include "bu.h"
-
 
 #define MAXLINE		(8*1024)
 #define DEFAULT_WIDTH	512
@@ -100,43 +98,43 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "vf:d:o:w:n:s:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "vf:d:o:w:n:s:" )) != EOF )  {
 		switch( c )  {
 		case 'v':
 			verbose++;
 			break;
 		case 'f':
-			select_filter(bu_optarg);
+			select_filter(optarg);
 			break;
 		case 'd':
 			dflag++;
-			kerndiv = atoi(bu_optarg);
+			kerndiv = atoi(optarg);
 			break;
 		case 'o':
 			oflag++;
-			kernoffset = atoi(bu_optarg);
+			kernoffset = atoi(optarg);
 			break;
 		case 'w':
-			width = atoi(bu_optarg);
+			width = atoi(optarg);
 			break;
 		case 'n':
-			height = atoi(bu_optarg);
+			height = atoi(optarg);
 			break;
 		case 's':
-			width = height = atoi(bu_optarg);
+			width = height = atoi(optarg);
 			break;
 		default:		/* '?' */
 			return(0);
 		}
 	}
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		if( isatty(fileno(stdin)) )
 			return(0);
 		file_name = "-";
 		infp = stdin;
 	} else {
-		file_name = argv[bu_optind];
+		file_name = argv[optind];
 		if( (infp = fopen(file_name, "r")) == NULL )  {
 			(void)fprintf( stderr,
 				"bwfilter: cannot open \"%s\" for reading\n",
@@ -148,7 +146,7 @@ get_args(int argc, register char **argv)
 	if( isatty(fileno(stdout)) )
 		return(0);
 
-	if ( argc > ++bu_optind )
+	if ( argc > ++optind )
 		(void)fprintf( stderr, "bwfilter: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

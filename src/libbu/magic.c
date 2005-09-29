@@ -48,6 +48,8 @@ static const char RCSmagic[] = "@(#)$Header$ (BRL)";
 
 #include "common.h"
 
+
+
 #include <stdio.h>
 #include "machine.h"
 #include "vmath.h"
@@ -256,7 +258,7 @@ bu_identify_magic(register long int magic)
 		return("wdb.h wdb_pipeseg_magic");
 
 	/*
-	 * fb.h -- not a good idea to include for real. (lib dependency)
+	 * fb.h -- not a good idea to include for real.
 	 */
 	case 0xfbfb00fb /* FB_MAGIC */:
 		return("fb.h fb_magic");

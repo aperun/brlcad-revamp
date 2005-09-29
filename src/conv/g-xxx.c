@@ -127,7 +127,7 @@ char	*argv[];
 		exit(1);
 	}
 
-	/* Open BRL-CAD database */
+	/* Open brl-cad database */
 	if ((dbip = db_open( argv[optind] , "r")) == DBI_NULL)
 	{
 		bu_log( "Cannot open %s\n" , argv[optind] );

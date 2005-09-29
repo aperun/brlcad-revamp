@@ -50,8 +50,6 @@ static char RCSid[] = "@(#)$Header$ (ARL)";
 
 #include "common.h"
 
-#ifdef IF_OGL
-
 #include <stdio.h> 
 #ifdef HAVE_STRING_H
 #  include <string.h>
@@ -2653,8 +2651,6 @@ ogl_refresh(FBIO *ifp, int x, int y, int w, int h)
     glFlush();
     return 0;
 }
-
-#endif /* IF_OGL */
 
 /*
  * Local Variables:

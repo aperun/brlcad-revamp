@@ -166,6 +166,9 @@ void common_pack_env(common_db_t *db, void **app_data, int *app_ind) {
       common_pack_write(app_data, app_ind, &((render_path_t *)db->env.render.data)->samples, sizeof(render_path_t));
       break;
 
+    case RENDER_METHOD_KELOS:
+      break;
+
     case RENDER_METHOD_PLANE:
       break;
 
@@ -544,8 +547,8 @@ void common_pack_mesh_adrt(common_db_t *db, void **app_data, int *app_ind, char 
   char meshname[256], texturename[256];
   unsigned char c;
   unsigned short s, endian;
-  int matrixind;
-  unsigned int face[144], marker_size, size, i, j, k, n, num, end, total_tri_num;
+  int face[144], marker_size, size, i, j, k, n, num, matrixind, end;
+  unsigned int total_tri_num;
 
 
   fh = fopen(filename, "rb");
@@ -578,13 +581,23 @@ void common_pack_mesh_adrt(common_db_t *db, void **app_data, int *app_ind, char 
     /* Mesh Name */
     fread(&c, sizeof(char), 1, fh);
     fread(meshname, sizeof(char), c, fh);
+    meshname[(int)(c++)] = 0;
     common_pack_write(app_data, app_ind, &c, sizeof(char));
     common_pack_write(app_data, app_ind, meshname, c);
 
+    /* Texture/Properties Name */
+#if 0
+    fread(&c, sizeof(char), 1, fh);
+    fread(texturename, sizeof(char), c, fh);
+    texturename[(int)(c++)] = 0;
+    common_pack_write(app_data, app_ind, &c, sizeof(char));
+    common_pack_write(app_data, app_ind, texturename, c);
+#endif
+
     /* Pack Number of Vertices */
-    fread(&num, sizeof(unsigned int), 1, fh);
-    if(endian) tienet_flip(&num, &num, sizeof(unsigned int));
-    common_pack_write(app_data, app_ind, &num, sizeof(unsigned int));
+    fread(&num, sizeof(int), 1, fh);
+    if(endian) tienet_flip(&num, &num, sizeof(int));
+    common_pack_write(app_data, app_ind, &num, sizeof(int));
 
     /* Read and Pack Vertices */
     n = 0;
@@ -601,17 +614,17 @@ void common_pack_mesh_adrt(common_db_t *db, void **app_data, int *app_ind, char 
     common_pack_write(app_data, app_ind, &c, 1);
 
     if(c) {
-      fread(&num, sizeof(unsigned int), 1, fh);
-      if(endian) tienet_flip(&num, &num, sizeof(unsigned int));
-      common_pack_write(app_data, app_ind, &num, sizeof(unsigned int));
+      fread(&num, sizeof(int), 1, fh);
+      if(endian) tienet_flip(&num, &num, sizeof(int));
+      common_pack_write(app_data, app_ind, &num, sizeof(int));
       common_pack_trinum += num;
 
       /* Pack Faces */
       i = 0;
       while(i < num) {
         n = num - i > 48 ? 48 : num - i;
-        fread(face, 3*sizeof(unsigned int), n, fh);
-        common_pack_write(app_data, app_ind, face, 3 * n * sizeof(unsigned int));
+        fread(face, 3*sizeof(int), n, fh);
+        common_pack_write(app_data, app_ind, face, 3 * n * sizeof(int));
         i += n;
       }
     } else {
@@ -696,27 +709,32 @@ void common_pack_kdtree_cache(common_db_t *db, void **app_data, int *app_ind, ch
 
 void common_pack_mesh_map(void **app_data, int *app_ind, char *filename) {
   FILE *fh;
+  char line[256], *token;
+  unsigned char c;
   unsigned int marker, size;
-  void *map;
 
 
   marker = *app_ind;
   *app_ind += sizeof(unsigned int);
 
-  fh = fopen(filename, "rb");
+  fh = fopen(filename, "r");
   if(!fh) {
     fprintf(stderr, "error: Mesh Map file %s doesn't exist, exiting.\n", filename);
     exit(1);
   }
 
-  fseek(fh, 0, SEEK_END);
-  size = ftell(fh);
-  fseek(fh, 0, SEEK_SET);
+  while(fgets(line, 256, fh)) {
+    token = strtok(line, ",");
+    c = strlen(token) + 1;
+    common_pack_write(app_data, app_ind, &c, 1);
+    common_pack_write(app_data, app_ind, token, c);
 
-  map = malloc(size);
-  fread(map, size, 1, fh);
-  common_pack_write(app_data, app_ind, map, size);
-  free(map);
+    token = strtok(NULL, ",");
+    if(token[strlen(token)-1] == '\n') token[strlen(token)-1] = 0;
+    c = strlen(token) + 1;
+    common_pack_write(app_data, app_ind, &c, 1);
+    common_pack_write(app_data, app_ind, token, c);
+  }
 
   fclose(fh);
 

@@ -57,7 +57,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #endif
 
 #include "machine.h"
-#include "bu.h"
 
 
 #define MAXLINE		(8*1024)
@@ -117,68 +116,68 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "vf:d:o:w:n:s:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "vf:d:o:w:n:s:" )) != EOF )  {
 		switch( c )  {
 		case 'v':
 			verbose++;
 			break;
 		case 'f':
-			select_filter(bu_optarg);
+			select_filter(optarg);
 			break;
 		case 'd':
 			dflag++;
-			kerndiv = atoi(bu_optarg);
+			kerndiv = atoi(optarg);
 			break;
 		case 'o':
 			oflag++;
-			kernoffset = atoi(bu_optarg);
+			kernoffset = atoi(optarg);
 			break;
 		case 'w':
-			width = atoi(bu_optarg);
+			width = atoi(optarg);
 			break;
 		case 'n':
-			height = atoi(bu_optarg);
+			height = atoi(optarg);
 			break;
 		case 's':
-			width = height = atoi(bu_optarg);
+			width = height = atoi(optarg);
 			break;
 		default:		/* '?' */
 			return(0);
 		}
 	}
 
-	if( bu_optind >= argc )  {
+	if( optind >= argc )  {
 		(void) fprintf( stderr,
 		    "pix3filter: must supply a file name\n");
 		return(0);
-	} else if ( bu_optind + 3 <= argc ) {
+	} else if ( optind + 3 <= argc ) {
 
-		if( (oldfp = fopen(argv[bu_optind], "r")) == NULL )  {
+		if( (oldfp = fopen(argv[optind], "r")) == NULL )  {
 			(void)fprintf( stderr,
 				"pix3filter: cannot open \"%s\" for reading\n",
-				argv[bu_optind] );
+				argv[optind] );
 			return(0);
 		}
 
-		if( (curfp = fopen(argv[++bu_optind], "r")) == NULL )  {
+		if( (curfp = fopen(argv[++optind], "r")) == NULL )  {
 			(void)fprintf( stderr,
 				"pix3filter: cannot open \"%s\" for reading\n",
-				argv[bu_optind] );
+				argv[optind] );
 			return(0);
 		}
 
-		if( (newfp = fopen(argv[++bu_optind], "r")) == NULL )  {
+		if( (newfp = fopen(argv[++optind], "r")) == NULL )  {
 			(void)fprintf( stderr,
 				"pix3filter: cannot open \"%s\" for reading\n",
-				argv[bu_optind] );
+				argv[optind] );
 			return(0);
 		}
-		bu_optind += 3;
+		optind += 3;
 	} else {
 		int frameNumber;
 		char *idx, *working_name;
 		
-		file_name = argv[bu_optind];
+		file_name = argv[optind];
 		working_name = (char *)malloc(strlen(file_name)+5);
 
 		if( (curfp = fopen(file_name, "r")) == NULL )  {
@@ -224,13 +223,13 @@ get_args(int argc, register char **argv)
 			return(0);
 		}
 		free(working_name);
-		bu_optind += 1;
+		optind += 1;
 	}
 
 	if( isatty(fileno(stdout)) )
 		return(0);
 
-	if ( argc > bu_optind )
+	if ( argc > optind )
 		(void)fprintf( stderr, "pix3filter: excess argument(s) ignored\n" );
 
 	return(1);		/* OK */

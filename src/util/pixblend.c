@@ -44,20 +44,20 @@
 #include "common.h"
 
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+# include <unistd.h>
 #endif
+                                                                                                                                                                            
+
 #include <sys/time.h>
 #include <stdio.h>
 #ifdef HAVE_STRING_H
-#  include <string.h>
+#include <string.h>
 #else
-#  include <strings.h>
+#include <strings.h>
 #endif
 #include <stdlib.h>
 
 #include "machine.h"
-#include "bu.h"
-
 
 static char	*f1_name;
 static char	*f2_name;
@@ -90,13 +90,13 @@ get_args(int argc, register char **argv)
 {
 	register int c;
 
-	while ( (c = bu_getopt( argc, argv, "r:i:Ss:g:" )) != EOF )  {
+	while ( (c = getopt( argc, argv, "r:i:Ss:g:" )) != EOF )  {
 		switch( c )  {
 		case 'r':
 		    if (iflg)
 			return 0;
 		    else {
-			value = atof( bu_optarg );
+			value = atof( optarg );
 			++rflg;
 		    }
 		    break;
@@ -108,7 +108,7 @@ get_args(int argc, register char **argv)
 			    fprintf(stderr, "The -g and -i options do not make sense together.\n");
 			    return 0;
 			}
-			value = atof( bu_optarg );
+			value = atof( optarg );
 			++iflg;
 		    }
 		    break;
@@ -116,7 +116,7 @@ get_args(int argc, register char **argv)
 		    seed = timeseed();
 		    break;
 		case 's':
-		    seed = atoi( bu_optarg );
+		    seed = atoi( optarg );
 		    break;
 		case 'g':
 		    if (iflg) {
@@ -124,17 +124,17 @@ get_args(int argc, register char **argv)
 			return 0;
 		    }
 		    ++gflg;
-		    gvalue = atof( bu_optarg );
+		    gvalue = atof( optarg );
 		    break;
 		default:		/* '?' */
 		    return(0);
 		}
 	}
 
-	if( bu_optind+2 > argc )
+	if( optind+2 > argc )
 		return(0);
 
-	f1_name = argv[bu_optind++];
+	f1_name = argv[optind++];
 	if( strcmp( f1_name, "-" ) == 0 )
 		f1 = stdin;
 	else if( (f1 = fopen(f1_name, "r")) == NULL )  {
@@ -145,7 +145,7 @@ get_args(int argc, register char **argv)
 		return(0);
 	}
 
-	f2_name = argv[bu_optind++];
+	f2_name = argv[optind++];
 	if( strcmp( f2_name, "-" ) == 0 )
 		f2 = stdin;
 	else if( (f2 = fopen(f2_name, "r")) == NULL )  {
@@ -156,7 +156,7 @@ get_args(int argc, register char **argv)
 		return(0);
 	}
 
-	if ( argc > bu_optind )
+	if ( argc > optind )
 		(void)fprintf( stderr, "pixblend: excess argument(s) ignored\n" );
 
 	/* Adjust value upwards if glitterize option is used */

@@ -1,0 +1,19 @@
+2005-09-29  brlcad  <brlcad@users.sourceforge.net>
+
+	* NEWS:
+	this release is being made so that muves-s2 works, so that ajem integration is simplified (ajem folks won't need to patch anything, muves-s2 team doesn't need to explain anything).
+
+	* NEWS:
+	murray and morrison fixed 'embedded mged' tclscript files so that muves-s2 integrates correctly and simplifies ajem integration later.
+
+	* NEWS: new section for 7.6.2
+
+	* src/tclscripts/lib/TableView.tcl:
+	get rid of the SystemBuuton and System Window symbols as they are windows-specific and cause breakage in one of the muves tools (this file is not used internally yet, it's used by archer)
+
+	* src/tclscripts/lib/Display.tcl:
+	add the missing rtarea/rtweight declarations
+
+	* README, configure.ac, include/config_win.h:
+	bump to 7.6.2 for an emergency patch release to coincide with a muves release
+

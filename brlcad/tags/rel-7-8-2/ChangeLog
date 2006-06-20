@@ -1,0 +1,469 @@
+2006-06-20  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* NEWS, configure.ac, include/config_win.h:
+	prepare for release of 7.8.2
+
+	* NEWS: fixed asc-nmg bug that caused a crash on exit
+
+2006-06-20  johnranderson  <johnranderson@users.sourceforge.net>
+
+	* src/conv/asc-nmg.c: Eliminated a redundant call to nmg_km()
+
+2006-06-16  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* HACKING:
+	Yet another massive rewrite/modification.  This time expand the document to include details relevant to all contributors, not just developers, so that the file is applicable to anyone with commit access (with particular attention to documentation writers).  Also, finally include some details on where we stand with C++ and clarify a lot of statements throughout with respect to style, conventions, and requirements.
+
+2006-06-15  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* db/.cvsignore: add toyjeep.g
+
+2006-06-15  bob1961  <bob1961@users.sourceforge.net>
+
+	* doc/archer_ack.txt: Minor changes
+
+2006-06-13  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* HACKING: add versiontracker to the release notification list
+
+2006-06-08  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* src/mged/ged.c: unconditionally disable for now
+
+	* src/tclscripts/archer/tclIndex: new index entries
+
+2006-06-07  d_rossberg  <d_rossberg@users.sourceforge.net>
+
+	* src/librt/g_pipe.c:
+	the bending angle may be (still) near 0, this should not be a problem
+
+	* include/bn.h, src/libbn/mat.c:
+	provide with bn_mat_inverse a less rigorous function to invert a 4-by-4 matrix,
+	it is almost impossible to decide in advance if a matrix is singular
+
+2006-06-06  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* doc/README.IRIX: ack, API != ABI.  Genericize the home directory too.
+
+2006-06-06  bob1961  <bob1961@users.sourceforge.net>
+
+	* src/tclscripts/archer/Archer.tcl:
+	Added a "Display" panel to the preferences dialog. At the moment it provides a simple way to set the viewing cube size.
+
+2006-06-05  bob1961  <bob1961@users.sourceforge.net>
+
+	* src/tclscripts/archer/Archer.tcl:
+	Check-in mods for Doug. This mod checks for the existence of  before trying to use it. Also change version to 0.8.1
+
+2006-06-05  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* src/other/blt/man/Makefile.am, configure.ac, src/other/blt/Makefile.am, src/other/blt/cf/Makefile.am, src/other/blt/examples/Makefile.am, src/other/blt/html/Makefile.am:
+	add initial makefiles for the other blt resource directories, help make distcheck work more prevalently
+
+	* src/tclscripts/swidgets/scripts/tclIndex:
+	apparently some new indexed methods
+
+	* src/other/iwidgets/pkgIndex.tcl:
+	commit the right version for iwidgets, 4.0.1
+
+	* src/other/iwidgets/pkgIndex.tcl.in:
+	iwidgets needs to use it's own version, not the version of cad
+
+	* configure.ac:
+	add a new configure --enable-verbose and --enable-progress option, with the first being a convenience option that enables the progress and warnings verbose options.  the --enable-verbose-progress option (alias) basically adds --silent to LIBTOOLFLAGS and/or to LIBTOOL.
+
+	* m4/args.m4:
+	record whether a configure option was set or not since it may be set yet still be the default
+
+2006-06-04  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* src/util/sgi-pix.c: few more unused
+
+	* src/util/roots_example.c: remove unused var i
+
+	* src/util/sgi-pix.c:
+	sane function ordering, clean up preprocessor logic, quell warnings, ws.
+
+	* src/util/pl-sgi.c, src/util/remapid.c, src/util/sgi-pix.c:
+	quell more warnings
+
+	* src/util/pl-sgi.c: move the other defines and globals to the top too
+
+	* src/util/pl-sgi.c: de-k&r-ify, ansify the functions
+
+	* src/util/pl-sgi.c:
+	reorder functions in proper decl/usage order, get rid of const Matrix casts
+
+2006-06-03  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* src/mged/points/process.c:
+	remove the usage if you're going to remove the decl
+
+	* src/mged/points/process.c: ws
+
+	* src/util/pl-X.c, src/util/pl-sgi.c: quell lots of warnings.
+
+	* src/util/bwscale.c: quell type warnings on bu_free
+
+	* src/nirt/if.c: quell incompatible parammeter type warning
+
+	* src/mged/utility2.c: removed unused variable i
+
+	* src/mged/points/process.c: remove unused variables, quell warnings
+
+	* src/gtools/g_transfer.c: remove unused variables
+
+	* src/burst/burst.c: only define sigcld if signal.h doesn't define it
+
+	* src/conv/g-adrt.c: quell more unused variable warnings
+
+	* src/libdm/dm_obj.c:
+	USE_FBSERV is now defined by configure, quell set but unused warning on id var.
+
+	* src/rt/viewxray.c: quell unsigned type warning
+
+	* src/rt/viewweight.c: quell unused var warning
+
+	* src/conv/g-adrt.c: quell unused variable warnings
+
+	* src/conv/bot_shell-vtk.c: missed a norm
+
+	* src/conv/bot_shell-vtk.c:
+	quell unused variable warning (norm variable)
+
+	* src/libpkg/pkg.c: quell unused variable warning
+
+	* TODO:
+	sgi knobs and example geometry are pushed back as (sigh) clone still isn't done and EF plugin and archer are going to require considerably more attention.  prepare for 7.8.2 release, nothing left to do.
+
+	* doc/README.IRIX:
+	no longer need to disable blt, build problem fixed (simple cast)
+
+	* src/other/blt/src/bltInit.c:
+	Tcl_GetAssocData returns a Clientdata, so have to cast to long to avoid mipspro type check failure
+
+	* m4/epsilon.m4:
+	so far, only freebsd seems to use doubles for floats .. so revert the leniancy and report when implementations deviate from what should be expected from IEEE compliance.
+
+	* sh/shtool:
+	treat screen as vt100, avoid the error message about determining how to do bold
+
+2006-06-02  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* src/conv/g-var.c:
+	follow the style guidelines, use K&R/Java style braces/indents not BSD. ws.
+
+	* src/conv/g-var.c:
+	crazy dev trickling variables throughout as if this were c++ code.  add a local var footer and remove reference to non-existant codebase.  fix header inclusion too.
+
+	* regress/spdi.sh: using == is not portable
+
+2006-06-01  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* src/libbu/bomb.c:
+	avoid passing additional format arguments to fprintf() to avoid potential buffer allocations. very nominal benefit, but can conceivably help with certain crashes and implementations of fprintf().
+
+	* src/libbu/ispar.c:
+	gah, reduce the massive WIN32 block to just the section that mattered so that kill() is not invoked on a bu_bomb().. should eventually contain a WIN32-esque method for killing a parent process gracefully ala kill()
+
+	* src/mged/ged.c:
+	avoid incrementing the dbi_uses counter directly -- do a clientless clone of the dbip instead
+
+	* src/librt/db_open.c:
+	allow for clientless cloning and closing of dbip instances where only the uses count is of interest.  no need to stash null clients even though the ptbl will record them, just ignore them.
+
+	* src/librt/g_submodel.c:
+	remove bad commented-out increment of the dbi_uses.  it might benefit to just clone the dbi, but seems unnecessary for a plot routine
+
+2006-06-01  d_rossberg  <d_rossberg@users.sourceforge.net>
+
+	* src/librt/db_open.c:
+	do not close a mapped file while the database instance is still in use
+	as db_clone_dbi does not increment dbi_mf->uses
+
+2006-06-01  bob1961  <bob1961@users.sourceforge.net>
+
+	* src/tclscripts/archer/Archer.tcl:
+	Mods to remove the expand button when in "Basic" mode. There's also a minor tweak of the aboutDialog's size.
+
+2006-05-28  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* HACKING:
+	add a new section on developer responsibilities outlining what is expected of them.  add details on header organization, usage of the K&R indentation style (aka java/gnu style), and routines in libbu that should be used for portability reasons.  more on the coding style in general.
+
+	* COPYING:
+	make it more clear that the package as a unified work is GPL though separate portions of the package are released under different licenses.  refer to the development control structure and refer to HACKING.  provide a point of contact.
+
+2006-05-22  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* src/mged/attach.c: init curr_dm_list to null
+
+2006-05-21  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* src/mged/ged.c:
+	make sure the curr_dm_list isn't null before trying to close the dm
+
+	* TODO: merge old and new tops behavior
+
+	* src/rt/worker.c:
+	get rid of the ifdef linux, init some vars used by USE_FORKED_THREADS
+
+2006-05-16  lbutler  <lbutler@users.sourceforge.net>
+
+	* configure.ac: misc changes to get ADRT to build
+
+2006-05-15  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* NEWS, src/mged/chgview.c, src/mged/cmd.c, src/mged/sedit.h, src/mged/titles.c:
+	ugh, removed horrible usage of vls strings for things that can just be string constants.  also takes care of a memory leak as the vls was never released.  thanks to jim monte for noticing the problem.
+
+	* src/mged/cmd.c:
+	jim monte noticed that using a vls here was unnecessary for the Tcl_LinkVar'ing of glob_compat_mode and output_as_return
+
+	* configure.ac:
+	typo, should have been profile not debug -- logic is still wrong though, needs to be redone for --enable-profile
+
+	* src/libbu/color.c: duplicate defines for RED/GRN/BLU
+
+	* NEWS:
+	s/tesselation/tessellation/ typo.  add emphasis to the extent of John's dxf importer enhancements
+
+2006-05-12  twingy  <twingy@users.sourceforge.net>
+
+	* src/mged/ged.c:
+	/dev/null should be in quotes, compiling with --disable-debug.
+
+2006-05-08  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* TODO: geometry example of building 238 is pushed back
+
+2006-05-03  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* NEWS: moved archer version info to bottom of about dialog
+
+	* src/mged/ged.c:
+	john noticed that sys/stat.h is needed for S_IRUSR and a few other mode flags now being used if DEBUG is enabled
+
+2006-05-03  bob1961  <bob1961@users.sourceforge.net>
+
+	* src/tclscripts/archer/images/aboutArcher.png: Removed version info.
+
+	* src/tclscripts/archer/Archer.tcl:
+	Added version info to the bottom of the "About" dialog.
+
+	* src/tclscripts/archer/CombEditFrame.tcl:
+	Added code to potentially activate the "Accept" button etc. when tabbing to another entry.
+
+2006-05-02  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* AUTHORS:
+	prasad silva (arl) makes his first contribution with a new g-var tool
+
+2006-05-02  prasad_silva  <prasad_silva@users.sourceforge.net>
+
+	* NEWS: g-var news
+
+	* src/conv/.cvsignore: Added g-var executable to ignore list
+
+	* src/conv/Makefile.am, src/conv/g-var.1, src/conv/g-var.c:
+	Added a vertex array exporter
+
+2006-05-02  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* src/tclscripts/archer/images/Themes/Crystal_Large/Makefile.am, src/tclscripts/archer/images/Themes/Crystal/Makefile.am:
+	missing a handful of new files
+
+	* AUTHORS: utf-8 version of Daniel's last name..
+
+	* NEWS:
+	archer gets support for multi-select and cut-n-paste from doug howard
+
+	* NEWS:
+	a new toy barbie jeep model was added, include a nice write-up of where the model comes from, the training class that produced it, and general overview of what was involved.
+
+	* db/toyjeep.asc: they are trademarks of mattel and daimler-crysler
+
+2006-05-01  bob1961  <bob1961@users.sourceforge.net>
+
+	* src/tclscripts/archer/images/Themes/Crystal_Large/file_text_small_disabled.png, src/tclscripts/archer/images/Themes/Crystal_Large/folder_closed_small_disabled.png, src/tclscripts/archer/images/Themes/Crystal_Large/folder_open_small_disabled.png, src/tclscripts/archer/images/Themes/Windows/file_text_small_disabled.png, src/tclscripts/archer/images/Themes/Windows/folder_closed_small_disabled.png, src/tclscripts/archer/images/Themes/Windows/folder_open_small_disabled.png, src/tclscripts/archer/images/Themes/Crystal/file_text_small_disabled.png, src/tclscripts/archer/images/Themes/Crystal/folder_closed_small_disabled.png, src/tclscripts/archer/images/Themes/Crystal/folder_open_small_disabled.png:
+	Add images to support future functionality (i.e. multi-select and cut-n-paste)
+
+	* src/tclscripts/swidgets/scripts/tree.itk:
+	Check-in for Doug Howard. Mods to support multi-select and cut-n-paste.
+
+	* src/tclscripts/archer/Archer.tcl:
+	Temporarily (i.e. until this functionality is available) removing the "Compact" menu item when viewing BRL-CAD geometry. Minor mods to reflect change in the tree widget.
+
+	* src/tclscripts/archer/CombEditFrame.tcl, src/tclscripts/archer/GeometryEditFrame.tcl:
+	Minor tweek to anchor the edit panel north
+
+2006-05-01  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* NEWS:
+	john continues on his dxf-g rampage with manpage enhancements and additional support to dxf-g for ELLIPSE entities.  earlier he added support for LWPOLYLINE, MTEXT, LEADER, ATTRIB, SOLID, and ATTDEF entity states -- all grouped into one news entry for dxf-g enhancements.
+
+	* NEWS:
+	fixed asc2g bug reading files with carriage returns.  if you attempted to run asc2g on a .asc file that came directly from the windows platform and had embedded carriage returns ('\r'), it would incorrectly parse the v4 I units version string dumping out a wierd undecipherable overlapping error (printing the carriage return), now it handles them correctly.
+
+	* NEWS: added dbupgrade manual page.  one didn't exist
+
+	* NEWS:
+	updated the g2asc manual page with format details.  the manpage still talked about it being necessary for platform independent conversions, language and details were updated to note that this is no longer the case (that the binary will work just fine).  also mentions that binary and ascii are open specs, though ascii is subject to deprecation change without notice whereas the binary is not. also that the ascii should not be relied upon by external developers but that it is currently a tcl command script.
+
+	* NEWS:
+	fixed g_diff attribute comparison issue.  when doing a g_diff, attributes were not being compared in order if the db command fails to tclify the exported version resulting in a binary 'these objects seem to differ' when they did not.  the tclification was improved so it can perform a proper ordered attribute comparison under more cases.
+
+	* NEWS:
+	g_diff reports more detail whether differences exist.  if the external forms are being compared, it will report whether the lengths differ or the contents (previously was an unknown either/or difference).  also g_diff will summarize and actually say that it found no differences instead of just ending a statement like there is something more like the following:
+
+	* NEWS:
+	g2asc now saves additional _GLOBAL attribute values.  previously, only the units and title were exported so that if a user had manually added additional attributes they were not being saved, now they are saved as attr commands in the ascii format.  (a situation where this was important was where a 'disclaimer' and 'description' attribute were added in addition to the title.
+
+	* NEWS:
+	fixed g2asc export of null units bug.  there was a situation where the current units could not be determined and a (null) was export to the ascii file.  this would halt an asc2g.  if the units cannot be determined, they are not output (i.e. no (null)) now.
+
+	* src/conv/Makefile.am: add new dbupgrade.1 manpage
+
+	* src/conv/dbupgrade.c: ws, indent
+
+	* src/conv/asc2g.c:
+	add support for carriage returns so old ascii files copied from windows parse correctly.  use a little less emphatic emphasis on error (!!!)
+
+	* src/conv/dbupgrade.1:
+	initial manual page for the dbupgrade command, basic usage info
+
+	* src/conv/g2asc.1:
+	update the manpage with more up-to-date information and details.  mention that current format is a tcl script, that the conversion to ascii isn't strictly necessary any longer since v5 format is portable, and that the ascii format should not be used by external codes.
+
+	* src/librt/wdb_obj.c:
+	comments, remove dead new proc creation code (there's a func for that creating a wdbp function object)
+
+2006-04-30  johnranderson  <johnranderson@users.sourceforge.net>
+
+	* src/conv/dxf-g.1, src/conv/dxf-g.c:
+	Added support for ELLIPSE entities, added a bit more logging, updated
+	man page.
+
+2006-04-30  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* src/mged/ged.c:
+	fix the mged logging so that it actually works now and consistently writes events.  clean up the whitespace while refactoring the closure of a db to f_closedb() consistently.
+
+2006-04-29  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* src/gtools/g_diff.c:
+	let the user know if there are no differences and be more specific on difference when external representations differ.
+
+	* src/conv/g2asc.c:
+	if the _GLOBAL object has attributes set other than units and title, write them out.  also make sure the units are not (null) before writing them out.
+
+	* src/conv/asc2g.c:
+	default units to millimeters instead of aborting if the units specified are unknown
+
+	* db/Makefile.am, db/toyjeep.asc:
+	add an toy barbie (tm) jeep (tm) modeled in 2005 over the course of a day by a group of students attending a BRL-CAD (tm) training course at SURVICE
+
+2006-04-28  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* TODO:
+	working on clone/tracker; EF importer plugin is on the asap list; mingw is delayed; added toy jeep; unpush idea for later.
+
+2006-04-28  d_rossberg  <d_rossberg@users.sourceforge.net>
+
+	* NEWS: Rossberg with utf-8 character
+
+2006-04-28  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* NEWS: it's a stack, most recent go on top
+
+2006-04-28  d_rossberg  <d_rossberg@users.sourceforge.net>
+
+	* NEWS: forgot to add my name
+
+	* NEWS: fixed crash in release build
+
+2006-04-28  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* TODO:
+	Optional compile-time support for using GMP or CLN for arbitrary precision arithmetic
+
+2006-04-28  d_rossberg  <d_rossberg@users.sourceforge.net>
+
+	* src/librt/g_bot_include.c:
+	crash with MSVC 6.0 release build because of an access behind bot->bot_facearray boundaries
+
+	* src/libwdb/pipe.c:
+	wdb_export frees the pipe structure; consequently, do not touch it afterwards
+
+2006-04-24  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* NEWS:
+	need to quantify exactly what sort of dxf-g enhancements john added, but it's a something so as not to forget
+
+2006-04-20  lbutler  <lbutler@users.sourceforge.net>
+
+	* regress/gqa.sh, regress/iges.sh, regress/lights.sh, regress/moss.sh, regress/shaders.sh, regress/solids.sh, regress/spdi.sh, regress/weight.sh:
+	Fixed various sh/csh syntax errrors.
+
+	* regress/gqa.sh, regress/iges.sh, regress/lights.sh, regress/moss.sh, regress/shaders.sh, regress/slave_build.sh, regress/solids.sh, regress/spdi.sh, regress/weight.sh:
+	Updates to make it easier to check the status of a regression test.  Each test
+	now reports its notion of whether it succeeded or failed.
+
+	* regress/Makefile.am, regress/slave_build.sh:
+	Make sure directory has been created (slave_build.sh) or wait for it.
+
+	Indicate that the regression test is done, but not whether it was successful or not. (Makefile.am)
+
+2006-04-20  jlowenz  <jlowenz@users.sourceforge.net>
+
+	* src/librt/nurb_trim.c:
+	modified rt_nurb_uv_trimmed to support a list of trims instead of a surface (to support the preprocessing)
+
+	* src/librt/nurb_knot.c: logging updates
+
+	* src/librt/nurb_bezier.c:
+	support for preprocessing non-bezier trims to bezier trims
+
+	* src/librt/g_nurb.c:
+	added support for preprocessing trims into beziers.
+
+	* include/nurb.h:
+	Added declaration for trim-to-bezier curve conversion routine, and updated uv in trim test function to accept a list of trims instead of a surface (since the trims are preprocessed.
+
+2006-04-18  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* TODO: test for USE_FORKED_THREADS in configure
+
+2006-04-17  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* AUTHORS:
+	special thanks to Mark Butkiewicz of SURVICE for his considerable input regarding the look and feel of archer as well as prioritizing what features to add in the allotted time.  he has also remained actively involved in the windows port effort as well as general collaboration, support, and suggestions for the package as a whole.
+
+	* AUTHORS:
+	special thanks to doug howard for his work during the very beginning stages of archer development.
+
+2006-04-13  BRL-CAD  <brlcad@users.sourceforge.net>
+
+	* BUGS:
+	raytracers report the wrong amount of cumulative time on amd64, benchmark reports wrong numbers unless using -P1
+
+2006-04-13  johnranderson  <johnranderson@users.sourceforge.net>
+
+	* src/conv/dxf-g.c: Added support for a couple more entity types
+
+2006-04-12  bob1961  <bob1961@users.sourceforge.net>
+
+	* src/mged/mged.bat: Update for handling an argument (i.e. file.g)
+
+2006-04-12  jlowenz  <jlowenz@users.sourceforge.net>
+
+	* src/librt/nurb_util.c:
+	Removed shared pool, went to thread-specific pools. Better solution, but only temporary since bu_parallel doesn't support thread-locals.
+
+	* src/librt/nurb_refine.c: ws; comment change
+
+2006-04-11  erikgreenwald  <erikgreenwald@users.sourceforge.net>
+
+	* configure.ac:
+	fix an over-zealous conditional so --disable-jove works (some of us use vi)
+

@@ -1,0 +1,203 @@
+BRL-CAD to do list
+==================
+
+Included below is a list of things that are scheduled or desirable to
+be done at some point.  Most recently added items are on top, older
+topics are on the bottom.  This is not an official list, it's more a
+scratch pad for the developers to use for tracking development ideas
+and informal plans.
+
+The items listed for release should not ever hinder, stop, or
+otherwise delay a release from being made.  The items listed are
+merely to give an estimate of what was expected to be done.  See the
+project task tracker for more to do items and future planning efforts.
+http://sf.net/pm/?group_id=105292
+
+
+THESE SHOULD HAPPEN BEFORE THE NEXT RELEASE
+-------------------------------------------
+
+* tbd
+
+THESE SHOULD HAPPEN WITHIN TWO RELEASE ITERATIONS
+-------------------------------------------------
+
+* clone and tracker
+
+* Endgame Framework importer plugin
+
+* fix potential buffer overflows and security issues detected by
+  Pedro's run of FlawFinder
+
+* get archer working
+
+* test pic/nonpic build problems with librtms/libmultispectral
+
+* run-time path identification of mged resources was never completed,
+  complete it.
+
+* use environ for run-time path lookups
+
+
+THESE ARE LOWER PRIORITY OR FOR FUTURE RELEASES
+-----------------------------------------------
+
+* add geometry example of building 238
+
+* Mac OS X SGI dial knobs support
+
+* merge old and 'new' tops behavior into one, preserving compatibility
+  where it makes sense.
+
+* ability to "unpush" objects, translating them to a new position and
+  applying the correct matrix (using either bounding box or center of
+  mass, for example)
+
+* ensure successful build on mingw
+
+* test for USE_FORKED_THREADS in configure
+
+* optimize CSG structures automatically, automatic simplification.
+
+* analyze command doesn't print values with enough precision.
+
+* option to mged make command or new command that enters solid edit
+  mode, "med", "smake", "makes", "msed", etc.  same for cp command.
+
+* recursive configure and variable overrides for autogen.sh
+
+* optimize configure testing so that when options are enabled, the
+  corresponding library and functionality tests are not performed.
+
+* have libbu report memory allocation statistics so the exact amount
+  of memory requirements for a geometry database can be computed on
+  the fly via a pre-prep phase.
+
+* center of presented area
+
+* short introductory documentation on using various BRL-CAD command
+  line tools such as rt, mged, nirt, fbserv, converters, etc.
+
+* short introductory documentation on using mged, covering a majority
+  of the various commands.
+
+* reference sheet of useful BRL-CAD command-line tools grouped
+  categorically.
+
+* reference sheet of common mged commands, keybindings, gui elements
+  and scripting facilities.
+
+* support to the raytracers for multiple image file formats,
+  recognizing an option and/or the file suffix of the -o filename.
+
+* libfb + font rendering (perhaps through libbn's plot interface) for
+  a posix terminal.
+
+* Optional compile-time support for using GMP or CLN for arbitrary
+  precision arithmetic.
+
+* gpgpu for enhanced performance boolweave sorting
+
+* getexecname, "/proc/self/cmdline", program_invocation_short_name.
+  separate out into new file.
+
+* write an introduction to brl-cad document that overviews the primary
+  tools and how they can be used together.
+
+* test out -Wfloat-equal
+
+* geometry viewing commands/visualizations of exploded levels
+
+* add command line help options to 'benchmark' tool
+
+* default mged text editor invokes ed, should invoke jove or system
+  gui editor like TextEdit on OS X if it's known.
+
+* mirror around an arbitrary plane (maybe point+vector) in mged
+
+* mirror around point/distance along axis operation in mged
+
+* librt-based path tracer
+
+* system identifier application with sysctl-style information
+  database, with some back-end functionality placed into libbu.
+
+* write scripts that parse the sf.net tracker data and generate
+  automatic reports for release.
+
+* add callback data parameters to libpkg hook functions
+
+* test intel compiler performance on Altix, add performance options
+
+* pix-png should make sure output is not to a terminal
+
+* investigate performance impact of using sched_setaffinity and/or
+  pthread_attr_setaffinity_np for linux threading affinity in librt.
+
+* rtedge-style tracer that outputs tool paths (splines/segments, etc)
+  for CNC/CAM style toolpath cutting descriptions (g-code files).
+
+* rt annotation support
+
+* support for fillets and chamfers as object/combination operations
+
+* M-x indent-region scripts
+
+* provide installation and post configuration support scripts
+
+* make the DSP primitive use less memory when data is coming from
+  a binunif. allocating 160 times binunif size is a bit extravagant
+  (which comes from sizeof(struct dsp_bb)).
+
+* add dynamic geometry support. i.e. the ability to modify the parsed
+  in-memory geometry tree on the fly via api calls (e.g. to add holes)
+
+* convert the documentation to docbook and integrate their generation
+  with the build system.
+
+* investigate why g-iges followed by iges-g on a single box results in
+  permuted vertex lists
+
+* fix reference to a "Create Solid" submenu on pdf page 18 (page 6) of
+  volume II
+
+* write up the history of brlcad
+
+* obliterate compilation warnings
+
+* add support for subgeometry support to the geometry syndicator
+
+* add xml, nff, bzw, pov, blend geometry import and export support
+
+* add support for filesystem-based geometry collections
+
+* add support for levels of detail
+
+
+ODDITIES
+--------
+
+* the scale structure in bn_cmd_noise_slice (bn_tcl.c) was never
+  initialized. it looks like somebody has planned to extend the
+  function but never carried out
+
+
+THESE BREAK PROTOCOL OR ARE BACKWARDS-INCOMPATIBLE
+--------------------------------------------------
+
+* support for features either as primitives or operations or both
+  e.g. chamfer, fillet, round, etc
+
+* fix the database I/O writing to properly support the addition of new
+  primitive types.  this includes modifying the major/minor code or
+  combinations/regions and binary objects
+
+* add database support for constraints, expressions, parametric
+  values, construction history, and timestamping.
+
+
+---
+See the project task tracker for more to do items and future planning
+efforts.  http://sf.net/pm/?group_id=105292
+
+TODO items should be formated to column 70 (M-q in emacs), no tabs

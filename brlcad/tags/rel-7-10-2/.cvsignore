@@ -1,0 +1,13 @@
+.deps
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache
+config.*
+configure
+libtool
+ltmain.sh
+so_locations
+.settings
+.project
+.cdtproject

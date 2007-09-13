@@ -1,0 +1,7 @@
+autom4te.cache
+config.log
+config.status
+configure
+libtcl8.5.*
+tclConfig.sh
+tclsh

@@ -46,7 +46,11 @@ static const char RCSid[] = "$Header$";
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #if defined(HAVE_UNISTD_H)
 #  include <unistd.h>
 #else
@@ -128,7 +132,7 @@ struct bu_structparse vrml_mat_parse[]={
 BU_EXTERN(union tree *do_region_end, (struct db_tree_state *tsp, struct db_full_path *pathp, union tree *curtree, genptr_t client_data));
 BU_EXTERN(union tree *nmg_region_end, (struct db_tree_state *tsp, struct db_full_path *pathp, union tree *curtree, genptr_t client_data));
 
-static const char usage[] = "Usage: %s [-v] [-xX lvl] [-d tolerance_distance (mm) ] [-a abs_tol (mm)] [-r rel_tol] [-n norm_tol] [-o out_file] [-u units] brlcad_db.g object(s)\n";
+static char	usage[] = "Usage: %s [-v] [-xX lvl] [-d tolerance_distance (mm) ] [-a abs_tol (mm)] [-r rel_tol] [-n norm_tol] [-o out_file] [-u units] brlcad_db.g object(s)\n";
 
 static char	*tok_sep = " \t";
 static int	NMG_debug;		/* saved arg of -X, for longjmp handling */
@@ -250,7 +254,7 @@ select_lights(register struct db_tree_state *tsp, struct db_full_path *pathp, co
 
 	if( id != ID_COMBINATION )
 	{
-		bu_log( "Directory/database mismatch!\n\t is '%s' a combination or not?\n",
+		bu_log( "Directory/database mismatch!!\n\t is '%s' a combination or not???\n",
 			dp->d_namep );
 		return( -1 );
 	}
@@ -457,18 +461,21 @@ main(int argc, char **argv)
 			scale_factor = bu_units_conversion( units );
 			if( scale_factor == 0.0 )
 			{
-				bu_exit(1, "Unrecognized units (%s)\n", units );
+				bu_log( "Unrecognized units (%s)\n", units );
+				bu_bomb( "Unrecognized units\n" );
 			}
 			scale_factor = 1.0 / scale_factor;
 			break;
 		default:
-			bu_exit(1, usage, argv[0]);
+			fprintf(stderr, usage, argv[0]);
+			exit(1);
 			break;
 		}
 	}
 
 	if (bu_optind+1 >= argc) {
-		bu_exit(1, usage, argv[0]);
+		fprintf(stderr, usage, argv[0]);
+		exit(1);
 	}
 
 	if( !units )
@@ -477,11 +484,12 @@ main(int argc, char **argv)
 	/* Open BRL-CAD database */
 	if ((dbip = db_open( argv[bu_optind] , "r")) == DBI_NULL)
 	{
+		bu_log( "Cannot open %s\n" , argv[bu_optind] );
 		perror(argv[0]);
-		bu_exit(1, "Cannot open %s\n" , argv[bu_optind] );
+		exit(1);
 	}
 	if( db_dirbuild( dbip ) ) {
-		bu_exit(1, "db_dirbuild() failed!\n" );
+		bu_bomb( "db_dirbuild() failed!\n" );
 	}
 
 	if( out_file == NULL )
@@ -490,8 +498,9 @@ main(int argc, char **argv)
 	{
 		if ((fp_out = fopen( out_file , "w")) == NULL)
 		{
+			bu_log( "Cannot open %s\n" , out_file );
 			perror( argv[0] );
-			bu_exit(2, "Cannot open %s\n" , out_file );
+			return 2;
 		}
 	}
 
@@ -610,7 +619,7 @@ nmg_2_vrml(FILE *fp, struct db_full_path *pathp, struct model *m, struct mater_i
 
 	if( id != ID_COMBINATION )
 	{
-		bu_log( "Directory/database mismatch!\n\t is '%s' a combination or not?\n",
+		bu_log( "Directory/database mismatch!!\n\t is '%s' a combination or not???\n",
 			dp->d_namep );
 		return;
 	}
@@ -632,7 +641,7 @@ nmg_2_vrml(FILE *fp, struct db_full_path *pathp, struct model *m, struct mater_i
 	if( mater->ma_shader )
 	{
 		tok = strtok( mater->ma_shader, tok_sep );
-		strncpy( mat.shader, tok, TXT_NAME_LEN );
+		strcpy( mat.shader, tok );
 	}
 	else
 		mat.shader[0] = '\0';
@@ -855,7 +864,7 @@ nmg_2_vrml(FILE *fp, struct db_full_path *pathp, struct model *m, struct mater_i
 							if( BU_SETJUMP )
 							{
 								BU_UNSETJUMP;
-								bu_log( "A face has failed triangulation!\n" );
+								bu_log( "A face has failed triangulation!!!!\n" );
 								if( next_fu == fu->fumate_p )
 									next_fu = BU_LIST_PNEXT( faceuse, &next_fu->l );
 								if( nmg_kfu( fu ) )
@@ -1305,16 +1314,15 @@ union tree *nmg_region_end(register struct db_tree_state *tsp, struct db_full_pa
 	bu_log( "Attempting %s\n", name );
 
 	regions_tried++;
-
 	/* Begin bu_bomb() protection */
 	if( BU_SETJUMP )
 	{
 		/* Error, bail out */
 		BU_UNSETJUMP;		/* Relinquish the protection */
-		bu_log( "conversion of %s FAILED!\n", name );
+		bu_log( "conversion of %s FAILED!!!\n", name );
 
 		/* Sometimes the NMG library adds debugging bits when
-		 * it detects an internal error, before before bombing out.
+		 * it detects an internal error, before bu_bomb().
 		 */
 		rt_g.NMG_debug = NMG_debug;	/* restore mode */
 

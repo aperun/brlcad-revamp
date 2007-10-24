@@ -1766,7 +1766,7 @@ f_tie(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
 		bu_vls_strcpy(&vls, argv[2]);
 
 	FOR_ALL_DISPLAYS(dlp, &head_dm_list.l)
-		if(!bu_vls_strcmp(&vls, &dlp->dml_dmp->dm_pathName))
+		if(!strcmp(bu_vls_addr(&vls), bu_vls_addr(&dlp->dml_dmp->dm_pathName)))
 			break;
 
 	if(dlp == &head_dm_list){
@@ -2764,7 +2764,7 @@ cmd_tree(ClientData	clientData,
 	 * routine with the name _mged_tree. So, we put back the original name.
 	 */
 	argv[0] = "tree";
-	ret = dgo_tree_cmd(dgop, interp, argc, argv);
+	ret = wdb_tree_cmd(wdbp, interp, argc, argv);
 
 #if 0
 	(void)signal(SIGINT, SIG_IGN);
@@ -3341,9 +3341,6 @@ cmd_blast(ClientData	clientData,
 
 	if (cmd_zap(clientData, interp, 1, av) == TCL_ERROR)
 		return TCL_ERROR;
-        
-        if( argc == 1 ) /* "B" alone is same as "Z" */
-            return TCL_OK;
 
 	return edit_com(argc, argv, 1, 1);
 }

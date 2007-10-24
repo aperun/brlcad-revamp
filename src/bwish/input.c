@@ -45,8 +45,6 @@
 #include "common.h"
 
 /* system headers */
-#include <string.h>
-#include <ctype.h>
 #include <time.h>
 #if defined(IRIX) && IRIX == 5
 #  define _BSD_COMPAT
@@ -59,6 +57,12 @@
 #    include <sys/unistd.h>
 #  endif
 #endif
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
+#include <ctype.h>
 
 /* interface headers */
 #include "tcl.h"

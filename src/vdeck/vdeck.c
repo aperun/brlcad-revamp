@@ -66,8 +66,11 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 #include <signal.h>
 #include <math.h>
-#include <string.h>
-
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #ifdef HAVE_SYS_TYPES_H
 #  include <sys/types.h>
 #endif
@@ -531,7 +534,7 @@ genptr_t		client_data;
 			}
 			left = 0;
 		}
-		strncpy( op, regdp->d_namep, 128 );
+		strcpy( op, regdp->d_namep );
 		op += strlen(op);
 		*op++ = '\n';
 		*op = '\0';
@@ -1558,7 +1561,7 @@ register int	ct;
 		}
 		else
 		{
-			(void) strncpy( &buf[column], list[i], MAX_COL+2 );
+			(void) strcpy( &buf[column], list[i] );
 			column += strlen( list[i] );
 			spaces = NAMESIZE - (column % NAMESIZE );
 			if( column + spaces < MAX_COL )

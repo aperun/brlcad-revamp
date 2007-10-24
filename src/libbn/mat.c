@@ -73,9 +73,15 @@ static const char bn_RCSmat[] = "@(#)$Header$ (ARL)";
 
 #include "common.h"
 
+
 #include <stdio.h>
 #include <math.h>
+
+#ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#include <strings.h>
+#endif
 
 #include "machine.h"
 #include "bu.h"
@@ -198,6 +204,7 @@ register const mat_t	src;
 	register int i;
 
 	/* Copy all elements */
+#	include "noalias.h"
 	bu_log("libbn/mat.c:  bn_mat_copy() is deprecated, use MAT_COPY()\n");
 	for( i=15; i>=0; i--)
 		dest[i] = src[i];

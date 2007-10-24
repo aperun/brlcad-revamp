@@ -33,13 +33,15 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "common.h"
 
+
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
-
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+#else
+#include <strings.h>
 #endif
+#include <unistd.h>
 
 unsigned char	ibuf[3*1024];
 unsigned char	red[1024], green[1024], blue[1024];

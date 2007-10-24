@@ -41,7 +41,9 @@
 #include <string.h>
 
 /* External functions from C library. */
-#include <stdlib.h>
+#ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+#endif
 
 #include "machine.h"
 #include "fb.h"

@@ -51,13 +51,17 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <math.h>
 #include <signal.h>
-
 #ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>		/* For struct timeval */
 #endif
+#include <sys/stat.h>		/* for chmod() */
 #ifdef HAVE_FCNTL_H
 #  include <fcntl.h>
 #endif
@@ -67,7 +71,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #ifdef HAVE_SYS_TYPES_H
 #  include <sys/types.h>
 #endif
-#include <sys/stat.h>
 #ifdef HAVE_SYS_WAIT_H
 #  include <sys/wait.h>
 #endif

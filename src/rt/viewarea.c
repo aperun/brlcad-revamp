@@ -41,7 +41,12 @@ static const char RCSrayg3[] = "@(#)$Header$ (BRL)";
 
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 
 #include "machine.h"
 #include "vmath.h"
@@ -661,9 +666,6 @@ view_end(struct application *ap)
 	    rp->reg_name = (genptr_t)NULL;
 	}
     }
-
-    /* flush for good measure */
-    fflush(stdout); fflush(stderr);
 
     return;
 }

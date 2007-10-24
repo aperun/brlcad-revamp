@@ -59,13 +59,17 @@
 #define HAS_OPENGL	1
 #define HAVE_ACCESS     1
 #define HAVE_CALLOC	1
+#define HAVE_ERRNO_H	1
 #define HAVE_FCNTL_H	1
+#define HAVE_FLOAT_H	1
 #define HAVE_GETENV     1
 #define HAVE_PUTENV     1
 #define HAVE_GETHOSTNAME	1
 #define HAVE_GETPROGNAME        1
 #define HAVE_GL_GL_H	1
 #define HAVE_IO_H	1
+#define HAVE_LIMITS_H	1
+#define HAVE_MATH_H     1
 #define HAVE_MATHERR	1
 #define HAVE_MEMORY_H	1
 #define HAVE_MEMSET	1
@@ -78,13 +82,17 @@
 #define HAVE_SETVBUF	1
 #define HAVE_STAT       1
 #define HAVE_STDARG_H	1
+#define HAVE_STDLIB_H	1
+#define HAVE_STRCHR	1
 #define HAVE_STRCHR	1
 #define HAVE_STRDUP	1
 #define HAVE_STRDUP_DECL	1
+#define HAVE_STRING_H	1
 #define HAVE_STRTOK	1
 #define HAVE_SYS_STAT_H 1
 #define HAVE_SYS_TYPES_H 1
 #define HAVE_TIME	1
+#define HAVE_TIME_H	1
 #define HAVE_VARARGS_H	1
 #define HAVE_VFORK	1
 #define HAVE_VPRINTF	1
@@ -134,7 +142,6 @@
 #define eof _eof
 #endif
 #define execvp _execvp
-#define fchmod _fchmod
 #define fdopen _fdopen
 #define fileno _fileno
 #define fork() -1

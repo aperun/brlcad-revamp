@@ -26,10 +26,15 @@
  */
 #include "common.h"
 
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <math.h>
 
 #include "machine.h"
@@ -87,7 +92,7 @@ int main(int argc, char **argv)
 	    case 'N': normalize_output++; break;
 	    case 'h': printf(usage); return EXIT_SUCCESS;
 	    case ':': printf("Missing argument to %c\n%s\n", c, usage); return EXIT_FAILURE;
-	    case '?':
+	    case '?': 
 	    default:  printf("Unknown argument: %c\n%s\n", c, usage); return EXIT_FAILURE;
 	    }
 

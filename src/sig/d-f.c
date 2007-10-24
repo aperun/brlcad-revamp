@@ -31,18 +31,26 @@
 #include "common.h"
 
 #include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
-
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
 
+#include <stdio.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h> /* for atof() */
+#endif
+
+#include <math.h>
+
 #include "machine.h"
 
-double	ibuf[512] = { 0.0 };
-float	obuf[512] = { 0.0f};
+double	ibuf[512];
+float	obuf[512];
 
 static char usage[] = "\
 Usage: d-f [-n || scale] < doubles > floats\n";

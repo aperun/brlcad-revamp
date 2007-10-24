@@ -47,20 +47,23 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <errno.h>
 #include <math.h>
 #include <netdb.h>
-#include <string.h>
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
+#ifdef HAVE_FCNTL_H
+#  include <fcntl.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <time.h>
 #include <sys/time.h>		/* sometimes includes <time.h> */
-
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>
-#endif
-#ifdef HAVE_FCNTL_H
-#  include <fcntl.h>
-#endif
 #ifdef HAVE_SYS_WAIT_H
 #  include <sys/wait.h>
 #endif
@@ -1568,15 +1571,9 @@ frame_is_done(register struct frame *fr)
 		if( unlink( fr->fr_filename ) < 0 )
 			perror( fr->fr_filename );
 	} else {
-	    FILE *fp;
-	    if( (fp = fopen( fr->fr_filename, "r" )) == NULL )  {
-		perror( fr->fr_filename );
-	    }
-	    /* Write-protect file, to prevent re-computation */
-	    if( fchmod( fileno(fp), 0444 ) < 0 ) {
-		perror( fr->fr_filename );
-	    }
-	    (void)fclose(fp);
+		/* Write-protect file, to prevent re-computation */
+		if( chmod( fr->fr_filename, 0444 ) < 0 )
+			perror( fr->fr_filename );
 	}
 
 	/* Forget all about this frame */
@@ -2858,6 +2855,10 @@ add_host(struct ihost *ihp)
 #ifdef sgi
 #	define RSH	"/usr/bsd/rsh"
 #endif
+#if CRAY || m68k
+/*	m68k: Need this for MAC II under AUX as well */
+#	define RSH	"/usr/bin/remsh"
+#endif
 #ifndef RSH
 #	define RSH	"/usr/ucb/rsh"
 #endif
@@ -3932,6 +3933,15 @@ struct command_tab cmd_tab[] = {
 		0,		0, 0}	/* END */
 };
 
+#ifdef CRAY2
+gettimeofday( tvp, tzp )
+struct timeval	*tvp;
+struct timezone	*tzp;
+{
+	tvp->tv_sec = time( (long *)0 );
+	tvp->tv_usec = 0;
+}
+#endif
 
 /*
  * Local Variables:

@@ -373,6 +373,7 @@ filter5(int *op, int **lines, int num)
 
 #ifdef VECTORIZE
 	/* This version vectorizes */
+#	include "noalias.h"
 	for( i=0; i < num; i++ )  {
 		j = i*2;
 		op[i] = (
@@ -424,6 +425,7 @@ filter3(int *op, int **lines, int num)
 
 #ifdef VECTORIZE
 	/* This version vectorizes */
+#	include "noalias.h"
 	for( i=0; i < num; i++ )  {
 		j = i*2;
 		op[i] = (

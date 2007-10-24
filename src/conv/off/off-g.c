@@ -67,7 +67,7 @@ int read_faces(struct model *m, FILE *fgeom)
 
 		/* Get numbers of vertices and faces, and grab the appropriate amount of memory */
 	if (fscanf(fgeom, "%d %d %d", &nverts, &nfaces, &nedges) != 3)
-		bu_exit(1, "Cannot read number of vertices, faces, edges.\n");
+		bu_bomb("Cannot read number of vertices, faces, edges.\n");
 
 	pts = (fastf_t *) bu_malloc(sizeof(fastf_t) * 3 * nverts, "points list");
 	verts = (struct vertex **) bu_malloc(sizeof(struct vertex *) * nverts, "vertices");
@@ -76,7 +76,7 @@ int read_faces(struct model *m, FILE *fgeom)
 		/* Read in vertex geometry, store in geometry list */
 	for (i = 0; i < nverts; i++) {
 		if (fscanf(fgeom, "%lf %lf %lf", &pts[3*i], &pts[3*i+1], &pts[3*i+2]) != 3)
-			bu_exit(1, "Not enough data points in geometry file.\n");
+			bu_bomb("Not enough data points in geometry file.\n");
 
 		verts[i] = (struct vertex *) 0;
 		fscanf(fgeom, "%*[^\n]");
@@ -91,7 +91,8 @@ int read_faces(struct model *m, FILE *fgeom)
 		int *pinds;
 
 		if (fscanf(fgeom, "%d", &nedges) != 1) {
-			bu_exit(1, "Not enough faces in geometry file.\n");
+			fprintf(stderr, "Not enough faces in geometry file.\n");
+			exit(1);
 		}
 					/* Grab memory for list for this face. */
 		vlist = (struct vertex **) bu_malloc(sizeof(struct vertex *) * nedges, "vertex list");
@@ -99,7 +100,8 @@ int read_faces(struct model *m, FILE *fgeom)
 
 		for (j = 0; j < nedges; j++) {			/* Read list of point indicies. */
 			if (fscanf(fgeom, "%d", &pinds[j]) != 1) {
-				bu_exit(1, "Not enough points on face.\n");
+				fprintf(stderr, "Not enough points on face.\n");
+				exit(1);
 			}
 			vlist[j] = verts[pinds[j]-1];
 		}
@@ -160,12 +162,12 @@ int off2nmg(FILE *fpin, struct rt_wdb *fpout)
 			strncpy(title, buf2, sizeof(title));
 /*		if (sscanf(buf, "author %[^\n]s", buf2) > 0)
 			strncpy(author, buf2, sizeof(author));
-*/		if (sscanf(buf, "geometry %200[^\n]s", buf2) > 0) {
+*/		if (sscanf(buf, "geometry %[^\n]s", buf2) > 0) {
 			char dtype[40], format[40];
-			if (sscanf(buf2, "%40s %40s %64s", dtype, format, geom_fname) != 3)
-				bu_exit(1, "Incomplete geometry field in input file.");
+			if (sscanf(buf2, "%s %s %s", dtype, format, geom_fname) != 3)
+				bu_bomb("Incomplete geometry field in input file.");
 			if (strcmp(dtype, "indexed_poly") != 0)
-				bu_exit(1, "Unknown geometry data type. Must be \"indexed_poly\".");
+				bu_bomb("Unknown geometry data type. Must be \"indexed_poly\".");
 		}
 		bu_fgets(buf, sizeof(buf), fpin);
 	}
@@ -174,19 +176,20 @@ int off2nmg(FILE *fpin, struct rt_wdb *fpout)
 		fprintf(stderr, "Warning: no title\n");
 
 	if (strlen(geom_fname) < (unsigned)1)
-		bu_exit(1, "ERROR: no geometry filename given");
+		bu_bomb("Error: no geometry filename.");
 
 	if ((fgeom = fopen(geom_fname, "r")) == NULL) {
-		bu_exit(1, "off2nmg: cannot open %s (geometry description) for reading\n",
+		fprintf(stderr, "off2nmg: cannot open %s (geometry description) for reading\n",
 			geom_fname);
+		exit(1);
 	}
 
 	m = nmg_mm();
 	read_faces(m, fgeom);
 	fclose(fgeom);
 
-	snprintf(sname, 67, "s.%s", title);
-	snprintf(rname, 67, "r.%s", title);
+	strcpy(sname, "s.");	strcat(sname, title);
+	strcpy(rname, "r.");	strcat(rname, title);
 
 	mk_id(fpout, title);
 	mk_nmg(fpout, sname, m);
@@ -210,15 +213,18 @@ int main(int argc, char **argv)
 
 	/* Get filenames and open the files. */
 	if (argc != 3)  {
-		bu_exit(2, "Usage: off-g file.off file.g\n");
+		fprintf(stderr, "Usage: off-g file.off file.g\n");
+		return 2;
 	}
 	if ((fpin = fopen(argv[1], "rt")) == NULL) {
-		bu_exit(1, "%s: cannot open %s for reading\n",
+		fprintf(stderr, "%s: cannot open %s for reading\n",
 			argv[0], argv[1]);
+		return (1);
 	}
 	if ((fpout = wdb_fopen(argv[2])) == NULL) {
-		bu_exit(1, "%s: cannot create %s\n",
+		fprintf(stderr, "%s: cannot create %s\n",
 			argv[0], argv[2]);
+		return (1);
 	}
 
 

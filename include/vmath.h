@@ -91,10 +91,14 @@
 #include "common.h"
 
 /* for sqrt(), sin(), cos(), rint(), etc */
-#include <math.h>
+#ifdef HAVE_MATH_H
+#  include <math.h>
+#endif
 
 /* for floating point tolerances and other math constants */
-#include <float.h>
+#ifdef HAVE_FLOAT_H
+#  include <float.h>
+#endif
 
 __BEGIN_DECLS
 

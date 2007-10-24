@@ -61,12 +61,12 @@ EOF
 ../src/conv/asc2pix < $1/regress/spdipix.asc > spdi_ref.pix
 ../src/util/pixdiff spdi.pix spdi_ref.pix > spdi_diff.pix 2>> spdi.log
 NUMBER_WRONG=`tr , '\012' < spdi.log | awk '/many/ {print $1}'`
-echo "spdi.pix $NUMBER_WRONG off by many"
+/bin/echo spdi.pix $NUMBER_WRONG off by many
 
 if [ "X$NUMBER_WRONG" = "X0" ] ; then
-    echo "-> spdi.sh succeeded"
+    /bin/echo '-> spdi.sh succeeded'
 else
-    echo "-> spdi.sh FAILED"
+    /bin/echo '-> spdi.sh failed'
 fi
 
 exit $NUMBER_WRONG

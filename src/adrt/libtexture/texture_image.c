@@ -33,10 +33,16 @@
  * $Id$
  */
 
-#include "texture_image.h"
+#ifdef HAVE_CONFIG_H
+# include "common.h"
+#endif
 
+#include "texture_image.h"
 #include <stdlib.h>
-#include <string.h>
+
+#ifdef HAVE_STRING_H
+# include <string.h>
+#endif
 
 #include "umath.h"
 

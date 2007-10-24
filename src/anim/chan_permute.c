@@ -40,10 +40,12 @@
 #include "common.h"
 
 #include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
 #endif
 
 #include "machine.h"
@@ -132,7 +134,7 @@ main(int argc, char **argv)
 		    num_done += 1;
 		else
 		    for(j=0;j<x->channels;j++)
-			fscanf(x->file, "%40s ", arrayd[x->list[j]]);
+			fscanf(x->file,"%s ",arrayd[x->list[j]]);
 	    }
 	    else if (x->i_o == 0){
 		for(j=0;j<x->channels;j++)

@@ -150,18 +150,7 @@ $CMD >> gqa.log 2>&1
 
 
 if [ $STATUS = 0 ] ; then
-    echo "-> gqa.sh succeeded"
+    /bin/echo '-> gqa.sh succeeded'
 else
-    echo "-> gqa.sh FAILED"
+    /bin/echo '-> gqa.sh failed'
 fi
-
-exit $STATUS
-
-# Local Variables:
-# mode: sh
-# tab-width: 8
-# sh-indentation: 4
-# sh-basic-offset: 4
-# indent-tabs-mode: t
-# End:
-# ex: shiftwidth=4 tabstop=8

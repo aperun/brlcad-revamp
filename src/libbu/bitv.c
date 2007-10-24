@@ -47,9 +47,12 @@ static const char libbu_bitv_RCSid[] = "@(#)$Header$ (ARL)";
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>		/* for bzero() */
+#ifdef HAVE_STRING_H
+#  include <string.h>		/* for bzero() */
+#else
+#  include <strings.h>
+#endif
 #include <ctype.h>
-
 #include "machine.h"
 #include "bu.h"
 
@@ -123,6 +126,7 @@ bu_bitv_or(struct bu_bitv *ov, const struct bu_bitv *iv)
     in = iv->bits;
     words = BU_BITS2WORDS(iv->nbits);
 #ifdef VECTORIZE
+#	include "noalias.h"
     for( --words; words >= 0; words-- )
 	out[words] |= in[words];
 #else
@@ -146,6 +150,7 @@ bu_bitv_and(struct bu_bitv *ov, const struct bu_bitv *iv)
     in = iv->bits;
     words = BU_BITS2WORDS(iv->nbits);
 #ifdef VECTORIZE
+#	include "noalias.h"
     for( --words; words >= 0; words-- )
 	out[words] &= in[words];
 #else

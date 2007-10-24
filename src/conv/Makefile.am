@@ -227,7 +227,6 @@ tankill_g_LDADD = ${WDB}
 viewpoint_g_SOURCES = viewpoint-g.c
 viewpoint_g_LDADD = ${WDB}
 
-dist_bin_SCRIPTS = intaval-g.py
 
 dist_man_MANS = \
 	asc-nmg.1 \
@@ -269,6 +268,8 @@ sample_applicationsdir = $(SAMPLE_APPLICATIONS_DIR)
 sample_applications_DATA = \
 	g-xxx.c \
 	g-xxx_facets.c
+
+MAINTAINERCLEANFILES = Makefile.in
 
 DEPS=src/libwdb src/librt
 

@@ -26,14 +26,18 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "common.h"
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#include <strings.h>
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <string.h>
-
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -360,7 +364,7 @@ main(int argc, char **argv)
 		char *home;
 	if( (home = getenv( "HOME" )) != NULL )
 		{
-		(void) strncpy( default_macro_file, home, MAX_LN );
+		(void) strcpy( default_macro_file, home );
 		home = default_macro_file + strlen( default_macro_file );
 		*home++ = '/';
 		}
@@ -569,18 +573,19 @@ init_Try(void)
 
 STATIC int
 push_Macro(char *buf)
-{
-    register int curlen = strlen( cptr );
-    register int buflen = strlen( buf );
-    if( curlen + buflen > MACROBUFSZ - 1 ) {
-	fb_log( "Macro buffer would overflow.\n" );
-	return 0;
-    }
-    (void) strncpy( macro_buf, cptr, MACROBUFSZ );
-    (void) snprintf(cread_buf, MACROBUFSZ, "%s%s", buf, macro_buf);
-    cptr = cread_buf;
-    return 1;
-}
+{	register int curlen = strlen( cptr );
+		register int buflen = strlen( buf );
+	if( curlen + buflen > MACROBUFSZ - 1 )
+		{
+		fb_log( "Macro buffer would overflow.\n" );
+		return 0;
+		}
+	(void) strcpy( macro_buf, cptr );
+	(void) strncpy( cread_buf, buf, buflen ); /* Don't copy NUL. */
+	(void) strcpy( cread_buf+buflen, macro_buf );
+	cptr = cread_buf;
+	return 1;
+	}
 
 /*	d o _ K e y _ C m d ( ) */
 void
@@ -617,7 +622,7 @@ STATIC bool
 getColor(unsigned char *pixelp, char *prompt, char *buffer)
 {	static char promptbuf[PROMPT_LEN];
 		static int red, grn, blu;
-	(void) snprintf( promptbuf, PROMPT_LEN, "%s [r g b] : ", prompt );
+	(void) sprintf( promptbuf, "%s [r g b] : ", prompt );
 
 	if( ! get_Input( buffer, CLR_LEN, promptbuf ) )
 		return false;
@@ -1136,7 +1141,7 @@ f_Name_Keyboard_Macro(char *buf)
 		{
 		Malloc_Bomb();
 		}
-	(void) strncpy( macro_entry->f_name, macro_name, strlen(macro_name)+1 );
+	(void) strcpy( macro_entry->f_name, macro_name );
 	add_Try( macro_entry, macro_entry->f_name, &try_rootp );
 	return 1;
 	}
@@ -1510,10 +1515,10 @@ f_Save_RLE(char *buf) /* Save framebuffer image with Run-Length Encoding. */
 		fb_log( "No default.\n" );
 		return 0;
 		}
-	if( bu_file_exists( rle_file_nm ) )
+	if( access( rle_file_nm, 0 ) == 0 )
 		{	char answer[2];
 			char question[MAX_LN+32];
-			(void) snprintf( question, MAX_LN+32, 
+		(void) sprintf( question,
 				"File \"%s\" exists, remove [n=no] ? ",
 				rle_file_nm
 				);
@@ -1599,7 +1604,7 @@ f_Stop_Macro(char *buf)
 		{
 		Malloc_Bomb();
 		}
-	(void) strncpy( macro_entry->f_buff, macro_buf, strlen(macro_buf)+1 );
+	(void) strcpy( macro_entry->f_buff, macro_buf );
 	fb_log( "Keyboard macro defined.\n" );
 	return 1;
 	}
@@ -1633,7 +1638,7 @@ f_Enter_Macro_Definition(char *buf)
 		{
 		Malloc_Bomb();
 		}
-	(void) strncpy( macro_entry->f_buff, macro_buf, strlen(macro_buf)+1 );
+	(void) strcpy( macro_entry->f_buff, macro_buf );
 	if( interactive )
 		fb_log( "Keyboard macro defined.\n" );
 	return 1;
@@ -2271,9 +2276,9 @@ get_Point(char *msg, register Point *pointp)
 STATIC void
 get_Rectangle(char *name, register Rectangle *rectp)
 {	char buf[MAX_LN];
-	(void) snprintf( buf, MAX_LN, "Pick lower-left corner of %s.", name );
+	(void) sprintf( buf, "Pick lower-left corner of %s.", name );
 	get_Point( buf, &rectp->r_origin );
-	(void) snprintf( buf, MAX_LN, "Pick upper-right corner of %s.", name );
+	(void) sprintf( buf, "Pick upper-right corner of %s.", name );
 	get_Point( buf, &rectp->r_corner );
 	fix_Rectangle( rectp );
 	return;

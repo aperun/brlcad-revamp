@@ -27,4 +27,6 @@ EXTRA_DIST = \
 	rt.pc.in \
 	wdb.pc.in
 
+MAINTAINERCLEANFILES = Makefile.in
+
 include $(top_srcdir)/misc/Makefile.defs

@@ -39,10 +39,13 @@ static const char RCSid[] = "$Header $";
 /* system headers */
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
+#endif
+
+#ifdef HAVE_STRING_H
+#  include <string.h>
 #endif
 
 #ifdef HAVE_STDINT_H
@@ -68,7 +71,7 @@ struct mesh {
 };
 
 
-static const char	usage[] = "Usage: %s [-v] [-y] [-s scale] [-f] [-o out_file] brlcad_db.h object\n";
+static char		usage[] = "Usage: %s [-v] [-y] [-s scale] [-f] [-o out_file] brlcad_db.h object\n";
 
 static uint8_t 		verbose = 0;
 static uint8_t		yup = 0;
@@ -422,13 +425,15 @@ int main(int argc, char *argv[])
 		break;
 
 	    default:
-		bu_exit(1, usage, argv[0]);
+		fprintf(stderr, usage, argv[0]);
+		exit(1);
 		break;
 	}
     }
     /* param check */
     if (bu_optind+1 >= argc) {
-	bu_exit(1, usage, argv[0]);
+	fprintf(stderr, usage, argv[0]);
+	exit(1);
     }
     /* get database filename and object */
     db_file = argv[bu_optind++];
@@ -436,11 +441,12 @@ int main(int argc, char *argv[])
 
     /* open BRL-CAD database */
     if ( (dbip = db_open( db_file, "r") ) == DBI_NULL ) {
+	bu_log( "Cannot open %s\n", db_file );
 	perror(argv[0]);
-	bu_exit(1, "Cannot open %s\n", db_file );
+	exit(1);
     }
     if ( db_dirbuild( dbip ) ) {
-	bu_exit(1, "db_dirbuild() failed!\n" );
+	bu_bomb( "db_dirbuild() failed!\n" );
     }
     if ( verbose ) {
 	fprintf(stderr, ">> opened db '%s'\n", dbip->dbi_title);
@@ -462,7 +468,8 @@ int main(int argc, char *argv[])
 
     dp = db_lookup( dbip, object, 0 );
     if ( dp == DIR_NULL ) {
-	bu_exit(1, "Object %s not found in database!\n", object );
+	bu_log( "Object %s not found in database!\n", object );
+	exit(1);
     }
 
     /* generate mesh list */

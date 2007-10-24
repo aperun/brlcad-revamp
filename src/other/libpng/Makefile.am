@@ -59,7 +59,7 @@ EXTRA_DIST = \
 	configure \
 	contrib \
 	example.c \
-	libpng-1.2.21.txt \
+	libpng-1.2.19.txt \
 	pngbar.jpg \
 	pngbar.png \
 	pngnow.png \
@@ -70,6 +70,8 @@ EXTRA_DIST = \
 .PHONY : test
 test:	pngtest
 	./pngtest ${top_srcdir}/src/other/libpng/pngtest.png
+
+MAINTAINERCLEANFILES = Makefile.in
 
 include $(top_srcdir)/misc/Makefile.defs
 

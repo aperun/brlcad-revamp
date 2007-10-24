@@ -37,7 +37,11 @@ static const char RCSid[] = "$Header$";
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #if defined(HAVE_UNISTD_H)
 #  include <unistd.h>
 #else
@@ -82,7 +86,7 @@ static struct db_tree_state	tree_state;	/* includes tol & model */
 static int	regions_tried = 0;
 static int	regions_converted = 0;
 
-/* extern struct mater* rt_material_head; */
+//extern struct mater* rt_material_head;
 
 /*
 *			D O _ R E G I O N _ E N D
@@ -125,7 +129,6 @@ union tree *do_region_end(register struct db_tree_state *tsp, struct db_full_pat
 		return  curtree;
 
 	regions_tried++;
-
 	/* Begin bu_bomb() protection */
 	if( BU_SETJUMP ) {
 		/* Error, bail out */
@@ -136,7 +139,7 @@ union tree *do_region_end(register struct db_tree_state *tsp, struct db_full_pat
 		bu_free( (char *)sofar, "sofar" );
 
 		/* Sometimes the NMG library adds debugging bits when
-		 * it detects an internal error, before bombing out.
+		 * it detects an internal error, before bu_bomb().
 		 */
 		rt_g.NMG_debug = NMG_debug;	/* restore mode */
 
@@ -494,26 +497,32 @@ main(int argc, char **argv)
 			bu_log("\n");
 			break;
 		default:
-			bu_exit(1, usage, argv[0]);
+			fprintf(stderr, usage, argv[0]);
+			exit(1);
+			break;
 		}
 	}
 
 	if (bu_optind+1 >= argc) {
-		bu_exit(1, usage, argv[0]);
+		fprintf(stderr, usage, argv[0]);
+		exit(1);
 	}
 
 	/* Open BRL-CAD database */
 	if ((dbip = db_open( argv[bu_optind] , "r")) == DBI_NULL) {
+		bu_log( "Cannot open %s\n" , argv[bu_optind] );
 		perror(argv[0]);
-		bu_exit(1, "Cannot open %s\n" , argv[bu_optind]);
+		exit(1);
 	}
 	if( db_dirbuild( dbip ) ) {
-	    bu_exit(1, "db_dirbuild failed\n");
+	    bu_log( "db_dirbuild failed\n" );
+	    exit(1);
 	}
 
 	if ((fp_out = wdb_fopen( out_file )) == NULL) {
 		perror( out_file );
-		bu_exit(2, "ERROR: Cannot open %s for reading\n" , out_file );
+		bu_log( "g-nng: Cannot open %s\n" , out_file );
+		return 2;
 	}
 
 	bu_optind++;
@@ -526,7 +535,7 @@ main(int argc, char **argv)
 
 		dp = db_lookup( dbip , argv[i] , 0 );
 		if( dp == DIR_NULL ) {
-			bu_log( "WARNING: Could not find %s, skipping\n", argv[i] );
+			bu_log( "WARNING!!! Could not find %s, skipping\n", argv[i] );
 			continue;
 		}
 		db_functree( dbip , dp , csg_comb_func , 0 , &rt_uniresource , NULL );

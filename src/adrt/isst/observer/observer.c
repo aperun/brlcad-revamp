@@ -294,7 +294,7 @@ void* isst_observer_networking(void *ptr) {
     /* Get the overlay data */
     {
       isst_overlay_data_t overlay;
-      char string[ADRT_NAME_SIZE];
+      char string[256];
 
       tienet_recv(isst_observer_master_socket, &overlay, sizeof(isst_overlay_data_t), 0);
 
@@ -305,32 +305,32 @@ void* isst_observer_networking(void *ptr) {
       util_display_draw(NULL);
 
       /* Overlay some useful text */
-      snprintf(string, ADRT_NAME_SIZE, "position: %.3f %.3f %.3f", overlay.camera_position.v[0], overlay.camera_position.v[1], overlay. camera_position.v[2]);
+      sprintf(string, "position: %.3f %.3f %.3f", overlay.camera_position.v[0], overlay.camera_position.v[1], overlay. camera_position.v[2]);
       util_display_text(string, 0, 0, UTIL_JUSTIFY_LEFT, UTIL_JUSTIFY_TOP);
 
-      snprintf(string, ADRT_NAME_SIZE, "camera_ae: %.3f %.3f", overlay.camera_azimuth, overlay.camera_elevation);
+      sprintf(string, "camera_ae: %.3f %.3f", overlay.camera_azimuth, overlay.camera_elevation);
       util_display_text(string, 0, 1, UTIL_JUSTIFY_LEFT, UTIL_JUSTIFY_TOP);
 
-      snprintf(string, ADRT_NAME_SIZE, "in_hit: %.3f %.3f %.3f", overlay.in_hit.v[0], overlay.in_hit.v[1], overlay.in_hit.v[2], overlay.out_hit.v[0], overlay.out_hit.v[1], overlay.out_hit.v[2]);
+      sprintf(string, "in_hit: %.3f %.3f %.3f", overlay.in_hit.v[0], overlay.in_hit.v[1], overlay.in_hit.v[2], overlay.out_hit.v[0], overlay.out_hit.v[1], overlay.out_hit.v[2]);
       util_display_text(string, 0, 2, UTIL_JUSTIFY_LEFT, UTIL_JUSTIFY_TOP);
 
-      snprintf(string, ADRT_NAME_SIZE, "nodes: %d", overlay.compute_nodes);
+      sprintf(string, "nodes: %d", overlay.compute_nodes);
       util_display_text(string, 0, 0, UTIL_JUSTIFY_LEFT, UTIL_JUSTIFY_BOTTOM);
 
-      snprintf(string, ADRT_NAME_SIZE, "fps: %.1f", fps);
+      sprintf(string, "fps: %.1f", fps);
       util_display_text(string, 0, 1, UTIL_JUSTIFY_LEFT, UTIL_JUSTIFY_BOTTOM);
 
-      snprintf(string, ADRT_NAME_SIZE, "units: meters");
+      sprintf(string, "units: meters");
       util_display_text(string, 0, 0, UTIL_JUSTIFY_RIGHT, UTIL_JUSTIFY_TOP);
 
       /* Multiply by 100 to put this number into a more weidly domain */
-      snprintf(string, ADRT_NAME_SIZE, "scale: %.3f", overlay.scale * 100.0);
+      sprintf(string, "scale: %.3f", overlay.scale * 100.0);
       util_display_text(string, 0, 1, UTIL_JUSTIFY_RIGHT, UTIL_JUSTIFY_TOP);
 
-      snprintf(string, ADRT_NAME_SIZE, "res: %s", overlay.resolution);
+      sprintf(string, "res: %s", overlay.resolution);
       util_display_text(string, 0, 1, UTIL_JUSTIFY_RIGHT, UTIL_JUSTIFY_BOTTOM);
 
-      snprintf(string, ADRT_NAME_SIZE, "controller: %s", overlay.controller ? "yes" : "no");
+      sprintf(string, "controller: %s", overlay.controller ? "yes" : "no");
       util_display_text(string, 0, 0, UTIL_JUSTIFY_RIGHT, UTIL_JUSTIFY_BOTTOM);
 
       util_display_cross();

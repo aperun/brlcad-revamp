@@ -36,21 +36,27 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/time.h>
-
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
+#endif
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
 #endif
 #ifdef HAVE_STDARG_H
 #  include <stdarg.h>
 #else
 #  include <varargs.h>
 #endif
+
+#include <sys/time.h>
+
 #ifdef HAVE_SYS_IOCTL_H
 #  include <sys/ioctl.h>
 #  include <sys/resource.h>
 #endif
+
 #ifdef HAVE_SYS_SOCKET_H
 #  include <sys/socket.h>
 #endif
@@ -274,7 +280,11 @@ main(int argc, char **argv)
 		 *  drop to the lowest sensible priority.
 		 */
 		if( !interactive )  {
+#ifdef CRAY
+			bu_nice_set(6);		/* highest "free" priority */
+#else
 			bu_nice_set(19);		/* lowest priority */
+#endif
 		}
 
 		/* Close off the world */

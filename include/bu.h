@@ -27,7 +27,7 @@
  *  This library provides several layers of low-level utility routines,
  *  providing features that make coding much easier.
  *	Parallel processing support:  threads, sempahores, parallel-malloc.
- *	Consolodated logging support:  bu_log(), bu_exit(), and bu_bomb().
+ *	Consolodated logging support:  bu_log(), bu_bomb().
  *
  *  The intention is that these routines are general extensions to
  *  the data types offered by the C language itself, and to the
@@ -147,36 +147,6 @@ __BEGIN_DECLS
 #endif
 
 /**
- * This is so we can use gcc's "format string vs arguments"-check for
- * various printf-like functions, and still maintain compatability.
- */
-#ifndef __attribute__
-/* This feature is only available in gcc versions 2.5 and later. */
-#  if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 5)
-#    define __attribute__(ignore) /* empty */
-#  endif
-/* The __-protected variants of `format' and `printf' attributes
- * are accepted by gcc versions 2.6.4 (effectively 2.7) and later.
- */
-#  if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7)
-#    define __format__ format
-#    define __printf__ printf
-#    define __noreturn__ noreturn
-#  endif
-#endif
-
-/**
- * shorthand declaration of a printf-style functions
- */
-#define __BU_ATTR_FORMAT12 __attribute__ ((__format__ (__printf__, 1, 2)))
-#define __BU_ATTR_FORMAT23 __attribute__ ((__format__ (__printf__, 2, 3)))
-
-/**
- * shorthand declaration of a function that doesn't return
- */
-#define __BU_ATTR_NORETURN __attribute__ ((__noreturn__))
-
-/**
  *			B U _ F O R T R A N
  * @def BU_FORTRAN
  *
@@ -188,6 +158,9 @@ __BEGIN_DECLS
  *  because there is no way to get the C preprocessor to change the
  *  case of a token.
  */
+#if defined(CRAY)
+#	define	BU_FORTRAN(lc,uc)	uc
+#endif
 #if defined(apollo) || defined(mips) || defined(aux) || defined(linux)
 	/* Lower case, with a trailing underscore */
 #ifdef __STDC__
@@ -288,14 +261,14 @@ __BEGIN_DECLS
 	if( !(_equation) )  { \
 		bu_log("BU_ASSERT( " #_equation " ) failed, file %s, line %d\n", \
 			__FILE__, __LINE__ ); \
-		bu_bomb("BU_ASSERT failure\n"); \
+		bu_bomb("assertion failure\n"); \
 	}
 #  else
 #    define BU_ASSERT(_equation)	\
 	if( !(_equation) )  { \
 		bu_log("BU_ASSERT( _equation ) failed, file %s, line %d\n", \
 			__FILE__, __LINE__ ); \
-		bu_bomb("BU_ASSERT failure\n"); \
+		bu_bomb("assertion failure\n"); \
 	}
 #  endif
 #endif
@@ -724,17 +697,17 @@ BU_EXPORT BU_EXTERN(struct bu_list *bu_list_pop, (struct bu_list *hp));
 
 #define BU_LIST_EACH( hp, p, type ) \
 	 for( (p)=(type *)BU_LIST_FIRST(bu_list,hp); \
-	      (p) && BU_LIST_NOT_HEAD(p,hp); \
+	      BU_LIST_NOT_HEAD(p,hp); \
 	      (p)=(type *)BU_LIST_PNEXT(bu_list,p) ) \
 
 #define BU_LIST_REVEACH( hp, p, type ) \
 	 for( (p)=(type *)BU_LIST_LAST(bu_list,hp); \
-	      (p) && BU_LIST_NOT_HEAD(p,hp); \
+	      BU_LIST_NOT_HEAD(p,hp); \
 	      (p)=(type *)BU_LIST_PREV(bu_list,((struct bu_list *)(p))) ) \
 
 #define BU_LIST_TAIL( hp, start, p, type ) \
 	 for( (p)=(type *)start ; \
-	      (p) && BU_LIST_NOT_HEAD(p,hp); \
+	      BU_LIST_NOT_HEAD(p,hp); \
 	      (p)=(type *)BU_LIST_PNEXT(bu_list,(p)) )
 
 /**
@@ -745,12 +718,12 @@ BU_EXPORT BU_EXTERN(struct bu_list *bu_list_pop, (struct bu_list *hp));
  */
 #define BU_LIST_FOR(p,structure,hp)	\
 	(p)=BU_LIST_FIRST(structure,hp); \
-	(p) && BU_LIST_NOT_HEAD(p,hp); \
+	BU_LIST_NOT_HEAD(p,hp); \
 	(p)=BU_LIST_PNEXT(structure,p)
 
 #define BU_LIST_FOR_BACKWARDS(p,structure,hp)	\
 	(p)=BU_LIST_LAST(structure,hp); \
-	(p) && BU_LIST_NOT_HEAD(p,hp); \
+	BU_LIST_NOT_HEAD(p,hp); \
 	(p)=BU_LIST_PLAST(structure,p)
 
 /**
@@ -759,7 +732,7 @@ BU_EXPORT BU_EXTERN(struct bu_list *bu_list_pop, (struct bu_list *hp));
  */
 #define BU_LIST_FOR_CIRC(p,structure,hp)	\
 	(p)=BU_LIST_PNEXT_CIRC(structure,hp); \
-	(p) && (p) != (hp); \
+	(p) != (hp); \
 	(p)=BU_LIST_PNEXT_CIRC(structure,p)
 
 /*
@@ -772,8 +745,8 @@ BU_EXPORT BU_EXTERN(struct bu_list *bu_list_pop, (struct bu_list *hp));
 #define	BU_LIST_FOR2(p1,p2,structure,hp1,hp2)				\
 		(p1)=BU_LIST_FIRST(structure,hp1),			\
 		(p2)=BU_LIST_FIRST(structure,hp2);			\
-		(p1) && BU_LIST_NOT_HEAD((struct bu_list *)(p1),(hp1)) &&	\
-		(p2) && BU_LIST_NOT_HEAD((struct bu_list *)(p2),(hp2));		\
+		BU_LIST_NOT_HEAD((struct bu_list *)(p1),(hp1)) &&	\
+		BU_LIST_NOT_HEAD((struct bu_list *)(p2),(hp2));		\
 		(p1)=BU_LIST_NEXT(structure,(struct bu_list *)(p1)),	\
 		(p2)=BU_LIST_NEXT(structure,(struct bu_list *)(p2))
 
@@ -1065,7 +1038,7 @@ struct bu_ptbl {
     ip = cast BU_PTBL_LASTADDR(ptbl); ip >= cast BU_PTBL_BASEADDR(ptbl); ip--
 
 
-/* vlist, vlblock?  But they use vmath.h .. hrm. */
+/* vlist, vlblock?  But they use vmath.h... */
 /** @} */
 
 /*----------------------------------------------------------------------*/
@@ -1341,10 +1314,10 @@ BU_EXPORT extern int	bu_debug;
 #if __STDC__ && !defined(ipsc860)
 #	define bu_offsetofarray(_t, _m)	offsetof(_t, _m[0])
 #else
-#	define bu_offsetofarray(_t, _m)	(size_t)( (((_t *)0)->_m))
+#	define bu_offsetofarray(_t, _m)	(int)( (((_t *)0)->_m))
 #endif
 #if !defined(offsetof)
-#	define bu_offsetof(_t, _m) (size_t)(&(((_t *)0)->_m))
+#	define bu_offsetof(_t, _m) (int)(&(((_t *)0)->_m))
 #else
 #	define bu_offsetof(_t, _m) offsetof(_t, _m)
 #endif
@@ -1360,24 +1333,24 @@ BU_EXPORT extern int	bu_debug;
  *  Matching compensation code for the CRAY is located in librt/parse.c
  */
 #if defined(CRAY)
-#	define bu_byteoffset(_i)	(((size_t)&(_i)))	/* actually a word offset */
+#	define bu_byteoffset(_i)	(((int)&(_i)))	/* actually a word offset */
 #else
 #  if defined(IRIX) && IRIX > 5 && _MIPS_SIM != _ABIN32 && _MIPS_SIM != _MIPS_SIM_ABI32
 #      define bu_byteoffset(_i)	((size_t)__INTADDR__(&(_i)))
 #  else
 #    if defined(sgi) || defined(__convexc__) || defined(ultrix) || defined(_HPUX_SOURCE)
        /* "Lazy" way.  Works on reasonable machines with byte addressing */
-#      define bu_byteoffset(_i)	((size_t)((char *)&(_i)))
+#      define bu_byteoffset(_i)	((int)((char *)&(_i)))
 #    else
 #      if defined(__ia64__) || defined(__x86_64__) || defined(__sparc64__)
 #        if defined (__INTEL_COMPILER)
-#          define bu_byteoffset(_i)	((size_t)((char *)&(_i)))
+#          define bu_byteoffset(_i)	((long)((char *)&(_i)))
 #        else
-#          define bu_byteoffset(_i)	((size_t)(((void *)&(_i))-((void *)0)))
+#          define bu_byteoffset(_i)	((long)(((void *)&(_i))-((void *)0)))
 #        endif
 #      else
 	 /* "Conservative" way of finding # bytes as diff of 2 char ptrs */
-#        define bu_byteoffset(_i)	((size_t)(((char *)&(_i))-((char *)0)))
+#        define bu_byteoffset(_i)	((int)(((char *)&(_i))-((char *)0)))
 #      endif
 #    endif
 #  endif
@@ -1551,14 +1524,14 @@ struct bu_rb_list
  */
 typedef struct
 {
-    /* CLASS I - Applications may read directly. */
+    /* CLASS I - Applications may read directly... */
     long	 	rbt_magic;	  /**< @brief  Magic no. for integrity check */
     int			rbt_nm_nodes;	  /**< @brief  Number of nodes */
-    /* CLASS II - Applications may read/write directly. */
+    /* CLASS II - Applications may read/write directly... */
     void		(*rbt_print)();	  /**< @brief  Data pretty-print function */
     int			rbt_debug;	  /**< @brief  Debug bits */
     char		*rbt_description; /**< @brief  Comment for diagnostics */
-    /* CLASS III - Applications should not manipulate directly. */
+    /* CLASS III - Applications should not manipulate directly... */
     int		 	rbt_nm_orders;	  /**< @brief  Number of simultaneous orders */
     int			(**rbt_order)();  /**< @brief  Comparison functions */
     struct bu_rb_node	**rbt_root;	  /**< @brief  The actual trees */
@@ -1763,8 +1736,7 @@ BU_EXPORT BU_EXTERN(void bu_bitv_free,
 BU_EXPORT BU_EXTERN(int bu_backtrace, (FILE *fp));
 
 /* bomb.c */
-BU_EXPORT BU_EXTERN(void bu_bomb, (const char *str)) __BU_ATTR_NORETURN;
-BU_EXPORT BU_EXTERN(void bu_exit, (int status, const char *fmt, ...)) __BU_ATTR_NORETURN __BU_ATTR_FORMAT23;
+BU_EXPORT BU_EXTERN(void bu_bomb, (const char *str));
 
 /* crashreport.c */
 BU_EXPORT BU_EXTERN(int bu_crashreport, (const char *filename));
@@ -1989,8 +1961,8 @@ BU_EXPORT BU_EXTERN(void bu_log_delete_hook,
 		    (bu_hook_t func,
 		     genptr_t clientdata));
 BU_EXPORT BU_EXTERN(void bu_putchar, (int c));
-BU_EXPORT BU_EXTERN(void bu_log, (char *, ... )) __BU_ATTR_FORMAT12;
-BU_EXPORT BU_EXTERN(void bu_flog, (FILE *, char *, ... )) __BU_ATTR_FORMAT23;
+BU_EXPORT BU_EXTERN(void bu_log, (char *, ... ));
+BU_EXPORT BU_EXTERN(void bu_flog, (FILE *, char *, ... ));
 
 /** @} */
 /** @addtogroup magic */
@@ -2336,8 +2308,6 @@ BU_EXPORT BU_EXTERN(void bu_semaphore_release,
 /** @{ */
 
 /* vls.c */
-#define bu_vls_strcmp(a,b) strcmp(bu_vls_addr(a),bu_vls_addr(b))
-#define bu_vls_strncmp(a,b,n) strncmp(bu_vls_addr(a),bu_vls_addr(b),(n))
 BU_EXPORT BU_EXTERN(void bu_vls_init,
 		    (struct bu_vls *vp));
 BU_EXPORT BU_EXTERN(void bu_vls_init_if_uninit,
@@ -2427,7 +2397,7 @@ BU_EXPORT BU_EXTERN(void bu_vls_vprintf,
 #if defined(HAVE_STDARG_H)
 BU_EXPORT BU_EXTERN(void bu_vls_printf,
 		    (struct bu_vls *vls,
-		     char *fmt, ...)) __BU_ATTR_FORMAT23;
+		     char *fmt, ...));
 #else  /* !HAVE_STDARG_H */
 #  if defined(HAVE_VARARGS_H)
 BU_EXPORT BU_EXTERN(void bu_vls_printf,
@@ -2441,7 +2411,7 @@ BU_EXPORT BU_EXTERN(void bu_vls_printf,
 #if defined(HAVE_STDARG_H)
 BU_EXPORT BU_EXTERN(void bu_vls_sprintf,
 		    (struct bu_vls *vls,
-		     char *fmt, ...)) __BU_ATTR_FORMAT23;
+		     char *fmt, ...));
 #else  /* !HAVE_STDARG_H */
 #  if defined(HAVE_VARARGS_H)
 BU_EXPORT BU_EXTERN(void bu_vls_sprintf,
@@ -2851,8 +2821,8 @@ BU_EXPORT BU_EXTERN(struct bu_image_file *bu_image_save_open,
 		     int depth));
 
 BU_EXPORT BU_EXTERN(int bu_image_save_writeline,
-		    (struct bu_image_file *bif,
-		     int y,
+		    (struct bu_image_file *bif, 
+		     int y, 
 		     unsigned char *data));
 
 BU_EXPORT BU_EXTERN(int bu_image_save_close,

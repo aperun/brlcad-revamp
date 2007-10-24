@@ -27,4 +27,6 @@ EXTRA_DIST = \
 	watch.html \
 	winop.html
 
+MAINTAINERCLEANFILES = Makefile.in
+
 include $(top_srcdir)/misc/Makefile.defs

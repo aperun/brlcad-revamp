@@ -34,13 +34,16 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include <stdlib.h> /* atof() */
 #include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <math.h>
-
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
+#include <ctype.h>
+#include <math.h>
 
 #include "machine.h"
 #include "bu.h"

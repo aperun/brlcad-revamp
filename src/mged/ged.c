@@ -553,10 +553,8 @@ main(int argc, char **argv)
 	}
 	bu_vls_free(&error);
 
-#if !defined(_WIN32)
 	/* bring application to focus if needed (Mac OS X only) */
 	dm_applicationfocus();
-#endif
     }
 
     if(argc >= 2){

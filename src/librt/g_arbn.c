@@ -37,7 +37,9 @@ static const char RCSarbn[] = "@(#)$Header$ (BRL)";
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#endif
 #include <math.h>
 #include <ctype.h>
 
@@ -85,18 +87,8 @@ rt_arbn_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip)
 	 *  which are used to make the bounding RPP.
 	 */
 
-	/* Zero face use counts
-         * and make sure normal vectors are unit vectors
-         */
+	/* Zero face use counts */
 	for( i=0; i<aip->neqn; i++ )  {
-                double normalLen = MAGNITUDE(aip->eqn[i]);
-                double scale;
-                if( NEAR_ZERO( normalLen, SMALL_FASTF) ) {
-                    bu_log( "arbn has zero length normal vector\n");
-                    return 1;
-                }
-                scale = 1.0 / normalLen;
-                HSCALE( aip->eqn[i], aip->eqn[i], scale );
 		used[i] = 0;
 	}
 	for( i=0; i<aip->neqn-2; i++ )  {
@@ -816,18 +808,12 @@ rt_arbn_import(struct rt_db_internal *ip, const struct bu_external *ep, register
 	ntohd( (unsigned char *)aip->eqn, (unsigned char *)(&rp[1]), aip->neqn*4 );
 
 	/* Transform by the matrix */
+#	include "noalias.h"
 	if (mat == NULL) mat = bn_mat_identity;
 	for( i=0; i < aip->neqn; i++ )  {
 		point_t	orig_pt;
 		point_t	pt;
 		vect_t	norm;
-                fastf_t factor;
-
-                /* unitize the plane equation first */
-                factor = 1.0 / MAGNITUDE( aip->eqn[i] );
-                VSCALE( aip->eqn[i], aip->eqn[i], factor );
-                aip->eqn[i][3] = aip->eqn[i][3] * factor;
-
 
 		/* Pick a point on the original halfspace */
 		VSCALE( orig_pt, aip->eqn[i], aip->eqn[i][3] );
@@ -937,17 +923,12 @@ rt_arbn_import5(struct rt_db_internal *ip, const struct bu_external *ep, registe
 	ntohd((unsigned char *)aip->eqn, (unsigned char *)ep->ext_buf + 4, double_count);
 
 	/* Transform by the matrix, if we have one that is not the identity */
+#	include "noalias.h"
 	if( mat && !bn_mat_is_identity( mat ) ) {
 		for (i=0; i < aip->neqn; i++) {
 			point_t	orig_pt;
 			point_t	pt;
 			vect_t	norm;
-                        fastf_t factor;
-
-                        /* unitize the plane equation first */
-                        factor = 1.0 / MAGNITUDE( aip->eqn[i] );
-                        VSCALE( aip->eqn[i], aip->eqn[i], factor );
-                        aip->eqn[i][3] = aip->eqn[i][3] * factor;
 
 			/* Pick a point on the original halfspace */
 			VSCALE( orig_pt, aip->eqn[i], aip->eqn[i][3] );

@@ -23,8 +23,11 @@ static const char RCSid[] = "$Id$";
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -53,7 +56,6 @@ struct  frame {
 struct bu_list head = {MAGIC, &head, &head};
 struct frame globals;
 
-extern FILE *yyin;
 extern int yylex(void);
 
 extern int bu_optind;

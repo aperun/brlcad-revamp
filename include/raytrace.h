@@ -39,8 +39,12 @@
  *  Include Sequencing -
 @code
 	# include "common.h"	/_* Must come before system <> includes *_/
+	#ifdef HAVE_STRING_H	/_* OPTIONAL, for strcmp() etc. *_/
+	#  include <string.h>
+	#else
+	#  include <strings.h>
+	#endif
 	# include <stdio.h>
-	# include <string.h>
 	# include <math.h>
 	# include "machine.h"	/_* For fastf_t definition on this machine *_/
 	# include "bu.h"
@@ -2328,13 +2332,13 @@ struct ray_data {
 #else
 #define GET_HITMISS(_p) { \
 	char str[64]; \
-	(void)snprintf(str, 64, "GET_HITMISS %s %d", __FILE__, __LINE__); \
+	(void)sprintf(str, "GET_HITMISS %s %d", __FILE__, __LINE__); \
 	(_p) = (struct hitmiss *)bu_calloc(1, sizeof(struct hitmiss), str); \
 	}
 
 #define FREE_HITMISS(_p) { \
 	char str[64]; \
-	(void)snprintf(str, 64, "FREE_HITMISS %s %d", __FILE__, __LINE__); \
+	(void)sprintf(str, "FREE_HITMISS %s %d", __FILE__, __LINE__); \
 	(void)bu_free( (char *)_p,  str); \
 	}
 
@@ -6033,6 +6037,11 @@ RT_EXPORT BU_EXTERN(int	wdb_get_tcl,
 		    (ClientData clientData,
 		     Tcl_Interp *interp,
 		     int argc, char **argv));
+RT_EXPORT BU_EXTERN(int dgo_cmd,
+		    (ClientData clientData,
+		     Tcl_Interp *interp,
+		     int argc,
+		     char **argv));
 RT_EXPORT BU_EXTERN(int	wdb_init_obj,
 		    (Tcl_Interp *interp,
 		     struct rt_wdb *wdbp,
@@ -6209,6 +6218,11 @@ RT_EXPORT BU_EXTERN(int	wdb_title_cmd,
 		     Tcl_Interp *interp,
 		     int argc,
 		     char **argv));
+RT_EXPORT BU_EXTERN(int	wdb_tree_cmd,
+		    (struct rt_wdb *wdbp,
+		     Tcl_Interp *interp,
+		     int argc,
+		     char **argv));
 RT_EXPORT BU_EXTERN(int	wdb_color_cmd,
 		    (struct rt_wdb *wdbp,
 		     Tcl_Interp *interp,
@@ -6351,11 +6365,6 @@ RT_EXPORT BU_EXTERN(int	wdb_importFg4Section_cmd,
 		     char **argv));
 
 /* defined in dg_obj.c */
-RT_EXPORT BU_EXTERN(int dgo_cmd,
-		    (ClientData clientData,
-		     Tcl_Interp *interp,
-		     int argc,
-		     char **argv));
 RT_EXPORT BU_EXTERN(int dgo_set_outputHandler_cmd,
 		    (struct dg_obj	*dgop,
 		     Tcl_Interp		*interp,
@@ -6470,11 +6479,6 @@ RT_EXPORT BU_EXTERN(void dgo_zap_cmd,
 		    (struct dg_obj *dgop,
 		     Tcl_Interp *interp));
 RT_EXPORT BU_EXTERN(int	dgo_shaded_mode_cmd,
-		    (struct dg_obj *dgop,
-		     Tcl_Interp *interp,
-		     int argc,
-		     char **argv));
-RT_EXPORT BU_EXTERN(int dgo_tree_cmd,
 		    (struct dg_obj *dgop,
 		     Tcl_Interp *interp,
 		     int argc,

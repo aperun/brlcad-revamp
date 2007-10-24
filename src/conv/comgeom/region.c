@@ -30,7 +30,11 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <ctype.h>
 
 #include "machine.h"
@@ -271,7 +275,7 @@ region_register(int reg_num, int id, int air, int mat, int los)
 			char	paren[32];
 
 			/* Denote an empty region */
-			snprintf( paren, 32, "(%s)", wp->wm_name );
+			sprintf( paren, "(%s)", wp->wm_name );
 			col_pr( paren );
 		}
 		return;
@@ -331,7 +335,7 @@ group_register(char *name, int lo, int hi)
 	}
 	wp = &groups[ngroups].grp_wm;
 
-	snprintf( nbuf, 32, "%s%s", name, name_it );
+	sprintf( nbuf, "%s%s", name, name_it );
 	wp->wm_name = bu_strdup( nbuf );
 
 	BU_LIST_INIT( &wp->l );

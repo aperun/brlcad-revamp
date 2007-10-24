@@ -29,7 +29,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <errno.h>
 
 #include "machine.h"
@@ -190,7 +194,7 @@ main(int argc, char **argv)
 			ptr = &curves[y+1][x*3];
 
 			if( fread( &r, 2, 1, infp ) != 1 )
-				bu_exit(1, "Unexpected end-of-file encountered in [%s]\n", argv[1]);
+				bu_bomb( "Unexpected EOF\n" );
 			if( r < 0 )
 				rad = 0.0;
 			else

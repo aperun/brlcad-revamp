@@ -669,9 +669,10 @@ Itcl_CreateMemberCode(interp, cdefn, arglist, body, mcodePtr)
 
     if (body) {
         procPtr->bodyPtr = Tcl_NewStringObj((CONST84 char *)body, -1);
+        Tcl_IncrRefCount(procPtr->bodyPtr);
     } else {
         procPtr->bodyPtr = Tcl_NewStringObj((CONST84 char *)"", -1);
-        mcode->flags |= ITCL_IMPLEMENT_NONE;
+	mcode->flags |= ITCL_IMPLEMENT_NONE;
     }
     Tcl_IncrRefCount(procPtr->bodyPtr);
 
@@ -696,7 +697,7 @@ Itcl_CreateMemberCode(interp, cdefn, arglist, body, mcodePtr)
      *  as a symbolic name for a C procedure.
      */
     if (body == NULL) {
-        /* No-op */
+      /* No-op */
     }
     else if (*body == '@') {
         Tcl_CmdProc *argCmdProc;
@@ -752,11 +753,11 @@ Itcl_DeleteMemberCode(cdata)
 
     if (mcode->arglist) {
         Itcl_DeleteArgList(mcode->arglist);
+    } else if (mcode->procPtr && mcode->procPtr->firstLocalPtr) {
+        Itcl_DeleteArgList(mcode->procPtr->firstLocalPtr);
     }
     if (mcode->procPtr) {
         ckfree((char*) mcode->procPtr->cmdPtr);
-
-        /* don't free compiled locals -- that is handled by arglist above */
 
         if (mcode->procPtr->bodyPtr) {
             Tcl_DecrRefCount(mcode->procPtr->bodyPtr);
@@ -790,16 +791,15 @@ Itcl_GetMemberCode(interp, member)
     Tcl_Interp* interp;        /* interpreter managing this action */
     ItclMember* member;        /* member containing code body */
 {
-    int result;
     ItclMemberCode *mcode = member->code;
-    assert(mcode != NULL);
+
+    int result;
 
     /*
      *  If the implementation has not yet been defined, try to
      *  autoload it now.
      */
-
-    if (!Itcl_IsMemberCodeImplemented(mcode)) {
+    if ((mcode->flags & ITCL_IMPLEMENT_NONE) != 0) {
         result = Tcl_VarEval(interp, "::auto_load ", member->fullname,
             (char*)NULL);
 
@@ -822,9 +822,8 @@ Itcl_GetMemberCode(interp, member)
      *    the member and look at the current code pointer again.
      */
     mcode = member->code;
-    assert(mcode != NULL);
 
-    if (!Itcl_IsMemberCodeImplemented(mcode)) {
+    if ((mcode->flags & ITCL_IMPLEMENT_NONE) != 0) {
         Tcl_AppendStringsToObj(Tcl_GetObjResult(interp),
             "member function \"", member->fullname,
             "\" is not defined and cannot be autoloaded",
@@ -1682,14 +1681,14 @@ Itcl_PushContext(interp, member, contextClass, contextObj, contextPtr)
          * have been defined as the body if no implementation was defined.
          */
         assert(mcode->procPtr->bodyPtr != NULL);
-
+	
         result = TclProcCompileProc(interp, mcode->procPtr,
-            mcode->procPtr->bodyPtr, (Namespace*)member->classDefn->namesp,
-            "body for", member->fullname);
-
+				    mcode->procPtr->bodyPtr, (Namespace*)member->classDefn->namesp,
+				    "body for", member->fullname);
+	
         if (result != TCL_OK) {
-            return result;
-        }
+	  return result;
+	}
 
         TclInitCompiledLocals(interp, framePtr,
             (Namespace*)contextClass->namesp);

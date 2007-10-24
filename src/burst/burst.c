@@ -65,7 +65,7 @@ getCommand( char *name, char *buf, int len, FILE *fp )
 	{
 	    if( buf[0] != CHAR_COMMENT )
 		{
-		    if( sscanf( buf, "%1330s", name ) == 1 ) /* LNBUFSZ */
+		    if( sscanf( buf, "%s", name ) == 1 )
 			{
 			    buf[strlen(buf)-1] = NUL; /* clobber newline */
 			    return	1;
@@ -75,7 +75,7 @@ getCommand( char *name, char *buf, int len, FILE *fp )
 		}
 	    else
 		{ /* Generate comment command. */
-		    (void) strncpy( name, CMD_COMMENT, LNBUFSZ );
+		    (void) strcpy( name, CMD_COMMENT );
 		    return	1;
 		}
 	}

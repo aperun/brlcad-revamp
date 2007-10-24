@@ -29,11 +29,15 @@
  */
 #include "common.h"
 
+
 #include <stdlib.h> /* for atof() */
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
-
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif

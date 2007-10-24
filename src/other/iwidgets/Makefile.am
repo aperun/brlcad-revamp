@@ -24,6 +24,8 @@ DISTCLEANFILES = \
 	iwidgets.tcl \
 	pkgIndex.tcl
 
+MAINTAINERCLEANFILES = Makefile.in
+
 install-script-hook:
 	ln -fs ${INSTALL_DIR} ${libdir}/iwidgets
 

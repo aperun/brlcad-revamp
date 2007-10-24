@@ -41,10 +41,12 @@ static const char RCSsph[] = "@(#)$Header$ (BRL)";
 
 #include "common.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
 
+#include <stdio.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#include <math.h>
 #include "machine.h"
 #include "vmath.h"
 #include "raytrace.h"
@@ -294,8 +296,11 @@ rt_sph_vshot(struct soltab **stp, struct xray **rp, struct seg *segp, int n, str
 	register int    i;
 
 	/* for each ray/sphere pair */
+#	include "noalias.h"
 	for(i = 0; i < n; i++){
+#if !CRAY	/* XXX currently prevents vectorization on cray */
 		if (stp[i] == 0) continue; /* stp[i] == 0 signals skip ray */
+#endif
 
 		sph = (struct sph_specific *)stp[i]->st_specific;
 		VSUB2( ov, sph->sph_V, rp[i]->r_pt );

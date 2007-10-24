@@ -60,14 +60,16 @@ static char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>		/* used by inet_addr() routine, below */
-#include <time.h>
-#include <string.h>
 
 #ifdef HAVE_SYS_PARAM_H
 #  include <sys/param.h>
 #endif
 #ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>
+#endif
+
+#ifdef HAVE_TIME_H
+#  include <time.h>
 #endif
 
 #if defined(HAVE_WINSOCK_H) && !defined(__CYGWIN__)
@@ -84,6 +86,11 @@ static char RCSid[] = "@(#)$Header$ (BRL)";
 #  undef LITTLE_ENDIAN		/* defined in netinet/{ip.h,tcp.h} */
 #endif
 
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -841,7 +848,7 @@ pkg_inget(register struct pkg_conn *pc, char *buf, int count)
  *  Returns number of bytes of user data actually sent.
  */
 int
-pkg_send(int type, const char *buf, int len, register struct pkg_conn *pc)
+pkg_send(int type, char *buf, int len, register struct pkg_conn *pc)
 {
 #ifdef HAVE_WRITEV
     static struct iovec cmdvec[2];
@@ -1119,7 +1126,7 @@ pkg_2send(int type, char *buf1, int len1, char *buf2, int len2, register struct 
  *  Returns number of bytes of user data actually sent (or queued).
  */
 int
-pkg_stream(int type, const char *buf, int len, register struct pkg_conn *pc)
+pkg_stream(int type, char *buf, int len, register struct pkg_conn *pc)
 {
     static struct pkg_header hdr;
 

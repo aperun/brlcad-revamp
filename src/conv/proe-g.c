@@ -39,11 +39,14 @@ static const char RCSid[] = "$Header$";
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <ctype.h>
 #include <regex.h>
 #include <errno.h>
-
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -235,7 +238,6 @@ Add_new_name(char *name, unsigned int obj, int type)
 		if( regexec( &reg_cmp, ptr->brlcad_name, 1, &pmatch, 0  ) == 0 )
 		{
 			/* got a match */
-			/* FIXME: this is fishy.. reg_cmp is user-provided */
 			strcpy( &ptr->brlcad_name[pmatch.rm_so], &ptr->brlcad_name[pmatch.rm_eo] );
 		}
 		if( debug )
@@ -722,7 +724,8 @@ Convert_part(char *line)
 	start += 4;
 	while( isspace( line[++start] ) && line[start] != '\0' );
 
-	if( line[start] != '\0' ) {
+	if( line[start] != '\0' )
+	{
 		/* get name */
 		i = (-1);
 		start--;
@@ -732,10 +735,11 @@ Convert_part(char *line)
 
 		/* get object id */
 		sscanf( &line[start] , "%x" , &obj );
-	} else if( stl_format && forced_name ) {
-		strncpy( name, forced_name, MAX_LINE_LEN );
-	} else if( stl_format ) {
-		/* build a name from the file name */
+	}
+	else if( stl_format && forced_name )
+		strcpy( name, forced_name );
+	else if( stl_format ) /* build a name from the file name */
+	{
 		char tmp_str[512];
 		char *ptr;
 		int len, suff_len;
@@ -769,12 +773,12 @@ Convert_part(char *line)
 		len = strlen( name );
 		suff_len = strlen( tmp_str );
 		if( len + suff_len < MAX_LINE_LEN )
-			strncat( name, tmp_str, MAX_LINE_LEN - len - 1 );
+			strcat( name, tmp_str );
 		else
-			snprintf( &name[MAX_LINE_LEN-suff_len-1], MAX_LINE_LEN, "%s", tmp_str );
-	} else {
-		strcpy( name, "noname" );
+			sprintf( &name[MAX_LINE_LEN-suff_len-1], tmp_str );
 	}
+	else
+		strcpy( name, "noname" );
 
 	bu_log( "Converting Part: %s\n" , name );
 

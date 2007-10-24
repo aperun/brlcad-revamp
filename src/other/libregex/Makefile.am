@@ -18,5 +18,8 @@ EXTRA_DIST =		\
 	engine.c	\
 	libregex.dsp
 
+MAINTAINERCLEANFILES = \
+	Makefile.in
+
 include $(top_srcdir)/misc/Makefile.defs
 

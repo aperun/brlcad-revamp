@@ -45,7 +45,11 @@ static const char RCSell[] = "@(#)$Header$ (BRL)";
 
 #include <stddef.h>
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <math.h>
 
 #include "machine.h"
@@ -418,9 +422,11 @@ rt_ell_vshot(struct soltab **stp, struct xray **rp, struct seg *segp, int n, str
 	FAST fastf_t	root;		/* root of radical */
 
 	/* for each ray/ellipse pair */
+#	include "noalias.h"
 	for(i = 0; i < n; i++){
+#if !CRAY /* XXX currently prevents vectorization on cray */
 		if (stp[i] == 0) continue; /* stp[i] == 0 signals skip ray */
-
+#endif
 		ell = (struct ell_specific *)stp[i]->st_specific;
 
 		MAT4X3VEC( dprime, ell->ell_SoR, rp[i]->r_dir );

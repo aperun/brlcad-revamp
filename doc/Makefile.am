@@ -1,7 +1,6 @@
 # $Id$
 
 SUBDIRS = \
-	book \
 	html \
 	legal
 
@@ -23,7 +22,6 @@ documentation_DATA = \
 	benchmark.tr \
 	cvs.txt \
 	description.txt \
-	deprecation.txt \
 	ged.tr \
 	history.txt \
 	hypot.txt \
@@ -54,5 +52,7 @@ EXTRA_DIST = \
 
 DISTCLEANFILES = \
 	pad_file.xml
+
+MAINTAINERCLEANFILES = Makefile.in
 
 include $(top_srcdir)/misc/Makefile.defs

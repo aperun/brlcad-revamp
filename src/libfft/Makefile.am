@@ -92,6 +92,7 @@ BUILT_SOURCES = \
 
 CLEANFILES = $(BUILT_SOURCES)
 DISTCLEANFILES = $(CLEANFILES)
+MAINTAINERCLEANFILES = Makefile.in
 
 include $(top_srcdir)/misc/Makefile.defs
 

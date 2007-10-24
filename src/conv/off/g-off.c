@@ -54,7 +54,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 BU_EXTERN(union tree *do_region_end, (struct db_tree_state *tsp, struct db_full_path *pathp, union tree *curtree, genptr_t client_data));
 
 
-static const char usage[] = "Usage: %s [-v] [-d] [-xX lvl] [-a abs_tol] [-r rel_tol] [-n norm_tol] [-p prefix] brlcad_db.g object(s)\n";
+static char	usage[] = "Usage: %s [-v] [-d] [-xX lvl] [-a abs_tol] [-r rel_tol] [-n norm_tol] [-p prefix] brlcad_db.g object(s)\n";
 
 static int	NMG_debug;	/* saved arg of -X, for longjmp handling */
 static int	verbose;
@@ -85,7 +85,6 @@ main(int argc, char **argv)
 	char		*dot, *fig_file;
 	register int	c;
 	double		percent;
-	int size;
 
 	bu_setlinebuf( stderr );
 
@@ -145,13 +144,15 @@ main(int argc, char **argv)
 			NMG_debug = rt_g.NMG_debug;
 			break;
 		default:
-			bu_exit(1, usage, argv[0]);
+			fprintf(stderr, usage, argv[0]);
+			exit(1);
 			break;
 		}
 	}
 
 	if (bu_optind+1 >= argc) {
-		bu_exit(1, usage, argv[0]);
+		fprintf(stderr, usage, argv[0]);
+		exit(1);
 	}
 
 	/* Open BRL-CAD database */
@@ -159,27 +160,26 @@ main(int argc, char **argv)
 	argv += bu_optind;
 	if ((dbip = db_open(argv[0], "r")) == DBI_NULL) {
 		perror(argv[0]);
-		bu_exit(1, "ERROR: Unable to open geometry database (%s)\n", argv[0]);
+		exit(1);
 	}
 	if( db_dirbuild( dbip ) ) {
-	    bu_exit(1, "db_dirbuild failed\n" );
+	    bu_log( "db_dirbuild failed\n" );
+	    exit(1);
 	}
 
 	/* Create .fig file name and open it. */
-	size = sizeof(prefix) + sizeof(argv[0] + 4);
-	fig_file = bu_malloc(size, "st");
+	fig_file = bu_malloc(sizeof(prefix) + sizeof(argv[0] + 4), "st");
 	/* Ignore leading path name. */
 	if ((dot = strrchr(argv[0], '/')) != (char *)NULL) {
-	    if (prefix) {
-		snprintf(fig_file, size, "%s%s", prefix, 1+dot);
-	    } else {
-		snprintf(fig_file, size, "%s", 1+dot);
-	    }
+		if (prefix)
+			strcat(strcpy(fig_file, prefix), 1 + dot);
+		else
+			strcpy(fig_file, 1 + dot);
 	} else {
-	    if (prefix)
-		snprintf(fig_file, size, "%s%s", prefix, argv[0]);
-	    else
-		snprintf(fig_file, size, "%s", argv[0]);
+		if (prefix)
+			strcat(strcpy(fig_file, prefix), argv[0]);
+		else
+			strcpy(fig_file, argv[0]);
 	}
 
 	/* Get rid of any file name extension (probably .g). */
@@ -247,7 +247,6 @@ union tree *do_region_end(register struct db_tree_state *tsp, struct db_full_pat
 		return  curtree;
 
 	regions_tried++;
-
 	/* Begin bu_bomb() protection */
 	if( ncpu == 1 ) {
 		if( BU_SETJUMP )  {
@@ -255,7 +254,7 @@ union tree *do_region_end(register struct db_tree_state *tsp, struct db_full_pat
 			BU_UNSETJUMP;		/* Relinquish the protection */
 
 			/* Sometimes the NMG library adds debugging bits when
-			 * it detects an internal error, before bombing out.
+			 * it detects an internal error, before bu_bomb().
 			 */
 			rt_g.NMG_debug = NMG_debug;	/* restore mode */
 

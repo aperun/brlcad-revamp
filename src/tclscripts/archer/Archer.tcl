@@ -68,17 +68,9 @@ namespace eval Archer {
     set methodImpls ""
     set extraMgedCommands ""
     set corePluginInit ""
-    set pluginsdir [file join $env(ARCHER_HOME) plugins archer]
-    if {![file exists $pluginsdir]} {
-	set pluginsdir [file join [bu_brlcad_data "plugins"] archer]
-    }
-    if {![file exists $pluginsdir]} {
-	set pluginsdir [file join [bu_brlcad_data "src"] archer plugins]
-    }
-
-    if {[file exists [file join $pluginsdir Core]]} {
+    if {[file exists [file join $env(ARCHER_HOME) plugins archer Core]]} {
 	set savePwd [pwd]
-	cd [file join $pluginsdir Core]
+	cd [file join $env(ARCHER_HOME) plugins archer Core]
 	catch {
 	    foreach filename [lsort [glob -nocomplain *]] {
 		if [file isfile $filename] {
@@ -101,9 +93,9 @@ namespace eval Archer {
 	}
 	cd $savePwd
     }
-    if {[file exists [file join $pluginsdir Commands]]} {
+    if {[file exists [file join $env(ARCHER_HOME) plugins archer Commands]]} {
 	set savePwd [pwd]
-	cd [file join $pluginsdir Commands]
+	cd [file join $env(ARCHER_HOME) plugins archer Commands]
 	catch {
 	    foreach filename [lsort [glob -nocomplain *]] {
 		if [file isfile $filename] {
@@ -12332,17 +12324,8 @@ Popup Menu    Right or Ctrl-Left
     set pwd [::pwd]
 
     # developer & user plugins
-    set pluginPath [file join [bu_brlcad_data "plugins"] archer]
-    if { ![file exists $pluginPath] } {
-	# try a source dir invocation
-	set pluginPath [file join [bu_brlcad_data "src"] archer plugins]
-    }
-    if { ![file exists $pluginPath] } {
-	# give up on loading any plugins
-	return
-    }
-
-    foreach plugindir [list $pluginPath] {
+#    foreach plugindir [list [file join $env(ARCHER_HOME) $brlcadDataPath plugins archer]]
+    foreach plugindir [list [file join $brlcadDataPath plugins archer]] {
 	::cd $plugindir
 	pluginLoadCWDFiles
     }

@@ -31,13 +31,16 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "common.h"
 
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
-
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
 #endif
 
 #include "machine.h"
@@ -61,7 +64,7 @@ struct vlist {
 
 static struct bn_tol	tol;
 
-static const char usage[] = "Usage: %s [-r region] [-g group] [jack_db] [brlcad_db]\n";
+static char	usage[] = "Usage: %s [-r region] [-g group] [jack_db] [brlcad_db]\n";
 
 BU_EXTERN( fastf_t nmg_loop_plane_area, (const struct loopuse *lu, plane_t pl ) );
 
@@ -93,7 +96,8 @@ main(int argc, char **argv)
 			reg_name = bu_optarg;
 			break;
 		default:
-			bu_exit(1, usage, argv[0]);
+			fprintf(stderr, usage, argv[0]);
+			return 1;
 			break;
 		}
 	}
@@ -105,8 +109,10 @@ main(int argc, char **argv)
 	} else {
 		jfile = argv[bu_optind];
 		if ((fpin = fopen(jfile, "r")) == NULL) {
-		    bu_exit(1, "%s: cannot open %s for reading\n",
-			    argv[0], jfile);
+			fprintf(stderr,
+				"%s: cannot open %s for reading\n",
+				argv[0], jfile);
+			return 1;
 		}
 	}
 
@@ -114,12 +120,15 @@ main(int argc, char **argv)
 	bu_optind++;
 	if (bu_optind >= argc) {
 		bfile = "-";
-		bu_exit(1, usage, argv[0]);
+		fprintf(stderr, usage, argv[0]);
+		return 1;
 	} else {
 		bfile = argv[bu_optind];
 		if ((fpout = wdb_fopen(bfile)) == NULL) {
-		    bu_exit(1, "%s: cannot open %s for writing\n",
-			    argv[0], bfile);
+			fprintf(stderr,
+				"%s: cannot open %s for writing\n",
+				argv[0], bfile);
+			return 1;
 		}
 	}
 
@@ -135,7 +144,7 @@ main(int argc, char **argv)
 		else
 			base++;
 		reg_name = bu_malloc(sizeof(base)+1, "reg_name");
-		strncpy(reg_name, base, sizeof(base));
+		strcpy(reg_name, base);
 		/* Ignore .pss extension if it's there. */
 		doti = strlen(reg_name) - 4;
 		if (doti > 0 && !strcmp(".pss", reg_name+doti))
@@ -199,7 +208,8 @@ read_psurf_vertices(FILE *fp, struct vlist *vert)
 
 	if( bomb )
 	{
-		bu_exit(1, "ERROR: Dataset contains %d data points, code is dimensioned for %d\n", i, MAX_NUM_PTS );
+		bu_log( "Dataset contains %d data points, code is dimensioned for %d\n", i, MAX_NUM_PTS );
+		bu_bomb( "jack-g\n" );
 	}
 
 	return(i);
@@ -325,13 +335,13 @@ create_brlcad_db(struct rt_wdb *fpout, struct model *m, char *reg_name, char *gr
 	rname = bu_malloc(sizeof(reg_name) + 3, "rname");	/* Region name. */
 	sname = bu_malloc(sizeof(reg_name) + 3, "sname");	/* Solid name. */
 
-	snprintf(sname, sizeof(reg_name) + 2, "s.%s", reg_name);
+	sprintf(sname, "s.%s", reg_name);
 	nmg_kill_zero_length_edgeuses( m );
 	nmg_rebound( m, &tol );
 	r = BU_LIST_FIRST( nmgregion, &m->r_hd);
 	s = BU_LIST_FIRST( shell, &r->s_hd );
 	mk_bot_from_nmg(fpout, sname,  s);		/* Make BOT object. */
-	snprintf(rname, sizeof(reg_name) + 2, "r.%s", reg_name);
+	sprintf(rname, "r.%s", reg_name);
 	mk_comb1(fpout, rname, sname, 1);	/* Put object in a region. */
 	if (grp_name) {
 		mk_comb1(fpout, grp_name, rname, 1);	/* Region in group. */

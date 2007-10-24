@@ -15,4 +15,6 @@ EXTRA_DIST = \
 	python.m4 \
 	sdl.m4
 
+MAINTAINERCLEANFILES = Makefile.in
+
 include $(top_srcdir)/misc/Makefile.defs

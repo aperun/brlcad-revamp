@@ -43,10 +43,13 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
+#endif
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
 #endif
 
 #include "machine.h"
@@ -760,7 +763,7 @@ readinfont(void)
 
 	fnum = new_font_num;
 	size = new_pt_size;
-	snprintf(cbuf, BUFSIZ, "%s.%d", fontname[fnum], size);
+	sprintf(cbuf, "%s.%d", fontname[fnum], size);
 
 	if( (vfp = vfont_get( cbuf )) == VFONT_NULL )  {
 		/* Ignore font change */

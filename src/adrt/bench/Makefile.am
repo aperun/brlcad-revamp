@@ -37,6 +37,8 @@ adrt_bench_LDADD = \
 noinst_HEADERS = \
 	bench.h
 
+MAINTAINERCLEANFILES = Makefile.in
+
 DEPS=src/libbu
 
 include $(top_srcdir)/misc/Makefile.defs

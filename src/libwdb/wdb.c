@@ -47,7 +47,9 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#endif
 
 #include "machine.h"
 #include "bu.h"
@@ -221,6 +223,7 @@ mk_arb8(struct rt_wdb *wdbp, const char *name, const fastf_t *pts)
 
 	BU_GETSTRUCT( arb, rt_arb_internal );
 	arb->magic = RT_ARB_INTERNAL_MAGIC;
+#	include "noalias.h"
 	for( i=0; i < 8; i++ )  {
 		VMOVE( arb->pt[i], &pts[i*3] );
 	}

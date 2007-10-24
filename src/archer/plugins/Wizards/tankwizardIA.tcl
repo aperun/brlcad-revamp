@@ -26,19 +26,8 @@
 #	 This is a script for loading/registering the tank wizard.
 #
 
-set brlcadDataPath [bu_brlcad_data "plugins"]
-# puts "pwd is [pwd], path is $brlcadDataPath"
-set filename [file join $brlcadDataPath archer Wizards tankwizardIA TankWizardIA.tcl]
-if { ![file exists $filename] } {
-    # non-tclscript resource, look in the source invocation path
-    set brlcadDataPath [bu_brlcad_data "src"]
-    set filename [file join $brlcadDataPath archer plugins Wizards tankwizardIA TankWizardIA.tcl]
-}
-if { ![file exists $filename] } {
-    puts "Could not load the TankWizard plugin, skipping $filename"
-    return
-}
-source $filename
+set brlcadDataPath [bu_brlcad_data ""]
+source [file join $brlcadDataPath plugins archer Wizards tankwizardIA TankWizardIA.tcl]
 
 # Load only once
 set pluginMajorType $TankWizardIA::wizardMajorType

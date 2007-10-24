@@ -39,14 +39,17 @@ static const char RCSrev[] = "$Revision$";
 #include "common.h"
 
 #include <stdlib.h>
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
-
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
 #endif
 
 #include "machine.h"
@@ -274,13 +277,15 @@ main(int argc, char *argv[])
 			NMG_debug = rt_g.NMG_debug;
 			break;
 		default:
-			bu_exit(1, usage, argv[0]);
+			bu_log( usage, argv[0]);
+			exit(1);
 			break;
 		}
 	}
 
 	if (bu_optind+1 >= argc) {
-		bu_exit(1, usage, argv[0]);
+		bu_log( usage, argv[0]);
+		exit(1);
 	}
 
 	/* Open BRL-CAD database */
@@ -289,12 +294,13 @@ main(int argc, char *argv[])
 	db_name = argv[0];
 	if ((dbip = db_open(db_name, "r")) == DBI_NULL) {
 		perror("g-iges");
-		bu_exit(1, "ERROR: unable to open geometry file (%s)\n", db_name);
+		exit(1);
 	}
 
 	/* Scan the database */
 	if( db_dirbuild( dbip ) ) {
-	    bu_exit(1, "db_dirbuild failed\n" );
+	    bu_log( "db_dirbuild failed\n" );
+	    exit(1);
 	}
 
 	if( !multi_file )
@@ -307,15 +313,17 @@ main(int argc, char *argv[])
 			fp_dir = stdout;
 		else {
 			if( (fp_dir=fopen( output_file , "wb" )) == NULL ) {
+				bu_log( "Cannot open output file: %s\n" , output_file );
 				perror( output_file );
-				bu_exit(1, "Cannot open output file: %s\n" , output_file );
+				exit( 1 );
 			}
 		}
 
 		/* Open the temporary file for the parameter section */
 		if( (fp_param=tmpfile()) == NULL ) {
+			bu_log( "Cannot open temporary file\n" );
 			perror( "g-iges" );
-			bu_exit(1, "Cannot open temporary file\n" );
+			exit( 1 );
 		}
 
 		/* Write start and global sections of the IGES file */
@@ -327,13 +335,15 @@ main(int argc, char *argv[])
 
 		if( stat( output_file, &stat_ptr ) )
 		{
+			bu_log( "Cannot determine status of %s\n", output_file );
 			perror( prog_name );
-			bu_exit(1, "Cannot determine status of %s\n", output_file );
+			exit( 1 );
 		}
 
 		if( !(stat_ptr.st_mode & S_IFDIR) )
 		{
-			bu_exit(1, "-o option must provide a directory, %s is not a directory\n", output_file );
+			bu_log( "-o option must provide a directory, %s is not a directory\n", output_file );
+			exit( 1 );
 		}
 	}
 
@@ -362,7 +372,7 @@ main(int argc, char *argv[])
 			(genptr_t)NULL);	/* in librt/nmg_bool.c */
 
 		if( ret )
-			bu_exit(1, "g-iges: Could not facetize anything!" );
+			bu_bomb( "g-iges: Could not facetize anything!!!" );
 
 		if( !multi_file )
 		{
@@ -408,7 +418,7 @@ main(int argc, char *argv[])
 			(genptr_t)NULL);	/* in librt/nmg_bool.c */
 
 		if( ret )
-			bu_exit(1, "g-iges: Could not facetize anything!" );
+			bu_bomb( "g-iges: Could not facetize anything!!!" );
 
 	}
 
@@ -416,14 +426,16 @@ main(int argc, char *argv[])
 	{
 		/* Copy the parameter section from the temporary file to the output file */
 		if( (fseek( fp_param , (long) 0 , 0 )) ) {
+			bu_log( "Cannot seek to start of temporary file\n" );
 			perror( "g-iges" );
-			bu_exit(1, "Cannot seek to start of temporary file\n" );
+			exit( 1 );
 		}
 
 		while( (i=fread( copy_buffer , 1 , CP_BUF_SIZE , fp_param )) )
 			if( fwrite( copy_buffer , 1 , i , fp_dir ) != i ) {
+				bu_log( "Error in copying parameter data to %s\n" , output_file );
 				perror( "g-iges" );
-				bu_exit(1, "Error in copying parameter data to %s\n" , output_file );
+				exit( 1 );
 			}
 
 		/* Write the terminate section */
@@ -495,7 +507,6 @@ genptr_t		client_data;
 		return  curtree;
 
 	regions_tried++;
-
 	/* Begin bu_bomb() protection */
 	if( BU_SETJUMP )  {
 		char *sofar;
@@ -504,11 +515,11 @@ genptr_t		client_data;
 		BU_UNSETJUMP;		/* Relinquish the protection */
 
 		sofar = db_path_to_string(pathp);
-		bu_log( "FAILED: Cannot convert %s!\n", sofar );
+		bu_log( "FAILED: Cannot convert %s!!!\n", sofar );
 		bu_free( sofar, "path string" );
 
 		/* Sometimes the NMG library adds debugging bits when
-		 * it detects an internal error, before bombing out.
+		 * it detects an internal error, before bu_bomb().
 		 */
 		rt_g.NMG_debug = NMG_debug;	/* restore mode */
 
@@ -556,7 +567,10 @@ genptr_t		client_data;
 				/* construct a unique file name */
 				len = strlen( output_file ) + strlen( dp->d_namep ) + 6 + SUFFIX_LEN;
 				multi_name = bu_malloc( sizeof( char )*len, "multi_name" );
-				snprintf(multi_name, len, "%s/%s.igs", output_file, dp->d_namep);
+				strcpy( multi_name, output_file );
+				strcat( multi_name, "/" );
+				strcat( multi_name, dp->d_namep );
+				strcat( multi_name, ".igs" );
 				strcpy( suffix, "a" );
 				suffix[0]--;
 				while( !unique )
@@ -587,21 +601,28 @@ genptr_t		client_data;
 					}
 					else if( suffix[0] > 'z' && len >= SUFFIX_LEN )
 					{
+						bu_log( "Cannot create a unique filename,\n" );
 						bu_log( "too many files with the same name (%s)\n", dp->d_namep );
-						bu_exit(1, "Cannot create a unique filename,\n" );
+						exit( 1 );
 					}
-					snprintf(multi_name, len, "%s/%s%s.igs", output_file, dp->d_namep, suffix);
+					strcpy( multi_name, output_file );
+					strcat( multi_name, "/" );
+					strcat( multi_name, dp->d_namep );
+					strcat( multi_name, suffix );
+					strcat( multi_name, ".igs" );
 				}
 				if( (fp_dir=fopen( multi_name , "wb" )) == NULL ) {
+					bu_log( "Cannot open output file: %s\n" , multi_name );
 					perror( "g-iges" );
-					bu_exit(1, "Cannot open output file: %s\n" , multi_name );
+					exit( 1 );
 				}
 			}
 
 			/* Open the temporary file for the parameter section */
 			if( (fp_param=tmpfile()) == NULL ) {
+				bu_log( "Cannot open temporary file\n" );
 				perror( "g-iges" );
-				bu_exit(1, "Cannot open temporary file\n" );
+				exit( 1 );
 			}
 
 			/* let the IGES routines know the selected tolerances and the database pointer */
@@ -637,14 +658,16 @@ genptr_t		client_data;
 
 			/* Copy the parameter section from the temporary file to the output file */
 			if( (fseek( fp_param , (long) 0 , 0 )) ) {
+				bu_log( "Cannot seek to start of temporary file\n" );
 				perror( "g-iges" );
-				bu_exit(1, "Cannot seek to start of temporary file\n" );
+				exit( 1 );
 			}
 
 			while( (i=fread( copy_buffer , 1 , CP_BUF_SIZE , fp_param )) )
 				if( fwrite( copy_buffer , 1 , i , fp_dir ) != i ) {
+					bu_log( "Error in copying parameter data to %s\n" , output_file );
 					perror( "g-iges" );
-					bu_exit(1, "Error in copying parameter data to %s\n" , output_file );
+					exit( 1 );
 				}
 
 			/* Write the terminate section */
@@ -714,7 +737,7 @@ int *de_pointers;
 					/* scale factor is not 1.0, IGES can't handle it.
 					   go ahead and write the solid instance anyway,
 					   but warn the user twice */
-					bu_log( "g-iges WARNING: member (%s) of combination (%s) is scaled, IGES cannot handle this\n" , dp_M->d_namep , dp->d_namep );
+					bu_log( "g-iges: WARNING!! member (%s) of combination (%s) is scaled, IGES cannot handle this\n" , dp_M->d_namep , dp->d_namep );
 					scale_error++;
 				}
 				de_pointers[de_pointer_number++] = write_solid_instance( -dp_M->d_uses , tp->tr_l.tl_mat , fp_dir , fp_param );
@@ -726,7 +749,7 @@ int *de_pointers;
 			}
 			break;
 		default:
-			bu_log( "Unrecognized operator in combination!\n" );
+			bu_log( "Unrecognized operator in combination!!\n" );
 			return( 1 );
 	}
 	return( 0 );
@@ -769,7 +792,7 @@ genptr_t	ptr;
 		return;
 	if( id != ID_COMBINATION )
 	{
-		bu_log( "Directory/Database mismatch! is %s a combination or not?\n", dp->d_namep );
+		bu_log( "Directory/Database mismatch!!!! is %s a combination or not????\n", dp->d_namep );
 		return;
 	}
 
@@ -799,7 +822,7 @@ genptr_t	ptr;
 		return;
 	}
 
-	strncpy( props.name, dp->d_namep, NAMESIZE );
+	strcpy( props.name, dp->d_namep );
 	props.material_name[0] = '\0';
 	props.material_params[0] = '\0';
 	props.region_flag = ' ';

@@ -32,8 +32,11 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#include <string.h>
-
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -44,7 +47,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #define	MAXLINELEN	256
 
-static const char *usage="Usage:\n\trpatch [-D] [-3] < fastgen_input_file > file.rp\n\
+static char *usage="Usage:\n\trpatch [-D] [-3] < fastgen_input_file > file.rp\n\
 	where -D means that type 3 components are donuts (rather than triangles)\n\
 	and -3 indicates that the input is in FASTGEN3 format\n";
 

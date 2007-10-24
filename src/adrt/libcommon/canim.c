@@ -104,7 +104,7 @@ int common_anim_read(common_anim_t *anim, const char *frames_file) {
 
       /* Mesh Name */
       token = strtok(NULL, ",");
-      strncpy(anim->frame_list[anim->frame_num].tlist[anim->frame_list[anim->frame_num].tnum].mesh_name, token, ADRT_NAME_SIZE);
+      strcpy(anim->frame_list[anim->frame_num].tlist[anim->frame_list[anim->frame_num].tnum].mesh_name, token);
 
 
       /* Matrix */

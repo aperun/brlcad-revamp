@@ -23,6 +23,8 @@ EXTRA_DIST = \
 	pull_solidsub.sh \
 	rpatch.f
 
+MAINTAINERCLEANFILES = Makefile.in
+
 include $(top_srcdir)/misc/Makefile.defs
 
 FAST_OBJECTS = \

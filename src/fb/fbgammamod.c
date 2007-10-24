@@ -38,9 +38,12 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <math.h>
-
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -81,7 +84,8 @@ do_file(void)
 		exit(1);
 	}
 	output_file = (char *)malloc( strlen(input_file)+10 );
-	snprintf(output_file, strlen(input_file)+9, "MOD_%s", input_file);
+	strcpy( output_file, "MOD_" );
+	strcat( output_file, input_file );
 
 	if( (ofp = fopen( output_file, "w" )) == NULL )  {
 		perror(output_file);

@@ -74,5 +74,7 @@ install-data-hook:
 		mv $(DESTDIR)$(mandir)/mann/iwidgets_$$manpage.new $(DESTDIR)$(mandir)/mann/iwidgets_$$manpage ; \
 	done
 
+MAINTAINERCLEANFILES = Makefile.in
+
 include $(top_srcdir)/misc/Makefile.defs
 

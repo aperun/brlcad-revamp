@@ -37,7 +37,11 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #if defined(HAVE_UNISTD_H)
 #  include <unistd.h>
 #else
@@ -813,7 +817,7 @@ Split_side_faces(struct shell *s, struct bu_ptbl *tab)
 
 		if( count != 4 )
 		{
-			bu_log( "Found a loop with %d edge! (should be 3 or 4)\n", count );
+			bu_log( "Found a loop with %d edge!!!! (should be 3 or 4)\n", count );
 			nmg_pr_fu_briefly( fu, "" );
 			continue;
 		}
@@ -1253,7 +1257,7 @@ refine_hit(register struct application *ap, struct partition *PartHeadp, struct 
 		}
 	}
 	if( !new_vu1 )
-		bu_exit(1, "ERROR: Cannot find VU in lu1\n" );
+		bu_bomb( "Cannot find VU in lu1\n" );
 
 	/* find new vu in lu2 */
 	new_vu2 = (struct vertexuse *)NULL;
@@ -1266,7 +1270,7 @@ refine_hit(register struct application *ap, struct partition *PartHeadp, struct 
 		}
 	}
 	if( !new_vu2 )
-		bu_exit(1, "ERROR: Cannot find VU in lu2\n" );
+		bu_bomb( "Cannot find VU in lu2\n" );
 	new_lu1 = nmg_cut_loop( new_vu1, vu1 );
 	new_lu2 = nmg_cut_loop( new_vu2, vu2 );
 	ref_data->lu1->orientation = OT_SAME;
@@ -1422,7 +1426,7 @@ refine_edges(struct shell *s)
 			}
 
 			if( fu1->orientation != OT_SAME )
-				bu_exit(1, "ERROR: Cannot find OT_SAME side of face\n" );
+				bu_bomb( "Cannot find OT_SAME side of face\n" );
 
 			eu2 = eu1->radial_p;
 			if( *eu2->up.magic_p != NMG_LOOPUSE_MAGIC )
@@ -1444,7 +1448,7 @@ refine_edges(struct shell *s)
 			}
 
 			if( fu2->orientation != OT_SAME )
-				bu_exit(1, "ERROR: Cannot find OT_SAME side of face\n" );
+				bu_bomb( "Cannot find OT_SAME side of face\n" );
 
 			NMG_GET_FU_NORMAL( norm1, fu1 );
 			NMG_GET_FU_NORMAL( norm2, fu2 );
@@ -1810,7 +1814,8 @@ main(int argc, char **argv)
 							initial_ray_dir = Z;
 							break;
 						default:
-							bu_exit(1, "Illegal ray direction (%c), must be X, Y, or Z!\n", *bu_optarg );
+							bu_log( "Illegal ray direction (%c), must be X, Y, or Z!!!\n", *bu_optarg );
+							exit( 1 );
 					}
 					break;
 			case 'a':	/* add an rpp for refining */
@@ -1844,7 +1849,7 @@ main(int argc, char **argv)
 						ptr = strtok( (char *)NULL, token_seps );
 						if( !ptr )
 						{
-							bu_log( "Unexpected end of option args for -a\n" );
+							bu_log( "Unexpected end of option args for -a!!!\n" );
 							bad_opt = 1;
 							break;
 						}
@@ -1862,7 +1867,7 @@ main(int argc, char **argv)
 						ptr = strtok( (char *)NULL, token_seps );
 						if( !ptr )
 						{
-							bu_log( "Unexpected end of option args for -a\n" );
+							bu_log( "Unexpected end of option args for -a!!!\n" );
 							bad_opt = 1;
 							break;
 						}
@@ -1908,34 +1913,38 @@ main(int argc, char **argv)
 
 	if (bu_optind+1 >= argc)
 	{
-		bu_exit(1, usage, argv[0] );
+		bu_log( usage, argv[0] );
+		exit( 1 );
 	}
 
 	if( output_file )
 	{
 		if( (fd_out=wdb_fopen( output_file )) == NULL )
 		{
+			bu_log( "Cannot open output file (%s)\n", output_file );
 			perror( argv[0] );
-			bu_exit(1, "ERROR: Cannot open output file (%s)\n", output_file );
+			exit( 1 );
 		}
 		mk_id( fd_out, "test g-sgp" );
 	}
 	else
-		bu_exit(1, "ERROR: Output file must be specified!\n" );
+		bu_bomb( "Output file must be specified!!!\n" );
 
 	if( plotfile )
 	{
 		if( (fd_plot=fopen( plotfile, "w")) == NULL )
 		{
+			bu_log( "Cannot open plot file (%s)\n", plotfile );
 			perror( argv[0] );
-			bu_exit(1, "ERROR: Cannot open plot file (%s)\n", plotfile );
+			exit( 1 );
 		}
 	}
 
 	/* Open BRL-CAD database */
 	if ((rtip=rt_dirbuild(argv[bu_optind], idbuf, sizeof(idbuf))) == RTI_NULL )
 	{
-		bu_exit(1, "ERROR: rt_durbuild FAILED on %s\n", argv[bu_optind] );
+		bu_log( "rt_durbuild FAILED on %s\n", argv[bu_optind] );
+		exit(1);
 	}
 
 	rtip->rti_space_partition = RT_PART_NUBSPT;

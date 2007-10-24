@@ -915,7 +915,7 @@ Itcl_HandleClass(clientData, interp, objc, objv)
         objc-2, objv+2, &newObj);
 
     if (result == TCL_OK) {
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(objName, -1));
+        Tcl_SetResult(interp, objName, TCL_VOLATILE);
     }
 
     Tcl_DStringFree(&buffer);

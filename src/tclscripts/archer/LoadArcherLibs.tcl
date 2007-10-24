@@ -55,21 +55,17 @@ proc LoadArcherLibs {dir} {
 	    load [file join $dir bin libdm.dll]
 	    load [file join $dir bin tkimg.dll]
 	}
-    }
+    } else {
+	if {[info exists $Archer::debug] && $Archer::debug} {
+	} else {
+	  set dir [bu_brlcad_root "lib"]
+	    load [file join $dir libblt2.4.so]
 
-    # load tkimg
-    set tkimgdir [bu_brlcad_root "lib"]
-    if {![file exists $tkimgdir]} {
-	set tkimgdir [file join [bu_brlcad_data "src"] other tkimg .libs]
+	    # Load Brlcad libraries
+	    #load [file join $dir lib libpng.so]
+	    load [file join $dir tkimg.so]
+	}
     }
-
-    # can't use sharedlibextension without changing tkimg build
-    if {![file exists [file join $tkimgdir tkimg.so]]} {
-	puts "ERROR: Unable to initialize Archer imagery"
-	exit 1
-    }
-
-    load [file join $tkimgdir tkimg.so]
 
     # Try to load Sdb
     if {[catch {package require Sdb 1.1}]} {

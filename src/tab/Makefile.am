@@ -1,39 +1,20 @@
 # $Id$
 
-if WITH_PARSERS
-SS_BIN = scriptsort
-SS_SRC = scriptsort.c script.l
-else
-SS_BIN =
-SS_SRC =
-endif
-
 bin_PROGRAMS = \
-	$(SS_BIN) \
-	script-tab \
 	tabinterp \
+	txyz-pl \
 	tabsub \
-	txyz-pl
+	scriptsort \
+	script-tab
 
 AM_CPPFLAGS = ${TCL_CPPFLAGS}
 LDADD = ${RT}
 
-scriptsort_SOURCES = $(SS_SRC)
+scriptsort_SOURCES = scriptsort.c script.l
 noinst_HEADERS = tokens.h
 
-man_MANS = \
-	scriptsort.1 \
-	tabinterp.1 \
-	tabsub.1
-
-BUILT_SOURCES = script.c
-DISTCLEANFILES = $(BUILT_SOURCES)
-
-EXTRA_DIST = \
-	$(BUILT_SOURCES) \
-	$(man_MANS) \
-	script.l \
-	scriptsort.c
+man_MANS = scriptsort.1 tabinterp.1 tabsub.1
+EXTRA_DIST = $(man_MANS)
 
 include $(top_srcdir)/misc/Makefile.defs
 

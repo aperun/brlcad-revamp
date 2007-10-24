@@ -35,13 +35,13 @@ tkimg_la_LIBADD = \
 	${LIBZ} \
 	${PNG} \
 	${TCL} \
-	${TK} \
-	${TCLSTUB}
+	${TK}
 
-# TCLSTUB is necessary so it will load as a dylib on Mac OS X without
-# unresolved stub symbols.
+#	${TCLSTUB}
 
 EXTRA_DIST = \
 	init.c
+
+MAINTAINERCLEANFILES = Makefile.in
 
 include $(top_srcdir)/misc/Makefile.defs

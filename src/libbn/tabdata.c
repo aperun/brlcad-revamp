@@ -55,12 +55,15 @@ static const char RCStabdata[] = "@(#)$Header$ (ARL)";
 
 
 #include <stdio.h>
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include <math.h>
 #include <fcntl.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
-
-#if HAVE_UNISTD_H
-#  include <unistd.h>
+#else
+#include <strings.h>
 #endif
 
 #include "machine.h"

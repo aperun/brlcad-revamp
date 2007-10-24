@@ -23,8 +23,11 @@
 #include "common.h"
 
 #include <stdio.h>
-#include <string.h>
-
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #ifdef HAVE_STDARG_H
 #  include <stdarg.h>
 #else

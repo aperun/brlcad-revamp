@@ -1116,8 +1116,8 @@ AC_CHECK_LIB(c, sproc, thread_link_works=yes ; LIBTHREAD="-lc",
 dnl check whether we ended up with functioning posix threading.
 AC_MSG_CHECKING([whether we are using POSIX threading])
 posix_threading=no
-PRELIBS="$LIBS"
-LIBS="$LIBS $LIBTHREAD"
+PRELDFLAGS="$LDFLAGS"
+LDFLAGS="$LDFLAGS $LIBTHREAD"
 AC_TRY_LINK([#include <pthread.h>], [
     pthread_t th;
     pthread_join(th, 0);
@@ -1126,7 +1126,7 @@ AC_TRY_LINK([#include <pthread.h>], [
     pthread_create(0,0,0,0);
     pthread_cleanup_pop(0);
 ], [posix_threading=yes])
-LIBS="$PRELIBS"
+LDFLAGS="$PRELDFLAGS"
 AC_MSG_RESULT($posix_threading)
 
 dnl check whether the CoreFoundation framework is available (used when
@@ -1217,11 +1217,11 @@ dnl *** X11 ***
 if test "x$bc_with_x11" != "xno" ; then
 
     if test "x$bc_with_x11_val" != "x" ; then
-	if test "x$x_includes" = "xNONE"; then
+	if test "x$x_includes" = "xNONE"; then 
 	    x_includes="$bc_with_x11_val/include"
 	    ac_x_includes="$x_includes"
 	fi
-	if test "x$x_libraries" = "xNONE"; then
+	if test "x$x_libraries" = "xNONE"; then 
 	    x_libraries="$bc_with_x11_val/lib"
 	    ac_x_libraries="$x_libraries"
 	fi
@@ -1465,7 +1465,7 @@ stdcxx_link_works=no
 LIBSTDCXX=""
 AC_CHECK_LIB(stdc++, main, stdcxx_link_works=yes ; LIBSTDCXX="-lstdc++",
 	[PRELIBS="$LIBS"
-	 LIBS="$LIBS $LIBM"
+	 LIBS="$LIBS $LIBM" 
 	 AC_CHECK_LIB(stdc++, main, stdcxx_link_works=yes ; LIBSTDCXX="-lstdc++ $LIBM"
 	 LIBS="$PRELIBS"
 	 )]
@@ -1486,7 +1486,9 @@ AC_CHECK_HEADERS( \
 	arpa/inet.h \
 	curses.h \
 	dslib.h \
+	errno.h \
 	fcntl.h \
+	float.h \
 	getopt.h \
 	gl/device.h \
 	ieeefp.h \
@@ -1496,7 +1498,10 @@ AC_CHECK_HEADERS( \
 	itk.h \
 	langinfo.h \
 	libgen.h \
+	limits.h \
+	locale.h \
 	malloc.h \
+	math.h \
 	memory.h \
 	ncurses.h \
 	netdb.h \
@@ -1505,11 +1510,17 @@ AC_CHECK_HEADERS( \
 	pwd.h \
 	rle.h \
 	sched.h \
+	setjmp.h \
 	sgtty.h \
+	signal.h \
 	socket.h \
 	stdarg.h \
+	stddef.h \
 	stdint.h \
+	stdlib.h \
+	string.h \
 	strings.h \
+	sys/errno.h \
 	sys/file.h \
 	sys/_ioctl.h \
 	sys/ioctl.h \
@@ -1540,6 +1551,7 @@ AC_CHECK_HEADERS( \
 	termio.h \
 	termios.h \
 	termlib.h \
+	time.h \
 	tinfo.h \
 	tk.h \
 	ulocks.h \
@@ -1551,10 +1563,6 @@ AC_CHECK_HEADERS( \
 	wchar.h \
 	winsock.h
 )
-# The headers assert.h, ctype.h, errno.h, float.h, limits.h, locale.h, math.h, setjmp.h, signal.h, stdarg.h, stddef.h, stdio.h, stdlib.h, string.h, time.h are part of C89.
-# The headers wchar.h, wctype.h, iso646.h were added with C95.
-# The headers complex.h, fenv.h, inttypes.h, stdbool.h, stdint.h, and tgmath.h were added with C99.
-
 
 GL_CPPFLAGS=""
 # optionally check for OpenGL headers
@@ -2168,8 +2176,8 @@ fi
 dnl *** libpng ***
 png_works=no
 AC_MSG_CHECKING(for portable network graphics functionality)
-PRELIBS="$LIBS"
-LIBS="$LIBS $LIBPNG"
+PRELDFLAGS="$LDFLAGS"
+LDFLAGS="$LDFLAGS $LIBPNG"
 AC_TRY_RUN([
 #include <png.h>
 main() {
@@ -2177,7 +2185,7 @@ main() {
     return 0;
 }
 ], [png_works=yes])
-LIBS="$PRELIBS"
+LDFLAGS="$PRELDFLAGS"
 AC_MSG_RESULT($png_works)
 
 dnl figure out whether we need to build libpng
@@ -2220,8 +2228,8 @@ dnl *** libregex ***
 dnl See if regular expression support works
 regex_works=no
 AC_MSG_CHECKING(for regular expression functionality)
-PRELIBS="$LIBS"
-LIBS="$LIBS $LIBREGEX"
+PRELDFLAGS="$LDFLAGS"
+LDFLAGS="$LDFLAGS $LIBREGEX"
 AC_TRY_RUN([
 #ifdef HAVE_SYS_TYPES_H
 #  include <sys/types.h>
@@ -2234,7 +2242,7 @@ int main() {
     return 0;
 }
 ], [regex_works=yes])
-LIBS="$PRELIBS"
+LDFLAGS="$PRELDFLAGS"
 AC_MSG_RESULT($regex_works)
 
 dnl figure out whether we need to build libregex
@@ -2272,8 +2280,8 @@ dnl *** libz ***
 dnl See if zlib library support works
 zlib_works=no
 AC_MSG_CHECKING(for zlib compression functionality)
-PRELIBS="$LIBS"
-LIBS="$LIBS $LIBZLIB"
+PRELDFLAGS="$LDFLAGS"
+LDFLAGS="$LDFLAGS $LIBZLIB"
 AC_TRY_RUN([
 #include <zlib.h>
 int main () {
@@ -2281,7 +2289,7 @@ int main () {
     return 0;
 }
 ], [zlib_works=yes])
-LIBS="$PRELIBS"
+LDFLAGS="$PRELDFLAGS"
 AC_MSG_RESULT($zlib_works)
 
 dnl figure out whether we need to build libz
@@ -2380,8 +2388,8 @@ dnl *** openNURBS ***
 dnl See if openNURBS library support works
 opennurbs_works=no
 AC_MSG_CHECKING(for openNURBS functionality)
-PRELIBS="$LIBS"
-LIBS="$LIBS $LIBOPENNURBS $LIBZLIB"
+PRELDFLAGS="$LDFLAGS"
+LDFLAGS="$LDFLAGS $LIBOPENNURBS $LIBZLIB"
 AC_LANG_PUSH([C++])
 AC_TRY_RUN([
 #include <opennurbs.h>
@@ -2391,7 +2399,7 @@ int main () {
 }
 ], [opennurbs_works=yes])
 AC_LANG_POP
-LIBS="$PRELIBS"
+LDFLAGS="$PRELDFLAGS"
 AC_MSG_RESULT($opennurbs_works)
 
 dnl figure out whether we need to build openNURBS
@@ -2568,7 +2576,7 @@ int main() {
 #define ATTEMPT(try,fail) if(try) { fprintf(stderr, fail": %s\n", \
 	interp->result); return -1; }
     ATTEMPT(Tcl_Init(interp) == TCL_ERROR,"Tcl_Init returned error");
-    ATTEMPT(Tk_ParseArgv(interp, NULL, &argl, arg, argtbl,
+    ATTEMPT(Tk_ParseArgv(interp, NULL, &argl, arg, argtbl, 
  	TK_ARGV_DONT_SKIP_FIRST_ARG) != TCL_OK, "Tk_ParseArgv");
 #if TK_MAJOR_VERSION < 8
     fprintf(stderr, "major version < 8  (it's %d)\n", TK_MAJOR_VERSION);
@@ -2763,7 +2771,7 @@ int main() {
 	printf("ITCL interp failed to initaliaze: %s\n", interp->result);
 	return 1;
     }
-    res = Tcl_Eval(interp, cmd);
+    res = Tcl_Eval(interp, cmd); 
     if ( res != TCL_OK) {
 	printf("Failed to load Iwidgets: %s\n", interp->result);
 	if(Tcl_Eval(interp, "package names") == TCL_ERROR)
@@ -2831,7 +2839,6 @@ else
      BLT=""
      AC_MSG_RESULT(no)
 fi
-AC_SUBST(BLT)
 
 
 dnl *** tkImg ***
@@ -2854,7 +2861,6 @@ else
     TKIMG=""
     AC_MSG_RESULT(no)
 fi
-AC_SUBST(TKIMG)
 
 
 dnl *** TNT ***
@@ -2938,8 +2944,8 @@ dnl *** libtermlib ***
 dnl See if termlib library support works
 termlib_works=no
 AC_MSG_CHECKING(for termlib functionality)
-PRELIBS="$LIBS"
-LIBS="$LIBS $LIBTERMLIB"
+PRELDFLAGS="$LDFLAGS"
+LDFLAGS="$LDFLAGS $LIBTERMLIB"
 AC_TRY_RUN([
 #ifdef HAVE_TERMLIB_H
 #  include <termlib.h>
@@ -2973,7 +2979,7 @@ int main () {
     return 0;
 }
 ], [termlib_works=yes])
-LIBS="$PRELIBS"
+LDFLAGS="$PRELDFLAGS"
 AC_MSG_RESULT($termlib_works)
 
 dnl figure out whether we need to build libtermlib
@@ -3216,7 +3222,7 @@ build_against_x11="no"
 if test "x$bc_with_x11" != "xno" ; then
     x11_works=no
     AC_MSG_CHECKING(for X11 header functionality)
-    PRELIBS="$LIBS"
+    PRELDFLAGS="$LDFLAGS"
     PRECPPFLAGS="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS $X_CFLAGS"
     AC_TRY_RUN([
@@ -3229,7 +3235,7 @@ main() {
     ],[x11_works=yes])
     AC_MSG_RESULT($x11_works)
     if test "x$x11_works" = "xyes" ; then
-	LIBS="$LIBS $X_LIBS"
+	LDFLAGS="$LDFLAGS $X_LIBS"
 	AC_MSG_CHECKING(for X11 link functionality)
 	AC_TRY_RUN([
 #include <X11/Xlib.h>
@@ -3241,7 +3247,7 @@ main() {
 	],,x11_works=no)
 	AC_MSG_RESULT($x11_works)
     fi
-    LIBS="$PRELIBS"
+    LDFLAGS="$PRELDFLAGS"
     CPPFLAGS="$PRECPPFLAGS"
 
     dnl figure out whether we need to build against X11
@@ -3282,9 +3288,9 @@ build_against_opengl="no"
 if test "x$bc_with_opengl" != "xno" ; then
     AC_MSG_CHECKING(for OpenGL functionality)
     opengl_works=no
-    PRELIBS="$LIBS"
+    PRELDFLAGS="$LDFLAGS"
     PRECPPFLAGS="$CPPFLAGS"
-    LIBS="$LIBS $LIBGL"
+    LDFLAGS="$LDFLAGS $LIBGL"
     CPPFLAGS="$CPPFLAGS $GL_CPPFLAGS"
     AC_TRY_RUN([
 #ifdef HAVE_GL_GL_H
@@ -3301,7 +3307,7 @@ main(int argc, char *argv[]) {
     return 0;
 }
     ], [opengl_works=yes])
-    LIBS="$PRELIBS"
+    LDFLAGS="$PRELDFLAGS"
     CPPFLAGS="$PRECPPFLAGS"
     AC_MSG_RESULT($opengl_works)
 
@@ -3328,8 +3334,8 @@ build_against_wgl="no"
 if test "x$bc_with_wgl" != "xno" ; then
     AC_MSG_CHECKING(for WindowsGL functionality)
     wgl_works=no
-    PRELIBS="$LIBS"
-    LIBS="$LIBS $LIBWGL"
+    PRELDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS $LIBWGL"
     AC_TRY_RUN([
 #ifdef HAVE_GL_GL_H
 #  include <GL/gl.h>
@@ -3345,7 +3351,7 @@ main(int argc, char *argv[]) {
     return 0;
 }
     ], [wgl_works=yes])
-    LIBS="$PRELIBS"
+    LDFLAGS="$PRELDFLAGS"
     AC_MSG_RESULT($wgl_works)
 
     dnl figure out whether we need to build against wgl
@@ -3696,7 +3702,6 @@ AC_CONFIG_FILES([
 	db/Makefile
 	db/include/Makefile
 	doc/Makefile
-	doc/book/Makefile
 	doc/html/Makefile
 	doc/html/ReleaseNotes/Makefile
 	doc/html/ReleaseNotes/Rel5.0/Makefile
@@ -3840,18 +3845,6 @@ AC_CONFIG_FILES([
 	src/other/URToolkit/tools/Makefile
 	src/other/URToolkit/tools/clock/Makefile
 	src/other/awf/Makefile
-	src/other/blt/Makefile
-	src/other/blt/cf/Makefile
-	src/other/blt/demos/Makefile
-	src/other/blt/demos/bitmaps/Makefile
-	src/other/blt/examples/Makefile
-	src/other/blt/html/Makefile
-	src/other/blt/library/Makefile
-	src/other/blt/library/dd_protocols/Makefile
-	src/other/blt/library/pkgIndex.tcl
-	src/other/blt/man/Makefile
-	src/other/blt/src/Makefile
-	src/other/blt/win/Makefile
 	src/other/incrTcl/Makefile
 	src/other/incrTcl/doc/Makefile
 	src/other/incrTcl/itcl/Makefile
@@ -3874,19 +3867,30 @@ AC_CONFIG_FILES([
 	src/other/jove/teach-jove
 	src/other/libpng/Makefile
 	src/other/libregex/Makefile
+	src/other/tcl/Makefile
+	src/other/tk/Makefile
 	src/other/libtermlib/Makefile
 	src/other/libutahrle/Makefile
 	src/other/libutahrle/include/Makefile
 	src/other/libz/Makefile
 	src/other/openNURBS/Makefile
-	src/other/tcl/Makefile
-	src/other/tk/Makefile
 	src/other/tkimg/Makefile
 	src/other/tkimg/base/Makefile
 	src/other/tkimg/png/Makefile
 	src/other/tkimg/pngtcl/Makefile
 	src/other/tkimg/zlibtcl/Makefile
 	src/other/tnt/Makefile
+	src/other/blt/Makefile
+	src/other/blt/cf/Makefile
+	src/other/blt/demos/Makefile
+	src/other/blt/demos/bitmaps/Makefile
+	src/other/blt/examples/Makefile
+	src/other/blt/html/Makefile
+	src/other/blt/library/Makefile
+	src/other/blt/library/dd_protocols/Makefile
+	src/other/blt/man/Makefile
+	src/other/blt/src/Makefile
+	src/other/blt/win/Makefile
 	src/proc-db/Makefile
 	src/remrt/Makefile
 	src/rt/Makefile

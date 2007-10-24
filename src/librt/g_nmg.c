@@ -38,7 +38,12 @@ static const char RCSnmg[] = "@(#)$Header$ (BRL)";
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 
 #include "machine.h"
 #include "vmath.h"
@@ -943,7 +948,7 @@ int
 rt_nmg_reindex(genptr_t p, struct nmg_exp_counts *ecnt)
 {
 	int	index;
-	int	ret=0;	/* zero is NOT the default value, this is just to satisfy cray compilers */
+	int	ret=0;	/* zero is NOT the default value, this is just to satisfy CRAY compilers */
 
 	/* If null pointer, return new subscript of zero */
 	if( p == 0 )  {

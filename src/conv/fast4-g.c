@@ -41,7 +41,11 @@ static const char RCSid[] = "$Header$";
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#include <strings.h>
+#endif
 #include <ctype.h>
 #include <errno.h>
 #if defined(HAVE_UNISTD_H)
@@ -78,7 +82,7 @@ static const char RCSid[] = "$Header$";
 	    mk_fastgen_region(fp, name, &((headp)->l), 'V', (char *)NULL, (char *)NULL, rgb, r_id, 0, 0, 0, 0 ); \
     } else {\
 	bu_log( "Illegal mode (%d), while trying to make region (%s)\n", mode, name );\
-	bu_log( "\tRegion not made!\n");\
+	bu_log( "\tRegion not made!!!!!\n");\
     }\
 }
 
@@ -536,7 +540,7 @@ Insert_region_name(char *name, int reg_id)
 	    bu_log( "Insert_region_name: name %s ident %d\n\tfound name is %d\n\tfound ident is %d\n",
 		    name, reg_id, foundn, foundr );
 	    List_names();
-	    bu_exit(1, "\tCannot insert new node\n" );
+	    bu_bomb( "\tCannot insert new node\n" );
 	}
 
     /* Add to tree for entire model */
@@ -563,7 +567,7 @@ Insert_region_name(char *name, int reg_id)
 		    if( nptr_model->nright )
 			{
 			    bu_log( "Insert_region_name: nptr_model->nright not null\n" );
-			    bu_exit(1, "\tCannot insert new node\n");
+			    bu_bomb( "\tCannot insert new node\n" );
 			}
 		    nptr_model->nright = new_ptr;
 		}
@@ -572,7 +576,7 @@ Insert_region_name(char *name, int reg_id)
 		    if( nptr_model->nleft )
 			{
 			    bu_log( "Insert_region_name: nptr_model->nleft not null\n" );
-			    bu_exit(1, "\tCannot insert new node\n");
+			    bu_bomb( "\tCannot insert new node\n" );
 			}
 		    nptr_model->nleft = new_ptr;
 		}
@@ -585,7 +589,7 @@ Insert_region_name(char *name, int reg_id)
 		    if( rptr_model->rright )
 			{
 			    bu_log( "Insert_region_name: rptr_model->rright not null\n" );
-			    bu_exit(1, "\tCannot insert new node\n");
+			    bu_bomb( "\tCannot insert new node\n" );
 			}
 		    rptr_model->rright = new_ptr;
 		}
@@ -594,7 +598,7 @@ Insert_region_name(char *name, int reg_id)
 		    if( rptr_model->rleft )
 			{
 			    bu_log( "Insert_region_name: rptr_model->rleft not null\n" );
-			    bu_exit(1, "\tCannot insert new node\n");
+			    bu_bomb( "\tCannot insert new node\n" );
 			}
 		    rptr_model->rleft = new_ptr;
 		}
@@ -733,7 +737,7 @@ Insert_name(struct name_tree **root, char *name, int inner)
 	    if( ptr->nright )
 		{
 		    bu_log( "Insert_name: ptr->nright not null\n" );
-		    bu_exit(1, "\tCannot insert new node\n");
+		    bu_bomb( "\tCannot insert new node\n" );
 		}
 	    ptr->nright = new_ptr;
 	}
@@ -742,7 +746,7 @@ Insert_name(struct name_tree **root, char *name, int inner)
 	    if( ptr->nleft )
 		{
 		    bu_log( "Insert_name: ptr->nleft not null\n" );
-		    bu_exit(1, "\tCannot insert new node\n");
+		    bu_bomb( "\tCannot insert new node\n" );
 		}
 	    ptr->nleft = new_ptr;
 	}
@@ -843,7 +847,7 @@ Subtract_holes(struct wmember *head, int comp_id, int group_id)
 					bu_log( "\tSubtracting %s\n", ptr->name );
 
 				    if( mk_addmember( ptr->name , &(head->l), NULL , WMOP_SUBTRACT ) == (struct wmember *)NULL )
-					bu_exit(1, "Subtract_holes: mk_addmember failed\n");
+					bu_bomb( "Subtract_holes: mk_addmember failed\n" );
 
 				    ptr = ptr->rright;
 				}
@@ -1076,12 +1080,14 @@ Delete_name(struct name_tree **root, char *name)
 
     if( !found )
 	{
-	    bu_exit(1, "ERROR: name (%s) deleted from name tree, but not found in ident tree!\n" , name);
+	    bu_log( "name (%s) deleted from name tree, but not found in ident tree!!\n" , name );
+	    bu_bomb( "Delete_name\n" );
 	}
 
     if( !parent )
 	{
-	    bu_exit(1, "ERROR: name (%s) is root of ident tree, but not name tree!\n" , name );
+	    bu_log( "name (%s) is root of ident tree, but not name tree!!\n" , name );
+	    bu_bomb( "Delete_name\n" );
 	}
 
 
@@ -1359,7 +1365,8 @@ f4_do_grid(void)
 
     if( grid_no < 1 )
 	{
-	    bu_exit(1, "ERROR: bad grid id number = %d\n" , grid_no);
+	    bu_log( "ERROR: grid id number = %d\n" , grid_no );
+	    bu_bomb( "BAD GRID ID NUMBER\n" );
 	}
 
     strncpy( field , &line[24] , 8 );
@@ -1445,7 +1452,8 @@ f4_do_sphere(void)
 
 	    if( mk_addmember( name ,  &sphere_group.l , NULL, WMOP_UNION ) == (struct wmember *)NULL )
 		{
-		    bu_exit(1, "f4_do_sphere: Error in adding %s to sphere group\n" , name);
+		    bu_log( "f4_do_sphere: Error in adding %s to sphere group\n" , name );
+		    bu_bomb( "f4_do_sphere" );
 		}
 	    bu_free( name, "solid_name" );
 
@@ -1462,7 +1470,8 @@ f4_do_sphere(void)
 
 	    if( mk_addmember( name , &sphere_group.l , NULL, WMOP_SUBTRACT ) == (struct wmember *)NULL )
 		{
-		    bu_exit(1, "f4_do_sphere: Error in subtracting %s from sphere region\n" , name);
+		    bu_log( "f4_do_sphere: Error in subtracting %s from sphere region\n" , name );
+		    bu_bomb( "f4_do_sphere" );
 		}
 	    bu_free( name, "solid_name" );
 
@@ -1571,7 +1580,7 @@ f4_do_ccone1(void)
 		    bu_log( "Unexpected EOF while reading continuation card for CCONE1\n" );
 		    bu_log( "\tgroup_id = %d, comp_id = %d, element_id = %d\n",
 			    group_id, comp_id, element_id );
-		    bu_exit(1, "ERROR: unexpected end-of-file");
+		    bu_bomb( "CCONE1\n" );
 		}
 	    return;
 	}
@@ -1596,7 +1605,7 @@ f4_do_ccone1(void)
 	    bu_log( "Unexpected EOF while reading continuation card for CCONE1\n" );
 	    bu_log( "\tgroup_id = %d, comp_id = %d, element_id = %d, c1 = %d\n",
 		    group_id, comp_id, element_id , c1 );
-	    bu_exit(1, "ERROR: unexpected end-of-file");
+	    bu_bomb( "CCONE1\n" );
 	}
 
     strncpy( field , line , 8 );
@@ -1691,7 +1700,7 @@ f4_do_ccone1(void)
 
 	    BU_LIST_INIT( &r_head.l );
 	    if( mk_addmember( outer_name , &r_head.l , NULL, WMOP_UNION ) == (struct wmember *)NULL )
-		bu_exit(1, "CCONE1: mk_addmember failed\n");
+		bu_bomb( "CCONE1: mk_addmember failed\n" );
 	    bu_free( outer_name, "solid_name" );
 
 	    length = MAGNITUDE( height );
@@ -1764,7 +1773,7 @@ f4_do_ccone1(void)
 		    mk_trc_h( fdout , inner_name , base , inner_height , inner_r1 , inner_r2 );
 
 		    if( mk_addmember( inner_name , &r_head.l , NULL, WMOP_SUBTRACT ) == (struct wmember *)NULL )
-			bu_exit(1, "CCONE1: mk_addmember failed\n");
+			bu_bomb( "CCONE1: mk_addmember failed\n" );
 		    bu_free( inner_name, "solid_name" );
 		}
 
@@ -1798,7 +1807,7 @@ f4_do_ccone2(void)
 		    bu_log( "Unexpected EOF while reading continuation card for CCONE2\n" );
 		    bu_log( "\tgroup_id = %d, comp_id = %d, element_id = %d\n",
 			    group_id, comp_id, element_id );
-		    bu_exit(1, "ERROR: unexpected end-of-file encountered\n" );
+		    bu_bomb( "CCONE2\n" );
 		}
 	    return;
 	}
@@ -1820,7 +1829,7 @@ f4_do_ccone2(void)
 	    bu_log( "Unexpected EOF while reading continuation card for CCONE2\n" );
 	    bu_log( "\tgroup_id = %d, comp_id = %d, element_id = %d, c1 = %d\n",
 		    group_id, comp_id, element_id , c1 );
-	    bu_exit(1, "ERROR: unexpected end-of-file encountered\n" );
+	    bu_bomb( "CCONE2\n" );
 	}
 
     strncpy( field , line , 8 );
@@ -1880,7 +1889,7 @@ f4_do_ccone2(void)
 	    mk_trc_h( fdout , name , grid_points[pt1] , height , ro1 , ro2 );
 
 	    if( mk_addmember( name , &r_head.l , NULL, WMOP_UNION ) == (struct wmember *)NULL )
-		bu_exit(1, "mk_addmember failed!\n");
+		bu_bomb( "mk_addmember failed!\n" );
 	    bu_free( name, "solid_name" );
 
 	    if( ri1 < min_radius )
@@ -1893,7 +1902,7 @@ f4_do_ccone2(void)
 	    mk_trc_h( fdout , name , grid_points[pt1] , height , ri1 , ri2 );
 
 	    if( mk_addmember( name , &r_head.l , NULL, WMOP_SUBTRACT ) == (struct wmember *)NULL )
-		bu_exit(1, "mk_addmember failed!\n");
+		bu_bomb( "mk_addmember failed!\n" );
 	    bu_free( name, "solid_name" );
 
 	    name = make_solid_name( CCONE2 , element_id , comp_id , group_id , 0 );
@@ -1924,7 +1933,7 @@ f4_do_ccone3(void)
 		    bu_log( "Unexpected EOF while reading continuation card for CCONE3\n" );
 		    bu_log( "\tgroup_id = %d, comp_id = %d, element_id = %d\n",
 			    group_id, comp_id, element_id );
-		    bu_exit(1, "ERROR: unexpected end-of-file encountered\n" );
+		    bu_bomb( "CCONE3\n" );
 		}
 	    return;
 	}
@@ -1948,7 +1957,7 @@ f4_do_ccone3(void)
 	    bu_log( "Unexpected EOF while reading continuation card for CCONE3\n" );
 	    bu_log( "\tgroup_id = %d, comp_id = %d, element_id = %d, c1 = %8.8s\n",
 		    group_id, comp_id, element_id , field );
-	    bu_exit(1, "ERROR: unexpected end-of-file encountered\n" );
+	    bu_bomb( "CCONE3\n" );
 	}
 
     if( strncmp( field, line, 8 ) )
@@ -2065,7 +2074,7 @@ f4_do_ccone3(void)
 		    name = make_solid_name( CCONE3, element_id, comp_id, group_id, 1 );
 		    mk_trc_h( fdout, name, grid_points[pt1], diff, ro[0], ro[1] );
 		    if( mk_addmember( name , &r_head.l , NULL, WMOP_UNION ) == (struct wmember *)NULL )
-			bu_exit(1, "mk_addmember failed!\n");
+			bu_bomb( "mk_addmember failed!\n" );
 		    bu_free( name, "solid_name" );
 
 		    /* and the inner cone */
@@ -2074,7 +2083,7 @@ f4_do_ccone3(void)
 			    name = make_solid_name( CCONE3, element_id, comp_id, group_id, 11 );
 			    mk_trc_h( fdout, name, grid_points[pt1], diff, ri[0], ri[1] );
 			    if( mk_addmember( name , &r_head.l , NULL, WMOP_SUBTRACT ) == (struct wmember *)NULL )
-				bu_exit(1, "mk_addmember failed!\n");
+				bu_bomb( "mk_addmember failed!\n" );
 			    bu_free( name, "solid_name" );
 			}
 		}
@@ -2090,7 +2099,7 @@ f4_do_ccone3(void)
 		    name = make_solid_name( CCONE3, element_id, comp_id, group_id, 2 );
 		    mk_trc_h( fdout, name, grid_points[pt2], diff, ro[1], ro[2] );
 		    if( mk_addmember( name , &r_head.l , NULL, WMOP_UNION ) == (struct wmember *)NULL )
-			bu_exit(1, "mk_addmember failed!\n");
+			bu_bomb( "mk_addmember failed!\n" );
 		    bu_free( name, "solid_name" );
 
 		    /* and the inner cone */
@@ -2099,7 +2108,7 @@ f4_do_ccone3(void)
 			    name = make_solid_name( CCONE3, element_id, comp_id, group_id, 22 );
 			    mk_trc_h( fdout, name, grid_points[pt2], diff, ri[1], ri[2] );
 			    if( mk_addmember( name , &r_head.l , NULL, WMOP_SUBTRACT ) == (struct wmember *)NULL )
-				bu_exit(1, "mk_addmember failed!\n");
+				bu_bomb( "mk_addmember failed!\n" );
 			    bu_free( name, "solid_name" );
 			}
 		}
@@ -2115,7 +2124,7 @@ f4_do_ccone3(void)
 		    name = make_solid_name( CCONE3, element_id, comp_id, group_id, 3 );
 		    mk_trc_h( fdout, name, grid_points[pt3], diff, ro[2], ro[3] );
 		    if( mk_addmember( name , &r_head.l , NULL, WMOP_UNION ) == (struct wmember *)NULL )
-			bu_exit(1, "mk_addmember failed!\n");
+			bu_bomb( "mk_addmember failed!\n" );
 		    bu_free( name, "solid_name" );
 
 		    /* and the inner cone */
@@ -2124,7 +2133,7 @@ f4_do_ccone3(void)
 			    name = make_solid_name( CCONE3, element_id, comp_id, group_id, 33 );
 			    mk_trc_h( fdout, name, grid_points[pt3], diff, ri[2], ri[3] );
 			    if( mk_addmember( name , &r_head.l , NULL, WMOP_SUBTRACT ) == (struct wmember *)NULL )
-				bu_exit(1, "mk_addmember failed!\n");
+				bu_bomb( "mk_addmember failed!\n" );
 			    bu_free( name, "solid_name" );
 			}
 		}
@@ -2263,9 +2272,11 @@ f4_do_hole_wall(int type)
     if( pass )
 	return;
 
-    if( type != HOLE && type != WALL ) {
-	bu_exit(1, "f4_do_hole_wall: unrecognized type (%d)\n", type);
-    }
+    if( type != HOLE && type != WALL )
+	{
+	    bu_log( "f4_do_hole_wall: unrecognized type (%d)\n", type );
+	    bu_bomb( "f4_do_hole_wall: unrecognized type\n" );
+	}
 
     /* eliminate trailing blanks */
     s_len = strlen( line );
@@ -2702,7 +2713,7 @@ f4_do_section(int final)
 		{
 		    nm_ptr = Search_ident( name_root, region_id, &found );
 		    if( found && nm_ptr->mode != mode ) {
-			bu_log( "ERROR: second SECTION card found with different mode for component (group=%d, component=%d), conversion of this component will be incorrect!\n",
+			bu_log( "ERROR: second SECTION card found with different mode for component (group=%d, component=%d), conversion of this component will be incorrect!!!\n",
 				group_id, comp_id );
 		    }
 		}
@@ -2736,7 +2747,7 @@ f4_do_hex1(void)
 		    bu_log( "Unexpected EOF while reading continuation card for CHEX1\n" );
 		    bu_log( "\tgroup_id = %d, comp_id = %d, element_id = %d\n",
 			    group_id, comp_id, element_id );
-		    bu_exit(1, "ERROR: unexpected end-of-file encountered\n");
+		    bu_bomb( "CHEX1\n" );
 		}
 	    return;
 	}
@@ -2764,7 +2775,7 @@ f4_do_hex1(void)
 	    bu_log( "Unexpected EOF while reading continuation card for CHEX1\n" );
 	    bu_log( "\tgroup_id = %d, comp_id = %d, element_id = %d, c1 = %d\n",
 		    group_id, comp_id, element_id , cont1 );
-	    bu_exit(1, "ERROR: unexpected end-of-file encountered\n");
+	    bu_bomb( "CHEX1\n" );
 	}
 
     strncpy( field , line , 8 );
@@ -2840,7 +2851,7 @@ f4_do_hex2(void)
 		    bu_log( "Unexpected EOF while reading continuation card for CHEX2\n" );
 		    bu_log( "\tgroup_id = %d, comp_id = %d, element_id = %d\n",
 			    group_id, comp_id, element_id );
-		    bu_exit(1, "ERROR: unexpected end-of-file encountered\n");
+		    bu_bomb( "CHEX2\n" );
 		}
 	    return;
 	}
@@ -2859,7 +2870,7 @@ f4_do_hex2(void)
 	    bu_log( "Unexpected EOF while reading continuation card for CHEX2\n" );
 	    bu_log( "\tgroup_id = %d, comp_id = %d, element_id = %d, c1 = %d\n",
 		    group_id, comp_id, element_id , cont1 );
-	    bu_exit(1, "ERROR: unexpected end-of-file encountered\n");
+	    bu_bomb( "CHEX2\n" );
 	}
 
     strncpy( field , line , 8 );
@@ -2994,7 +3005,8 @@ Process_input(int pass_number)
 
     if( pass_number != 0 && pass_number != 1 )
 	{
-	    bu_exit(1, "Process_input: illegal pass number %d\n" , pass_number);
+	    bu_log( "Process_input: illegal pass number %d\n" , pass_number );
+	    bu_bomb( "Process_input" );
 	}
 
     region_id = 0;
@@ -3085,18 +3097,21 @@ fix_regions(struct db_i *dbip, struct directory *dp, genptr_t ptr)
 
     if( rt_db_get_internal( &internal, dp, dbip, NULL, &rt_uniresource ) < 0 )
 	{
-	    bu_exit(1, "ERROR: Failed to get internal representation of %s\n", dp->d_namep);
+	    bu_log( "Failed to get internal representation of %s\n", dp->d_namep );
+	    bu_bomb( "rt_db_get_internal() Failed!!!\n" );
 	}
 
     if( internal.idb_type != ID_COMBINATION )
 	{
-	    bu_exit(1, "ERROR: In fix_regions: [%s] is not a combination!\n", dp->d_namep);
+	    bu_log( "In fix_regions:%s is not a combination!!!!\n", dp->d_namep );
+	    bu_bomb( "Expecting a combination!!!!\n" );
 	}
 
     comb = (struct rt_comb_internal *)internal.idb_ptr;
     if( !comb->region_flag )
 	{
-	    bu_exit(1, "ERROR: %s is not a region!\n", dp->d_namep);
+	    bu_log( "%s is not a region!!!!\n", dp->d_namep );
+	    bu_bomb( "Expecting a region!!!!\n" );
 	}
     RT_CK_COMB( comb );
     tree = comb->tree;
@@ -3118,7 +3133,8 @@ fix_regions(struct db_i *dbip, struct directory *dp, genptr_t ptr)
 
     if( rt_db_get_internal( &internal2, dp2, dbip, NULL, &rt_uniresource ) < 0 )
 	{
-	    bu_exit(1, "ERROR: Failed to get internal representation of %s\n", dp2->d_namep );
+	    bu_log( "Failed to get internal representation of %s\n", dp2->d_namep );
+	    bu_bomb( "rt_db_get_internal() Failed!!!\n" );
 	}
 
     if( internal2.idb_type != ID_COMBINATION )
@@ -3139,7 +3155,8 @@ fix_regions(struct db_i *dbip, struct directory *dp, genptr_t ptr)
     comb->tree = tree2;
     if( rt_db_put_internal( dp, dbip, &internal, &rt_uniresource ) < 0 )
 	{
-	    bu_exit(1, "ERROR: Failed to write region %s\n", dp->d_namep );
+	    bu_log( "Failed to write region %s\n", dp->d_namep );
+	    bu_bomb( "rt_db_put_internal() failed!!!\n" );
 	}
 
     /* now kill the second combination */
@@ -3304,7 +3321,7 @@ make_regions(void)
 
 	    snprintf( solids_name, LINELEN, "solids_%d.s", ptr1->region_id );
 	    if( mk_comb( fdout, solids_name, &solids.l, 0, NULL, NULL, NULL, 0, 0, 0, 0, 0, 1, 1) )
-		bu_log("Failed to make combination of solids (%s)!\n\tRegion %s is in ERROR!\n",
+		bu_log("Failed to make combination of solids (%s)!!!!\n\tRegion %s is in ERROR!!!\n",
 		       solids_name, ptr1->name );
 
 	    /* hole components do not get made into regions */
@@ -3406,14 +3423,14 @@ make_regions(void)
 	{
 	    /* build a "holes" group */
 	    if( mk_comb( fdout, "holes", &holes.l, 0, NULL, NULL, NULL, 0, 0, 0, 0, 0, 1, 1) )
-		bu_log("Failed to make holes group!\n" );
+		bu_log("Failed to make holes group!!!!\n" );
 	}
 }
 
 
 #define COLOR_LINE_LEN 256
 
-static void
+static void 
 read_fast4_colors(char *color_file)
 {
     FILE *fp;
@@ -3499,7 +3516,7 @@ main(int argc, char **argv)
 			break;
 		    default:
 			bu_log( "Unrecognzed option (%c)\n", c );
-			bu_exit(1, usage);
+			bu_bomb( usage );
 			break;
 		}
 	}
@@ -3508,21 +3525,24 @@ main(int argc, char **argv)
 	bu_log( "doing memory checking\n" );
 
     if( argc-bu_optind != 2 ) {
-	bu_exit(1, usage);
+	bu_log( usage );
+	exit( 1 );
     }
 
     rt_init_resource( &rt_uniresource, 0, NULL );
 
     if( (fdin=fopen( argv[bu_optind] , "r" )) == (FILE *)NULL )
 	{
+	    bu_log( "Cannot open FASTGEN4 file (%s)\n" , argv[bu_optind] );
 	    perror( "fast4-g" );
-	    bu_exit(1, "Cannot open FASTGEN4 file (%s)\n" , argv[bu_optind]);
+	    exit( 1 );
 	}
 
     if( (fdout=wdb_fopen( argv[bu_optind+1] )) == NULL )
 	{
+	    bu_log( "Cannot open file for output (%s)\n" , argv[bu_optind+1] );
 	    perror( "fast4-g" );
-	    bu_exit(1, "Cannot open file for output (%s)\n" , argv[bu_optind+1]);
+	    exit( 1 );
 	}
 
     if( plot_file )
@@ -3530,7 +3550,7 @@ main(int argc, char **argv)
 	    if( (fd_plot=fopen( plot_file, "w")) == NULL )
 		{
 		    bu_log( "Cannot open plot file (%s)\n", plot_file );
-		    bu_exit(1, usage);
+		    bu_bomb( usage );
 		}
 	}
 

@@ -63,7 +63,7 @@ char *name;
 
 	/* add this name to the list */
 	ptr = (struct name_list *)bu_malloc( sizeof( struct name_list ), "Add_brl_name: ptr" );
-	strncpy( ptr->name, name, NAMESIZE );
+	strcpy( ptr->name, name );
 	ptr->next = name_root;
 	name_root = ptr;
 
@@ -135,7 +135,7 @@ char *name;
 		return( Add_brl_name( name ) );
 
 
-	/* still not unique! Try two character suffix */
+	/* still not unique!!! Try two character suffix */
 	char_ptr--;
 	i = 0;
 	j = 0;
@@ -172,7 +172,8 @@ char *name;
 	if( !found )
 	{
 		/* not likely */
-		bu_exit(1, "Could not make name unique: (%s)\n", name );
+		bu_log( "Could not make name unique: (%s)\n", name );
+		bu_bomb( "Make_unique_brl_name: failed\n" );
 		return( (char *)NULL );		/* make the compilers happy */
 	}
 	else
@@ -536,18 +537,20 @@ int entityno;
 	char *name;
 
 	if( entityno >= totentities )
-		bu_exit(1, "Get_subfig_name: entityno too big!\n" );
+		bu_bomb( "Get_subfig_name: entityno too big!!\n" );
 
 	if( dir[entityno]->type != 308 )
 	{
-		bu_exit(1, "Get_subfig_name called with entity type %s, should be Subfigure Definition\n",
+		bu_log( "Get_subfig_name called with entity type %s, should be Subfigure Definition\n",
 			iges_type( dir[entityno]->type  ) );
+		bu_bomb( "Get_subfig_name: bad type\n" );
 	}
 
 	if( dir[entityno]->param <= pstart )
 	{
-		bu_exit(1, "Illegal parameter pointer for entity D%07d (%s)\n" ,
+		bu_log( "Illegal parameter pointer for entity D%07d (%s)\n" ,
 				dir[entityno]->direct , dir[entityno]->name );
+		bu_bomb( "Get_subfig_name: Bad entity\n" );
 	}
 
 	Readrec( dir[entityno]->param );
@@ -555,8 +558,9 @@ int entityno;
 	Readint( &entity_type, "" );
 	if( entity_type != 308 )
 	{
-		bu_exit(1, "Get_subfig_name: Read entity type %s, should be Subfigure Definition\n",
+		bu_log( "Get_subfig_name: Read entity type %s, should be Subfigure Definition\n",
 			iges_type( dir[entityno]->type  ) );
+		bu_bomb( "Get_subfig_name: bad type\n" );
 	}
 
 	Readint( &i, "" );	/* ignore depth */

@@ -28,17 +28,25 @@
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  *
  */
+#ifndef lint
+static char RCSid[] = "@(#)$Header$ (ARL)";
+#endif
 
 #include "common.h"
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <sys/time.h>
 #include <fcntl.h>
-#include <ctype.h>
-#include <string.h>
-#ifdef HAVE_SYS_TIME_H
-#  include <sys/time.h>
+#ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
 #endif
+#include <ctype.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
+
 
 #include "machine.h"
 #include "bu.h"
@@ -1228,7 +1236,7 @@ int parse_args(ac, av)
     else
 	++progname;
 
-    strncpy(arg_buf, progname, 10000);
+    strcpy(arg_buf, progname);
     len = strlen(arg_buf) + 1;
     arg_v[arg_c = 0] = arg_buf;
     arg_v[++arg_c] = (char *)NULL;
@@ -1253,7 +1261,7 @@ int parse_args(ac, av)
 	    if (p[1] == ':') {
 		arg_v[arg_c++] = &arg_buf[len];
 		arg_v[arg_c] = (char *)NULL;
-		(void)snprintf(&arg_buf[len], 10000, "%s", bu_optarg);
+		(void)sprintf(&arg_buf[len], "%s", bu_optarg);
 		len += strlen(&arg_buf[len]) + 1;
 	    }
 	}

@@ -29,8 +29,7 @@
  *  buffer of memory.
  *
  *  @par Functions -
- *    bu_bomb		Called during unexpected fatal errors.
- *    bu_exit		Causes termination of the application.
+ *    bu_bomb		Called upon fatal error.
  *
  *  @author -
  *    Michael John Muuss
@@ -46,11 +45,11 @@ static const char RCSbomb[] = "@(#)$Header$ (ARL)";
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <string.h>
-#include <stdarg.h>
-
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
+#endif
+#ifdef HAVE_STRING_H
+#  include <string.h>
 #endif
 #ifdef HAVE_UNIX_IO
 #  include <fcntl.h>
@@ -115,14 +114,11 @@ bu_bomb_failsafe_init()
 /**
  *			B U _ B O M B
  *@brief
- * Abort the program with a message.
+ *  Abort the program with a message.
  *
- * Only produce a core-dump when that debugging bit is set.  Note that
- * this function is meant to be a last resort graceful abort.  It
- * should not attempt to allocate anything on the stack or heap.
- *
- * This routine should never return unless there is a bu_setjmp
- * handler registered.
+ *  Only produce a core-dump when that debugging bit is set.  Note
+ *  that this function is meant to be a last resort graceful abort.
+ *  It should not attempt to allocate anything on the stack or heap.
  */
 void
 bu_bomb(const char *str)
@@ -153,6 +149,7 @@ bu_bomb(const char *str)
 	    fprintf(stderr,"bu_bomb(): in parallel mode, could not longjmp up to application handler\n");
 	} else {
 	    /* Application is non-parallel, so this is safe */
+	    fprintf(stderr,"bu_bomb(): taking longjmp up to application handler\n");
 	    longjmp( (void *)(bu_jmpbuf), 1 );
 	    /* NOTREACHED */
 	}
@@ -209,41 +206,6 @@ bu_bomb(const char *str)
 
     exit(12);
 }
-
-
-/**
- * b u _ e x i t
- *
- * Semi-graceful termination of the application that doesn't cause a
- * stack trace, exiting with the specified status after printing the
- * given message.  It's okay for this routine to use the stack,
- * contrary to bu_bomb's behavior since it should be called for
- * expected termination situations.  This routine should never return.
- */
-void
-bu_exit(int status, const char *fmt, ...)
-{
-    va_list ap;
-    struct bu_vls message;
-
-    bu_vls_init(&message);
-
-    if (fmt && strlen(fmt) > 0) {
-	va_start(ap, fmt);
-	bu_vls_vprintf(&message, fmt, ap);
-
-	if (!BU_SETJUMP) {
-	    bu_bomb(bu_vls_addr(&message));
-	}
-	BU_UNSETJUMP;
-    }
-
-    bu_vls_free(&message);
-
-    exit(status);
-}
-
-
 /** @} */
 /*
  * Local Variables:

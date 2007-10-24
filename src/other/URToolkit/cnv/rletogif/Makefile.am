@@ -12,5 +12,7 @@ noinst_HEADERS = rletogif.h
 rletogif_LDADD = ${RLE}
 rletogif_CFLAGS = ${RLE_CPPFLAGS}
 
+MAINTAINERCLEANFILES = Makefile.in
+
 include $(top_srcdir)/misc/Makefile.defs
 

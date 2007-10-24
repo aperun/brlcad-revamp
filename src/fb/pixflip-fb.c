@@ -38,12 +38,15 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-#include <sys/time.h>		/* For struct timeval */
-
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
+#include <sys/time.h>		/* For struct timeval */
 #ifdef HAVE_SYS_TYPES_H
 #  include <sys/types.h>
 #endif
@@ -221,9 +224,9 @@ main(int argc, char **argv)
 			/* See if we read all the files */
 			if( bu_optind >= argc )
 				goto done;
-			strncpy(name, argv[bu_optind++], 256);
+			strcpy(name, argv[bu_optind++]);
 		} else {
-			snprintf(name, 256, "%s.%d", input_basename, framenumber);
+			sprintf(name,"%s.%d", input_basename, framenumber);
 		}
 		if( (fd=open(name,0))<0 )  {
 			perror(name);

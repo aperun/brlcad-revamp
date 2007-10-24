@@ -49,7 +49,11 @@ static const char libbu_ptbl_RCSid[] = "@(#)$Header$ (ARL)";
 #include "common.h"
 
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 
 #include "machine.h"
 #include "bu.h"
@@ -140,6 +144,7 @@ bu_ptbl_locate(const struct bu_ptbl *b, const long int *p)
 
 	BU_CK_PTBL(b);
 	pp = (const long **)b->buffer;
+#	include "noalias.h"
 	for( k = b->end-1; k >= 0; k-- )
 		if (pp[k] == p) return(k);
 
@@ -161,6 +166,7 @@ bu_ptbl_zero(struct bu_ptbl *b, const long int *p)
 
 	BU_CK_PTBL(b);
 	pp = (const long **)b->buffer;
+#	include "noalias.h"
 	for( k = b->end-1; k >= 0; k-- )
 		if (pp[k] == p) pp[k] = (long *)0;
 }
@@ -186,6 +192,8 @@ bu_ptbl_ins_unique(struct bu_ptbl *b, long int *p)
 	register long	**pp = b->buffer;
 
 	BU_CK_PTBL(b);
+
+#	include "noalias.h"
 
 	/* search for existing */
 	for( k = b->end-1; k >= 0; k-- )
@@ -238,6 +246,7 @@ bu_ptbl_rm(struct bu_ptbl *b, const long int *p)
 			/* pp[l] through pp[j-1] match p */
 
 			end -= j - l;
+#			include "noalias.h"
 			for(k=l ; j < b->end ;)
 				b->buffer[k++] = b->buffer[j++];
 			b->end = end;

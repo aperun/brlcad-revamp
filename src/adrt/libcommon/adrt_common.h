@@ -74,12 +74,11 @@ typedef struct common_triangle_s {
   tfloat *normals;
 } common_triangle_t;
 
-#define ADRT_NAME_SIZE 256
 
 /* Mesh */
 typedef struct common_mesh_s {
   int flags;
-  char name[ADRT_NAME_SIZE];
+  char name[256];
   TIE_3 min, max;
   tfloat matrix[16];
   tfloat matinv[16];
@@ -91,7 +90,7 @@ typedef struct common_mesh_s {
 
 
 typedef struct common_anim_transform_s {
-  char mesh_name[ADRT_NAME_SIZE];
+  char mesh_name[256];
   tfloat matrix[16];
 } common_anim_transform_t;
 
@@ -125,12 +124,12 @@ typedef struct common_env_s {
   int tile_w;	/* tile size width */
   int tile_h;	/* tile size height */
 
-  char geometry_file[ADRT_NAME_SIZE];
-  char kdtree_cache_file[ADRT_NAME_SIZE];
-  char properties_file[ADRT_NAME_SIZE];
-  char textures_file[ADRT_NAME_SIZE];
-  char mesh_map_file[ADRT_NAME_SIZE];
-  char frames_file[ADRT_NAME_SIZE];
+  char geometry_file[256];
+  char kdtree_cache_file[256];
+  char properties_file[256];
+  char textures_file[256];
+  char mesh_map_file[256];
+  char frames_file[256];
 } common_env_t;
 
 

@@ -34,13 +34,15 @@
  *	The U. S. Army Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  */
+#ifndef lint
+static const char RCSid[] = "@(#)$Header$ (ARL)";
+#endif
 
 #include "common.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -97,15 +99,19 @@ extern BU_FILE			bu_iob[1];
  *	The U. S. Army Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  */
+static const char RCSrtstring[] = "@(#)$Header$ (BRL)";
 
 #include "common.h"
 
 #include <stdio.h>
 #include <ctype.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
-
+#else
+#include <strings.h>
+#endif
 #if defined(HAVE_STDARG_H)
-#  include <stdarg.h>
+# include <stdarg.h>
 #endif
 
 #include "machine.h"

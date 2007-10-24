@@ -28,15 +28,33 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <fcntl.h>
 #include <math.h>
 #include <signal.h>
 #include <assert.h>
 
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>
-#endif
+#if defined( CRAY )
+#  include <sys/category.h>
+#  include <sys/resource.h>
+#  include <sys/types.h>
+#  if defined( CRAY1 )
+#    include <sys/machd.h>	/* For HZ */
+#  endif
+#  if defined( CRAY2 )
+#    undef MAXINT
+#    include <sys/param.h>
+#  endif
+#  define MAX_CPU_TICKS	(200000*HZ) /* Max ticks = seconds * ticks/sec.	*/
+#  define NICENESS	-6 /* should bring it down from 16 to 10 */
+#endif	/* Cray */
 
 #include "machine.h"
 #include "vmath.h"
@@ -100,6 +118,26 @@ main(int argc, char **argv)
     else
 	rt_g.rtg_parallel = 0;
     bu_semaphore_init( RT_SEM_LAST );
+
+#if defined( CRAY )
+    {
+	int	newnice;
+	long	oldlimit;
+	long	newlimit;
+	if( (newnice = nicem( C_PROC, 0, NICENESS )) == -1 )
+	    perror( "nicem" );
+	else
+	    bu_log( "Program niced to %d.\n", newnice - 20 );
+	oldlimit = limit( C_PROC, 0, L_CPU, MAX_CPU_TICKS );
+	newlimit = limit( C_PROC, 0, L_CPU, -1 );
+	bu_log(	"CPU time limit: was %d seconds, now set to %d seconds.\n",
+		oldlimit/HZ,
+		newlimit/HZ
+		);
+	bu_log(	"Memory limit set to %dKW.\n",
+		limit( C_PROC, 0, L_MEM, -1 ) );
+    }
+#endif
 
     init_Lgts();
 

@@ -33,15 +33,22 @@
  *	The U. S. Army Research Laboratory
  *	Aberdeen Proving Ground, Maryland  21005-5068  USA
  */
+#ifndef lint
+static char RCSid[] = "@(#)$Header$ (ARL)";
+#endif
 
 #include "common.h"
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <string.h>
+
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 
 #include "machine.h"
 
@@ -272,10 +279,10 @@ int main(int ac, char *av[])
     }
     /* All children are finished */
 
-
-    (void)fchmod(fd, 0444);
+    close(fd);
     (void)dsclose(dsp);
     (void)close(fd);
+    (void)chmod(av[arg_index], 0444);
     return(0);
 }
 

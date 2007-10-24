@@ -39,7 +39,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 
 #include "machine.h"
 #include "bu.h"

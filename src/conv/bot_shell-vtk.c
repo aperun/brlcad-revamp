@@ -51,7 +51,11 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #if defined(HAVE_UNISTD_H)
 #  include <unistd.h>
 #else
@@ -422,7 +426,8 @@ char *argv[];
 			case 'g':	/* cell size */
 				cell_size = atof( bu_optarg );
 				if( cell_size < tol.dist ) {
-					bu_exit(1, "Cell size too small! (%g)\n", cell_size );
+					bu_log( "Cell size too small!!! (%g)\n", cell_size );
+					exit( 1 );
 				}
 				break;
 			case 'o':	/* VTK polydata output file */
@@ -436,25 +441,28 @@ char *argv[];
 
 	if (bu_optind+1 >= argc)
 	{
-		bu_exit(1, usage, argv[0]);
+		bu_log( usage, argv[0] );
+		exit( 1 );
 	}
 
 	if( output_file )
 	{
 		if( (fd_out=fopen( output_file, "w" )) == NULL )
 		{
+			bu_log( "Cannot open output file (%s)\n", output_file );
 			perror( argv[0] );
-			bu_exit(1, "Cannot open output file (%s)\n", output_file);
+			exit( 1 );
 		}
 	}
 	else
-		bu_exit(1, "Output file must be specified!\n");
+		bu_bomb( "Output file must be specified!!!\n" );
 
 	/* Open BRL-CAD database */
 	database_index = bu_optind;
 	if ((rtip=rt_dirbuild(argv[bu_optind], idbuf, sizeof(idbuf))) == RTI_NULL )
 	{
-		bu_exit(1, "rt_durbuild FAILED on %s\n", argv[bu_optind]);
+		bu_log( "rt_durbuild FAILED on %s\n", argv[bu_optind] );
+		exit(1);
 	}
 
 	rtip->rti_space_partition = RT_PART_NUBSPT;

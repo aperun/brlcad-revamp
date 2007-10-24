@@ -1,6 +1,6 @@
 .PHONY : regression regress test moss lights solids shaders spdi iges weight gqa
 
-regression: clean solids shaders spdi moss lights Makefile iges weight gqa flawfinder
+regression: clean solids shaders spdi moss lights Makefile iges weight gqa
 	@${ECHO} ---
 	@${ECHO} Regression testing completed.
 
@@ -40,13 +40,8 @@ gqa: $(top_srcdir)/regress/gqa.sh
 	-${SH} $(top_srcdir)/regress/gqa.sh
 	@${ECHO} +++ $@ test complete.
 
-flawfinder: $(top_srcdir)/regress/flawfinder.sh
-	-${SH} $(top_srcdir)/regress/flawfinder.sh $(top_srcdir)
-	@${ECHO} +++ $@ test complete.
-
 # these are here because they go in the distribution but are not installed
 EXTRA_DIST = \
-	flawfinder.sh \
 	gqa.sh \
 	iges.sh \
 	lights.sh \
@@ -69,7 +64,6 @@ CLEANFILES = \
 	eagleCAD-512x438.pix \
 	ebm.bw \
 	exp_air.pl \
-	flawfinder.log \
 	gaps.pl \
 	gqa.g \
 	gqa.log \
@@ -111,13 +105,13 @@ CLEANFILES = \
 	shaders.rt.pixdiff.log \
 	shaders.txt \
 	shaders_ref.pix \
+	solids \
 	solids-diff.log \
 	solids.g \
 	solids.log \
 	solids.mged \
+	solids.pix \
 	solids.pix.diff \
-	solids.rt \
-	solids.rt.pix \
 	solids_ref.pix \
 	spdi \
 	spdi.g \
@@ -136,7 +130,6 @@ CLEANFILES = \
 	wgt.out
 
 MOSTLYCLEANFILES = \
-	flawfinder.log \
 	gqa.log \
 	lights.log \
 	moss-png.log \
@@ -146,5 +139,8 @@ MOSTLYCLEANFILES = \
 	solids.log \
 	spdi.log \
 	weight.log
+
+MAINTAINERCLEANFILES = Makefile.in
+
 
 include $(top_srcdir)/misc/Makefile.defs

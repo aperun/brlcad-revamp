@@ -37,7 +37,11 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #if defined(HAVE_UNISTD_H)
 #  include <unistd.h>
 #else
@@ -185,22 +189,26 @@ char	*argv[];
 			inches = 1;
 			break;
 		default:
-			bu_exit(1, usage, argv[0]);
+			bu_log(  usage, argv[0]);
+			exit(1);
 			break;
 		}
 	}
 
 	if (bu_optind+1 >= argc) {
-		bu_exit(1, usage, argv[0]);
+		bu_log( usage, argv[0]);
+		exit(1);
 	}
 
 	if( !output_file ) {
-		bu_exit(1, "No output file specified!\n" );
+		bu_log( "No output file specified!!!\n" );
+		exit( 1 );
 	} else {
 		/* Open output file */
 		if( (fpf=fopen( output_file, "w+" )) == NULL ) {
+			bu_log( "Cannot open output file (%s) for writing\n", output_file );
 			perror( argv[0] );
-			bu_exit(1, "Cannot open output file (%s) for writing\n", output_file );
+			exit( 1 );
 		}
 	}
 
@@ -213,8 +221,9 @@ char	*argv[];
 	else
 	if( (fpe=fopen( error_file, "w" )) == NULL )
 	{
+	bu_log( "Cannot open output file (%s) for writing\n", error_file );
 		perror( argv[0] );
-		bu_exit(1, "Cannot open output file (%s) for writing\n", error_file );
+		exit( 1 );
 	}
 
 	/* Open BRL-CAD database */
@@ -222,10 +231,11 @@ char	*argv[];
 	argv += bu_optind;
 	if ((dbip = db_open(argv[0], "r")) == DBI_NULL) {
 		perror(argv[0]);
-		bu_exit(1, "ERROR: unable to open geometry database file (%s)\n", argv[0]);
+		exit(1);
 	}
 	if( db_dirbuild( dbip ) ) {
-	    bu_exit(1, "db_dirbuild failed\n");
+	    bu_log( "db_dirbuild failed\n" );
+	    exit(1);
 	}
 
 	BN_CK_TOL(tree_state.ts_tol);
@@ -436,7 +446,6 @@ genptr_t		client_data;
 		return  curtree;
 
 	regions_tried++;
-
 	/* Begin bu_bomb() protection */
 	if( ncpu == 1 ) {
 		if( BU_SETJUMP )  {
@@ -451,7 +460,7 @@ genptr_t		client_data;
 			bu_free( (char *)sofar, "sofar" );
 
 			/* Sometimes the NMG library adds debugging bits when
-			 * it detects an internal error, before bombing out.
+			 * it detects an internal error, before bu_bomb().
 			 */
 			rt_g.NMG_debug = NMG_debug;	/* restore mode */
 
@@ -540,7 +549,7 @@ genptr_t		client_data;
 				bu_free( (char *)sofar, "sofar" );
 
 				/* Sometimes the NMG library adds debugging bits when
-				 * it detects an internal error, before bombing out.
+				 * it detects an internal error, before bu_bomb().
 				 */
 				rt_g.NMG_debug = NMG_debug;	/* restore mode */
 

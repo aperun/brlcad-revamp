@@ -38,7 +38,11 @@ static const char RCSid[] = "$Header$";
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <signal.h>
 #if defined(HAVE_UNISTD_H)
 #  include <unistd.h>
@@ -115,7 +119,8 @@ fastf_print(FILE *fp_out, int length, fastf_t f)
 	ptr = strchr( buffer, '.' );
 	if( (ptr - buffer) > length )
 	{
-		bu_exit(1, "ERROR: Value (%f) too large for format length (%d)\n" , f, length );
+		bu_log( "Value (%f) too large for format length (%d)\n" , f, length );
+		bu_bomb( "fastf_print\n" );
 	}
 
 	for( i=0 ; i<length ; i++ )
@@ -500,23 +505,27 @@ main(int argc, char **argv)
 			NMG_debug = rt_g.NMG_debug;
 			break;
 		default:
-			bu_exit(1, usage, argv[0]);
+			fprintf(stderr, usage, argv[0]);
+			exit(1);
 			break;
 		}
 	}
 
 	if (bu_optind+1 >= argc) {
-		bu_exit(1, usage, argv[0]);
+		fprintf(stderr, usage, argv[0]);
+		exit(1);
 	}
 
 	/* Open BRL-CAD database */
 	if ((dbip = db_open( argv[bu_optind] , "r")) == DBI_NULL)
 	{
+		bu_log( "Cannot open %s\n" , argv[bu_optind] );
 		perror(argv[0]);
-		bu_exit(1, "Cannot open %s\n" , argv[bu_optind] );
+		exit(1);
 	}
 	if( db_dirbuild( dbip ) ) {
-	    bu_exit(1, "db_dirbuild failed\n" );
+	    bu_log( "db_dirbuild failed\n" );
+	    exit(1);
 	}
 	bu_optind++;
 
@@ -603,14 +612,14 @@ union tree *do_region_end(register struct db_tree_state *tsp, struct db_full_pat
 	dir = DB_FULL_PATH_CUR_DIR( pathp );
 	if( (fp_out = fopen( dir->d_namep , "w" )) == NULL )
 	{
+		bu_log(" Cannot open file %s\n" , dir->d_namep );
 		perror( "g-euclid" );
-		bu_exit(1, "ERROR: Cannot open file %s\n" , dir->d_namep);
+		bu_bomb( "g-euclid: Cannot open output file\n" );
 	}
 
 	bu_log( "\n\nProcessing region %s:\n" , dir->d_namep );
 
 	regions_tried++;
-
 	/* Begin bu_bomb() protection */
 	if( BU_SETJUMP )
 	{
@@ -620,7 +629,7 @@ union tree *do_region_end(register struct db_tree_state *tsp, struct db_full_pat
 		(void)alarm( 0 );
 
 		/* Sometimes the NMG library adds debugging bits when
-		 * it detects an internal error, before bombing out.
+		 * it detects an internal error, before bu_bomb().
 		 */
 		rt_g.NMG_debug = NMG_debug;	/* restore mode */
 

@@ -58,7 +58,11 @@ static const char RCSparse[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 
 #include "machine.h"
 #include "bu.h"
@@ -157,7 +161,11 @@ bu_struct_export(struct bu_external *ext, const genptr_t base, const struct bu_s
 
 	for( ip = imp; ip->sp_fmt[0] != '\0'; ip++ )  {
 
+#if CRAY && !__STDC__
+		loc = ((char *)base) + ((int)ip->sp_offset*sizeof(int));
+#else
 		loc = ((char *)base) + ip->sp_offset;
+#endif
 
 		switch( ip->sp_fmt[0] )  {
 		case 'i':
@@ -300,7 +308,11 @@ bu_struct_import(genptr_t base, const struct bu_structparse *imp, const struct b
 	bytes_used = 0;
 	for( ip = imp; ip->sp_fmt[0] != '\0'; ip++ )  {
 
+#if CRAY && !__STDC__
+		loc = ((char *)base) + ((int)ip->sp_offset*sizeof(int));
+#else
 		loc = ((char *)base) + ip->sp_offset;
+#endif
 
 		switch( ip->sp_fmt[0] )  {
 		case 'i':
@@ -615,7 +627,11 @@ bu_struct_lookup(register const struct bu_structparse *sdp, register const char 
 		 * with a name in the structure description
 		 */
 
+#if CRAY && !__STDC__
+		loc = (char *)(base + ((int)sdp->sp_offset*sizeof(int)));
+#else
 		loc = (char *)(base + sdp->sp_offset);
+#endif
 
 		if (sdp->sp_fmt[0] == 'i') {
 			/* Indirect to another structure */
@@ -934,7 +950,11 @@ bu_vls_struct_item(struct bu_vls *vp, const struct bu_structparse *sdp, const ch
 	return;
     }
 
+#if CRAY && !__STDC__
+    loc = (char *)(base + ((int)sdp->sp_offset*sizeof(int)));
+#else
     loc = (char *)(base + sdp->sp_offset);
+#endif
 
     if (sdp->sp_fmt[0] == 'i' )  {
 	bu_log( "Cannot print type 'i' yet!\n" );
@@ -1042,7 +1062,11 @@ bu_struct_print(const char *title, const struct bu_structparse *parsetab, const 
 			continue;
 		lastoff = sdp->sp_offset;
 
+#if CRAY && !__STDC__
+		loc = (char *)(base + ((int)sdp->sp_offset*sizeof(int)));
+#else
 		loc = (char *)(base + sdp->sp_offset);
+#endif
 
 		if (sdp->sp_fmt[0] == 'i' )  {
 			bu_struct_print( sdp->sp_name,
@@ -1211,7 +1235,11 @@ bu_vls_struct_print(struct bu_vls *vls, register const struct bu_structparse *sd
 			continue;
 		lastoff = sdp->sp_offset;
 
+#if CRAY && !__STDC__
+		loc = (char *)(base + ((int)sdp->sp_offset*sizeof(int)));
+#else
 		loc = (char *)(base + sdp->sp_offset);
+#endif
 
 		if (sdp->sp_fmt[0] == 'i')  {
 			struct bu_vls sub_str;
@@ -1384,7 +1412,11 @@ bu_vls_struct_print2(struct bu_vls			*vls_out,
 			continue;
 		lastoff = sdp->sp_offset;
 
+#if CRAY && !__STDC__
+		loc = (char *)(base + ((int)sdp->sp_offset*sizeof(int)));
+#else
 		loc = (char *)(base + sdp->sp_offset);
+#endif
 
 		if (sdp->sp_fmt[0] == 'i' )  {
 			bu_vls_struct_print2(vls_out, sdp->sp_name,

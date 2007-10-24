@@ -173,12 +173,12 @@ server_args(struct pkg_conn *connection, char *buf)
      */
     srv_argc++;
     if (!srv_argv) {
-	srv_argv = bu_calloc(1, srv_argc * sizeof(char *), "server_args() srv_argv calloc");
+	srv_argv = bu_calloc(1, sizeof(char *), "server_args() srv_argv calloc");
     } else {
 	srv_argv = bu_realloc(srv_argv, srv_argc * sizeof(char *), "server_args() srv_argv realloc");
     }
     srv_argv[srv_argc - 1] = bu_calloc(1, sizeof(buf) + 1, "server_args() srv_argv[] calloc");
-    strncpy(srv_argv[srv_argc - 1], buf, sizeof(buf)+1);
+    strcpy(srv_argv[srv_argc - 1], buf);
 
     bu_log("Planning to shoot at %s\n", buf);
 
@@ -517,7 +517,7 @@ main(int argc, char *argv[]) {
 	}
 
 	/* mark the database as in-memory only */
-	/* XXX = wdb_dbopen(dbip, RT_WDB_TYPE_DB_INMEM); */
+	//	XXX = wdb_dbopen(dbip, RT_WDB_TYPE_DB_INMEM);
 
 	/* ignore broken pipes */
 	(void)signal(SIGPIPE, SIG_IGN);

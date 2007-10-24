@@ -30,7 +30,7 @@ EOF
 ../src/conv/asc2g lights.asc lights.g
 rm -f lights.asc
 
-echo rendering lights...
+/bin/echo rendering lights...
 ../src/rt/rt -M -B -p30 -o lights.pix lights.g 'all.g' 2> lights.log <<EOF
 viewsize 1.600000000000000e+02;
 orientation 0.000000000000000e+00 0.000000000000000e+00 0.000000000000000e+00 1.000000000000000e+00;
@@ -43,12 +43,12 @@ EOF
 ../src/conv/asc2pix < $1/regress/lights_ref.asc  > lights_ref.pix
 ../src/util/pixdiff lights.pix lights_ref.pix > lights_diff.pix 2>> lights.log
 NUMBER_WRONG=`tr , '\012' < lights.log | awk '/many/ {print $1}'`
-echo "lights.pix $NUMBER_WRONG off by many"
+/bin/echo lights.pix $NUMBER_WRONG off by many
 
 if [ X$NUMBER_WRONG = X0 ] ; then
-    echo "-> lights.sh succeeded"
+    /bin/echo '-> lights.sh succeeded'
 else
-    echo "-> lights.sh FAILED"
+    /bin/echo '-> lights.sh failed'
 fi
 
 exit $NUMBER_WRONG

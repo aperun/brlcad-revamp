@@ -24,22 +24,22 @@
  *
  */
 
-/*
- * $Id$
- */
+#ifdef HAVE_CONFIG_H
+# include "common.h"
+#endif
 
-/* compnet is first as it includes $(top_srcdir)/include/common.h */
 #include "compnet.h"
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+
+#ifdef HAVE_STRING_H
+# include <string.h>
+#endif
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
-
-#include "adrt_common.h"
 #include "tienet.h"
 
 int isst_master_compserv_socket;
@@ -114,13 +114,13 @@ void isst_compnet_connect(char *host, int port) {
 * Update the status of a component
 */
 void isst_compnet_update(char *string, char status) {
-  char message[ADRT_NAME_SIZE];
+  char message[256];
 
   if(!isst_master_compserv_active)
     return;
 
   /* format message */
-  snprintf(message, ADRT_NAME_SIZE, "%c%s,%d%c", SET_BASE_ATTS_STATE, string, status, TERM);
+  sprintf(message, "%c%s,%d%c", SET_BASE_ATTS_STATE, string, status, TERM);
 
   /* Send string */
   tienet_send(isst_master_compserv_socket, message, strlen(message), 0);

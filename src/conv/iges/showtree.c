@@ -87,24 +87,21 @@ struct node *root;
 			Apush( dir[-(1+ptr->op)/2]->name );
 		else	/* this is an operator */
 		{
-			int size;
 			/* Pop the names of the operands */
 			opb = Apop();
 			opa = Apop();
 
-			size = strlen(opa) + strlen(opb) + 6;
-
 			/* construct the character string (opa ptr->op opb) */
-			tmp = (char *)bu_malloc( size, "Showtree: tmp" );
-			if( ptr->parent )
+			tmp = (char *)bu_malloc( strlen( opa ) + strlen( opb ) + 6, "Showtree: tmp" );
+			if( ptr->parent != NULL )
 				strcpy( tmp , "(" );
 			else
 				*tmp = '\0';
-			strncat( tmp , opa, size - strlen(tmp) - 1 );
+			strcat( tmp , opa );
 			oper[1] = operator[ptr->op];
-			strncat( tmp , oper, size - strlen(tmp) - 1 );
-			strncat( tmp , opb, size - strlen(tmp) - 1 );
-			if( ptr->parent )
+			strcat( tmp , oper );
+			strcat( tmp , opb );
+			if( ptr->parent != NULL )
 				strcat( tmp , ")" );
 
 			/* push the character string representing the result */

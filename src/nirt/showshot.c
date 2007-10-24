@@ -38,15 +38,20 @@
  *			the '-d' debug option.
  */
 
-#include "common.h"
+#ifndef lint
+static const char RCSid[] = "$Header$";
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <string.h>
-
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+# include <unistd.h>
 #endif
 
 #include "machine.h"

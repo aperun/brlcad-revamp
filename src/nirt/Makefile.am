@@ -36,6 +36,8 @@ EXTRA_DIST = \
 	dist_def.c \
 	nirt.dsp
 
+MAINTAINERCLEANFILES = Makefile.in
+
 include $(top_srcdir)/misc/Makefile.defs
 
 FAST_OBJECTS = \

@@ -190,7 +190,7 @@ void common_pack_env(common_db_t *db, void **app_data, int *app_ind) {
 void common_pack_prop(void **app_data, int *app_ind, char *filename) {
   FILE *fh;
   common_prop_t def_prop;
-  char line[ADRT_NAME_SIZE], name[ADRT_NAME_SIZE], *token;
+  char line[256], name[256], *token;
   unsigned char c;
   unsigned int marker, size, prop_num;
 
@@ -204,7 +204,7 @@ void common_pack_prop(void **app_data, int *app_ind, char *filename) {
   }
 
   prop_num = 0;
-  while(fgets(line, ADRT_NAME_SIZE, fh)) {
+  while(fgets(line, 256, fh)) {
     token = strtok(line, ",");
     if(!strcmp("properties", token)) {
 
@@ -220,7 +220,7 @@ void common_pack_prop(void **app_data, int *app_ind, char *filename) {
       token = strtok(NULL, ",");
       /* strip off newline */
       if(token[strlen(token)-1] == '\n') token[strlen(token)-1] = 0;
-      strncpy(name, token, ADRT_NAME_SIZE);
+      strcpy(name, token);
 
       /* set defaults */
       def_prop.color.v[0] = 0.8;

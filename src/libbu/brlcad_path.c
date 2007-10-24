@@ -38,8 +38,11 @@ static const char RCSbrlcad_path[] = "@(#)$Header$ (BRL)";
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #ifdef HAVE_SYS_PARAM_H
 #  include <sys/param.h>
 #endif
@@ -238,7 +241,7 @@ bu_setprogname(const char *argv0) {
     }
 
     (void)bu_ipwd();
-
+    
     return;
 }
 
@@ -656,84 +659,6 @@ bu_brlcad_data(const char *rhs, int fail_quietly)
 	}
 	bu_vls_free(&searched);
 	return result;
-    }
-
-    /* running from uninstalled source distribution, look for THIS file */
-#define BPC "/src/libbu/" __FILE__
-    if (bu_file_exists("." BPC)) {
-	if (bu_find_path(result, ".", rhs, NULL, NULL)) {
-	    if (bu_debug & BU_DEBUG_PATHS) {
-		bu_log("Found: source directory [%s]\n", result);
-	    }
-	    bu_vls_free(&searched);
-	    return result;
-	} else if (bu_find_path(result, "./src", rhs, NULL, NULL)) {
-	    if (bu_debug & BU_DEBUG_PATHS) {
-		bu_log("Found: source directory [%s]\n", result);
-	    }
-	    bu_vls_free(&searched);
-	    return result;
-	}
-    }
-    if (bu_file_exists(".." BPC)) {
-	if (bu_find_path(result, "..", rhs, NULL, NULL)) {
-	    if (bu_debug & BU_DEBUG_PATHS) {
-		bu_log("Found: source directory [%s]\n", result);
-	    }
-	    bu_vls_free(&searched);
-	    return result;
-	} else if (bu_find_path(result, "../src", rhs, NULL, NULL)) {
-	    if (bu_debug & BU_DEBUG_PATHS) {
-		bu_log("Found: source directory [%s]\n", result);
-	    }
-	    bu_vls_free(&searched);
-	    return result;
-	}
-    }
-    if (bu_file_exists("../.." BPC)) {
-	if (bu_find_path(result, "../..", rhs, NULL, NULL)) {
-	    if (bu_debug & BU_DEBUG_PATHS) {
-		bu_log("Found: source directory [%s]\n", result);
-	    }
-	    bu_vls_free(&searched);
-	    return result;
-	} else if (bu_find_path(result, "../../src", rhs, NULL, NULL)) {
-	    if (bu_debug & BU_DEBUG_PATHS) {
-		bu_log("Found: source directory [%s]\n", result);
-	    }
-	    bu_vls_free(&searched);
-	    return result;
-	}
-    }
-    if (bu_file_exists("../../.." BPC)) {
-	if (bu_find_path(result, "../../..", rhs, NULL, NULL)) {
-	    if (bu_debug & BU_DEBUG_PATHS) {
-		bu_log("Found: source directory [%s]\n", result);
-	    }
-	    bu_vls_free(&searched);
-	    return result;
-	} else if (bu_find_path(result, "../../../src", rhs, NULL, NULL)) {
-	    if (bu_debug & BU_DEBUG_PATHS) {
-		bu_log("Found: source directory [%s]\n", result);
-	    }
-	    bu_vls_free(&searched);
-	    return result;
-	}
-    }
-    if (bu_file_exists("../../../.." BPC)) {
-	if (bu_find_path(result, "../../../..", rhs, NULL, NULL)) {
-	    if (bu_debug & BU_DEBUG_PATHS) {
-		bu_log("Found: source directory [%s]\n", result);
-	    }
-	    bu_vls_free(&searched);
-	    return result;
-	} else if (bu_find_path(result, "../../../../src", rhs, NULL, NULL)) {
-	    if (bu_debug & BU_DEBUG_PATHS) {
-		bu_log("Found: source directory [%s]\n", result);
-	    }
-	    bu_vls_free(&searched);
-	    return result;
-	}
     }
 
     if (!fail_quietly) {

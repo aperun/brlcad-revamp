@@ -56,11 +56,16 @@
  *				and not zero as with c.
  */
 
+
 #include "common.h"
 
 /* system headers */
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <math.h>
 
 /* interface headers */

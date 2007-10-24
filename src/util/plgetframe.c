@@ -34,13 +34,15 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "common.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+#include <stdio.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#include <strings.h>
 #endif
+#include <unistd.h>
+#include <stdlib.h>
 
 #define	TBAD	0	/* no such command */
 #define TNONE	1	/* no arguments */

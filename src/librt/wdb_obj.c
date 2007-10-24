@@ -45,12 +45,21 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 
 #include <stdlib.h>
 #include <ctype.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <math.h>
-#include <errno.h>
-
 #if defined(HAVE_FCNTL_H)
 #  include <fcntl.h>
+#endif
+#if defined(HAVE_ERRNO_H)
+#  include <errno.h>
+#else
+#  if defined(HAVE_SYS_ERRNO_H)
+#    include <sys/errno.h>
+#  endif
 #endif
 #if defined(HAVE_UNISTD_H)
 #  include <unistd.h>
@@ -246,6 +255,7 @@ static int wdb_find_tcl(ClientData clientData, Tcl_Interp *interp, int argc, cha
 static int wdb_which_tcl(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
 static int wdb_title_tcl(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
 static int wdb_track_tcl(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
+static int wdb_tree_tcl(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
 static int wdb_color_tcl(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
 static int wdb_prcolor_tcl(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
 static int wdb_tol_tcl(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
@@ -376,6 +386,7 @@ static struct bu_cmdtab wdb_cmds[] = {
 	{"tol",		wdb_tol_tcl},
 	{"tops",	wdb_tops_tcl},
 	{"track",	wdb_track_tcl},
+	{"tree",	wdb_tree_tcl},
 	{"unhide",	wdb_unhide_tcl},
 	{"units",	wdb_units_tcl},
 	{"version",	wdb_version_tcl},
@@ -2006,19 +2017,18 @@ wdb_ls_cmd(struct rt_wdb	*wdbp,
 				 */
 	struct directory **dirp;
 	struct directory **dirp0 = (struct directory **)NULL;
-	const char *cmdname = argv[0];
 
 	bu_vls_init(&vls);
 
 	if (argc < 1 || MAXARGS < argc) {
-		bu_vls_printf(&vls, "helplib_alias wdb_ls %s", cmdname);
+		bu_vls_printf(&vls, "helplib_alias wdb_ls %s", argv[0]);
 		Tcl_Eval(interp, bu_vls_addr(&vls));
 		bu_vls_free(&vls);
 		return TCL_ERROR;
 	}
 
 	bu_optind = 1;	/* re-init bu_getopt() */
-	while ((c = bu_getopt(argc, argv, "acrslopA")) != EOF) {
+	while ((c = bu_getopt(argc, argv, "acrslpAo")) != EOF) {
 		switch (c) {
 		case 'A':
 			attr_flag = 1;
@@ -2049,9 +2059,8 @@ wdb_ls_cmd(struct rt_wdb	*wdbp,
 			return TCL_ERROR;
 		}
 	}
-	/* skip options processed plus command name, should just leave object names */
-	argc -= bu_optind;
-	argv += bu_optind;
+	argc -= (bu_optind - 1);
+	argv += (bu_optind - 1);
 
 	/* create list of selected objects from database */
 	if( attr_flag ) {
@@ -2060,13 +2069,13 @@ wdb_ls_cmd(struct rt_wdb	*wdbp,
 		struct bu_attribute_value_set avs;
 		int dir_flags;
 		int op;
-		if( (argc < 2) || (argc%2 != 0) ) {
-		    /* should be even number of name/value pairs */
-		    bu_log("ls -A option expects even number of 'name value' pairs\n");
-		    bu_vls_printf(&vls, "helplib_alias wdb_ls %s", cmdname);
-		    Tcl_Eval(interp, bu_vls_addr(&vls));
-		    bu_vls_free(&vls);
-		    return TCL_ERROR;
+
+		if( argc < 3 || argc%2 != 1 ) {
+			/* should be odd number of args name/value pairs plus argv[0] */
+			bu_vls_printf(&vls, "helplib_alias wdb_ls %s", argv[0]);
+			Tcl_Eval(interp, bu_vls_addr(&vls));
+			bu_vls_free(&vls);
+			return TCL_ERROR;
 		}
 
 		if( or_flag ) {
@@ -2082,34 +2091,31 @@ wdb_ls_cmd(struct rt_wdb	*wdbp,
 		if( rflag ) dir_flags = DIR_REGION;
 		if( !dir_flags ) dir_flags = -1 ^ DIR_HIDDEN;
 
-		bu_avs_init( &avs, argc, "wdb_ls_cmd avs" );
-		for (i = 0; i < argc; i += 2) {
+		bu_avs_init( &avs, argc-1, "wdb_ls_cmd avs" );
+		for (i = 1; i < argc; i += 2) {
 			if( or_flag ) {
 				bu_avs_add_nonunique( &avs, argv[i], argv[i+1] );
 			} else {
 				bu_avs_add( &avs, argv[i], argv[i+1] );
 			}
 		}
-
 		tbl = db_lookup_by_attr( wdbp->dbip, dir_flags, &avs, op );
 		bu_avs_free( &avs );
-
 		dirp = wdb_getspace(wdbp->dbip, BU_PTBL_LEN( tbl ));
 		dirp0 = dirp;
 		for( i=0 ; i<BU_PTBL_LEN( tbl ) ; i++ ) {
 			*dirp++ = (struct directory *)BU_PTBL_GET( tbl, i );
 		}
-
 		bu_ptbl_free( tbl );
 		bu_free( (char *)tbl, "wdb_ls_cmd ptbl" );
-	} else if (argc > 0) {
+	} else if (argc > 1) {
 		/* Just list specified names */
-		dirp = wdb_getspace(wdbp->dbip, argc);
+		dirp = wdb_getspace(wdbp->dbip, argc-1);
 		dirp0 = dirp;
 		/*
 		 * Verify the names, and add pointers to them to the array.
 		 */
-		for (i = 0; i < argc; i++) {
+		for (i = 1; i < argc; i++) {
 			if ((dp = db_lookup(wdbp->dbip, argv[i], LOOKUP_NOISY)) == DIR_NULL)
 				continue;
 			*dirp++ = dp;
@@ -3400,10 +3406,6 @@ adjust_names(
 	     struct concat_data *cc_data )
 {
 	char *new_name;
-        
-        if( trp == NULL ) {
-            return;
-        }
 
 	switch( trp->tr_op ) {
 		case OP_DB_LEAF:
@@ -3464,8 +3466,8 @@ copy_object(
 		switch( ip.idb_minor_type ) {
 			case DB5_MINORTYPE_BRLCAD_COMBINATION:
 				comb = (struct rt_comb_internal *)ip.idb_ptr;
-                                RT_CK_COMB_TCL( interp, comb );
-                                adjust_names( interp, comb->tree, curr_dbip, name_tbl, used_names_tbl, cc_data );
+				RT_CK_COMB_TCL( interp, comb );
+				adjust_names( interp, comb->tree, curr_dbip, name_tbl, used_names_tbl, cc_data );
 				break;
 			case DB5_MINORTYPE_BRLCAD_EXTRUDE:
 				extr = (struct rt_extrude_internal *)ip.idb_ptr;
@@ -5349,7 +5351,7 @@ wdb_version_tcl(ClientData	clientData,
  *@brief
  *  NON-PARALLEL due to rt_uniresource
  */
-void
+static void
 wdb_print_node(struct rt_wdb		*wdbp,
 	       Tcl_Interp		*interp,
 	       register struct directory *dp,
@@ -5488,6 +5490,93 @@ wdb_track_tcl(ClientData clientData,
   return wdb_track_cmd(wdbp, interp, argc-1, argv+1);
 }
 
+/**
+ *
+ *
+ */
+int
+wdb_tree_cmd(struct rt_wdb	*wdbp,
+	     Tcl_Interp		*interp,
+	     int		argc,
+	     char 		**argv)
+{
+	register struct directory	*dp;
+	register int			j;
+	int				cflag = 0;
+	int				indentSize = -1;
+	int				c;
+	struct bu_vls			vls;
+	FILE				*fdout = NULL;
+
+	if (argc < 2 || MAXARGS < argc) {
+
+		bu_vls_init(&vls);
+		bu_vls_printf(&vls, "helplib_alias wdb_tree %s", argv[0]);
+		Tcl_Eval(interp, bu_vls_addr(&vls));
+		bu_vls_free(&vls);
+		return TCL_ERROR;
+	}
+
+	/* Parse options */
+	bu_optind = 1;	/* re-init bu_getopt() */
+	while ((c=bu_getopt(argc, argv, "i:o:c")) != EOF) {
+		switch (c) {
+		case 'i':
+			indentSize = atoi(bu_optarg);
+			break;
+		case 'c':
+		    cflag = 1;
+			break;
+		case 'o':
+		    if( (fdout = fopen( bu_optarg, "w+" )) == NULL ) {
+			Tcl_SetErrno( errno );
+			Tcl_AppendResult( interp, "Failed to open output file, ",
+					  strerror( errno ), (char *)NULL );
+			return TCL_ERROR;
+		    }
+		    break;
+		case '?':
+		default:
+		    bu_vls_init(&vls);
+		    bu_vls_printf(&vls, "helplib_alias wdb_tree %s", argv[0]);
+		    Tcl_Eval(interp, bu_vls_addr(&vls));
+		    bu_vls_free(&vls);
+		    return TCL_ERROR;
+		    break;
+		}
+	}
+
+	argc -= (bu_optind - 1);
+	argv += (bu_optind - 1);
+
+	for (j = 1; j < argc; j++) {
+		if (j > 1)
+			Tcl_AppendResult(interp, "\n", (char *)NULL);
+		if ((dp = db_lookup(wdbp->dbip, argv[j], LOOKUP_NOISY)) == DIR_NULL)
+			continue;
+		wdb_print_node(wdbp, interp, dp, 0, indentSize, 0, cflag);
+	}
+
+	if( fdout != NULL ) {
+	    fprintf( fdout, "%s", Tcl_GetStringResult( interp ) );
+	    Tcl_ResetResult( interp );
+	    fclose( fdout );
+	}
+
+	return TCL_OK;
+}
+
+/**
+ * Usage:
+ *        procname tree object(s)
+ */
+static int
+wdb_tree_tcl(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+{
+	struct rt_wdb *wdbp = (struct rt_wdb *)clientData;
+
+	return wdb_tree_cmd(wdbp, interp, argc-1, argv+1);
+}
 
 /**
  *  			W D B _ C O L O R _ P U T R E C

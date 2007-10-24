@@ -83,7 +83,8 @@ struct iges_edge_use *edge;
 
 	if( !el )
 	{
-		bu_exit(1, "Cannot find an edge list with edge_de = %d\n" , edge->edge_de );
+		bu_log( "Cannot find an edge list with edge_de = %d\n" , edge->edge_de );
+		bu_bomb( "Cannot find correct edge list\n" );
 	}
 
 	if( edge->orient )
@@ -104,7 +105,7 @@ struct iges_edge_use *edge;
 	if( v_list->i_verts[vert_index].v )
 	{
 		bu_log( "vertex already assigned x%x, trying to assign x%x\n", v_list->i_verts[vert_index].v, v );
-		bu_exit(1, "Multiple vertex assignments\n" );
+		bu_bomb( "Multiple vertex assignments\n" );
 	}
 
 	v_list->i_verts[vert_index].v = v;

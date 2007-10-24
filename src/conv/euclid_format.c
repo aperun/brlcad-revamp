@@ -32,7 +32,11 @@ static const char RCSid[] = "$Header$";
 
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 
 #include "machine.h"
 #include "vmath.h"
@@ -65,18 +69,18 @@ main(void)
 			int j;
 
 			if( scanf( "%d %f %f %f" , &j , &a , &b , &c ) == EOF )
-				bu_exit(1, "Unexpected EOF\n");
+				bu_bomb( "Unexpected EOF\n" );
 
 			if( j != i+1 )
 			{
-				bu_exit(1, "Points out of order\n");
+				bu_bomb( "Points out of order\n" );
 			}
 
 			VSET( pts[i] , a , b , c );
 		}
 
 		if( scanf( "%d %f %f %f %f" , &face_no , &a , &b , &c , &d ) == EOF )
-			bu_exit(1, "Unexpected EOF\n" );
+			bu_bomb( "Unexpected EOF\n" );
 		VSET( pl , a , b , c );
 		pl[3] = d;
 

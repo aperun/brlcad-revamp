@@ -11,7 +11,7 @@ export LOG_FILE=`pwd`/${MYNAME}_${START_TIME}.log
 # if we are the master host, get things set up
 #
 if [ X$MYNAME == X$MASTERHOST ] ; then
-    echo "fetching archive"
+    /bin/echo fetching archive
 
     # Delete any leftovers
     rm -rf $HOSTS
@@ -23,7 +23,7 @@ if [ X$MYNAME == X$MASTERHOST ] ; then
     cvs  -z3 -d:ext:lbutler@cvs.sf.net:/cvsroot/brlcad co -P brlcad > $LOG_FILE 2>&1
 
     if [ ! -d brlcad ] ; then
-	echo "unable to extract source from CVS repository"
+	/bin/echo "unable to extract source from CVS repository"
 	exit 1
     fi
 
@@ -42,7 +42,7 @@ if [ X$MYNAME == X$MASTERHOST ] ; then
 
 
     # Update configure.ac with the release we found in README
-    echo "update configure"
+    /bin/echo update configure
     if [ ! -f configure.ac.orig ] ; then
 	mv configure.ac configure.ac.orig
     fi
@@ -54,14 +54,14 @@ if [ X$MYNAME == X$MASTERHOST ] ; then
 	< configure.ac.orig > configure.ac
 
     # get a build environment so we can "make dist"
-    echo "autogen"
-    sh ./autogen.sh >> $LOG_FILE 2>&1
+    /bin/echo autogen
+    /bin/sh ./autogen.sh >> $LOG_FILE 2>&1
 
-    echo "configure"
+    /bin/echo configure
     ./configure >> $LOG_FILE 2>&1
 
     # Prepare a source distribution
-    echo "making dist"
+    /bin/echo making dist
     make dist >> $LOG_FILE 2>&1
     cd ..
 
@@ -69,9 +69,9 @@ if [ X$MYNAME == X$MASTERHOST ] ; then
     tar xzf brlcad/brlcad-$MAJOR.$MINOR.$PATCH.tar.gz
 
     # Let the other regression hosts start doing their work
-    echo "semaphores"
+    /bin/echo semaphores
     for i in $HOSTS ; do
-	echo "$MAJOR.$MINOR.$PATCH" > $i
+	echo $MAJOR.$MINOR.$PATCH > $i
     done
 fi
 
@@ -84,7 +84,7 @@ while [ ! -f $MYNAME ] ; do
 
     if [ $DELTA -gt 300 ] ; then
 	# we should log something here
-	echo "$MYNAME giving up at $NOW" >> $LOG_FILE
+	/bin/echo $MYNAME giving up at $NOW >> $LOG_FILE
 
 	exit 1
     fi
@@ -92,7 +92,7 @@ while [ ! -f $MYNAME ] ; do
     sleep 10
 done
 
-echo "Starting build"
+/bin/echo "Starting build"
 
 VERSION=`cat $MYNAME`
 rm $MYNAME
@@ -121,7 +121,7 @@ cocoa)
     export MAKE_CMD="make" ;
     export MAKE_OPTS="-j2" ;;
 *)
-    echo "hostname \"$MYNAME\" not recognized"
+    echo hostname \"$MYNAME\" not recognized
     exit 1
 esac
 
@@ -129,7 +129,7 @@ BUILD_DIR=`pwd`/${MYNAME}_${START_TIME}.dir
 rm -f $BUILD_DIR
 mkdir $BUILD_DIR
 if [ ! -d $BUILD_DIR ] ; then
-    echo "Creation of $BUILD_DIR failed"
+    echo create $BUILD_DIR failed
     exit 1
 fi
 
@@ -145,18 +145,18 @@ echo ../brlcad-$VERSION/configure \
     --prefix=/usr/brlcad/rel-$VERSION \
     >> $LOG_FILE 2>&1
 
-echo "runnig: $MAKE_CMD $MAKE_OPTS" >> $LOG_FILE 2>&1
+echo runnig: $MAKE_CMD $MAKE_OPTS >> $LOG_FILE 2>&1
 
 $MAKE_CMD $MAKE_OPTS > build.log 2>&1
 STATUS=$?
 if [ $STATUS != 0 ] ; then
-    echo "Build failed with status $STATUS"
+    echo build failed status $STATUS
     exit 1
 fi
 if [ -s build.log ] ; then
     cd regress
     make test > test.log 2>&1
 else
-    echo "Build failed, zero length log file"
+    echo build failed zero length log
     exit 1
 fi

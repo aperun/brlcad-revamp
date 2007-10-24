@@ -41,7 +41,9 @@ static const char RCSars[] = "@(#)$Header$ (BRL)";
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#endif
 #include <math.h>
 #include <ctype.h>
 

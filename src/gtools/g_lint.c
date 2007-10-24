@@ -33,14 +33,19 @@
 static const char RCSid[] = "@(#)$Header$ (ARL)";
 #endif
 
+#include <stdlib.h>
 #include "common.h"
 
-#include <stdlib.h>
+
+#ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#include <strings.h>
+#endif
+
 #include <stdio.h>
 #include <math.h>
 #include <limits.h>			/* home of INT_MAX aka MAXINT */
-
 #include "machine.h"
 #include "bu.h"
 #include "vmath.h"

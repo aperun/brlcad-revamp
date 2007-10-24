@@ -104,7 +104,11 @@ Acknowledgements:
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <math.h>
 #include <signal.h>
 #include "tcl.h"
@@ -527,7 +531,8 @@ vdraw_send_tcl(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
 		return TCL_ERROR;
 	}
 
-	snprintf(solid_name, RT_VDRW_MAXNAME+RT_VDRW_PREFIX_LEN+1, "%s%s", RT_VDRW_PREFIX, dgop->dgo_currVHead->vdc_name);
+	sprintf(solid_name, RT_VDRW_PREFIX);
+	strncat(solid_name, dgop->dgo_currVHead->vdc_name, RT_VDRW_MAXNAME);
 	if ((dp = db_lookup(dgop->dgo_wdbp->dbip, solid_name, LOOKUP_QUIET)) == DIR_NULL) {
 		real_flag = 0;
 	} else {

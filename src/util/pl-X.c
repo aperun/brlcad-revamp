@@ -33,10 +33,13 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#endif
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
@@ -179,8 +182,8 @@ getshort(void)
 double
 getieee(void)
 {
-	unsigned char	in[8];
-	double		d;
+	char	in[8];
+	double	d;
 
 	fread( in, 8, 1, stdin );
 	ntohd( (unsigned char *)&d, in, 1 );
@@ -481,7 +484,7 @@ main(int argc, char **argv)
 		    waiting = 0;
 		    break;
 		case Expose:
-
+		    
 		default:
 		    printf("unhandled event: %d\n", event.type);
 	    }

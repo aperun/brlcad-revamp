@@ -28,7 +28,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #if defined(HAVE_UNISTD_H)
 #  include <unistd.h>
 #else
@@ -207,7 +211,7 @@ static int invisible=0;
 #define LINELEN	2050
 char line[LINELEN];
 
-static char *usage="dxf-g [-c] [-d] [-v] [-t tolerance] [-s scale_factor] input_file.dxf output_file.g\n";
+static char *usage="dxf-g [-c] [-d] [-v] [-t tolerance] [-s scale_factor] input_dxf_file output_file.g\n";
 
 static FILE *dxf;
 static struct rt_wdb *out_fp;
@@ -626,7 +630,13 @@ add_triangle( int v1, int v2, int v3, int layer )
 	if( layers[layer]->curr_tri >= layers[layer]->max_tri ) {
 		/* allocate more memory for triangles */
 		layers[layer]->max_tri += TRI_BLOCK;
-		layers[layer]->part_tris = (int *)bu_realloc( layers[layer]->part_tris, sizeof( int ) * layers[layer]->max_tri * 3, "layers[layer]->part_tris" );
+		layers[layer]->part_tris = (int *)bu_realloc( layers[layer]->part_tris,
+							  sizeof( int ) * layers[layer]->max_tri * 3, "layers[layer]->part_tris" );
+		if( !layers[layer]->part_tris ) {
+			bu_log( "ERROR: Failed to allocate memory for part triangles on layer %s\n",
+				 layers[layer]->name);
+			exit( 1 );
+		}
 	}
 
 	/* fill in triangle info */
@@ -3487,9 +3497,10 @@ main( int argc, char *argv[] )
 		{
 			case 's':	/* scale factor */
 				scale_factor = atof( bu_optarg );
-				if (scale_factor < SQRT_SMALL_FASTF) {
-					bu_log("scale factor too small (%g < %g)\n", scale_factor, SQRT_SMALL_FASTF);
-					bu_exit(1, "%s", usage);
+				if( scale_factor < SQRT_SMALL_FASTF ) {
+					bu_log( "scale factor too small\n" );
+					bu_log( "%s", usage );
+					exit( 1 );
 				}
 				break;
 			case 'c':	/* ignore colors */
@@ -3506,26 +3517,28 @@ main( int argc, char *argv[] )
 				verbose = 1;
 				break;
 			default:
-				bu_exit(1, usage);
+				bu_bomb( usage );
 				break;
 		}
 	}
 
 	if( argc - bu_optind < 2 ) {
-		bu_exit( 1, usage );
+		bu_bomb( usage );
 	}
 
 	dxf_file = argv[bu_optind++];
 	output_file = argv[bu_optind];
 
-	if( (dxf=fopen( dxf_file, "r")) == NULL ) {
-		perror( dxf_file );
-		bu_exit( 1, "Cannot open DXF file (%s)\n", dxf_file );
+	if( (out_fp = wdb_fopen( output_file )) == NULL ) {
+		bu_log( "Cannot open output file (%s)\n", output_file );
+		perror( output_file );
+		bu_bomb( "Cannot open output file\n" );
 	}
 
-	if( (out_fp = wdb_fopen( output_file )) == NULL ) {
-		perror( output_file );
-		bu_exit( 1, "Cannot open BRL-CAD geometry file (%s)\n", output_file );
+	if( (dxf=fopen( dxf_file, "r")) == NULL ) {
+		bu_log( "Cannot open DXF file (%s)\n", dxf_file );
+		perror( dxf_file );
+		bu_bomb( "Cannot open DXF file\n" );
 	}
 
 	ptr1 = strrchr( dxf_file , '/' );

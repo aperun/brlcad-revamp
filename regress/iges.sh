@@ -25,36 +25,28 @@ EOF
 ../src/conv/iges/iges-g -o iges_new.g -p iges_file.iges 2>> iges.log
 
 if [ $? != 0 ] ; then
-    echo g-iges/iges-g FAILED
+    /bin/echo g-iges/iges-g FAILED
     STATUS=-1
 else
-    echo g-iges/iges-g completed successfully
+    /bin/echo g-iges/iges-g completed successfully
 fi
 
 
 ../src/conv/iges/iges-g -o iges_stdout_new.g -p iges_stdout.iges 2>> iges.log
 
 if [ $? != 0 ] ; then
-    echo g-iges/iges-g FAILED
+    /bin/echo g-iges/iges-g FAILED
     STATUS=-1
 else
-    echo g-iges/iges-g completed successfully
+    /bin/echo g-iges/iges-g completed successfully
 fi
 
 
 if [ X$STATUS = X0 ] ; then
-    echo "-> iges.sh succeeded"
+    /bin/echo '-> iges.sh succeeded'
 else
-    echo "-> iges.sh FAILED"
+    /bin/echo '-> iges.sh failed'
 fi
 
-exit $STATUS
 
-# Local Variables:
-# mode: sh
-# tab-width: 8
-# sh-indentation: 4
-# sh-basic-offset: 4
-# indent-tabs-mode: t
-# End:
-# ex: shiftwidth=4 tabstop=8
+exit $STATUS

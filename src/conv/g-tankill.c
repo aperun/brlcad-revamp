@@ -37,7 +37,11 @@ static const char RCSid[] = "$Header$";
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #if defined(HAVE_UNISTD_H)
 #  include <unistd.h>
 #else
@@ -59,7 +63,7 @@ static const char RCSid[] = "$Header$";
 
 BU_EXTERN(union tree *do_region_end, (struct db_tree_state *tsp, struct db_full_path *pathp, union tree *curtree, genptr_t client_data));
 
-static const char usage[] = "Usage:\n\
+static char	usage[] = "Usage:\n\
 	%s [-v] [-xX lvl] [-a abs_tol] [-r rel_tol] [-n norm_tol] [-s surroundings_code] [-i idents_output_file] [-o out_file] brlcad_db.g object(s)\n\
 		v - verbose\n\
 		x - librt debug level\n\
@@ -188,7 +192,7 @@ long *flags;
 		if( fu->orientation != OT_SAME )
 			fu = fu->fumate_p;
 		if( fu->orientation != OT_SAME )
-			bu_exit(1, "nmg_find_void_shells: Neither faceuse nor mate have OT_SAME orient\n" );
+			bu_bomb( "nmg_find_void_shells: Neither faceuse nor mate have OT_SAME orient\n" );
 
 		NMG_GET_FU_NORMAL( normal , fu );
 		if( normal[dir] > 0.0 )
@@ -477,7 +481,7 @@ Write_tankill_region(struct nmgregion *r, struct db_tree_state *tsp, struct db_f
 
 		if( lu->orientation != OT_SAME )
 		{
-			bu_log( "g-tankill: Found a hole in a triangulated face!\n" );
+			bu_log( "g-tankill: Found a hole in a triangulated face!!!\n" );
 			nmg_pr_fu_briefly( fu , (char *)NULL );
 			goto outt;
 		}
@@ -553,10 +557,10 @@ Write_tankill_region(struct nmgregion *r, struct db_tree_state *tsp, struct db_f
 						if( BU_LIST_FIRST_MAGIC(&lu->down_hd) != NMG_EDGEUSE_MAGIC )
 							continue;
 
-						/* shouldn't be any holes! */
+						/* shouldn't be any holes!!! */
 						if( lu->orientation != OT_SAME )
 						{
-							bu_log( "g-tankill: Found a hole in a triangulated face!\n" );
+							bu_log( "g-tankill: Found a hole in a triangulated face!!!\n" );
 							nmg_pr_fu_briefly( fu , (char *)NULL );
 							goto outt;
 						}
@@ -723,23 +727,27 @@ main(int argc, char **argv)
 			NMG_debug = rt_g.NMG_debug;
 			break;
 		default:
-			bu_exit(1, usage, argv[0]);
+			fprintf(stderr, usage, argv[0]);
+			exit(1);
 			break;
 		}
 	}
 
 	if (bu_optind+1 >= argc) {
-		bu_exit(1, usage, argv[0]);
+		fprintf(stderr, usage, argv[0]);
+		exit(1);
 	}
 
 	/* Open BRL-CAD database */
 	if ((dbip = db_open( argv[bu_optind] , "r")) == DBI_NULL)
 	{
+		bu_log( "Cannot open %s\n" , argv[bu_optind] );
 		perror(argv[0]);
-		bu_exit(1, "Cannot open %s\n" , argv[bu_optind] );
+		exit(1);
 	}
 	if( db_dirbuild( dbip ) ) {
-	    bu_exit(1, "db_dirbuild failed\n" );
+	    bu_log( "db_dirbuild failed\n" );
+	    exit(1);
 	}
 
 	if( out_file == NULL )
@@ -865,7 +873,6 @@ union tree *do_region_end(register struct db_tree_state *tsp, struct db_full_pat
 		return  curtree;
 
 	regions_tried++;
-
 	/* Begin bu_bomb() protection */
 	if( BU_SETJUMP )
 	{
@@ -879,7 +886,7 @@ union tree *do_region_end(register struct db_tree_state *tsp, struct db_full_pat
 		bu_free( (char *)sofar, "sofar" );
 
 		/* Sometimes the NMG library adds debugging bits when
-		 * it detects an internal error, before before bombing out.
+		 * it detects an internal error, before bu_bomb().
 		 */
 		rt_g.NMG_debug = NMG_debug;	/* restore mode */
 
@@ -954,7 +961,7 @@ union tree *do_region_end(register struct db_tree_state *tsp, struct db_full_pat
 				bu_free( (char *)sofar, "sofar" );
 
 				/* Sometimes the NMG library adds debugging bits when
-				 * it detects an internal error, before before bombing out.
+				 * it detects an internal error, before bu_bomb().
 				 */
 				rt_g.NMG_debug = NMG_debug;	/* restore mode */
 

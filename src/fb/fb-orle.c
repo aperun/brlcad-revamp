@@ -218,7 +218,7 @@ parsArgv(int argc, register char **argv)
 	}
 	if( argv[bu_optind] != NULL )
 	{
-		if(bu_file_exists(argv[bu_optind]))
+		if( access( argv[bu_optind], 0 ) == 0 )
 		{
 			(void) fprintf( stderr,
 			"\"%s\" already exists.\n",

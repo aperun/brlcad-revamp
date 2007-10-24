@@ -1,7 +1,7 @@
 # $Id$
 
 AM_CPPFLAGS = ${TCL_CPPFLAGS}
-AM_LDFLAGS = \
+LDFLAGS = \
 	${OPTICAL} \
 	${RT} ${FB}
 
@@ -203,6 +203,8 @@ EXTRA_DIST = \
 	$(ALLSRCS) \
 	$(man_MANS) \
 	rt.dsp
+
+MAINTAINERCLEANFILES = Makefile.in
 
 DEPS=src/librt src/libfb src/liboptical
 

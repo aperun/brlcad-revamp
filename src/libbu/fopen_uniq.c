@@ -39,12 +39,15 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>	/* for strerror() */
-#include <ctype.h>
-#include <math.h>
-#include <string.h>
-
 #ifdef HAVE_SYS_PARAM_H
 #  include <sys/param.h>
+#endif
+#include <ctype.h>
+#include <math.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
 #endif
 
 #include "machine.h"

@@ -31,8 +31,6 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 #include <signal.h>
 #include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 #include "machine.h"
 #include "vmath.h"
@@ -49,7 +47,8 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #define DEBUG_UI	0
 
 static char promptbuf[LNBUFSZ];
-static const char *bannerp = "BURST (2.2)";
+static char *bannerp = "BURST (%s)";
+static char *pgmverp = "2.2";
 
 #define AddCmd( nm, f )\
 	{	Trie	*p;\
@@ -68,7 +67,7 @@ static const char *bannerp = "BURST (2.2)";
 			var = 0; \
 		else \
 			{ \
-			(void) snprintf( scrbuf, LNBUFSZ, \
+			(void) sprintf( scrbuf, \
 					"Illegal input \"%s\".", \
 					ptr->buffer ); \
 			warning( scrbuf ); \
@@ -81,7 +80,7 @@ static const char *bannerp = "BURST (2.2)";
 	{\
 	if( ! batchmode )\
 		{\
-		(void) snprintf( (ptr)->buffer, LNBUFSZ, (ptr)->fmt, var*conv );\
+		(void) sprintf( (ptr)->buffer, (ptr)->fmt, var*conv );\
 		(void) getInput( ptr );\
 		if( (sscanf( (ptr)->buffer, (ptr)->fmt, &(var) )) != 1 )\
 			{\
@@ -426,7 +425,7 @@ Ftable *tp;
 static void
 banner()
 	{
-	(void) snprintf( scrbuf, LNBUFSZ, "%s", bannerp );
+	(void) sprintf(	scrbuf,	bannerp, pgmverp );
 	HmBanner( scrbuf, BORDER_CHR );
 	return;
 	}
@@ -449,10 +448,10 @@ Input *ip;
 		if( *defaultp == NUL )
 			defaultp = "no default";
 		if( ip->range != NULL )
-			(void) snprintf( promptbuf, LNBUFSZ, "%s ? (%s)[%s] ",
+			(void) sprintf( promptbuf, "%s ? (%s)[%s] ",
 					ip->prompt, ip->range, defaultp );
 		else
-			(void) snprintf( promptbuf, LNBUFSZ, "%s ? [%s] ",
+			(void) sprintf( promptbuf, "%s ? [%s] ",
 					ip->prompt, defaultp );
 		prompt( promptbuf );
 		for( p = ip->buffer; (c = HmGetchar()) != '\n'; )
@@ -467,7 +466,7 @@ Input *ip;
 		{	char *str = strtok( cmdptr, WHITESPACE );
 		if( str == NULL )
 			return	0;
-		(void) strncpy( ip->buffer, str, LNBUFSZ );
+		(void) strcpy( ip->buffer, str );
 		cmdptr = NULL;
 		}
 	return  1;
@@ -560,7 +559,7 @@ HmItem *itemp;
 		register Input *ip = input;
 	GetVar( viewazim, ip, DEGRAD );
 	GetVar( viewelev, ip, DEGRAD );
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t%g %g",
+	(void) sprintf( scrbuf, "%s\t%g %g",
 			itemp != NULL ? itemp->text : cmdname,
 			viewazim, viewelev );
 	logCmd( scrbuf );
@@ -583,13 +582,13 @@ HmItem *itemp;
 	if( shotburst )
 		{
 		GetBool( reqburstair, ip );
-		(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s %s",
+		(void) sprintf( scrbuf, "%s\t\t%s %s",
 				itemp != NULL ? itemp->text : cmdname,
 				shotburst ? "yes" : "no",
 				reqburstair ? "yes" : "no" );
 		}
 	else
-		(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
+		(void) sprintf( scrbuf, "%s\t\t%s",
 				itemp != NULL ? itemp->text : cmdname,
 				shotburst ? "yes" : "no" );
 	logCmd( scrbuf );
@@ -610,18 +609,18 @@ HmItem *itemp;
 		register Input *ip = input;
 		FILE *airfp;
 	if( getInput( ip ) )
-		(void) strncpy( airfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( airfile, ip->buffer );
 	else
 		airfile[0] = NUL;
 	if( (airfp = fopen( airfile, "r" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ, 
+		(void) sprintf( scrbuf,
 				"Read access denied for \"%s\"",
 				airfile );
 		warning( scrbuf );
 		return;
 		}
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
+	(void) sprintf( scrbuf, "%s\t\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			airfile );
 	logCmd( scrbuf );
@@ -643,18 +642,18 @@ HmItem *itemp;
 		register Input *ip = input;
 		FILE *armorfp;
 	if( getInput( ip ) )
-		(void) strncpy( armorfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( armorfile, ip->buffer );
 	else
 		armorfile[0] = NUL;
 	if( (armorfp = fopen( armorfile, "r" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ, 
+		(void) sprintf( scrbuf,
 				"Read access denied for \"%s\"",
 				armorfile );
 		warning( scrbuf );
 		return;
 		}
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t%s",
+	(void) sprintf( scrbuf, "%s\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			armorfile );
 	logCmd( scrbuf );
@@ -675,7 +674,7 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	GetVar( bdist, ip, unitconv );
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%g",
+	(void) sprintf( scrbuf, "%s\t\t%g",
 			itemp != NULL ? itemp->text : cmdname,
 			bdist );
 	logCmd( scrbuf );
@@ -693,18 +692,18 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	if( getInput( ip ) )
-		(void) strncpy( outfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( outfile, ip->buffer );
 	else
 		outfile[0] = NUL;
 	if( (outfp = fopen( outfile, "w" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ, 
+		(void) sprintf( scrbuf,
 				"Write access denied for \"%s\"",
 				outfile );
 		warning( scrbuf );
 		return;
 		}
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
+	(void) sprintf( scrbuf, "%s\t\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			outfile );
 	logCmd( scrbuf );
@@ -721,7 +720,7 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	GetVar( cellsz, ip, unitconv );
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%g",
+	(void) sprintf( scrbuf, "%s\t\t%g",
 			itemp != NULL ? itemp->text : cmdname,
 			cellsz );
 	logCmd( scrbuf );
@@ -741,18 +740,18 @@ HmItem *itemp;
 		register Input *ip = input;
 		FILE *colorfp;
 	if( getInput( ip ) )
-		(void) strncpy( colorfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( colorfile, ip->buffer );
 	else
 		colorfile[0] = NUL;
 	if( (colorfp = fopen( colorfile, "r" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ, 
+		(void) sprintf( scrbuf,
 				"Read access denied for \"%s\"",
 				colorfile );
 		warning( scrbuf );
 		return;
 		}
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
+	(void) sprintf( scrbuf, "%s\t\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			colorfile );
 	logCmd( scrbuf );
@@ -775,7 +774,7 @@ HmItem *itemp;
 		{
 		if( getInput( ip ) )
 			{
-			(void) snprintf( scrbuf, LNBUFSZ, "%c%s",
+			(void) sprintf( scrbuf, "%c%s",
 					CHAR_COMMENT, ip->buffer );
 			logCmd( scrbuf );
 			(void) strcpy( ip->buffer, " " ); /* restore default */
@@ -796,7 +795,7 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	GetVar( conehfangle, ip, DEGRAD );
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%g",
+	(void) sprintf( scrbuf, "%s\t\t%g",
 			itemp != NULL ? itemp->text : cmdname,
 			conehfangle );
 	logCmd( scrbuf );
@@ -815,18 +814,18 @@ HmItem *itemp;
 		register Input *ip = input;
 		FILE *critfp;
 	if( getInput( ip ) )
-		(void) strncpy( critfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( critfile, ip->buffer );
 	else
 		critfile[0] = NUL;
 	if( (critfp = fopen( critfile, "r" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ, 
+		(void) sprintf( scrbuf,
 				"Read access denied for \"%s\"",
 				critfile );
 		warning( scrbuf );
 		return;
 		}
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t%s",
+	(void) sprintf( scrbuf, "%s\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			critfile );
 	logCmd( scrbuf );
@@ -848,7 +847,7 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	GetBool( deflectcone, ip );
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t%s",
+	(void) sprintf( scrbuf, "%s\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			deflectcone ? "yes" : "no" );
 	logCmd( scrbuf );
@@ -865,7 +864,7 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	GetBool( dithercells, ip );
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
+	(void) sprintf( scrbuf, "%s\t\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			dithercells ? "yes" : "no" );
 	logCmd( scrbuf );
@@ -888,7 +887,7 @@ HmItem *itemp;
 	GetVar( gridrt, ip, unitconv );
 	GetVar( griddn, ip, unitconv );
 	GetVar( gridup, ip, unitconv );
-	(void) snprintf( scrbuf,LNBUFSZ, 
+	(void) sprintf( scrbuf,
 			"%s\t\t%g %g %g %g",
 			itemp != NULL ? itemp->text : cmdname,
 			gridlf, gridrt, griddn, gridup );
@@ -906,7 +905,7 @@ static void
 MencloseTarget( itemp )
 HmItem *itemp;
 	{
-	    (void) snprintf( scrbuf, LNBUFSZ, 
+	(void) sprintf( scrbuf,
 			"%s",
 			itemp != NULL ? itemp->text : cmdname );
 	logCmd( scrbuf );
@@ -924,7 +923,7 @@ HmItem *itemp;
 		register Input *ip = input;
 		static int errfd = -1;
 	if( getInput( ip ) )
-		(void) strncpy( errfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( errfile, ip->buffer );
 	else
 		(void) strncpy( errfile, "/dev/tty", LNBUFSZ );
 	/* insure that error log is truncated */
@@ -940,7 +939,7 @@ HmItem *itemp;
 		locPerror( "fcntl" );
 		return;
 		}
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
+	(void) sprintf( scrbuf, "%s\t\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			errfile );
 	logCmd( scrbuf );
@@ -953,7 +952,7 @@ Mexecute( itemp )
 HmItem *itemp;
 	{	static boolean	gottree = 0;
 		boolean		loaderror = 0;
-		(void) snprintf( scrbuf, LNBUFSZ, 
+	(void) sprintf( scrbuf,
 			"%s",
 			itemp != NULL ? itemp->text : cmdname );
 	logCmd( scrbuf );
@@ -985,11 +984,11 @@ HmItem *itemp;
 			ptr = NULL
 			)
 			{
-			(void) snprintf( scrbuf, LNBUFSZ, "Loading \"%s\"", obj );
+			(void) sprintf( scrbuf, "Loading \"%s\"", obj );
 			notify( scrbuf, NOTIFY_APPEND );
 			if( rt_gettree( rtip, obj ) != 0 )
 				{
-				    (void) snprintf( scrbuf, LNBUFSZ, 
+				(void) sprintf( scrbuf,
 						"Bad object \"%s\".",
 						obj );
 				warning( scrbuf );
@@ -1029,10 +1028,10 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	if( getInput( ip ) )
-		(void) strncpy( fbfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( fbfile, ip->buffer );
 	else
 		fbfile[0] = NUL;
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
+	(void) sprintf( scrbuf, "%s\t\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			fbfile );
 	logCmd( scrbuf );
@@ -1043,29 +1042,27 @@ HmItem *itemp;
 static void
 MgedFile( itemp )
 HmItem *itemp;
-{
-    struct stat sb;
-    static Input input[] = {
-	{ "Name of target (MGED) file", "", "%s", 0 },
-    };
-    register Input *ip = input;
-
-    if( getInput( ip ) )
-	(void) strncpy( gedfile, ip->buffer, LNBUFSZ );
-
-    if (!bu_file_exists(gedfile)) {
-	(void) snprintf( scrbuf, LNBUFSZ, 
-			 "Unable to find file \"%s\"",
-			 gedfile );
-	warning( scrbuf );
+	{	static Input input[] =
+			{
+			{ "Name of target (MGED) file", "", "%s", 0 },
+			};
+		register Input *ip = input;
+	if( getInput( ip ) )
+		(void) strcpy( gedfile, ip->buffer );
+	if( access( gedfile, 04 ) == -1 )
+		{
+		(void) sprintf( scrbuf,
+				"Read access denied for \"%s\"",
+				gedfile );
+		warning( scrbuf );
+		return;
+		}
+	(void) sprintf( scrbuf, "%s\t\t%s",
+			itemp != NULL ? itemp->text : cmdname,
+			gedfile );
+	logCmd( scrbuf );
 	return;
-    }
-    (void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
-		     itemp != NULL ? itemp->text : cmdname,
-		     gedfile );
-    logCmd( scrbuf );
-    return;
-}
+	}
 
 /*ARGSUSED*/
 static void
@@ -1077,18 +1074,18 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	if( getInput( ip ) )
-		(void) strncpy( gridfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( gridfile, ip->buffer );
 	else
 		histfile[0] = NUL;
 	if( (gridfp = fopen( gridfile, "w" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ, 
+		(void) sprintf( scrbuf,
 				"Write access denied for \"%s\"",
 				gridfile );
 		warning( scrbuf );
 		return;
 		}
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
+	(void) sprintf( scrbuf, "%s\t\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			gridfile );
 	logCmd( scrbuf );
@@ -1123,7 +1120,7 @@ HmItem *itemp;
 		GetVar( grndbk, ip, unitconv );
 		GetVar( grndlf, ip, unitconv );
 		GetVar( grndrt, ip, unitconv );
-		(void) snprintf( scrbuf, LNBUFSZ, "%s\t\tyes %g %g %g %g %g",
+		(void) sprintf( scrbuf, "%s\t\tyes %g %g %g %g %g",
 				itemp != NULL ? itemp->text : cmdname,
 				grndht, grndfr, grndbk, grndlf, grndrt );
 		grndht /= unitconv; /* convert to millimeters */
@@ -1133,7 +1130,7 @@ HmItem *itemp;
 		grndrt /= unitconv;
 		}
 	else
-		(void) snprintf( scrbuf, LNBUFSZ, "%s\t\tno",
+		(void) sprintf( scrbuf, "%s\t\tno",
 				itemp != NULL ? itemp->text : cmdname
 				);
 	logCmd( scrbuf );
@@ -1150,18 +1147,18 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	if( getInput( ip ) )
-		(void) strncpy( histfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( histfile, ip->buffer );
 	else
 		histfile[0] = NUL;
 	if( (histfp = fopen( histfile, "w" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ, 
+		(void) sprintf( scrbuf,
 				"Write access denied for \"%s\"",
 				histfile );
 		warning( scrbuf );
 		return;
 		}
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
+	(void) sprintf( scrbuf, "%s\t\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			histfile );
 	logCmd( scrbuf );
@@ -1181,7 +1178,7 @@ HmItem *itemp;
 	GetVar( burstpoint[X], ip, unitconv );
 	GetVar( burstpoint[Y], ip, unitconv );
 	GetVar( burstpoint[Z], ip, unitconv );
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t%g %g %g",
+	(void) sprintf( scrbuf, "%s\t%g %g %g",
 			itemp != NULL ? itemp->text : cmdname,
 			burstpoint[X], burstpoint[Y], burstpoint[Z] );
 	logCmd( scrbuf );
@@ -1204,7 +1201,7 @@ HmItem *itemp;
 		register Input *ip = input;
 	GetVar( fire[X], ip, unitconv );
 	GetVar( fire[Y], ip, unitconv );
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%g %g",
+	(void) sprintf( scrbuf, "%s\t\t%g %g",
 			itemp != NULL ? itemp->text : cmdname,
 			fire[X], fire[Y] );
 	logCmd( scrbuf );
@@ -1228,7 +1225,7 @@ HmItem *itemp;
 	GetVar( fire[X], ip, unitconv );
 	GetVar( fire[Y], ip, unitconv );
 	GetVar( fire[Z], ip, unitconv );
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%g %g %g",
+	(void) sprintf( scrbuf, "%s\t\t%g %g %g",
 			itemp != NULL ? itemp->text : cmdname,
 			fire[X], fire[Y], fire[Z] );
 	logCmd( scrbuf );
@@ -1257,8 +1254,8 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	if( getInput( ip ) )
-		(void) strncpy( objects, ip->buffer, LNBUFSZ );
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
+		(void) strcpy( objects, ip->buffer );
+	(void) sprintf( scrbuf, "%s\t\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			objects );
 	logCmd( scrbuf );
@@ -1275,7 +1272,7 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	GetBool( reportoverlaps, ip );
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
+	(void) sprintf( scrbuf, "%s\t\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			reportoverlaps ? "yes" : "no" );
 	logCmd( scrbuf );
@@ -1292,7 +1289,7 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	GetVar( nbarriers, ip, 1 );
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%d",
+	(void) sprintf( scrbuf, "%s\t\t%d",
 			itemp != NULL ? itemp->text : cmdname,
 			nbarriers );
 	logCmd( scrbuf );
@@ -1309,7 +1306,7 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	GetVar( nspallrays, ip, 1 );
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%d",
+	(void) sprintf( scrbuf, "%s\t\t%d",
 			itemp != NULL ? itemp->text : cmdname,
 			nspallrays );
 	logCmd( scrbuf );
@@ -1326,18 +1323,18 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	if( getInput( ip ) )
-		(void) strncpy( plotfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( plotfile, ip->buffer );
 	else
 		plotfile[0] = NUL;
 	if( (plotfp = fopen( plotfile, "w" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ, 
+		(void) sprintf( scrbuf,
 				"Write access denied for \"%s\"",
 				plotfile );
 		warning( scrbuf );
 		return;
 		}
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
+	(void) sprintf( scrbuf, "%s\t\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			plotfile );
 	logCmd( scrbuf );
@@ -1354,16 +1351,16 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	if( getInput( ip ) )
-		(void) strncpy( shotfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( shotfile, ip->buffer );
 	if( (shotfp = fopen( shotfile, "r" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ, 
+		(void) sprintf( scrbuf,
 				"Read access denied for \"%s\"",
 				shotfile );
 		warning( scrbuf );
 		return;
 		}
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t%s",
+	(void) sprintf( scrbuf, "%s\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			shotfile );
 	logCmd( scrbuf );
@@ -1381,16 +1378,16 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	if( getInput( ip ) )
-		(void) strncpy( shotfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( shotfile, ip->buffer );
 	if( (shotfp = fopen( shotfile, "r" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ, 
+		(void) sprintf( scrbuf,
 				"Read access denied for \"%s\"",
 				shotfile );
 		warning( scrbuf );
 		return;
 		}
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t%s",
+	(void) sprintf( scrbuf, "%s\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			shotfile );
 	logCmd( scrbuf );
@@ -1408,16 +1405,16 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	if( getInput( ip ) )
-		(void) strncpy( burstfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( burstfile, ip->buffer );
 	if( (burstfp = fopen( burstfile, "r" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ, 
+		(void) sprintf( scrbuf,
 				"Read access denied for \"%s\"",
 				burstfile );
 		warning( scrbuf );
 		return;
 		}
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
+	(void) sprintf( scrbuf, "%s\t\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			burstfile );
 	logCmd( scrbuf );
@@ -1437,10 +1434,10 @@ HmItem *itemp;
 		char cmdfile[LNBUFSZ];
 		FILE *cmdfp;
 	if( getInput( ip ) )
-		(void) strncpy( cmdfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( cmdfile, ip->buffer );
 	if( (cmdfp = fopen( cmdfile, "r" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ, 
+		(void) sprintf( scrbuf,
 				"Read access denied for \"%s\"",
 				cmdfile );
 		warning( scrbuf );
@@ -1461,18 +1458,18 @@ HmItem *itemp;
 			};
 		register Input *ip = input;
 	if( getInput( ip ) )
-		(void) strncpy( shotlnfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( shotlnfile, ip->buffer );
 	else
 		shotlnfile[0] = NUL;
 	if( (shotlnfp = fopen( shotlnfile, "w" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ,
+		(void) sprintf( scrbuf,
 				"Write access denied for \"%s\"",
 				shotlnfile );
 		warning( scrbuf );
 		return;
 		}
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t%s",
+	(void) sprintf( scrbuf, "%s\t\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			shotlnfile );
 	logCmd( scrbuf );
@@ -1517,7 +1514,7 @@ HmItem *itemp;
 	units = unitStrToInt( unitstr );
 	if( units == U_BAD )
 		{
-		(void) snprintf( scrbuf, LNBUFSZ, "Illegal units \"%s\"", unitstr );
+		(void) sprintf( scrbuf, "Illegal units \"%s\"", unitstr );
 		warning( scrbuf );
 		return;
 		}
@@ -1539,7 +1536,7 @@ HmItem *itemp;
 		unitconv = 1.0e-03;
 		break;
 		}
-	(void) snprintf( scrbuf, LNBUFSZ, "%s\t\t\t%s",
+	(void) sprintf( scrbuf, "%s\t\t\t%s",
 			itemp != NULL ? itemp->text : cmdname,
 			unitstr );
 	logCmd( scrbuf );
@@ -1559,10 +1556,10 @@ HmItem *itemp;
 		FILE *cmdfp;
 		FILE *inpfp;
 	if( getInput( ip ) )
-		(void) strncpy( cmdfile, ip->buffer, LNBUFSZ );
+		(void) strcpy( cmdfile, ip->buffer );
 	if( (cmdfp = fopen( cmdfile, "w" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ, 
+		(void) sprintf( scrbuf,
 				"Write access denied for \"%s\"",
 				cmdfile );
 		warning( scrbuf );
@@ -1570,7 +1567,7 @@ HmItem *itemp;
 		}
 	if( (inpfp = fopen( tmpfname, "r" )) == NULL )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ, 
+		(void) sprintf( scrbuf,
 				"Read access denied for \"%s\"",
 				tmpfname );
 		warning( scrbuf );
@@ -1599,7 +1596,7 @@ intr_sig( int sig )
 		else
 		if( ip->buffer[0] != 'n' )
 			{
-			    (void) snprintf( scrbuf, LNBUFSZ,
+			(void) sprintf( scrbuf,
 					"Illegal input \"%s\".",
 					ip->buffer );
 			warning( scrbuf );

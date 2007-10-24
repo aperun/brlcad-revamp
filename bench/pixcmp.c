@@ -33,6 +33,9 @@
  *	Charles M. Kennedy
  *	Michael John Muuss
  */
+#ifndef lint
+static const char RCSid[] = "@(#)$Header$ (BRL)";
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -216,7 +219,7 @@ main(int argc, char *argv[])
 	perror("FILE1 fseek failure");
 	exit(FILE_ERROR);
     }
-
+    
     /* skip requested pixels in FILE2 */
     if (f2_skip && fseek(f2, f2_skip, SEEK_SET)) {
 	fprintf(stderr,

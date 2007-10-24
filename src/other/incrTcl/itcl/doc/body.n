@@ -13,7 +13,7 @@
 .SH NAME
 body \- change the body for a class method/proc
 .SH SYNOPSIS
-\fBitcl::body \fIclassName\fB::\fIfunction args body\fR
+\fBbody \fIclassName\fB::\fIfunction args body\fR
 .BE
 
 .SH DESCRIPTION
@@ -86,7 +86,7 @@ of the constructor/destructor must be included in the class
 definition, but they can be redefined via the \fBbody\fR command
 as well.
 .CS
-itcl::class File {
+class File {
     private variable fid ""
     constructor {name access} {
         set fid [open $name $access]
@@ -100,13 +100,13 @@ itcl::class File {
     method eof {}
 }
 
-itcl::body File::get {} {
+body File::get {} {
     return [gets $fid]
 }
-itcl::body File::put {line} {
+body File::put {line} {
     puts $fid $line
 }
-itcl::body File::eof {} {
+body File::eof {} {
     return [::eof $fid]
 }
 
@@ -117,7 +117,7 @@ File x /etc/passwd "r"
 while {![x eof]} {
     puts "=> [x get]"
 }
-itcl::delete object x
+delete object x
 .CE
 
 .SH KEYWORDS

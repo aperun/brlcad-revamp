@@ -13,8 +13,10 @@ brlcadinclude_required = \
 	config_win.h \
 	raytrace.h \
 	rtgeom.h \
+	rtlist.h \
 	rtprivate.h \
 	rtserver.h \
+	rtstring.h \
 	tclcad.h
 
 brlcadinclude_wanted = \
@@ -45,7 +47,10 @@ brlcadinclude_wanted = \
 	light.h \
 	machine.h \
 	mater.h \
+	msr.h \
 	nmg.h \
+	noalias-prag.h \
+	noalias.h \
 	nurb.h \
 	opennurbs_ext.h \
 	optical.h \
@@ -58,6 +63,8 @@ brlcadinclude_wanted = \
 	regex.h \
 	shadefuncs.h \
 	shadework.h \
+	shortvect-pr.h \
+	shortvect.h \
 	solid.h \
 	spectrum.h \
 	spm.h \
@@ -100,5 +107,7 @@ endif
 endif
 # end ONLY_BENCHMARK
 
+
+MAINTAINERCLEANFILES = Makefile.in
 
 include $(top_srcdir)/misc/Makefile.defs

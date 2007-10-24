@@ -32,6 +32,8 @@ fast: all-am
 depends: all-am
 
 
+MAINTAINERCLEANFILES = Makefile.in
+
 # Local Variables:
 # mode: Makefile
 # tab-width: 8

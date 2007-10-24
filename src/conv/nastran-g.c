@@ -39,10 +39,13 @@ static const char RCSid[] = "$Header$";
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <ctype.h>
 #include <errno.h>
-
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -208,13 +211,13 @@ do_silly_nastran_shortcuts(void)
 	{
 		if( !strcmp( curr_rec[field_no], "=" ) )
 		{
-			strncpy( curr_rec[field_no], prev_rec[field_no], FIELD_LENGTH );
+			strcpy( curr_rec[field_no], prev_rec[field_no] );
 		}
 		else if( !strcmp( curr_rec[field_no], "==" ) )
 		{
 			while( field_no < NO_OF_FIELDS )
 			{
-				strncpy( curr_rec[field_no], prev_rec[field_no], FIELD_LENGTH );
+				strcpy( curr_rec[field_no], prev_rec[field_no] );
 				field_no++;
 			}
 		}
@@ -284,7 +287,8 @@ get_large_field_input(FILE *fd, int write_flag)
 	{
 		if( !get_next_record( fd, 0, 0 ) )
 		{
-			bu_exit(1, "unexpected end of INPUT at line #%d\n", line_count );
+			bu_log( "unexpected end of INPUT at line #%d\n", line_count );
+			bu_bomb( "unexpected end of INPUT\n" );
 		}
 
 		card_len = strlen( line );
@@ -338,7 +342,8 @@ get_small_field_input(FILE *fd, int write_flag)
 	{
 		if( !get_next_record( fd, 0, 0 ) )
 		{
-			bu_exit(1, "unexpected end of INPUT at line #%d\n", line_count );
+			bu_log( "unexpected end of INPUT at line #%d\n", line_count );
+			bu_bomb( "unexpected end of INPUT\n" );
 		}
 
 		card_len = strlen( line );
@@ -381,12 +386,12 @@ get_free_form_input(FILE *fd, int write_flag)
 			bu_log( "Cannot use consecutive replication cards:\n" );
 			bu_log( "%s", prev_line );
 			bu_log( "%s", line );
-			bu_exit(1, "ERROR: Cannot use consecutive replication cards\n" );
+			bu_bomb( "ERROR: Cannot use consecutive replication cards\n" );
 		}
 
 		for( i=0 ; i<count ; i++ )
 		{
-			strncpy( line, prev_line, MAXLINELEN );
+			strcpy( line, prev_line );
 			get_free_form_input( fd, write_flag );
 		}
 		return;
@@ -419,7 +424,8 @@ get_free_form_input(FILE *fd, int write_flag)
 			/* continuation card */
 			if( !get_next_record( fd, 0, 0 ) )
 			{
-				bu_exit(1, "unexpected end of INPUT at line #%d\n", line_count );
+				bu_log( "unexpected end of INPUT at line #%d\n", line_count );
+				bu_bomb( "unexpected end of INPUT\n" );
 			}
 
 			i = 0;
@@ -579,7 +585,8 @@ convert_cs(struct coord_sys *cs)
 
 	if( BU_LIST_IS_HEAD( &cs2->l, &coord_head.l ) )
 	{
-		bu_exit(1, "A coordinate system is defined in terms of a non-existent coordinate system!!!\n" );
+		bu_log( "A coordinate system is defined in terms of a non-existent coordinate system!!!\n" );
+		exit( 1 );
 	}
 
 	if( convert_pt( cs->origin, cs2, tmp_orig ) )
@@ -638,8 +645,9 @@ convert_pt( const point_t pt, struct coord_sys *cs, point_t out_pt )
 			break;
 
 		default:
-			bu_exit(1, "Unrecognized coordinate system type (%c) for cid=%d!\n",
+			bu_log( "Unrecognized coordinate system type (%c) for cid=%d!!!\n",
 				cs->type, cs->cid );
+			exit( 1 );
 	}
 	return( 0 );
 }
@@ -669,7 +677,8 @@ convert_grid(int index)
 
 	if( BU_LIST_IS_HEAD( &cs->l, &coord_head.l ) )
 	{
-		bu_exit(1, "No coordinate system defined for grid point #%d!\n", g_pts[index].gid );
+		bu_log( "No coordinate system defined for grid point #%d!!!\n", g_pts[index].gid );
+		exit( 1 );
 	}
 
 	if( convert_pt( g_pts[index].pt, cs, tmp_pt ) )
@@ -698,14 +707,16 @@ get_gridi(int gid)
 
 	if( found < 0 )
 	{
-		bu_exit(1, "Grid point %d is not defined!\n", gid );
+		bu_log( "Grid point %d is not defined!!\n", gid );
+		exit( 1 );
 	}
 
 	if( g_pts[found].cid )
 	{
 		if( !convert_grid( found ) )
 		{
-			bu_exit(1, "Could not convert grid point #%d to BRL-CAD!\n", gid );
+			bu_log( "Could not convert grid point #%d to BRL-CAD!!!\n", gid );
+			exit( 1 );
 		}
 	}
 
@@ -729,14 +740,16 @@ get_grid(int gid, fastf_t *pt)
 
 	if( found < 0 )
 	{
-		bu_exit(1, "Grid point %d is not defined!\n", gid );
+		bu_log( "Grid point %d is not defined!!\n", gid );
+		exit( 1 );
 	}
 
 	if( g_pts[found].cid )
 	{
 		if( !convert_grid( found ) )
 		{
-			bu_exit(1, "Could not convert grid point #%d to BRL-CAD!\n", gid );
+			bu_log( "Could not convert grid point #%d to BRL-CAD!!!\n", gid );
+			exit( 1 );
 		}
 	}
 
@@ -966,7 +979,7 @@ get_cquad4(void)
 
 		if( !found )
 		{
-			bu_log( "Cannot find PSHELL entry for a CQUAD4 element (ignoring)!\n" );
+			bu_log( "Cannot find PSHELL entry for a CQUAD4 element (ignoring)!!!\n" );
 			write_fields();
 			return;
 		}
@@ -1072,7 +1085,7 @@ get_ctria3(void)
 
 		if( !found )
 		{
-			bu_log( "Cannot find PSHELL entry for a CTRIA3 element (ignoring)!\n" );
+			bu_log( "Cannot find PSHELL entry for a CTRIA3 element (ignoring)!!!\n" );
 			write_fields();
 			return;
 		}
@@ -1208,8 +1221,9 @@ main(int argc, char **argv)
 				fdin = fopen( bu_optarg, "r" );
 				if( fdin == (FILE *)NULL )
 				{
-					bu_log( "Cannot open NASTRAN file (%s) for reading!\n", bu_optarg );
-					bu_exit(1, Usage, argv[0] );
+					bu_log( "Cannot open NASTRAN file (%s) for reading!!!\n", bu_optarg );
+					bu_log( "Usage", argv[0] );
+					exit( 1 );
 				}
 				break;
 			case 'o':
@@ -1221,13 +1235,15 @@ main(int argc, char **argv)
 	fdout = wdb_fopen( output_file );
 	if( fdout == NULL )
 	{
-		bu_log( "Cannot open BRL-CAD file (%s) for writing!\n", output_file );
-		bu_exit(1, Usage, argv[0] );
+		bu_log( "Cannot open BRL-CAD file (%s) for writing!!!\n", output_file );
+		bu_log( "Usage", argv[0] );
+		exit( 1 );
 	}
 
 	if( !fdin || !fdout )
 	{
-		bu_exit(1, Usage, argv[0] );
+		bu_log( Usage, argv[0] );
+		exit( 1 );
 	}
 
 	line = (char *)bu_malloc( MAXLINELEN, "line" );
@@ -1255,8 +1271,9 @@ main(int argc, char **argv)
 
 	if( start_off < 0 )
 	{
-		bu_log( "Cannot find start of bulk data in NASTRAN file!\n" );
-		bu_exit(1, Usage, argv[0] );
+		bu_log( "Cannot find start of bulk data in NASTRAN file!!!\n" );
+		bu_log( "Usage", argv[0] );
+		exit( 1 );
 	}
 
 	/* convert BULK data deck into something reasonable */
@@ -1264,7 +1281,7 @@ main(int argc, char **argv)
 	if( fdtmp == NULL )
 	{
 		perror( argv[0] );
-		bu_exit(1, "Cannot open temporary file\n" );
+		bu_bomb( "Cannot open temporary file\n" );
 	}
 	convert_input();
 
@@ -1285,7 +1302,8 @@ main(int argc, char **argv)
 	}
 	if( !grid_count )
 	{
-		bu_exit(1, "No geometry in this NASTRAN file!\n" );
+		bu_log( "No geometry in this NASTRAN file!!!\n" );
+		exit( 1 );
 	}
 
 	/* get default values and properties */
@@ -1388,7 +1406,8 @@ main(int argc, char **argv)
 		i++;
 		if( i > 10 )
 		{
-			bu_exit(1, "Cannot convert to default coordinate system, check for circular definition\n" );
+			bu_log( "Cannot convert to default coordinate system, check for circular definition\n" );
+			exit( 1 );
 		}
 	}
 

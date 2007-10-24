@@ -306,7 +306,7 @@ register int	ct;
 		}
 		else
 		{
-			(void) strncpy( &buf[column], list[i], MAX_COL+2 );
+			(void) strcpy( &buf[column], list[i] );
 			column += strlen( list[i] );
 			spaces = NAMESIZE - (column % NAMESIZE );
 			if( column + spaces < MAX_COL )

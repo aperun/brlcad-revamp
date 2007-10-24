@@ -720,11 +720,7 @@ void view_cleanup(void) { }
 /*
  * end of each frame
  */
-void view_end(void) { 
-    if(bif)
-	bu_image_save_close(bif); 
-    bif = NULL;
-}
+void view_end(void) { if(bif)bu_image_save_close(bif); bif = NULL; }
 
 /*
  *			R A Y H I T

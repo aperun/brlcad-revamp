@@ -32,10 +32,19 @@
  *	to reinitialize bu_optind=1 before beginning on the next argument list.
  */
 
+
+#ifndef lint
+static const char libbu_getopt_RCSid[] = "@(#)$Header$ (BRL)";
+#endif
+
 #include "common.h"
 
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 
 #include "machine.h"
 #include "bu.h"

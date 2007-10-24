@@ -50,7 +50,11 @@ static const char libbu_xdr_RCSid[] = "@(#)$Header$ (ARL)";
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 
 #include "machine.h"
 #include "bu.h"

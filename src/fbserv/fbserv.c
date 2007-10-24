@@ -66,24 +66,24 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
-#include <signal.h>
-#include <errno.h>
-#include <string.h>
-#include <time.h>
-
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
+#include <ctype.h>
+#include <signal.h>
+#include <errno.h>
+
 #if defined(HAVE_STDARG_H)
 #  include <stdarg.h>
 #endif
 #if !defined(HAVE_STDARG_H) && defined(HAVE_VARARGS_H)
 #  include <varargs.h>
 #endif
+
 #if HAVE_SYSLOG_H
 #  include <syslog.h>
 #endif
+
 #ifdef HAVE_SYS_SOCKET_H
 #  include <sys/socket.h>
 #endif
@@ -94,6 +94,12 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #  include <process.h>
 #  include <winsock.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #ifdef HAVE_SYS_WAIT_H
 #  include <sys/wait.h>
 #endif
@@ -101,6 +107,7 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>		/* For struct timeval */
 #endif
+#include <time.h>
 
 #include "machine.h"
 #include "fb.h"
@@ -127,8 +134,6 @@ static	int	port = 0;
 static	int	port_set = 0;		/* !0 if user supplied port num */
 static	int	once_only = 0;
 static 	int	netfd;
-
-#define OUTBUFSZ 4096
 
 #define MAX_CLIENTS	32
 struct pkg_conn	*clients[MAX_CLIENTS];
@@ -233,7 +238,7 @@ sigalarm(int code)
 	if( fb_server_fbp != FBIO_NULL ) {
 		fb_poll(fb_server_fbp);
 	}
-#ifdef SIGALRM
+#ifdef HAVE_SIGNAL
 	(void)signal( SIGALRM, sigalarm );	/* some systems remove handler */
 #endif
 	alarm(1);
@@ -285,8 +290,7 @@ drop_client(int sub)
 int
 main(int argc, char **argv)
 {
-#define PORTSZ 32
-	char	portname[PORTSZ];
+	char	portname[32];
 
 	max_fd = 0;
 
@@ -294,7 +298,7 @@ main(int argc, char **argv)
 	_fb_disk_enable = 0;
 	memset((void *)clients, 0, sizeof(struct pkg_conn *) * MAX_CLIENTS);
 
-#ifdef SIGALRM
+#ifdef HAVE_SIGNAL
 	(void)signal( SIGPIPE, SIG_IGN );
 	(void)signal( SIGALRM, sigalarm );
 #endif
@@ -348,7 +352,7 @@ main(int argc, char **argv)
 			if( port < 1024 )
 				port += 5559;
 		}
-		snprintf(portname, PORTSZ, "%d",port);
+		sprintf(portname,"%d",port);
 
 		/*
 		 * Hang an unending listen for PKG connections
@@ -555,7 +559,7 @@ comm_error(char *str)
 {
 #if defined(HAVE_SYSLOG_H)
     if( use_syslog ) {
-	syslog( LOG_ERR, "%s", str );
+	syslog( LOG_ERR, str );
     } else {
 	fprintf( stderr, "%s", str );
     }
@@ -586,7 +590,7 @@ void
 fb_log( char *fmt, ... )
 {
 	va_list ap;
-	char	outbuf[OUTBUFSZ];			/* final output string */
+	char	outbuf[4096];			/* final output string */
 	int	want;
 	int	i;
 	int	nsent = 0;
@@ -625,7 +629,7 @@ va_dcl
 	int	longify;
 	char	fbuf[64];			/* % format buffer */
 	char	nfmt[256];
-	char	outbuf[OUTBUFSZ];			/* final output string */
+	char	outbuf[4096];			/* final output string */
 	char	*op;				/* output buf pointer */
 	int	want, got;
 	int	i;
@@ -688,7 +692,7 @@ va_dcl
 			{
 				register double d;
 				d = va_arg(ap, double);
-				snprintf( op, OUTBUFSZ-strlen(outbuf)-1, fbuf, d );
+				sprintf( op, fbuf, d );
 				op = &outbuf[strlen(outbuf)];
 			}
 			break;
@@ -698,13 +702,13 @@ va_dcl
 				register long ll;
 				/* Long int */
 				ll = va_arg(ap, long);
-				snprintf( op, OUTBUFSZ-strlen(outbuf)-1, fbuf, ll );
+				sprintf( op, fbuf, ll );
 				op = &outbuf[strlen(outbuf)];
 			} else {
 				register int i;
 				/* Regular int */
 				i = va_arg(ap, int);
-				snprintf( op, OUTBUFSZ-strlen(outbuf)-1, fbuf, i );
+				sprintf( op, fbuf, i );
 				op = &outbuf[strlen(outbuf)];
 			}
 			break;

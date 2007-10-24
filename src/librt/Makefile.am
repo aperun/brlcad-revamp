@@ -226,6 +226,7 @@ EXTRA_DIST = \
 	sqrt.vax.s \
 	timer-nt.c \
 	timer52brl.c \
+	timercos.c \
 	timerhep.c \
 	timerunix.c \
 	vshoot.c
@@ -236,6 +237,8 @@ else
 DEPADD=
 endif
 DEPS=src/libbn src/libsysv $(DEPADD)
+
+MAINTAINERCLEANFILES = Makefile.in
 
 include $(top_srcdir)/misc/Makefile.defs
 

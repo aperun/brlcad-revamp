@@ -41,7 +41,11 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include <stddef.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 
 #include "machine.h"
 #include "bu.h"
@@ -1260,6 +1264,7 @@ rt_rpp_region(struct rt_i *rtip, const char *reg_name, fastf_t *min_rpp, fastf_t
 void
 rt_fastf_float(register fastf_t *ff, register const dbfloat_t *fp, register int n)
 {
+#	include "noalias.h"
     while( n-- )  {
 	*ff++ = *fp++;
 	*ff++ = *fp++;

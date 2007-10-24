@@ -25,4 +25,6 @@ EXTRA_DIST = libtclcad.dsp
 
 DEPS=src/libfb
 
+MAINTAINERCLEANFILES = Makefile.in
+
 include $(top_srcdir)/misc/Makefile.defs

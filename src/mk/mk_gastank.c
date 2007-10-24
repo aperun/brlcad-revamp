@@ -33,9 +33,16 @@
 
 #include "common.h"
 
+
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#include <strings.h>
+#endif
 #include <math.h>
 
 #include "machine.h"

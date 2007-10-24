@@ -125,6 +125,9 @@ DIST_SUBDIRS= \
 	$(rts_dirs) \
 	$(kitchensink_dirs)
 
+MAINTAINERCLEANFILES = \
+	Makefile.in
+
 EXTRA_DIST = README
 
 include $(top_srcdir)/misc/Makefile.defs

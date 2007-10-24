@@ -338,9 +338,8 @@ void util_display_editor(char **content_buffer, int *content_lines, char **conso
 		  {
 		    char *code, response[1024];
 		    int n;
-		    int size = (*content_lines+1) * 80;
 
-		    code = (char *)malloc(size);
+		    code = (char *)malloc((*content_lines+1) * 80);
 		    if (!code) {
 			perror("code");
 			exit(1);
@@ -348,7 +347,8 @@ void util_display_editor(char **content_buffer, int *content_lines, char **conso
 
 		    code[0] = 0;
 		    for(i = 0; i <= *content_lines; i++) {
-			snprintf(code, size, "%s\n", content_buffer[i]);
+		      strcat(code, content_buffer[i]);
+		      strcat(code, "\n");
 		    }
 		    fcb_process(code, response);
 
@@ -379,9 +379,9 @@ void util_display_editor(char **content_buffer, int *content_lines, char **conso
 		  break;
 
 		case SDLK_x: /* cut */
-		  strncpy(paste, content_buffer[v_ind], 80);
+		  strcpy(paste, content_buffer[v_ind]);
 		  for(i = v_ind; i < *content_lines; i++)
-		    strncpy(content_buffer[i], content_buffer[i+1], 80);
+		    strcpy(content_buffer[i], content_buffer[i+1]);
 		  if(*content_lines) {
 		    (*content_lines)--;
 		  } else {
@@ -392,8 +392,8 @@ void util_display_editor(char **content_buffer, int *content_lines, char **conso
 
 		case SDLK_v: /* paste */
 		  for(i = *content_lines; i >= v_ind; i--)
-		    strncpy(content_buffer[i+1], content_buffer[i], 80);
-		  strncpy(content_buffer[v_ind], paste, 80);
+		    strcpy(content_buffer[i+1], content_buffer[i]);
+		  strcpy(content_buffer[v_ind], paste);
 		  (*content_lines)++;
 		  h_ind = 0;
 		  break;

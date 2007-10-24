@@ -52,7 +52,11 @@ static const char RCStgc[] = "@(#)$Header$ (BRL)";
 
 #include <stddef.h>
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <math.h>
 
 #include "machine.h"
@@ -248,7 +252,7 @@ rt_tgc_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip)
 	tgc->tgc_D = mag_d;
 
 	if(RT_G_DEBUG&DEBUG_SOLIDS)
-	    bu_log("%s: a is %.20f, b is %.20f, c is %.20f, d is %.20f\n",
+	    bu_log("%s: a is %.20f, b is %.20f, c is %.20f, d is %.20f\n", 
 		    stp->st_name, magsq_a, magsq_b, magsq_c, magsq_d);
 
 	/* Part of computing ALPHA() */
@@ -716,7 +720,7 @@ rt_tgc_shot(struct soltab *stp, register struct xray *rp, struct application *ap
 		/*  The equation is 4th order, so we expect 0 to 4 roots */
 		nroots = rt_poly_roots( &C , val, stp->st_dp->d_namep );
 
-		/* bn_pr_roots("roots", val, nroots); */
+		//		bn_pr_roots("roots", val, nroots);
 
 		/*  Only real roots indicate an intersection in real space.
 		 *
@@ -730,7 +734,7 @@ rt_tgc_shot(struct soltab *stp, register struct xray *rp, struct application *ap
 				k[npts++] = val[l].re;
 			}
 		}
-		/* bu_log("npts rooted is %d; ", npts); */
+		//		bu_log("npts rooted is %d; ", npts);
 
 		/* Here, 'npts' is number of points being returned */
 		if ( npts != 0 && npts != 2 && npts != 4 && npts > 0 ){
@@ -755,7 +759,7 @@ rt_tgc_shot(struct soltab *stp, register struct xray *rp, struct application *ap
 		k[i] += cor_proj;
 	}
 
-	/* bu_log("npts before elimination is %d; ", npts); */
+	//	bu_log("npts before elimination is %d; ", npts);
 	/*
 	 * Eliminate hits beyond the end planes
 	 */
@@ -779,7 +783,7 @@ rt_tgc_shot(struct soltab *stp, register struct xray *rp, struct application *ap
 	/*
 	 * Consider intersections with the end ellipses
 	 */
-	/* bu_log("npts before base is %d; ", npts); */
+	//	bu_log("npts before base is %d; ", npts);
 	dir = VDOT( tgc->tgc_N, rp->r_dir );
 	if( !NEAR_ZERO( dprime[Z], SMALL_FASTF ) && !NEAR_ZERO( dir, RT_DOT_TOL ) )  {
 		b = ( -pprime[Z] )/dprime[Z];
@@ -811,7 +815,7 @@ rt_tgc_shot(struct soltab *stp, register struct xray *rp, struct application *ap
 		}
 	}
 
-	/* bu_log("npts FINAL is %d\n", npts); */
+	//	bu_log("npts FINAL is %d\n", npts);
 
 	/* Sort Most distant to least distant: rt_pt_sort( k, npts ) */
 	{
@@ -945,11 +949,16 @@ rt_tgc_vshot(struct soltab **stp, register struct xray **rp, struct seg *segp, i
 	C = (bn_poly_t *)bu_malloc(n * sizeof(bn_poly_t), "tor bn_poly_t");
 
 	/* Initialize seg_stp to assume hit (zero will then flag miss) */
+#       include "noalias.h"
 	for(ix = 0; ix < n; ix++) segp[ix].seg_stp = stp[ix];
 
 	/* for each ray/cone pair */
+#   include "noalias.h"
 	for(ix = 0; ix < n; ix++) {
+
+#if !CRAY       /* XXX currently prevents vectorization on cray */
 		if (segp[ix].seg_stp == 0) continue; /* == 0 signals skip ray */
+#endif
 
 		tgc = (struct tgc_specific *)stp[ix]->st_specific;
 
@@ -1195,6 +1204,7 @@ rt_tgc_vshot(struct soltab **stp, register struct xray **rp, struct seg *segp, i
 	}
 
 	/* for each ray/cone pair */
+#   include "noalias.h"
 	for(ix = 0; ix < n; ix++) {
 		if (segp[ix].seg_stp == 0) continue; /* Skip */
 

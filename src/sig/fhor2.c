@@ -25,7 +25,12 @@
  */
 #include "common.h"
 
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
+
 #include <stdio.h>
 #include <math.h>		/* XXX - temp debug */
 

@@ -1,4 +1,4 @@
-/*                          B R E P . C P P
+/*                          B R E P . C P P 
  * BRL-CAD
  *
  * Copyright (c) 1987-2007 United States Government as represented by
@@ -32,9 +32,14 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include "common.h"
 
+
 #include <stdio.h>
 #include <math.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#include <strings.h>
+#endif
 
 #include "machine.h"
 #include "bu.h"
@@ -47,7 +52,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 /*
  *                        M K _ B R E P
  *
- *  Create a brep in the geometry file.
+ *  Create a brep in the geometry file. 
  */
 int
 mk_brep( struct rt_wdb* file, const char* name, ON_Brep* brep )

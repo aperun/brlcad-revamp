@@ -41,9 +41,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <errno.h>
-
 #if defined(HAVE_UNISTD_H)
 #  include <unistd.h>
 #else
@@ -89,8 +92,8 @@ main(int argc, char **argv)
 	struct rt_wdb *out_fp;		/* output file pointers */
 	char *output_file = "viewpoint.g";
 	char *base_name;		/* title and top level group name */
-	char coords_name[LINELEN] = {0};	/* input coordinates file name */
-	char elems_name[LINELEN] = {0};		/* input elements file name */
+	char *coords_name=(char *)NULL;	/* input coordinates file name */
+	char *elems_name;		/* input elements file name */
 	float x,y,z,nx,ny,nz;		/* vertex and normal coords */
 	char *ptr1,*ptr2;
 	int name_len;
@@ -133,7 +136,8 @@ main(int argc, char **argv)
 				tol.dist_sq = tol.dist * tol.dist;
 				break;
 			case 'c': /* input coordinates file name */
-				strncpy( coords_name, bu_optarg, LINELEN );
+				coords_name = (char *)bu_malloc( strlen( bu_optarg ) + 1 , "Viewpoint-g: base name" );
+				strcpy( coords_name , bu_optarg );
 				if( (coords = fopen( coords_name , "r" )) == NULL )
 				{
 					bu_log( "Cannot open %s\n" , coords_name );
@@ -142,7 +146,8 @@ main(int argc, char **argv)
 				}
 				break;
 			case 'e': /* input elements file name */
-				strncpy( elems_name , bu_optarg, LINELEN );
+				elems_name = (char *)bu_malloc( strlen( bu_optarg ) + 1 , "Viewpoint-g: base name" );
+				strcpy( elems_name , bu_optarg );
 				if( (elems = fopen( elems_name , "r" )) == NULL )
 				{
 					bu_log( "Cannot open %s\n" , elems_name );
@@ -170,7 +175,7 @@ main(int argc, char **argv)
 		bu_bomb( usage );
 
 	/* build a title for the BRL-CAD database */
-	if ( coords_name[0] == 0 ) {
+	if ( !coords_name ) {
 		bu_log("%s:%d no coords_name set\n", __FILE__, __LINE__);
 		bu_bomb("croak\n");
 	}
@@ -231,11 +236,11 @@ main(int argc, char **argv)
 
 	while( !done )
 	{
-		char *name,*ptr;
-		char curr_name[LINELEN] = {0};
+		char *name,*curr_name,*ptr;
 		int eof=0;
 
 		/* Find an element name that has not already been processed */
+		curr_name = NULL;
 		done = 1;
 		while( bu_fgets( line , LINELEN , elems ) != NULL )
 		{
@@ -244,7 +249,8 @@ main(int argc, char **argv)
 			if( BU_PTBL_END( &names ) == 0 )
 			{
 				/* this is the first element processed */
-				strncpy( curr_name , name, LINELEN );
+				curr_name = bu_malloc( sizeof( name ) + 1 , "viewpoint-g: component name" );
+				strcpy( curr_name , name );
 
 				/* add this name to the table */
 				bu_ptbl_ins( &names , (long *)curr_name );
@@ -268,7 +274,8 @@ main(int argc, char **argv)
 				if( !found )
 				{
 					/* didn't find name, so this becomes the current name */
-					strncpy( curr_name, name, LINELEN );
+					curr_name = bu_malloc( sizeof( name ) + 1 , "viewpoint-g: component name" );
+					strcpy( curr_name , name );
 
 					/* add it to the table */
 					bu_ptbl_ins( &names , (long *)curr_name );
@@ -279,7 +286,7 @@ main(int argc, char **argv)
 		}
 
 		/* if no current name, then we are done */
-		if( curr_name[0] == 0 )
+		if( curr_name == NULL )
 			break;
 
 		/* Hopefully, the user is still around */

@@ -41,18 +41,20 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 #include <signal.h>
 #include <errno.h>
 #include <math.h>
-#include <string.h>
-
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
 #include <netdb.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>
-#endif
 
 #include "machine.h"
 #include "vmath.h"

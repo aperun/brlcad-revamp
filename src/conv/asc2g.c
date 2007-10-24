@@ -45,7 +45,11 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #ifdef HAVE_FCNTL_H
 #  include <fcntl.h>
 #endif
@@ -63,7 +67,7 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 
 
 #define BUFSIZE			(16*1024)	/* input line buffer size */
-#define TYPE_LEN			200
+#define TYPELEN			100
 #define NAME_LEN			200
 
 void		identbld(void), polyhbld(void), pipebld(void), particlebld(void);
@@ -76,7 +80,7 @@ void		strsolbld(void), nmgbld(void);
 
 static union record	record;			/* GED database record */
 char 		*buf = NULL;		/* Record input buffer */
-char		name[NAME_LEN + 2] = {0};
+char		name[NAMESIZE + 2] = {0};
 
 FILE *ifp = NULL;
 struct rt_wdb *ofp = NULL;
@@ -151,7 +155,8 @@ main(int argc, char *argv[])
     ofp = wdb_fopen(argv[2]);
     if( !ofp )  perror(argv[2]);
     if (ifp == NULL || ofp == NULL) {
-	bu_exit(1, "asc2g: can't open files.");
+	(void)fprintf(stderr, "asc2g: can't open files.");
+	Tcl_Exit(1);
     }
 
     rt_init_resource( &rt_uniresource, 0, NULL );
@@ -159,7 +164,7 @@ main(int argc, char *argv[])
     if( bu_fgets( c1, 6, ifp ) == NULL ) {
 	fclose(ifp); ifp = NULL;
 	wdb_close(ofp); ofp = NULL;
-	bu_exit(1, "Unexpected EOF\n");
+	bu_bomb( "Unexpected EOF\n" );
     }
 
     /* new style ascii database */
@@ -179,12 +184,13 @@ main(int argc, char *argv[])
 	interp = Tcl_CreateInterp();
 	if (wdb_init_obj(interp, ofp, db_name) != TCL_OK ||
 	    wdb_create_cmd(interp, ofp, db_name) != TCL_OK) {
-	    bu_exit(1, "Failed to initialize wdb_obj!\n");
+	    bu_bomb( "Failed to initialize wdb_obj!\n" );
 	}
 
 	/* Create the safe interpreter */
 	if ((safe_interp = Tcl_CreateSlave(interp, slave_name, 1)) == NULL) {
-	    bu_exit(1, "Failed to create safe interpreter");
+	    bu_log("Failed to create safe interpreter");
+	    Tcl_Exit(1);
 	}
 
 	/* Create aliases */
@@ -453,7 +459,7 @@ sktbld(void)
     point_t V;
     vect_t u, v;
     point2d_t *verts;
-    char name[NAME_LEN+1];
+    char name[NAMESIZE+1];
     struct rt_sketch_internal *skt;
     struct curve *crv;
     struct line_seg *lsg;
@@ -465,7 +471,7 @@ sktbld(void)
     cp++;
     cp++;
 
-    (void)sscanf( cp, "%200s %f %f %f %f %f %f %f %f %f %d %d", /* NAME_LEN */
+    (void)sscanf( cp, "%s %f %f %f %f %f %f %f %f %f %d %d",
 		  name,
 		  &fV[0], &fV[1], &fV[2],
 		  &fu[0], &fu[1], &fu[2],
@@ -618,8 +624,8 @@ void
 extrbld(void)
 {
     register char *cp;
-    char name[NAME_LEN+1];
-    char sketch_name[NAME_LEN+1];
+    char name[NAMESIZE+1];
+    char sketch_name[NAMESIZE+1];
     int keypoint;
     float fV[3];
     float fh[3];
@@ -632,7 +638,7 @@ extrbld(void)
     cp++;
 
     cp++;
-    (void)sscanf( cp, "%200s %200s %d %f %f %f  %f %f %f %f %f %f %f %f %f", /* NAME_LEN */
+    (void)sscanf( cp, "%s %s %d %f %f %f  %f %f %f %f %f %f %f %f %f",
 		  name, sketch_name, &keypoint, &fV[0], &fV[1], &fV[2], &fh[0], &fh[1], &fh[2],
 		  &fu_vec[0], &fu_vec[1], &fu_vec[2], &fv_vec[0], &fv_vec[1], &fv_vec[2] );
 
@@ -1063,7 +1069,7 @@ membbld(struct bu_list *headp)
     register char 	*np;
     register int 	i;
     char		relation;	/* boolean operation */
-    char		inst_name[NAME_LEN+2];
+    char		inst_name[NAMESIZE+2];
     struct wmember	*memb;
 
     cp = buf;
@@ -1151,19 +1157,24 @@ arsbbld(void)
 	cp = nxt_spc( cp );
 	ars_curves[ars_curve][ars_pt*3 + 2] = atof( cp );
 	if( ars_curve > 0 || ars_pt > 0 )
-	    VADD2( &ars_curves[ars_curve][ars_pt*3], &ars_curves[ars_curve][ars_pt*3], &ars_curves[0][0] );
+	    VADD2( &ars_curves[ars_curve][ars_pt*3], &ars_curves[ars_curve][ars_pt*3], &ars_curves[0][0] )
 
-	incr_ret = incr_ars_pt();
-	if( incr_ret == 2 ) {
-	    /* finished, write out the ARS solid */
-	    if( mk_ars( ofp, ars_name, ars_ncurves, ars_ptspercurve, ars_curves ) ) {
-		bu_exit(1, "Failed trying to make ARS (%s)\n", ars_name );
+		incr_ret = incr_ars_pt();
+	if( incr_ret == 2 )
+	    {
+		/* finished, write out the ARS solid */
+		if( mk_ars( ofp, ars_name, ars_ncurves, ars_ptspercurve, ars_curves ) )
+		    {
+			bu_log( "Failed trying to make ARS (%s)\n", ars_name );
+			bu_bomb( "Failed trying to make ARS\n" );
+		    }
+		return;
 	    }
-	    return;
-	} else if( incr_ret == 1 ) {
-	    /* end of curve, ignore remainder of reocrd */
-	    return;
-	}
+	else if( incr_ret == 1 )
+	    {
+		/* end of curve, ignore remainder of reocrd */
+		return;
+	    }
     }
 }
 
@@ -1333,7 +1344,7 @@ polyhbld(void)
 	register int	i;
 
 	if( bu_fgets( buf, BUFSIZE, ifp ) == NULL )  break;
-	if( buf[0] != ID_P_DATA )  bu_exit(1, "mis-count of Q records?\n");
+	if( buf[0] != ID_P_DATA )  bu_bomb("mis-count of Q records?\n");
 
 	/* Input always has 5 points, even if all aren't significant */
 	fp->verts = (fastf_t *)bu_malloc( 5*3*sizeof(fastf_t), "verts[]" );
@@ -1374,7 +1385,7 @@ polyhbld(void)
     tol.para = 1 - tol.perp;
 
     if( rt_pg_to_bot( &intern, &tol, &rt_uniresource ) < 0 )
-	bu_exit(1, "Failed to convert [%s] polysolid object to triangle mesh\n", name);
+	bu_bomb("rt_pg_to_bot() failed\n");
     /* The polysolid is freed by the converter */
 
     /*
@@ -1382,7 +1393,7 @@ polyhbld(void)
      * calling mk_bot().
      */
     if( wdb_put_internal( ofp, name, &intern, mk_conv2mm ) < 0 )
-	bu_exit(1, "Failed to create [%s] triangle mesh representation from polysolid object\n", name);
+	bu_bomb("wdb_put_internal() failure on BoT from polysolid\n");
     /* BoT internal has been freed */
 }
 
@@ -1449,7 +1460,7 @@ bsplbld(void)
 
     mk_bsolid(ofp, name, nsurf, resolution);
 #else
-    bu_exit(1, "bsplbld() needs to be upgraded to v5\n");
+    bu_bomb("bsplbld() needs to be upgraded to v5\n");
 #endif
 }
 
@@ -1554,7 +1565,7 @@ bsurfbld(void)
     /* Free the control mesh memory */
     (void)bu_free( (char *)fp, "mesh data" );
 #else
-    bu_exit(1, "bsrfbld() needs to be upgraded to v5\n");
+    bu_bomb("bsrfbld() needs to be upgraded to v5\n");
 #endif
 }
 
@@ -1617,7 +1628,7 @@ botbld(void)
     int			*faces;
     struct bu_bitv		*facemode=NULL;
 
-    sscanf( buf, "%c %200s %d %d %d %d %d", &type, my_name, &mode, &orientation, /* NAME_LEN */
+    sscanf( buf, "%c %s %d %d %d %d %d", &type, my_name, &mode, &orientation,
 	    &error_mode, &num_vertices, &num_faces );
 
     /* get vertices */
@@ -1768,7 +1779,7 @@ particlebld(void)
      * particles fit into one granule.
      */
 
-    (void)sscanf(buf, "%c %200s %le %le %le %le %le %le %le %le", /* NAME_LEN */
+    (void)sscanf(buf, "%c %s %le %le %le %le %le %le %le %le",
 		 &ident, name,
 		 &vertex[0],
 		 &vertex[1],
@@ -1793,7 +1804,7 @@ arbnbld(void)
 {
 
     char		name[NAME_LEN] = {0};
-    char		type[TYPE_LEN] = {0};
+    char		type[TYPELEN] = {0};
     int		i;
     int		neqn;			/* number of eqn expected */
     plane_t		*eqn;			/* pointer to plane equations for faces */
@@ -1833,7 +1844,7 @@ arbnbld(void)
      */
     for( i = 0; i < neqn; i++ )  {
 	bu_fgets( buf, BUFSIZE, ifp);
-	(void)sscanf( buf, "%200s %le %le %le %le", type, /* TYPE_LEN */
+	(void)sscanf( buf, "%s %le %le %le %le", type,
 		      &eqn[i][X], &eqn[i][Y], &eqn[i][Z], &eqn[i][3]);
     }
 

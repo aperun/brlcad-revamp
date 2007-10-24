@@ -37,11 +37,14 @@ EXTRA_DIST = \
 	acinclude.m4 \
 	AUTHORS \
 	ChangeLog \
+	config.h \
 	configure.ac \
 	COPYING \
 	Doxyfile \
 	NEWS \
 	README
+
+MAINTAINERCLEANFILES = Makefile.in
 
 DEPS = src/libbu
 

@@ -46,7 +46,11 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #if defined(HAVE_UNISTD_H)
 #  include <unistd.h>
 #else
@@ -204,23 +208,27 @@ char	*argv[];
 			inches = 1;
 			break;
 		default:
-			bu_exit(1, usage, argv[0]);
+			bu_log(  usage, argv[0]);
+			exit(1);
 			break;
 		}
 	}
 
 	if (bu_optind+1 >= argc) {
-		bu_exit(1, usage, argv[0]);
+		bu_log( usage, argv[0]);
+		exit(1);
 	}
 
 	if( output_file && output_directory ) {
 		bu_log( "ERROR: options \"-o\" and \"-m\" are mutually exclusive\n" );
-		bu_exit(1, usage, argv[0] );
+		bu_log( usage, argv[0] );
+		exit( 1 );
 	}
 
 	if( !output_file && !output_directory ) {
 		if( binary ) {
-			bu_exit(1, "Can't output binary to stdout\n");
+			bu_log( "Can't output binary to stdout\n");
+			exit( 1 );
 		}
 		fp = stdout;
 	} else if( output_file ) {
@@ -228,8 +236,9 @@ char	*argv[];
 			/* Open ASCII output file */
 			if( (fp=fopen( output_file, "w+" )) == NULL )
 			{
+				bu_log( "Cannot open ASCII output file (%s) for writing\n", output_file );
 				perror( argv[0] );
-				bu_exit(1, "Cannot open ASCII output file (%s) for writing\n", output_file );
+				exit( 1 );
 			}
 		} else {
 			/* Open binary output file */
@@ -239,8 +248,9 @@ char	*argv[];
 			if( (bfd=open( output_file, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)) < 0 )
 #endif
 			{
+				bu_log( "Cannot open binary output file (%s) for writing\n", output_file );
 				perror( argv[0] );
-				bu_exit(1, "Cannot open binary output file (%s) for writing\n", output_file );
+				exit( 1 );
 			}
 		}
 	}
@@ -250,10 +260,11 @@ char	*argv[];
 	argv += bu_optind;
 	if ((dbip = db_open(argv[0], "r")) == DBI_NULL) {
 		perror(argv[0]);
-		bu_exit(1, "Unable to open geometry file (%s)\n", argv[0]);
+		exit(1);
 	}
 	if( db_dirbuild( dbip ) ) {
-	    bu_exit(1, "ERROR: db_dirbuild failed\n" );
+	    bu_log( "db_dirbuild failed\n" );
+	    exit(1);
 	}
 
 	BN_CK_TOL(tree_state.ts_tol);
@@ -384,11 +395,12 @@ int material_id;
 			/* Open ASCII output file */
 			if( (fp=fopen( bu_vls_addr( &file_name ), "w+" )) == NULL )
 			{
+				bu_log( "Cannot open ASCII output file (%s) for writing\n", bu_vls_addr( &file_name ) );
 				perror( "g-stl" );
-				bu_exit(1, "Cannot open ASCII output file (%s) for writing\n", bu_vls_addr( &file_name ) );
+				exit( 1 );
 			}
 		} else {
-			char buf[81] = {0};	/* need exactly 80 char for header */
+			char buf[81];	/* need exactly 80 char for header */
 
 			/* Open binary output file */
 #ifdef _WIN32
@@ -397,18 +409,20 @@ int material_id;
 			if( (bfd=open( bu_vls_addr( &file_name ), O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)) < 0 )
 #endif
 			{
+				bu_log( "Cannot open binary output file (%s) for writing\n", bu_vls_addr( &file_name ) );
 				perror( "g-stl" );
-				bu_log( "ERROR: Cannot open binary output file (%s) for writing\n", bu_vls_addr( &file_name ) );
+				exit( 1 );
 			}
 
-			if (!region_name) {
-			    snprintf( buf, 80, "BRL-CAD generated STL FILE (Units=%s)", inches?"inches":"mm");
+			bzero( buf, sizeof( buf ) );
+			if (inches) {
+				strcpy( buf, "BRL-CAD generated STL FILE (Units=inches)");
 			} else {
-			    if (region_name && strlen(region_name) > 0) {
-				snprintf( buf, 80, "BRL-CAD generated STL FILE (Units=%s) %s", inches?"inches":"mm", region_name);
-			    } else {
-				snprintf( buf, 80, "BRL-CAD generated STL FILE (Units=%s) %s", inches?"inches":"mm", region_name);
-			    }
+				strcpy( buf, "BRL-CAD generated STL FILE (Units=mm)");
+			}
+			if( strlen( buf ) + strlen( region_name ) + 1 < 80 ) {
+				strcat( buf, " " );
+				strcat( buf, region_name );
 			}
 			write(bfd, &buf, 80);
 
@@ -501,8 +515,8 @@ int material_id;
 				if( vert_count > 3 )
 				{
 					bu_free( region_name, "region name" );
-					bu_log( "lu x%x has %d vertices!\n", lu, vert_count );
-					bu_exit(1, "ERROR: LU is not a triangle" );
+					bu_log( "lu x%x has %d vertices!!!!\n", lu, vert_count );
+					bu_bomb( "LU is not a triangle" );
 				}
 				else if( vert_count < 3 )
 					continue;
@@ -583,7 +597,6 @@ genptr_t		client_data;
 		return  curtree;
 
 	regions_tried++;
-
 	/* Begin bu_bomb() protection */
 	if( ncpu == 1 ) {
 		if( BU_SETJUMP )  {
@@ -596,7 +609,7 @@ genptr_t		client_data;
 			bu_free( (char *)sofar, "sofar" );
 
 			/* Sometimes the NMG library adds debugging bits when
-			 * it detects an internal error, before bombing out.
+			 * it detects an internal error, before bu_bomb().
 			 */
 			rt_g.NMG_debug = NMG_debug;	/* restore mode */
 
@@ -681,7 +694,7 @@ genptr_t		client_data;
 				bu_free( (char *)sofar, "sofar" );
 
 				/* Sometimes the NMG library adds debugging bits when
-				 * it detects an internal error, before before bombing out.
+				 * it detects an internal error, before bu_bomb().
 				 */
 				rt_g.NMG_debug = NMG_debug;	/* restore mode */
 

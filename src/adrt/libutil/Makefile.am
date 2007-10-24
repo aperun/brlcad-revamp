@@ -7,4 +7,6 @@ AM_CFLAGS = @SDL_CFLAGS@ -I${top_srcdir}/src/adrt/libtie -I${top_srcdir}/src/adr
 
 noinst_HEADERS = camera.h display.h font.h image.h rand.h umath.h
 
+MAINTAINERCLEANFILES = Makefile.in
+
 include $(top_srcdir)/misc/Makefile.defs

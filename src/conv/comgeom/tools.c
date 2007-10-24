@@ -32,6 +32,15 @@ endstr(char *str)
 	return( str );
 }
 
+#ifndef HAVE_STRCPY
+strcpy(char *s, char *t)	/* === */
+
+{
+	while( (*s++ = *t++) != '\0' );
+	*s = '\0';
+}
+#endif
+
 strappend(char *s, char *t)	/* === */
 
 {	s = endstr( s );

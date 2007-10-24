@@ -224415,9 +224415,8 @@ if ../src/mged/mged -c > shaders.log 2>&1 << EOF
 EOF
 
 [ ! -f shaders.rt ] ; then
-    echo 'mged failed to create shaders.rt'
-    echo '-> shaders.sh FAILED'
-    exit 1
+	echo 'mged failed'
+	exit 1
 fi
 mv shaders.rt shaders.rt.orig
 sed "s,^rt,../src/rt/rt -P 1 -B -U 1," < shaders.rt.orig > shaders.rt
@@ -224435,8 +224434,7 @@ esac
 
 NUMBER_WRONG=1
 if [ ! -f shaders.rt.pix ] ; then
-	echo "shaders raytrace failed to create shaders.rt.pix"
-	echo '-> shaders.sh FAILED'
+	echo shaders raytrace failed
 	exit 1
 else
 	if [ ! -f $TOP_SRCDIR/regress/shaderspix.asc ] ; then
@@ -224447,14 +224445,14 @@ else
 
 		NUMBER_WRONG=`tr , '\012' < shaders.rt.pixdiff.log | awk '/many/ {print $1}' | tail -${TAIL_N}1`
 		export NUMBER_WRONG
-		echo "shaders.rt.pix $NUMBER_WRONG off by many"
+		/bin/echo shaders.rt.pix $NUMBER_WRONG off by many
 	fi
 fi
 
 if [ X$NUMBER_WRONG = X0 ] ; then
-    echo '-> shaders.sh succeeded'
+    /bin/echo '-> shaders.sh succeeded'
 else
-    echo '-> shaders.sh FAILED'
+    /bin/echo '-> shaders.sh failed'
 fi
 
 exit $NUMBER_WRONG

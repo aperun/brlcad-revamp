@@ -37,7 +37,11 @@ static const char RCSid[] = "@(#)$Header$ (ARL)";
 
 #include <math.h>
 #include <stdio.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <pthread.h>
 
 #include "machine.h"
@@ -601,7 +605,7 @@ rts_open_session()
 	return 0;
 
 #if 0
-	/* Better session management is needed. When a session is opened it needs to be
+	/* Better session management is needed. When a session is opened it needs to be 
 	 * to be associated with an analysis and a run. subsequent open session requests
 	 * should then return the appropriate session bases on a passed in analysis id and run number
 	 */

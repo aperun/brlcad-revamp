@@ -34,12 +34,15 @@ static const char RCSid[] = "@(#)$Header$ (BRL)";
 #include "common.h"
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
-
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
+#endif
+#include <stdio.h>
+#include <math.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
 #endif
 
 #include "machine.h"
@@ -57,7 +60,7 @@ void	jack_faces(struct nmgregion *r, FILE *fp_psurf, int *map);
 
 extern double nmg_eue_dist;		/* from nmg_plot.c */
 
-static const char usage[] = "\
+static char	usage[] = "\
 Usage: %s [-v] [-d] [-f] [-xX lvl] [-u eu_dist]\n\
 	[-a abs_tess_tol] [-r rel_tess_tol] [-n norm_tess_tol]\n\
 	[-D dist_calc_tol]\n\
@@ -292,7 +295,6 @@ union tree *do_region_end(register struct db_tree_state *tsp, struct db_full_pat
 		return  curtree;
 
 	regions_tried++;
-
 	/* Begin bu_bomb() protection */
 	if( ncpu == 1 ) {
 		if( BU_SETJUMP )  {
@@ -300,7 +302,7 @@ union tree *do_region_end(register struct db_tree_state *tsp, struct db_full_pat
 			BU_UNSETJUMP;		/* Relinquish the protection */
 
 			/* Sometimes the NMG library adds debugging bits when
-			 * it detects an internal error, before bombing out.
+			 * it detects an internal error, before bu_bomb().
 			 */
 			rt_g.NMG_debug = NMG_debug;	/* restore mode */
 

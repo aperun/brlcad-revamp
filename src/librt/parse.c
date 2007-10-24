@@ -46,10 +46,15 @@ static const char RCSparse[] = "@(#)$Header$ (BRL)";
 
 #include "common.h"
 
+
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+# include <string.h>
+#else
+# include <strings.h>
+#endif
 
 #include "machine.h"
 #include "vmath.h"
@@ -114,7 +119,11 @@ bu_structprint(const char *title, const struct bu_structparse *parsetab, const c
 			continue;
 		lastoff = sdp->sp_offset;
 
+#if CRAY && !__STDC__
+		loc = (char *)(base + ((int)sdp->sp_offset*sizeof(int)));
+#else
 		loc = (char *)(base + ((int)sdp->sp_offset));
+#endif
 
 		if (sdp->sp_fmt[0] == 'i' )  {
 			bu_structprint( sdp->sp_name,
@@ -325,7 +334,11 @@ bu_struct_lookup(register const struct bu_structparse *sdp, register const char 
 		 * with a name in the structure description
 		 */
 
+#if CRAY && !__STDC__
+		loc = (char *)(base + ((int)sdp->sp_offset*sizeof(int)));
+#else
 		loc = (char *)(base + ((int)sdp->sp_offset));
+#endif
 
 		if (sdp->sp_fmt[0] == 'i') {
 			/* Indirect to another structure */
@@ -569,7 +582,11 @@ bu_vls_item_print_core(struct bu_vls *vp, const struct bu_structparse *sdp, cons
 	return;
     }
 
+#if CRAY && !__STDC__
+    loc = (char *)(base + ((int)sdp->sp_offset*sizeof(int)));
+#else
     loc = (char *)(base + ((int)sdp->sp_offset));
+#endif
 
     if (sdp->sp_fmt[0] == 'i' )  {
 	bu_log( "Cannot print type 'i' yet!\n" );
@@ -755,7 +772,11 @@ bu_vls_structprint(struct bu_vls *vls, register const struct bu_structparse *sdp
 			continue;
 		lastoff = sdp->sp_offset;
 
+#if CRAY && !__STDC__
+		loc = (char *)(base + ((int)sdp->sp_offset*sizeof(int)));
+#else
 		loc = (char *)(base + ((int)sdp->sp_offset));
+#endif
 
 		if (sdp->sp_fmt[0] == 'i')  {
 			struct bu_vls sub_str;

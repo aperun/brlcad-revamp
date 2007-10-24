@@ -20,4 +20,6 @@ EXTRA_DIST = \
 	status.c \
 	vas4.doc
 
+MAINTAINERCLEANFILES = Makefile.in
+
 include $(top_srcdir)/misc/Makefile.defs

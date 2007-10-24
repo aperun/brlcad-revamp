@@ -1068,7 +1068,7 @@ gridInit()
 		nriplevels = 0;
 	if( !shotburst && groundburst )
 		{
-		    (void) snprintf( scrbuf, LNBUFSZ,
+		(void) sprintf( scrbuf,
 				"Ground bursting directive ignored: %s.\n",
 				"only relevant if bursting along shotline" );
 		warning( scrbuf );

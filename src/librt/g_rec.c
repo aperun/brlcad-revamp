@@ -145,10 +145,12 @@ static const char RCSrec[] = "@(#)$Header$ (BRL)";
 
 #include "common.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
 
+#include <stdio.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#include <math.h>
 #include "machine.h"
 #include "vmath.h"
 #include "raytrace.h"
@@ -592,8 +594,11 @@ rt_rec_vshot(struct soltab **stp, struct xray **rp, struct seg *segp, int n, str
 	FAST fastf_t	dx2dy2;
 
 	/* for each ray/right_eliptical_cylinder pair */
+#	include "noalias.h"
 	for(i = 0; i < n; i++){
+#if !CRAY /* XXX currently prevents vectorization on cray */
 		if (stp[i] == 0) continue; /* stp[i] == 0 signals skip ray */
+#endif
 
 		rec = (struct rec_specific *)stp[i]->st_specific;
 		hitp = &hits[0];

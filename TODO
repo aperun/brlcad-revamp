@@ -23,7 +23,11 @@ THESE SHOULD HAPPEN BEFORE THE NEXT RELEASE
 THESE SHOULD HAPPEN WITHIN TWO RELEASE ITERATIONS
 -------------------------------------------------
 
+* clone and tracker
+
 * Endgame Framework importer plugin
+
+* get archer working, ensure functionality cross-platform
 
 * modify the new tree traversal code to be generic
 
@@ -36,10 +40,7 @@ THESE SHOULD HAPPEN WITHIN TWO RELEASE ITERATIONS
 THESE ARE LOWER PRIORITY OR FOR FUTURE RELEASES
 -----------------------------------------------
 
-* eliminate vararg.h and non-ansi cray-specific support code
-
-* implement a lighting model for rt that visualizes how expensive each
-  individual pixel is to compute with an intensity (heat graph)
+* update OpenNURBS to the July 2007 update
 
 * integrate 'the rest' of adrt, consider decoupling the dependencies
 
@@ -75,6 +76,8 @@ THESE ARE LOWER PRIORITY OR FOR FUTURE RELEASES
   (instead of one conglomerate BoT)
 
 * change root solver to have coefficients in the right order (!)
+
+* remove obsolete headers
 
 * use environ for run-time path lookups
 
@@ -221,6 +224,8 @@ THESE ARE LOWER PRIORITY OR FOR FUTURE RELEASES
 
 * support for fillets and chamfers as object/combination operations
 
+* provide installation and post configuration support scripts
+
 * make the DSP primitive use less memory when data is coming from
   a binunif. allocating 160 times binunif size is a bit extravagant
   (which comes from sizeof(struct dsp_bb)).
@@ -273,8 +278,30 @@ THESE BREAK PROTOCOL OR ARE BACKWARDS-INCOMPATIBLE
 * add database support for constraints, expressions, parametric
   values, construction history, and timestamping.
 
-* see doc/deprecation.txt for items that have been marked as
-  deprecated or are available for deprecation.
+* DEPRECATION LIST.  can remove these during a major update, after at
+  least three minor updates, or after six months, whichever comes
+  first:
+	include/msr.h (pre 7.0)
+		msr.h -> bu.h
+	include/rtlist.h (pre 7.0)
+		rtlist.h -> bu.h
+	include/rtstring.h (pre 7.0)
+		rtstring.h -> bu.h
+	include/raytrace.h (pre 7.0)
+		struct application.a_overlap -> a_multioverlap()
+		rt_overlap_quietly() -> struct application.a_logoverlap
+	include/compat4.h (pre 7.0)
+		compat4.h -> bu.h && bn.h
+	include/shortvect.h (pre 7.0)
+	include/shortvect-pr.h (pre 7.0)
+	include/bn.h (7.0)
+		bn_mat_zero() -> MAT_ZERO()
+		bn_mat_idn() -> MAT_IDN()
+		bn_mat_copy() -> MAT_COPY()
+	src/libbu/brlcad_path.c (7.4)
+		bu_brlcad_path() -> bu_brlcad_root() || bu_brlcad_data()
+	src/librt/bomb.c (7.10)
+		rt_bomb() -> bu_bomb()
 
 
 DOCUMENTATION

@@ -41,9 +41,12 @@ static const char RCSid[] = "$Header$";
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
 #include <errno.h>
-
 #if defined(HAVE_UNISTD_H)
 #  include <unistd.h>
 #else
@@ -167,7 +170,7 @@ main(int argc, char **argv)
 	struct wmember reg_head;
 	struct comp_idents *ptr;
 	char name[NAMESIZE+1];
-	char input_file[START_ARRAY_SIZE] = {0};				/* input file name */
+	char *input_file;				/* input file name */
 	char *output_file = "tankill.g";
 	FILE *in_fp;					/* input file pointer */
 	struct rt_wdb *out_fp;				/* output file pointer */
@@ -186,6 +189,7 @@ main(int argc, char **argv)
 
 	in_fp = stdin;
 	polysolids = 1;
+	input_file = (char *)NULL;
 	id_root = (struct comp_idents *)NULL;
 	bu_ptbl_init( &faces , 64, " &faces ");
 
@@ -224,7 +228,8 @@ main(int argc, char **argv)
 					perror( "tankill-g" );
 					bu_bomb( "Cannot open input file" );
 				}
-				strncpy( input_file , bu_optarg, START_ARRAY_SIZE );
+				input_file = bu_malloc( sizeof( bu_optarg ) +1 , "tankill-g: input file name" );
+				strcpy( input_file , bu_optarg );
 				break;
 			case 'o': /* output file name */
 				output_file = bu_optarg;
@@ -243,7 +248,7 @@ main(int argc, char **argv)
 	}
 
 	/* use the input file name as the title (if available) */
-	if( input_file[0] == 0 )
+	if( input_file == (char *)NULL )
 		mk_id( out_fp , "Conversion from TANKILL" );
 	else
 		mk_id( out_fp , input_file );

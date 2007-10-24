@@ -124,7 +124,9 @@ EXTRA_DIST = \
 	fhor3.c \
 	smod.c
 
-DEPS=src/libfb src/libfft
+MAINTAINERCLEANFILES = Makefile.in
+
+DEPS=src/libfb src/libfft 
 
 include $(top_srcdir)/misc/Makefile.defs
 

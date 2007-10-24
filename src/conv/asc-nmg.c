@@ -112,16 +112,15 @@ void
 create_brlcad_db(struct rt_wdb *fpout, struct model *m, char *reg_name, char *grp_name)
 {
 	char	*rname, *sname;
-	int size = sizeof(reg_name) + 3;
 
 	mk_id(fpout, "Ascii NMG");
 
-	rname = bu_malloc(size, "rname");	/* Region name. */
-	sname = bu_malloc(size, "sname");	/* Solid name. */
+	rname = bu_malloc(sizeof(reg_name) + 3, "rname");	/* Region name. */
+	sname = bu_malloc(sizeof(reg_name) + 3, "sname");	/* Solid name. */
 
-	snprintf(sname, size, "s.%s", reg_name);
+	sprintf(sname, "s.%s", reg_name);
 	mk_nmg(fpout, sname,  m);		/* Make nmg object. */
-	snprintf(rname, size, "r.%s", reg_name);
+	sprintf(rname, "r.%s", reg_name);
 	mk_comb1(fpout, rname, sname, 1);	/* Put object in a region. */
 	if (grp_name) {
 		mk_comb1(fpout, grp_name, rname, 1);	/* Region in group. */
@@ -211,11 +210,11 @@ descr_to_nmg(struct shell *s, FILE *fp, fastf_t *Ext)
 	    verts[i] = NULL;
 	}
 
-	stat = fscanf(fp, "%80s", token);	/* Get 1st token. */
+	stat = fscanf(fp, "%s", token);	/* Get 1st token. */
 	do {
 		switch (token[0]) {
 		case 'e':		/* Extrude face. */
-			stat = fscanf(fp, "%80s", token);
+			stat = fscanf(fp, "%s", token);
 			switch (token[0]) {
 			case '0':
 			case '1':
@@ -237,7 +236,7 @@ descr_to_nmg(struct shell *s, FILE *fp, fastf_t *Ext)
 				VSET(Ext, x, y, z);
 
 				/* Get token for next trip through loop. */
-				stat = fscanf(fp, "%80s", token);
+				stat = fscanf(fp, "%s", token);
 				break;
 			}
 			break;
@@ -266,7 +265,7 @@ descr_to_nmg(struct shell *s, FILE *fp, fastf_t *Ext)
 						nmg_jv(verts[-lu_verts[i]], cur_loop[i]);
 				n = 0;
 			}
-			stat = fscanf(fp, "%80s", token);
+			stat = fscanf(fp, "%s", token);
 
 			switch (token[0]) {
 			case 'h':	/* Is it cw or ccw? */
@@ -275,7 +274,7 @@ descr_to_nmg(struct shell *s, FILE *fp, fastf_t *Ext)
 				else
 					bu_bomb("descr_to_nmg: expected \"hole\"\n");
 				/* Get token for next trip through loop. */
-				stat = fscanf(fp, "%80s", token);
+				stat = fscanf(fp, "%s", token);
 				break;
 
 			default:
@@ -288,7 +287,7 @@ descr_to_nmg(struct shell *s, FILE *fp, fastf_t *Ext)
 			if (token[1] == '\0')
 				bu_bomb("descr_to_nmg: vertices must be numbered.\n");
 			vert_num = atoi(token+1);
-			stat = fscanf(fp, "%80s", token);
+			stat = fscanf(fp, "%s", token);
 			switch (token[0]) {
 			case '0':
 			case '1':
@@ -316,7 +315,7 @@ descr_to_nmg(struct shell *s, FILE *fp, fastf_t *Ext)
 				if (++n > MAXV)
 					bu_bomb("descr_to_nmg: too many points in loop\n");
 				/* Get token for next trip through loop. */
-				stat = fscanf(fp, "%80s", token);
+				stat = fscanf(fp, "%s", token);
 				break;
 
 			default:
@@ -329,7 +328,8 @@ descr_to_nmg(struct shell *s, FILE *fp, fastf_t *Ext)
 			break;
 
 		default:
-			bu_exit(1, "descr_to_nmg: unexpected token \"%s\"\n", token);
+			bu_log("descr_to_nmg: unexpected token \"%s\"\n", token);
+			bu_bomb("");
 			break;
 		}
 	} while (stat != EOF);

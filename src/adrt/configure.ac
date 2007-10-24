@@ -65,6 +65,7 @@ AC_CHECK_HEADERS([\
 	pthread.h\
 	signal.h\
 	stdio.h\
+	stdlib.h\
 	string.h\
 	sys/select.h\
 	sys/socket.h\

@@ -1,0 +1,1711 @@
+2008-03-07 23:41  brlcad
+
+	* src/other/tcl/unix/Makefile.in, src/other/tk/unix/Makefile.in:
+	  make sure the libraries have the exec bit set
+
+2008-03-11 05:22  brlcad
+
+	* NEWS:
+	  bob improved the keybinding behavior of the geometry browser so
+	  that you no longer have to keep right-click depressed while
+	  left-clicking selections. now you keep right click depressed and
+	  when released on an option, that option is selected.
+
+2008-03-11 05:25  brlcad
+
+	* NEWS:
+	  bob also made the Geometry Browser redraw any objects being
+	  displayed after edits are performed with a nice lil 'eval draw
+	  [who]'.
+
+2008-03-11 07:24  brlcad
+
+	* NEWS:
+	  include final release notes that mention the windows
+	  enhancements, clone/traker, intaval, and the mintration to
+	  subversion. sleeping on it, but should be last step to tag trunk
+	  as 7.12
+
+2008-03-11 14:39  brlcad
+
+	* src/other/tcl/unix/Makefile.in, src/other/tk/unix/Makefile.in:
+	  stray @
+
+2008-03-11 15:21  bob1961
+
+	* src/tclscripts/archer/Archer.tcl:
+	  Fixed a typo.
+
+2008-03-11 15:44  starseeker
+
+	* TODO:
+	  Add note from class - request for 'last chance' checking on
+	  killtree commands with wildcards
+
+2008-03-11 16:12  bob1961
+
+	* src/tclscripts/archer/Archer.tcl:
+	  If in view-only mode, the primaryToolbar and cmd components do
+	  not exist.
+
+2008-03-11 16:28  starseeker
+
+	* TODO:
+	  Add note from class - more flexibility in obj.s[num1-num2]
+	  command line file matching would be nice
+
+2008-03-11 17:31  starseeker
+
+	* BUGS:
+	  Add note about button_font not being found in Linux
+
+2008-03-11 20:52  starseeker
+
+	* TODO:
+	  Remove previous notes. Discussed with Sean - these behaviors are
+	  as expected given normal command line behavior.
+
+2008-03-11 22:03  brlcad
+
+	* include/Makefile.am:
+	  ugh, dg.h is missing from the dist
+
+2008-03-12 00:28  brlcad
+
+	* db/Makefile.am:
+	  yet one more stab at accounting for parallel make problems where
+	  the libtool wrapper script is invoked by too many threads before
+	  it has time to generate the lt-asc2g binary. this fixes the
+	  problem by creating a lockfile mechanism that invokes asc2g first
+	  on just the operators.asc file (cause it's so damn small) before
+	  running everyone else. seems to work like a charm though I bet
+	  there is still an exceptionally rare race condition possible if
+	  the operators.g dependency isn't handled first (it's listed as a
+	  dep so it should be first)
+
+2008-03-12 06:54  brlcad
+
+	* db/Makefile.am:
+	  clear out the lockfile and any .g's we are scheduled to build
+
+2008-03-13 13:14  bob1961
+
+	* src/librt/wdb_obj.c:
+	  Modified wdb_prep_dbip() to allow database creation if database
+	  doesn't exist.
+
+2008-03-13 13:25  bob1961
+
+	* src/tclscripts/archer/ArcherCore.tcl:
+	  Modified the initDefaultBindings method to not always use
+	  itk_component(mged).
+
+2008-03-14 13:55  erikgreenwald
+
+	* src/librt/g_metaball.c:
+	  tweak bounding volume stuff to cope with different methods
+
+2008-03-14 16:40  bob1961
+
+	* src/archer/archer, src/tclscripts/archer/Archer.tcl,
+	  src/tclscripts/archer/ArcherCore.tcl,
+	  src/tclscripts/archer/LoadArcherLibs.tcl:
+	  Remove SDB (SURVICE Database) related code.
+
+2008-03-14 17:10  bob1961
+
+	* src/other/tk/library/panedwindow.tcl:
+	  Hack to get around the occassional complaining from the
+	  panedwindow about "identify" being a bad option.
+
+2008-03-14 18:31  g2asc
+
+	* AUTHORS:
+	  dpk worked for BRL.
+
+2008-03-14 18:38  g2asc
+
+	* AUTHORS:
+	  Mike worked for BRL first, then ARL.
+
+2008-03-14 18:43  brlcad
+
+	* AUTHORS:
+	  cliff now contributes as qri too .. probably need a way to
+	  indicate open source contributions separately
+
+2008-03-14 18:46  g2asc
+
+	* AUTHORS:
+	  Added BRL affiliation to developers Moss, Dykstra, Applin,
+	  Kennedy, Gwynn, Stay, Hanes, Butler, A
+	  nderson, Tanenbaum.
+
+2008-03-14 19:33  starseeker
+
+	* doc/book/VolumeII.xml:
+	  Continuing xml conversion - appendix contents have been largely
+	  removed and will be re-added later. Remainder is now valid
+	  according to nXML mode, but will need more formatting work.
+
+2008-03-14 19:43  erikgreenwald
+
+	* src/mged/typein.c:
+	  default sweat is 1 in a metaball, not 0 (0 is not viable for
+	  Blinn method blob)
+
+2008-03-14 20:28  brlcad
+
+	* db/Makefile.am:
+	  fix a problem that bsd make made apparent where there were
+	  multiple rules for operators.g (direct and via .asc.g) causing a
+	  cyclic reference. Instead, use the same build approach but create
+	  an operators.asc2g file instead of operators.g; additionally make
+	  that file dependent upon asc2g so we're sure to keep updating the
+	  lt binary wrapper as needed.
+
+2008-03-14 20:58  erikgreenwald
+
+	* src/librt/g_metaball.c:
+	  fix up output a little
+
+2008-03-14 21:02  erikgreenwald
+
+	* src/nirt/if.c:
+	  report value for obliquity if out of valid range.
+
+2008-03-14 22:00  brlcad
+
+	* configure.ac:
+	  add protections and notification to users that installing into
+	  /usr is generally a pretty bad idea (particularly for those linux
+	  folks). require that they interactively confirm that they would
+	  like to continue (by having them type 'yes'/'no'). there is
+	  probably additional specific checks that could be added to make
+	  sure libdir and prefix aren't different, but it's a good first
+	  stab.
+
+2008-03-15 14:59  brlcad
+
+	* AUTHORS:
+	  annotate all of the various individuals that have made
+	  non-affiliated contributions as open source contributors.
+
+2008-03-16 15:39  brlcad
+
+	* include/raytrace.h:
+	  include common.h
+
+2008-03-16 15:40  brlcad
+
+	* include/brep.h:
+	  minor cleanup investigating the C++ linkage failure seen on
+	  Fedora.
+
+2008-03-16 16:26  brlcad
+
+	* src/other/openNURBS/opennurbs_system.h:
+	  try to fix the fedora linkage error (blindly). these are C
+	  headers, so protect them with an extern C declaration if we're
+	  compiling in C++ mode.
+
+2008-03-17 03:19  brlcad
+
+	* src/other/tcl/unix/Makefile.in, src/other/tk/unix/Makefile.in:
+	  only install/chmod the lib files if they exist, hopefully
+	  bypassing an ubuntu install error where libtclstub.a doesn't
+	  exist for some (unknown) reason.
+
+2008-03-17 14:33  brlcad
+
+	* src/other/Makefile.am, src/other/incrTcl/Makefile.am:
+	  if we don't have X11, then we should not be compiling tk, tkimg,
+	  blt, itk. turn them off.
+
+2008-03-19 13:53  brlcad
+
+	* m4/compiler.m4:
+	  allow BC_SANITY_CHECK to take an argument so we can customize the
+	  message being printed
+
+2008-03-19 13:54  brlcad
+
+	* configure.ac:
+	  add a sanity check for the C++ compiler to make sure one is
+	  installed and working since we need one now, otherwise we'll just
+	  end up with more bizaree errors later on.
+
+2008-03-20 18:20  brlcad
+
+	* include/conf/PATCH:
+	  that is pretty cool.. svn can tag without a checkout. bump patch
+	  version up to 1
+
+2008-03-20 19:15  dgodbey
+
+	* configure.ac, src/conv/3dm, src/conv/3dm/3dm-g.cpp,
+	  src/conv/3dm/Makefile.am, src/conv/Makefile.am:
+	  Initial checkin of 3dm-g converter.
+
+2008-03-20 19:24  dgodbey
+
+	* src/conv/3dm/3dm-g.cpp, src/conv/3dm/Makefile.am:
+	  Fix file properties
+
+2008-03-20 22:06  brlcad
+
+	* ChangeLog:
+	  it didn't make the rel-7-12-0 tag, but it needs to be in there
+	  anyways .. update the changelog (generated via svn2cl.sh
+	  --break-before-msg -r {2007-10-24}:{2008-03-11}
+
+2008-03-21 03:22  brlcad
+
+	* NEWS:
+	  add new section for 7.12.1
+
+2008-03-21 03:32  brlcad
+
+	* HACKING:
+	  update from rcs2log to svn2cl
+
+2008-03-21 03:33  brlcad
+
+	* README:
+	  bah, update to 7.12.2
+
+2008-03-21 03:33  brlcad
+
+	* src/librt/g_brep.cpp:
+	  header cleanup
+
+2008-03-21 17:18  brlcad
+
+	* configure.ac:
+	  ouch, someone had a copy-paste boo boo. don't set LIBITCL during
+	  the LIBITK tests...
+
+2008-03-23 05:12  brlcad
+
+	* m4/compiler.m4:
+	  bah, need stdlib.h for exit().. C++ sanity check seems insistent
+	  on needing it.
+
+2008-03-23 05:14  brlcad
+
+	* m4/compiler.m4:
+	  don't need stdio.h
+
+2008-03-23 06:47  brlcad
+
+	* HACKING:
+	  the dutch cad4linux site seems to be now defunct
+
+2008-03-23 07:10  brlcad
+
+	* HACKING:
+	  add devmaster to the notification list
+
+2008-03-24 05:18  brlcad
+
+	* src/conv/3dm/3dm-g.cpp:
+	  we're no longer including authorship in source files (put into
+	  docs instead), and don't use machine.h
+
+2008-03-24 05:23  brlcad
+
+	* src/conv/Makefile.am:
+	  actually, there is no g-3dm. if there were, it'd probably be in
+	  the 3dm dir anyways. SUBDIRS should be sorted by alpha unless
+	  there is a dependency.
+
+2008-03-24 13:07  dgodbey
+
+	* src/conv/3dm/3dm-g.cpp:
+	  Add getopt loop and trap ON_Curve, ON_Surface, and ON_Mesh.
+
+2008-03-25 20:05  brlcad
+
+	* NEWS, src/mged/rtif.c, src/tclscripts/mged/help.tcl:
+	  added -e, -l, -o, and -i options to the mged saveview command so
+	  you can override the executable, logfile, outputfile, and
+	  inputfile respectively when generating a saveview script.
+
+2008-03-26 12:15  johnranderson
+
+	* include/rtserver.h, src/librtserver/rtserver.c,
+	  src/librtserver/rtserverTest.c:
+	  updates to librtserver
+
+2008-03-26 23:32  johnranderson
+
+	* include/rtserver.h:
+	  Added a few more declarations
+
+2008-03-27 00:51  brlcad
+
+	* include/rtserver.h:
+	  remove duplicate decls, sort lines
+
+2008-03-27 01:10  brlcad
+
+	* TODO:
+	  dbconcat verified, seems to work like a charm with default, -s,
+	  -p with or without affix
+
+2008-03-27 05:58  brlcad
+
+	* BUGS:
+	  mged seems to be locking up at least on slackware, taking up full
+	  cpu and being non-responsive. works find with -c and X dm.
+	  reported by pacman87 (thx).
+
+2008-03-28 02:56  johnranderson
+
+	* src/librt/db5_bin.c:
+	  eliminated excess logging
+
+2008-03-28 03:03  johnranderson
+
+	* src/tclscripts/mged/make_solid.tcl,
+	  src/tclscripts/mged/openw.tcl, src/tclscripts/mged/tclIndex:
+	  added binunif to create menu
+
+2008-03-28 04:52  brlcad
+
+	* NEWS:
+	  john added support to mged for creating binunif objects via the
+	  Create menu
+
+2008-03-28 05:03  brlcad
+
+	* TODO:
+	  next release should be 'soon' so only promote rtarea, clone, and
+	  itcl build support
+
+2008-03-28 05:05  brlcad
+
+	* src/librt/bundle.c, src/librt/cut.c, src/librt/prep.c,
+	  src/librt/qray.c, src/librt/shoot.c, src/mged/buttons.c,
+	  src/mged/inside.c, src/tclscripts/mged/edit_menu.tcl,
+	  src/tclscripts/mged/openw.tcl:
+	  consistently spell out all references to 'prims' as primitives to
+	  help usability. not documenting in news cause it's stupid..
+
+2008-03-28 05:15  brlcad
+
+	* src/conv/off/off-g.c, src/irprep/all_sf.c, src/libpkg/pkg.c:
+	  remove t parameter from open calls. it's not posix and not needed
+	  (text mode is default on windows).
+
+2008-03-28 05:29  brlcad
+
+	* src/libbu/log.c:
+	  cleanup, remove dead code
+
+2008-03-28 06:28  brlcad
+
+	* src/util/pl-dm.c:
+	  make pl-dm compile once again, de knrify it, remove code not
+	  longer relevant
+
+2008-03-28 06:33  brlcad
+
+	* src/util/pl-dm.c:
+	  rip out the ogl and wgl code. it's highly unlikely that wgl will
+	  work without modifications given X is required. also, it's just a
+	  horrible way to support N dm interfaces .. the point is supposed
+	  to be that the dm interface incapsulates against doing this kind
+	  of stuff.
+
+2008-03-28 06:38  brlcad
+
+	* src/util/Makefile.am:
+	  add pl-dm back to the build if X is available
+
+2008-03-28 06:39  brlcad
+
+	* src/util/Makefile.am:
+	  ws
+
+2008-03-28 13:12  brlcad
+
+	* BUGS:
+	  the opengl framebuffer problem on mac os x where parallel
+	  rendering was causing it to fail was indeed fixed (by adding the
+	  necessary requests for each thread to acquire the context), but
+	  something since then has changed -- it's just giving a blank
+	  window at the moment
+
+2008-03-28 13:14  brlcad
+
+	* BUGS:
+	  actually it is rendering, just not updating the window apparently
+	  until it gets expose events
+
+2008-03-28 21:16  starseeker
+
+	* src/proc-db/tire.c:
+	  Add first exploratory coding efforts related to tire proc-db.
+
+2008-03-28 21:17  starseeker
+
+	* src/proc-db/Makefile.am:
+	  Add tire.c to proc-db Makefile.
+
+2008-03-28 22:27  brlcad
+
+	* src/util/Makefile.am:
+	  need tk_cppflags
+
+2008-03-29 02:38  brlcad
+
+	* include/dm.h:
+	  need the interp
+
+2008-03-29 02:43  brlcad
+
+	* src/util/Makefile.am:
+	  turn pl-dm off until I can get a full clean build to verify all
+	  flags are set
+
+2008-03-29 03:09  brlcad
+
+	* src/proc-db/tire.c:
+	  started in 2008, new header format
+
+2008-03-29 03:16  brlcad
+
+	* src/util/pl-dm.c:
+	  don't need the glx headers and dm_configureWindowShape no longer
+	  exists
+
+2008-03-29 03:44  brlcad
+
+	* src/util/Makefile.am:
+	  try turning pl-dm back on.. works here clean-built
+
+2008-03-29 22:55  brlcad
+
+	* BUGS:
+	  resolved ogl crash, removed duplicate context invalidate bug
+
+2008-03-30 04:53  starseeker
+
+	* src/proc-db/tire.c:
+	  Equations now calculating something other than nan, and answers
+	  agree with Maxima's evaluation of the formula, but still not
+	  returning the original parameters
+
+2008-04-01 03:18  brlcad
+
+	* src/proc-db/masonry.c:
+	  cleanup
+
+2008-04-01 03:25  brlcad
+
+	* src/proc-db/masonry.c:
+	  lil more
+
+2008-04-01 06:25  brlcad
+
+	* src/libbu/units.c:
+	  implement a bu_nearest_units_string() function that returns the
+	  name of the unit closest to the input unit. also, enhance the
+	  units table with ALL of the SI units from yoctometers to
+	  yottameters along with other astronomical units of measurements,
+	  chains, furlongs, and leagues.
+
+2008-04-01 06:26  brlcad
+
+	* include/bu.h:
+	  declare the new bu_nearest_units_string() function
+
+2008-04-01 07:27  brlcad
+
+	* src/rt/opt.c:
+	  add a -u option to all of the ray-tracers as a 'units' option for
+	  specifying the desired output units. default continues to be mm
+	  (istead of local). ray-tracers still have to be manually updated
+	  to take advantage of the option
+
+2008-04-01 07:42  brlcad
+
+	* NEWS, TODO, doc/deprecation.txt, src/rt/viewarea.c:
+	  add a new -u units option support to rtarea so that users can
+	  specify the desired output units. announce clearly that the
+	  output format of rtarea is subject to change soon as is the
+	  terminology being used. this is in preparation of addressing
+	  other user requests to fix the naming conventions, default units
+	  (using local units), and support for additional output formats
+	  (tables). this feature was requested by _many_ (most?) modelers
+	  and analysts.
+
+2008-04-01 07:44  brlcad
+
+	* src/rt/viewarea.c:
+	  missing newlines
+
+2008-04-01 15:22  bob1961
+
+	* src/mged/ged.c:
+	  Not setting cbreak_mode to COMMAND_LINE_EDITING on windows.
+
+2008-04-01 15:25  brlcad
+
+	* src/libbu/vls.c:
+	  make bu_vls_gets() behave regardless of the lines being \n, \r,
+	  or \r\n -- strip the EOL accordingly
+
+2008-04-01 17:00  starseeker
+
+	* src/proc-db/tire.c:
+	  New routine is able to return input parameters in test case -
+	  need more elaborate testing now.
+
+2008-04-01 17:11  bob1961
+
+	* misc/win32-msvc8/asc2g/asc2g.vcproj:
+	  Update version to 7.12.1
+
+2008-04-01 22:09  bob1961
+
+	* src/librt/g_sketch.c:
+	  Tcl_AppendResult needs three parameters. This fixes a core dump
+	  when getting the form of a sketch.
+
+2008-04-02 00:34  brlcad
+
+	* src/libbu/fgets.c:
+	  ws
+
+2008-04-02 01:36  brlcad
+
+	* src/mged/attach.c:
+	  rework the initial classic console mode attach prompt to use
+	  bu_vls_gets so that we don't have to worry about end of line
+	  issues. also, trim whitespace so it matches more easily and
+	  inform the user which selection is being used to affirm their
+	  selection.
+
+2008-04-02 01:36  brlcad
+
+	* src/mged/attach.c:
+	  loopy
+
+2008-04-02 02:11  brlcad
+
+	* NEWS:
+	  bob fixed a bug with the sketch primitive where it was crashing
+	  when someone requested the tcl form of the sketch. the
+	  Tcl_AppendResult didn't have a terminating null argument.
+
+2008-04-02 02:13  brlcad
+
+	* NEWS:
+	  improved mged's classic mode 'attach' display manager selection,
+	  particularly on windows where it was getting the carriage return
+	  in the input string and not getting a successful match. Now it
+	  drops the EOL character(s) and trims whitespace on comparison,
+	  and affirms to the user which option was selected.
+
+2008-04-02 10:26  brlcad
+
+	* bench, db/include, doc, doc/book, doc/html,
+	  doc/html/ReleaseNotes, doc/html/ReleaseNotes/Rel5.0,
+	  doc/html/ReleaseNotes/Rel5.0/Summary,
+	  doc/html/ReleaseNotes/Rel6.0, doc/html/manuals,
+	  doc/html/manuals/Anim_Tutorial, doc/html/manuals/archer,
+	  doc/html/manuals/cadwidgets, doc/html/manuals/libbu,
+	  doc/html/manuals/libdm, doc/html/manuals/librt,
+	  doc/html/manuals/mged, doc/html/manuals/mged/animmate,
+	  doc/html/manuals/shaders, doc/legal, include/conf, m4,
+	  misc/archlinux, misc/debian, misc/enigma, misc/macosx,
+	  misc/macosx/Resources, misc/macosx/Resources/ReadMe.rtfd,
+	  misc/macosx/Resources/Welcome.rtfd, misc/nsis, misc/pkgconfig,
+	  misc/win32-msvc, misc/win32-msvc/Dll, misc/win32-msvc/aPrep,
+	  misc/win32-msvc7, misc/win32-msvc8, pix, regress, sh, src,
+	  src/adrt, src/adrt/bench, src/adrt/doc, src/adrt/isst,
+	  src/adrt/libcommon, src/adrt/librender, src/adrt/libtexture,
+	  src/adrt/libtie, src/adrt/libtienet, src/adrt/libutil,
+	  src/adrt/master, src/adrt/misc, src/adrt/rise,
+	  src/adrt/rise/master, src/adrt/rise/observer,
+	  src/adrt/rise/slave, src/adrt/scripts, src/adrt/slave,
+	  src/archer, src/archer/plugins, src/archer/plugins/Commands,
+	  src/archer/plugins/Core, src/archer/plugins/Utility,
+	  src/archer/plugins/Wizards,
+	  src/archer/plugins/Wizards/tankwizardIA,
+	  src/archer/plugins/Wizards/tankwizardIA/images, src/brlman,
+	  src/burst, src/bwish, src/canon, src/conv/3dm, src/conv/comgeom,
+	  src/conv/jack, src/conv/off, src/conv/patch, src/external,
+	  src/external/Cubit, src/external/EndgameFramework,
+	  src/external/ProEngineer, src/external/Unigraphics, src/fbed,
+	  src/fbserv, src/gtools, src/gtools/beset, src/halftone, src/java,
+	  src/java/mil, src/java/mil/army, src/java/mil/army/arl,
+	  src/java/mil/army/arl/brlcad, src/lgt, src/libbn, src/libbu,
+	  src/libcursor, src/libdm, src/libfb, src/libmultispectral,
+	  src/liboptical, src/liborle, src/libpkg, src/librt,
+	  src/librtserver, src/libsysv, src/libtclcad, src/libtermio,
+	  src/libwdb, src/mged, src/mged/points, src/mk, src/nirt,
+	  src/other, src/other/URToolkit/cnv,
+	  src/other/URToolkit/cnv/rletoabA62,
+	  src/other/URToolkit/cnv/rletogif, src/other/URToolkit/man,
+	  src/other/URToolkit/tools, src/other/URToolkit/tools/clock,
+	  src/other/awf, src/other/blt, src/other/blt/cf,
+	  src/other/blt/demos, src/other/blt/demos/bitmaps,
+	  src/other/blt/examples, src/other/blt/html,
+	  src/other/blt/library, src/other/blt/library/dd_protocols,
+	  src/other/blt/man, src/other/blt/src, src/other/blt/win,
+	  src/other/incrTcl, src/other/incrTcl/doc, src/other/incrTcl/itcl,
+	  src/other/incrTcl/itcl/doc, src/other/incrTcl/itcl/generic,
+	  src/other/incrTcl/itcl/library, src/other/incrTcl/itk,
+	  src/other/incrTcl/itk/doc, src/other/incrTcl/itk/generic,
+	  src/other/incrTcl/itk/library, src/other/incrTcl/tools,
+	  src/other/intaval, src/other/iwidgets, src/other/iwidgets/doc,
+	  src/other/iwidgets/generic, src/other/jove, src/other/libpng,
+	  src/other/libregex, src/other/libtermlib, src/other/libutahrle,
+	  src/other/libutahrle/include, src/other/libz,
+	  src/other/openNURBS, src/other/tcl, src/other/tcl/unix,
+	  src/other/tcl/unix/dltest, src/other/tk, src/other/tk/unix,
+	  src/other/tkimg, src/other/tkimg/base, src/other/tkimg/png,
+	  src/other/tkimg/pngtcl, src/other/tkimg/zlibtcl, src/other/tnt,
+	  src/proc-db, src/remrt, src/rttherm, src/tab, src/tclscripts,
+	  src/tclscripts/archer, src/tclscripts/archer/images,
+	  src/tclscripts/archer/images/Themes,
+	  src/tclscripts/archer/images/Themes/Crystal,
+	  src/tclscripts/archer/images/Themes/Crystal_Large,
+	  src/tclscripts/archer/images/Themes/Windows,
+	  src/tclscripts/geometree, src/tclscripts/lib,
+	  src/tclscripts/mged, src/tclscripts/nirt, src/tclscripts/pl-dm,
+	  src/tclscripts/rtwizard, src/tclscripts/rtwizard/examples,
+	  src/tclscripts/rtwizard/examples/PictureTypeA,
+	  src/tclscripts/rtwizard/examples/PictureTypeB,
+	  src/tclscripts/rtwizard/examples/PictureTypeC,
+	  src/tclscripts/rtwizard/examples/PictureTypeD,
+	  src/tclscripts/rtwizard/examples/PictureTypeE,
+	  src/tclscripts/rtwizard/examples/PictureTypeF,
+	  src/tclscripts/rtwizard/lib, src/tclscripts/sdialogs,
+	  src/tclscripts/sdialogs/scripts, src/tclscripts/swidgets,
+	  src/tclscripts/swidgets/images, src/tclscripts/swidgets/scripts,
+	  src/tclscripts/util, src/vas4, src/vdeck, src/vfont:
+	  ignore generated Makefile.in and Makefile files
+
+2008-04-02 10:34  brlcad
+
+	* bench, db/include, doc, doc/book, doc/html,
+	  doc/html/ReleaseNotes, doc/html/ReleaseNotes/Rel5.0,
+	  doc/html/ReleaseNotes/Rel5.0/Summary,
+	  doc/html/ReleaseNotes/Rel6.0, doc/html/manuals,
+	  doc/html/manuals/Anim_Tutorial, doc/html/manuals/archer,
+	  doc/html/manuals/cadwidgets, doc/html/manuals/libbu,
+	  doc/html/manuals/libdm, doc/html/manuals/librt,
+	  doc/html/manuals/mged, doc/html/manuals/mged/animmate,
+	  doc/html/manuals/shaders, doc/legal, include/conf, m4,
+	  misc/archlinux, misc/debian, misc/enigma, misc/macosx,
+	  misc/macosx/Resources, misc/macosx/Resources/ReadMe.rtfd,
+	  misc/macosx/Resources/Welcome.rtfd, misc/nsis, misc/pkgconfig,
+	  misc/win32-msvc, misc/win32-msvc/Dll, misc/win32-msvc/aPrep,
+	  misc/win32-msvc7, misc/win32-msvc8, pix, regress, sh, src,
+	  src/adrt, src/adrt/bench, src/adrt/doc, src/adrt/isst,
+	  src/adrt/libcommon, src/adrt/librender, src/adrt/libtexture,
+	  src/adrt/libtie, src/adrt/libtienet, src/adrt/libutil,
+	  src/adrt/master, src/adrt/misc, src/adrt/rise,
+	  src/adrt/rise/master, src/adrt/rise/observer,
+	  src/adrt/rise/slave, src/adrt/scripts, src/adrt/slave,
+	  src/archer, src/archer/plugins, src/archer/plugins/Commands,
+	  src/archer/plugins/Core, src/archer/plugins/Utility,
+	  src/archer/plugins/Wizards,
+	  src/archer/plugins/Wizards/tankwizardIA,
+	  src/archer/plugins/Wizards/tankwizardIA/images, src/brlman,
+	  src/burst, src/bwish, src/canon, src/conv/3dm, src/conv/comgeom,
+	  src/conv/jack, src/conv/off, src/conv/patch, src/external,
+	  src/external/Cubit, src/external/EndgameFramework,
+	  src/external/ProEngineer, src/external/Unigraphics, src/fbed,
+	  src/fbserv, src/gtools, src/gtools/beset, src/halftone, src/java,
+	  src/java/mil, src/java/mil/army, src/java/mil/army/arl,
+	  src/java/mil/army/arl/brlcad, src/lgt, src/libbn, src/libbu,
+	  src/libcursor, src/libdm, src/libfb, src/libmultispectral,
+	  src/liboptical, src/liborle, src/libpkg, src/librt,
+	  src/librtserver, src/libsysv, src/libtclcad, src/libtermio,
+	  src/libwdb, src/mged, src/mged/points, src/mk, src/nirt,
+	  src/other, src/other/URToolkit/cnv,
+	  src/other/URToolkit/cnv/rletoabA62,
+	  src/other/URToolkit/cnv/rletogif, src/other/URToolkit/man,
+	  src/other/URToolkit/tools, src/other/URToolkit/tools/clock,
+	  src/other/awf, src/other/blt, src/other/blt/cf,
+	  src/other/blt/demos, src/other/blt/demos/bitmaps,
+	  src/other/blt/examples, src/other/blt/html,
+	  src/other/blt/library, src/other/blt/library/dd_protocols,
+	  src/other/blt/man, src/other/blt/src, src/other/blt/win,
+	  src/other/incrTcl, src/other/incrTcl/doc, src/other/incrTcl/itcl,
+	  src/other/incrTcl/itcl/doc, src/other/incrTcl/itcl/generic,
+	  src/other/incrTcl/itcl/library, src/other/incrTcl/itk,
+	  src/other/incrTcl/itk/doc, src/other/incrTcl/itk/generic,
+	  src/other/incrTcl/itk/library, src/other/incrTcl/tools,
+	  src/other/intaval, src/other/iwidgets, src/other/iwidgets/doc,
+	  src/other/iwidgets/generic, src/other/jove, src/other/libpng,
+	  src/other/libregex, src/other/libtermlib, src/other/libutahrle,
+	  src/other/libutahrle/include, src/other/libz,
+	  src/other/openNURBS, src/other/tcl, src/other/tcl/unix,
+	  src/other/tcl/unix/dltest, src/other/tk, src/other/tk/unix,
+	  src/other/tkimg, src/other/tkimg/base, src/other/tkimg/png,
+	  src/other/tkimg/pngtcl, src/other/tkimg/zlibtcl, src/other/tnt,
+	  src/proc-db, src/remrt, src/rttherm, src/tab, src/tclscripts,
+	  src/tclscripts/archer, src/tclscripts/archer/images,
+	  src/tclscripts/archer/images/Themes,
+	  src/tclscripts/archer/images/Themes/Crystal,
+	  src/tclscripts/archer/images/Themes/Crystal_Large,
+	  src/tclscripts/archer/images/Themes/Windows,
+	  src/tclscripts/geometree, src/tclscripts/lib,
+	  src/tclscripts/mged, src/tclscripts/nirt, src/tclscripts/pl-dm,
+	  src/tclscripts/rtwizard, src/tclscripts/rtwizard/examples,
+	  src/tclscripts/rtwizard/examples/PictureTypeA,
+	  src/tclscripts/rtwizard/examples/PictureTypeB,
+	  src/tclscripts/rtwizard/examples/PictureTypeC,
+	  src/tclscripts/rtwizard/examples/PictureTypeD,
+	  src/tclscripts/rtwizard/examples/PictureTypeE,
+	  src/tclscripts/rtwizard/examples/PictureTypeF,
+	  src/tclscripts/rtwizard/lib, src/tclscripts/sdialogs,
+	  src/tclscripts/sdialogs/scripts, src/tclscripts/swidgets,
+	  src/tclscripts/swidgets/images, src/tclscripts/swidgets/scripts,
+	  src/tclscripts/util, src/vas4, src/vdeck, src/vfont:
+	  bah, revert previous propsetting .. need additive, not override
+
+2008-04-02 11:24  brlcad
+
+	* bench, db/include, doc, doc/book, doc/html,
+	  doc/html/ReleaseNotes, doc/html/ReleaseNotes/Rel5.0,
+	  doc/html/ReleaseNotes/Rel5.0/Summary,
+	  doc/html/ReleaseNotes/Rel6.0, doc/html/manuals,
+	  doc/html/manuals/Anim_Tutorial, doc/html/manuals/archer,
+	  doc/html/manuals/cadwidgets, doc/html/manuals/libbu,
+	  doc/html/manuals/libdm, doc/html/manuals/librt,
+	  doc/html/manuals/mged, doc/html/manuals/mged/animmate,
+	  doc/html/manuals/shaders, doc/legal, include/conf, m4,
+	  misc/archlinux, misc/debian, misc/enigma, misc/macosx,
+	  misc/macosx/Resources, misc/macosx/Resources/ReadMe.rtfd,
+	  misc/macosx/Resources/Welcome.rtfd, misc/nsis, misc/pkgconfig,
+	  misc/win32-msvc, misc/win32-msvc/Dll, misc/win32-msvc/aPrep,
+	  misc/win32-msvc7, misc/win32-msvc8, pix, regress, sh, src,
+	  src/adrt, src/adrt/bench, src/adrt/doc, src/adrt/isst,
+	  src/adrt/libcommon, src/adrt/librender, src/adrt/libtexture,
+	  src/adrt/libtie, src/adrt/libtienet, src/adrt/libutil,
+	  src/adrt/master, src/adrt/misc, src/adrt/rise,
+	  src/adrt/rise/master, src/adrt/rise/observer,
+	  src/adrt/rise/slave, src/adrt/scripts, src/adrt/slave,
+	  src/archer, src/archer/plugins, src/archer/plugins/Commands,
+	  src/archer/plugins/Core, src/archer/plugins/Utility,
+	  src/archer/plugins/Wizards,
+	  src/archer/plugins/Wizards/tankwizardIA,
+	  src/archer/plugins/Wizards/tankwizardIA/images, src/brlman,
+	  src/burst, src/bwish, src/canon, src/conv/3dm, src/conv/comgeom,
+	  src/conv/jack, src/conv/off, src/conv/patch, src/external,
+	  src/external/Cubit, src/external/EndgameFramework,
+	  src/external/ProEngineer, src/external/Unigraphics, src/fbed,
+	  src/fbserv, src/gtools, src/gtools/beset, src/halftone, src/java,
+	  src/java/mil, src/java/mil/army, src/java/mil/army/arl,
+	  src/java/mil/army/arl/brlcad, src/lgt, src/libbn, src/libbu,
+	  src/libcursor, src/libdm, src/libfb, src/libmultispectral,
+	  src/liboptical, src/liborle, src/libpkg, src/librt,
+	  src/librtserver, src/libsysv, src/libtclcad, src/libtermio,
+	  src/libwdb, src/mged, src/mged/points, src/mk, src/nirt,
+	  src/other, src/other/URToolkit/cnv,
+	  src/other/URToolkit/cnv/rletoabA62,
+	  src/other/URToolkit/cnv/rletogif, src/other/URToolkit/man,
+	  src/other/URToolkit/tools, src/other/URToolkit/tools/clock,
+	  src/other/awf, src/other/blt, src/other/blt/cf,
+	  src/other/blt/demos, src/other/blt/demos/bitmaps,
+	  src/other/blt/examples, src/other/blt/html,
+	  src/other/blt/library, src/other/blt/library/dd_protocols,
+	  src/other/blt/man, src/other/blt/src, src/other/blt/win,
+	  src/other/incrTcl, src/other/incrTcl/doc, src/other/incrTcl/itcl,
+	  src/other/incrTcl/itcl/doc, src/other/incrTcl/itcl/generic,
+	  src/other/incrTcl/itcl/library, src/other/incrTcl/itk,
+	  src/other/incrTcl/itk/doc, src/other/incrTcl/itk/generic,
+	  src/other/incrTcl/itk/library, src/other/incrTcl/tools,
+	  src/other/intaval, src/other/iwidgets, src/other/iwidgets/doc,
+	  src/other/iwidgets/generic, src/other/jove, src/other/libpng,
+	  src/other/libregex, src/other/libtermlib, src/other/libutahrle,
+	  src/other/libutahrle/include, src/other/libz,
+	  src/other/openNURBS, src/other/tcl, src/other/tcl/unix,
+	  src/other/tcl/unix/dltest, src/other/tk, src/other/tk/unix,
+	  src/other/tkimg, src/other/tkimg/base, src/other/tkimg/png,
+	  src/other/tkimg/pngtcl, src/other/tkimg/zlibtcl, src/other/tnt,
+	  src/proc-db, src/remrt, src/rttherm, src/tab, src/tclscripts,
+	  src/tclscripts/archer, src/tclscripts/archer/images,
+	  src/tclscripts/archer/images/Themes,
+	  src/tclscripts/archer/images/Themes/Crystal,
+	  src/tclscripts/archer/images/Themes/Crystal_Large,
+	  src/tclscripts/archer/images/Themes/Windows,
+	  src/tclscripts/geometree, src/tclscripts/lib,
+	  src/tclscripts/mged, src/tclscripts/nirt, src/tclscripts/pl-dm,
+	  src/tclscripts/rtwizard, src/tclscripts/rtwizard/examples,
+	  src/tclscripts/rtwizard/examples/PictureTypeA,
+	  src/tclscripts/rtwizard/examples/PictureTypeB,
+	  src/tclscripts/rtwizard/examples/PictureTypeC,
+	  src/tclscripts/rtwizard/examples/PictureTypeD,
+	  src/tclscripts/rtwizard/examples/PictureTypeE,
+	  src/tclscripts/rtwizard/examples/PictureTypeF,
+	  src/tclscripts/rtwizard/lib, src/tclscripts/sdialogs,
+	  src/tclscripts/sdialogs/scripts, src/tclscripts/swidgets,
+	  src/tclscripts/swidgets/images, src/tclscripts/swidgets/scripts,
+	  src/tclscripts/util, src/util, src/vas4, src/vdeck, src/vfont:
+	  much better .. ignore all the generated Makefile, Makefile.in,
+	  .deps, and .libs stuff
+
+2008-04-02 13:35  bob1961
+
+	* src/librt/wdb_comb_std.c:
+	  Found another case where Tcl_AppendResult was not being used
+	  correctly (i.e. last argument must be a null char *).
+
+2008-04-02 15:13  brlcad
+
+	* include/dg.h, src/proc-db/tire.c:
+	  folks need to set up their subversion config file with auto-props
+	  entries. set the mime-types and eol-style
+
+2008-04-02 15:17  brlcad
+
+	* include/dg.h:
+	  fix header
+
+2008-04-02 16:11  starseeker
+
+	* src/proc-db/tire.c:
+	  Appears to be a problem with rotation - added testing routines
+	  for equations at various points, easier generation of test cases.
+
+2008-04-03 16:18  starseeker
+
+	* src/proc-db/tire.c:
+	  Solve derivative equations for zero, not -1.
+
+2008-04-03 20:57  starseeker
+
+	* src/proc-db/tire.c:
+	  Still some edge effects when testing parameters, but much closer.
+
+2008-04-03 21:40  bob1961
+
+	* src/archer/archer.bat, src/mged/mged.bat:
+	  Update version.
+
+2008-04-03 21:41  bob1961
+
+	* misc/nsis/brlcad.nsi:
+	  Added desktop icons for mged and archer. Minor cleanup.
+
+2008-04-03 21:43  bob1961
+
+	* misc/win32-msvc8/tclsh/library/installTree.tcl:
+	  Added variables for keeping track of versions.
+
+2008-04-04 05:40  brlcad
+
+	* src/other/tkimg/png/Makefile.am:
+	  missing LIBZ_CPPFLAGS
+
+2008-04-04 16:11  bob1961
+
+	* src/util/rtwizard.bat:
+	  Update the version.
+
+2008-04-04 19:08  brlcad
+
+	* AUTHORS:
+	  add gillich to the contributors list for his g-sat importer
+
+2008-04-04 20:23  bob1961
+
+	* misc/win32-msvc8/rt/rt.vcproj,
+	  misc/win32-msvc8/rt_bot_faces/rt_bot_faces.vcproj,
+	  misc/win32-msvc8/rtarea/rtarea.vcproj,
+	  misc/win32-msvc8/rtcell/rtcell.vcproj,
+	  misc/win32-msvc8/rtfrac/rtfrac.vcproj,
+	  misc/win32-msvc8/rthide/rthide.vcproj,
+	  misc/win32-msvc8/rtpp/rtpp.vcproj,
+	  misc/win32-msvc8/rtrad/rtrad.vcproj,
+	  misc/win32-msvc8/rtrange/rtrange.vcproj,
+	  misc/win32-msvc8/rtray/rtray.vcproj,
+	  misc/win32-msvc8/rtsil/rtsil.vcproj,
+	  misc/win32-msvc8/rtweight/rtweight.vcproj,
+	  misc/win32-msvc8/rtxray/rtxray.vcproj:
+	  Change _DEBUG to NDEBUG in preprocessor definitions.
+
+2008-04-04 20:26  bob1961
+
+	* src/mged/mged.bat:
+	  Mods to get rid of complaints about nul.
+
+2008-04-04 20:29  bob1961
+
+	* src/archer/archer.bat:
+	  Move "ECHO OFF" up in the file.
+
+2008-04-04 22:35  starseeker
+
+	* src/proc-db/tire.c:
+	  Able to successfully generate reasonable shapes for the tire
+	  surface.
+
+2008-04-05 00:36  brlcad
+
+	* TODO:
+	  bu_temp_file() _is_ a secure replacement to all of the various
+	  temp file routines. remote related todo entry.
+
+2008-04-05 03:07  starseeker
+
+	* src/proc-db/tire.c:
+	  Got tire routine to the point where it can insert the surface
+	  shape and the trimming cuts are in place. Draw tire-surface.c for
+	  the current example.
+
+2008-04-05 08:53  brlcad
+
+	* AUTHORS:
+	  mike's contributions have been code -- his work on
+	  src/external/Cubit
+
+2008-04-05 08:55  brlcad
+
+	* AUTHORS, src/conv/3dm/3dm-g.cpp, src/proc-db/brep_cube.cpp,
+	  src/proc-db/brep_simple.cpp, src/util/lowp.c:
+	  apply mafm's sf patch 1934710 that apply constness and string.h
+	  to a handful of files.
+
+2008-04-05 14:01  starseeker
+
+	* src/proc-db/tire.c:
+	  Haul in the clipping cylinders for the top - don't need to go
+	  quite so far out. ymax derivative may not be doing what is
+	  intended.
+
+2008-04-05 15:02  brlcad
+
+	* src/librt/cut.c:
+	  make sure we're not calling log(0) by pretending there is one
+	  more solid than there really is. there is something causing an
+	  illegal instruction in log(), so hopefully this accounts for that
+	  problem.
+
+2008-04-07 06:35  starseeker
+
+	* src/proc-db/tire.c:
+	  Switch from attempt at derivative fixing to additional point
+	  measurement.
+
+2008-04-07 15:24  louipc
+
+	* misc/archlinux/PKGBUILD:
+	  Remove extra options from build()
+
+2008-04-07 20:35  starseeker
+
+	* src/proc-db/tire.c:
+	  Added inner solid fill for tire - next step is to provide proper
+	  'cut out' shape.
+
+2008-04-07 21:45  bob1961
+
+	* src/mged/mged.bat:
+	  For the moment, put back the old START command. Without the "2>&1
+	  nul" we lose the output from forked apps like rt.
+
+2008-04-07 22:06  bob1961
+
+	* misc/nsis/brlcad.nsi:
+	  Add shortcuts for RtWizard.
+
+2008-04-07 23:16  brlcad
+
+	* HACKING:
+	  not acceptable!
+
+2008-04-08 00:34  brlcad
+
+	* HACKING:
+	  it's apparently an int pointer, thanks andrecastelo
+
+2008-04-08 00:39  brlcad
+
+	* misc/nsis/brlcad.nsi:
+	  apply sf patch 1936200 (Selecting the environmental variables in
+	  NSIS) so that PROGRAMFILES is properly set. kinda helps the
+	  windows installer work. thanks suryajith.
+
+2008-04-08 03:49  starseeker
+
+	* src/proc-db/tire.c:
+	  Change variable naming conventions to match new measurements
+
+2008-04-08 05:50  starseeker
+
+	* src/proc-db/tire.c:
+	  Add option to append text to all components of a tire shape -
+	  allows for multiple definitions in one g file, required for
+	  curved subtraction of tire solid.
+
+2008-04-08 12:02  starseeker
+
+	* src/proc-db/tire.c:
+	  Truncate the string to reset it correctly.
+
+2008-04-08 15:04  bob1961
+
+	* src/mged/ged.c, src/mged/mged.bat:
+	  Removed hack that was used to have output from rt apps show up in
+	  mged's command window in gui mode.
+
+2008-04-08 16:52  starseeker
+
+	* src/proc-db/tire.c:
+	  Redo the side subtractions, make tire input parameters variables
+
+2008-04-09 04:44  starseeker
+
+	* src/proc-db/tire.c:
+	  Fix subtractions for ell intersections so wireframe does not
+	  extend so far beyond actual tire surface.
+
+2008-04-09 17:27  bob1961
+
+	* misc/nsis/brlcad.nsi:
+	  ReadEnvStr must be called within a function or a section. Also,
+	  PROGRAMFILES cannot be set (i.e. its a constant defined by nsis).
+	  Put the ReadEnvStr inside the .onInit callback function.
+
+2008-04-10 01:03  johnranderson
+
+	* src/rt/opt.c, src/rt/rt.1, src/rt/view.c:
+	  Added a -k option to rt. Specifies a cutting plane to allow
+	  faster computation
+	  of cutaway images. Note that this produces an approximation of
+	  the image that
+	  would be produced by actually subtracting the equivalent
+	  halfspace. This may
+	  satisfy bug #1812560 Cutaway view 210x slower.
+
+2008-04-10 02:16  brlcad
+
+	* NEWS:
+	  john added a new -k 'kutaway view' option to rt that allows users
+	  to specify a cutting plane for fast(er) computation of cutaway
+	  images that approximates the image that would be produced by
+	  actually subtracting the equivalent halfspace and potentially
+	  satisfies clock's sf bug 1812560 (Cutaway view 210x slower) but
+	  still makes this an absurd-yet-fun run-on sentence.
+
+2008-04-10 02:21  starseeker
+
+	* src/proc-db/tire.c:
+	  No functionality change - just adding some options for printing
+	  Maxima style equations for debugging. Committing for now so
+	  they're available if I have to throw out subsequent tests.
+
+2008-04-10 18:10  starseeker
+
+	* src/proc-db/tire.c:
+	  Fix two bugs in matrix solver.
+
+2008-04-10 19:34  starseeker
+
+	* src/proc-db/tire.c:
+	  Testing new way of specifying top ellipse.
+
+2008-04-11 03:19  starseeker
+
+	* src/proc-db/tire.c:
+	  New way of specifying the sides - hopefully somewhat more robust
+	  than previous method.
+
+2008-04-11 13:49  starseeker
+
+	* src/proc-db/tire.c:
+	  Clean up unused variables in new specification scheme.
+
+2008-04-11 18:23  brlcad
+
+	* src/libbu/htond.c:
+	  cleanup header
+
+2008-04-11 18:55  starseeker
+
+	* src/proc-db/tire.c:
+	  Experimenting with ways to make reasonable tire shapes from
+	  standard input data.
+
+2008-04-11 19:39  starseeker
+
+	* src/proc-db/tire.c:
+	  Whoops - set scale factor to one for this part.
+
+2008-04-11 21:04  brlcad
+
+	* regress/flawfinder.sh:
+	  fix test failure
+
+2008-04-13 15:51  starseeker
+
+	* src/proc-db/tire.c:
+	  Add a little extra clipping to sides to eliminate hairline
+	  floating material.
+
+2008-04-13 22:01  brlcad
+
+	* src/libbu/image.c:
+	  duplicate headers
+
+2008-04-13 22:02  brlcad
+
+	* configure.ac, src/conv/3dm/Makefile.am,
+	  src/conv/comgeom/Makefile.am, src/conv/iges/Makefile.am,
+	  src/conv/jack/Makefile.am, src/conv/off/Makefile.am,
+	  src/conv/patch/Makefile.am, src/libbu/Makefile.am,
+	  src/libpkg/Makefile.am, src/librt/Makefile.am:
+	  recursive lib dependency fixes for the ubuntuneers. not done
+
+2008-04-14 04:15  starseeker
+
+	* src/proc-db/tire.c:
+	  Can now call one function and specify one set of dimensions to
+	  get the outer tire shape.
+
+2008-04-14 10:09  brlcad
+
+	* HACKING:
+	  wasn't explicit, but the intent is the same .. usually should use
+	  null-terminated instead of the strn family of funcs unless they
+	  are raw data buffers
+
+2008-04-14 10:28  brlcad
+
+	* TODO:
+	  add options to nirt for reporting the exit points (instead of
+	  just LOS thickness) as well as the gaps between geometry
+	  (simulated air).
+
+2008-04-14 15:10  starseeker
+
+	* src/proc-db/tire.c:
+	  First cut at 'tire size spec' to geometry inputs logic.
+
+2008-04-14 15:33  starseeker
+
+	* src/proc-db/tire.c:
+	  Switch to bu_unit for converting input, minor cleanup of unused
+	  variables.
+
+2008-04-14 19:01  starseeker
+
+	* src/proc-db/tire.c:
+	  Added basic command line specification behavior - tire size can
+	  now be specified - ex: 'tire -d 265/70R15 mytire.g'
+
+2008-04-14 20:10  bob1961
+
+	* src/mged/rtif.c:
+	  rtcheck needs to call the dgo_rtcheck_cmd (i.e. the handlers
+	  associated with rtcheck expect binary vector data on stdout and
+	  text on stderr).
+
+2008-04-14 20:40  bob1961
+
+	* src/tclscripts/mged/mgedrc.tcl:
+	  Double quote html_dir and web_browser values when dumping mged
+	  state to .mgedrc
+
+2008-04-14 20:57  starseeker
+
+	* src/proc-db/tire.c:
+	  Add comments, rename some things.
+
+2008-04-15 15:20  brlcad
+
+	* configure.ac:
+	  somehow Xi is not getting detected, seemingly from a failure to
+	  include the X11 include dirs. set up CPPFLAGS to see if they can
+	  be found.
+
+2008-04-15 16:16  brlcad
+
+	* TODO:
+	  push back to next release, time to start testing
+
+2008-04-15 16:48  starseeker
+
+	* src/proc-db/tire.c:
+	  Exploratory work for rims.
+
+2008-04-15 19:24  brlcad
+
+	* src/tclscripts/mged/openw.tcl:
+	  apply a modified version of sf patch 1940958 (Fix for bad paths
+	  in .mgedrc on Windows) from Elena Bautu - ebautu.
+
+2008-04-15 19:24  starseeker
+
+	* src/proc-db/tire.c:
+	  More rim experimentation. Dimensions are off somewhere in wheel -
+	  need to re-factor equations.
+
+2008-04-15 19:30  brlcad
+
+	* AUTHORS, NEWS:
+	  credit elena bautu for her patch to handle paths with spaces in
+	  the .mgedrc file. accepted sf patch 1940958 (Fix for bad paths in
+	  .mgedrc on Windows) which bob applied via proxy through dave. the
+	  patch also tests for internet exploder's existence for reading
+	  the html help files.
+
+2008-04-15 21:08  starseeker
+
+	* src/proc-db/tire.c:
+	  Add patterning for subtracting holes from the wheel.
+
+2008-04-16 03:40  starseeker
+
+	* src/proc-db/tire.c:
+	  Use some intermediate variable names to simplify rim creation
+	  logic a bit - seems to be working now for different sizes.
+
+2008-04-16 14:17  brlcad
+
+	* sh/make_dmg.sh:
+	  include the size of the package in the dmg autosize calcs
+
+2008-04-16 14:21  brlcad
+
+	* src/gtools/beset/beset.c, src/gtools/beset/beset.h:
+	  quellage
+
+2008-04-16 15:09  starseeker
+
+	* src/proc-db/tire.c:
+	  Add first stab at cuts for bolt holes and center.
+
+2008-04-16 15:26  brlcad
+
+	* AUTHORS:
+	  found a reference to mged contributions from Gary Kuehl in a
+	  branch. it's unclear if these changes ever made it in or if other
+	  code was related or if it was even code that was provided, but
+	  credit him with special thanks for now.
+
+2008-04-16 15:30  brlcad
+
+	* AUTHORS:
+	  dtrmenak is an open source contributor, bob has contributed as
+	  open source off-the-clock as well
+
+2008-04-16 15:35  brlcad
+
+	* AUTHORS:
+	  butler inactive for approx 17 months now (only two isolated
+	  events intaval script and manpage update), remove activity marker
+
+2008-04-16 15:40  brlcad
+
+	* AUTHORS:
+	  shumaker has been inactive for nearly two years, remove activity
+	  marker
+
+2008-04-16 15:42  brlcad
+
+	* AUTHORS:
+	  butler's away on sabattical/training/education so update POC to
+	  be davisson for ARL
+
+2008-04-16 15:46  brlcad
+
+	* AUTHORS:
+	  yapp moves up from special thanks for gentoo/doc work to
+	  significant code contributions for proc-db/tire, on his way to
+	  being new dev (woot)
+
+2008-04-16 16:45  bob1961
+
+	* src/librt/mirror.c, src/mged/chgmodel.c,
+	  src/tclscripts/mged/help.tcl:
+	  Added the mirror_pt parameter to rt_mirror. This is the point on
+	  the axis about which the mirror action will take place.
+
+2008-04-16 19:24  bob1961
+
+	* include/raytrace.h:
+	  Update signature of rt_mirror (i.e. added mirror_pt).
+
+2008-04-17 01:21  starseeker
+
+	* src/mged/clone.c:
+	  Sean fixed bug in clone where cloning combinations resulted in an
+	  infinite loop.
+
+2008-04-17 01:28  starseeker
+
+	* NEWS:
+	  Add clone fix
+
+2008-04-17 01:29  starseeker
+
+	* src/proc-db/tire.c:
+	  Add (very) preliminary support for tread on tires.
+
+2008-04-17 02:02  brlcad
+
+	* AUTHORS:
+	  fill in contribution details for when the individual first made a
+	  commit (per ohloh stats on head). also include the committer and
+	  common IRC nicknames for those known.
+
+2008-04-17 02:17  brlcad
+
+	* AUTHORS:
+	  add terry slatter to the special thanks section as he did commit
+	  at least one (minor) tweak to pix-rle to use LOGNAME in oct 89
+
+2008-04-17 02:25  brlcad
+
+	* AUTHORS:
+	  susan coates, BRLer per the contribution year
+
+2008-04-17 02:26  brlcad
+
+	* AUTHORS:
+	  susan was february 89 even
+
+2008-04-17 02:30  brlcad
+
+	* AUTHORS:
+	  damnits, keep getting those two mixed up. sue coates was '91 sep
+	  BRLer, sue muuss was 89' feb BRLer. also, natalie eberius and
+	  natalie barker are one in the same.
+
+2008-04-17 02:36  brlcad
+
+	* AUTHORS:
+	  special thanks to steven buckley for his '88 aug contributions
+	  (maybe as a BRL student, but unknown) .. they were a bunch (42)
+	  manpage updates
+
+2008-04-17 02:38  brlcad
+
+	* AUTHORS:
+	  special thanks to john grosh for a tabinterp tweak back in oct 93
+	  (incrased some buf size).
+
+2008-04-17 02:42  brlcad
+
+	* AUTHORS:
+	  add david godbey to the code contributors list for his work on
+	  the 3dm-g importer and brep testing. while we're at is, note that
+	  jra has also contributed as an altus guy in addition to his usual
+	  open sourceage goodness as things pertain to librtserver.
+
+2008-04-17 03:46  bharder
+
+	* AUTHORS:
+	  Update own record
+
+2008-04-17 05:15  brlcad
+
+	* BUGS, src/util/bwmod.c:
+	  dawn thomas noted that bwmod performing a divide-by-zero no
+	  longer occurs. turns out this bug was fixed about 3.5 years ago
+	  by butler in r23494 so poof it goes, thx dawn
+
+2008-04-17 05:22  brlcad
+
+	* src/util/bwmod.c:
+	  don't compare floating point with ==, use NEAR_ZERO tolerancing
+	  for portability
+
+2008-04-17 13:25  d_rossberg
+
+	* include/conf/CMakeLists.txt, include/conf/Makefile.am,
+	  misc/win32-msvc/CMakeLists.txt,
+	  misc/win32-msvc/Dll/CMakeLists.txt,
+	  misc/win32-msvc/Dll/Makefile.am, misc/win32-msvc/Dll/brlcad.dsp,
+	  misc/win32-msvc/Makefile.am, misc/win32-msvc/aPrep,
+	  misc/win32-msvc/brlcad.dsw, src/libbn/CMakeLists.txt,
+	  src/libbn/Makefile.am, src/libbn/libbn.dsp,
+	  src/libbu/CMakeLists.txt, src/libbu/Makefile.am,
+	  src/libbu/libbu.dsp, src/librt/CMakeLists.txt,
+	  src/librt/Makefile.am, src/librt/librt.dsp,
+	  src/libsysv/CMakeLists.txt, src/libsysv/Makefile.am,
+	  src/libsysv/libsysv.dsp, src/libwdb/CMakeLists.txt,
+	  src/libwdb/Makefile.am, src/libwdb/libwdb.dsp,
+	  src/other/libregex/CMakeLists.txt,
+	  src/other/libregex/Makefile.am, src/other/libregex/libregex.dsp,
+	  src/other/libz/CMakeLists.txt, src/other/libz/Makefile.am,
+	  src/other/libz/libz.dsp, src/other/openNURBS/CMakeLists.txt,
+	  src/other/openNURBS/Makefile.am,
+	  src/other/openNURBS/opennurbs.dsp:
+	  update of the brlcad.dll build environment for current MSVC
+	  versions
+	  because of differences in the .vcproj files for the different
+	  MSVS versions CMake is used here
+	  this does not mean that they are portable to UNIX (at least not
+	  at the moment)
+	  perhaps it could be a base to build on
+
+2008-04-17 13:40  dgodbey
+
+	* src/librt/g_brep.cpp, src/other/openNURBS/opennurbs_bezier.cpp:
+	  Changes support raytracing of simple Rhino converted geometries
+
+2008-04-17 14:29  brlcad
+
+	* src/tclscripts/mged/openw.tcl:
+	  this isn't C, use elseif
+
+2008-04-17 14:47  erikgreenwald
+
+	* AUTHORS:
+	  add missing nicknames
+
+2008-04-17 18:34  starseeker
+
+	* src/proc-db/tire.c:
+	  Try a slight tweak with the tread.
+
+2008-04-17 21:33  bob1961
+
+	* src/mged/clone.c:
+	  If necessary, modify the matrix to apply mirror effects to the
+	  incoming primitive.
+
+2008-04-17 22:03  starseeker
+
+	* src/proc-db/tire.c:
+	  Combine everything into single toplevel object, add options for
+	  naming that object.
+
+2008-04-18 03:44  starseeker
+
+	* src/proc-db/tire.c:
+	  Add input flag for tread - default is off, -t to activate it
+	  (currently only the default test tread is available.
+
+2008-04-18 03:45  brlcad
+
+	* configure.ac:
+	  there is no more aPrep dir
+
+2008-04-18 04:47  starseeker
+
+	* src/proc-db/Makefile.am, src/proc-db/tire.1:
+	  Add start of man page for tire, integrate it into autoconf.
+
+2008-04-18 05:03  brlcad
+
+	* src/proc-db/tire.c:
+	  don't need an array for single values, just pass in an address to
+	  that value then dereference the variable in the function
+
+2008-04-18 05:27  brlcad
+
+	* src/proc-db/tire.1:
+	  tire started in 2008
+
+2008-04-18 18:06  bob1961
+
+	* src/mged/clone.c:
+	  Modify f_clone() to return the name of the clone if one has been
+	  created.
+
+2008-04-18 18:37  starseeker
+
+	* src/proc-db/tire.c:
+	  Tweak the zig-zag tread generator.
+
+2008-04-18 19:14  bob1961
+
+	* src/tclscripts/mged/xclone.tcl:
+	  Initial check-in.
+
+2008-04-18 19:15  bob1961
+
+	* src/tclscripts/mged/tclIndex:
+	  Add entry for xclone.
+
+2008-04-18 19:17  bob1961
+
+	* src/tclscripts/mged/Makefile.am:
+	  Add entry for xclone.tcl.
+
+2008-04-18 19:49  bob1961
+
+	* src/mged/clone.c:
+	  Modified copy_v5_solid to use state->rpnt if specified.
+
+2008-04-18 21:40  brlcad
+
+	* src/tclscripts/mged/xclone.tcl:
+	  xclone started in 2008
+
+2008-04-18 22:04  starseeker
+
+	* src/proc-db/tire.c:
+	  Still have a bug in tread somewhere - not fixed yet - uploading
+	  for further study.
+
+2008-04-19 02:43  starseeker
+
+	* src/proc-db/tire.c:
+	  Rotation looks OK now, but primitives in tread pattern look off -
+	  may have sizing wrong.
+
+2008-04-19 03:43  brlcad
+
+	* misc, misc/Makefile.am:
+	  ignore and clean up after ylwrap
+
+2008-04-19 04:00  brlcad
+
+	* src/other/jove/jove.h:
+	  string.h needs to take priority, remove the HAVE_STRINGS_H check
+
+2008-04-19 04:14  brlcad
+
+	* src/other/jove/jove.h:
+	  no longer need common.h with HAVE_STRINGS_H removed
+
+2008-04-19 04:16  brlcad
+
+	* src/other/jove/jove.h:
+	  oops, revert .. we do still need it elsewhere
+
+2008-04-19 14:49  brlcad
+
+	* src/proc-db/Makefile.am:
+	  include wdb_deps for the debianeers. for whatever reason, it's
+	  still dropping the deps on the cxx target
+
+2008-04-19 15:08  brlcad
+
+	* src/tab/Makefile.am:
+	  eep, make sure script.c isn't a BUILT_SOURCES files if we don't
+	  have a lexer
+
+2008-04-19 19:56  brlcad
+
+	* m4/patch.m4:
+	  This should finally (re)fix the Debian and Ubuntu builds. The
+	  problem boils down to the Debian devs insisting on modifying
+	  default upstream libtool linkage behavior. They
+	  do this for performance/relinkage reasons so that rebuilding and
+	  installing a base library (like libpng) doesn't necessarily
+	  require relinking all callers. They force
+	  *off* the addition of dependency libraries on the linker line by
+	  setting link_all_deplibs=no which in turn mucks havok with
+	  compilation. Their intent seems to assume that
+	  all libs are installed before a binary needs to link against them
+	  so that recursive linux dynamic link lookups will find everything
+	  needed via rpaths alone. So all of the
+	  dependencies listed on our (not-yet-installed) libtool archive
+	  libraries are stripped off when binaries are linked.
+	  
+	  This fix reverts the libtool script back to the default "unknown"
+	  value for link_all_deplibs. So libtool does properly keep track
+	  of the recursive dependency descriptions
+	  provided in the build files and allows binaries to link against
+	  libraries that aren't yet installed.
+	  
+	  References:
+	  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=291641
+	  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=297726
+	  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=473415
+
+2008-04-19 21:13  brlcad
+
+	* NEWS:
+	  Bob added xclone command to mged for xpushed deep copies.
+	  scripted implementation, performs xpush then clone.
+
+2008-04-20 06:43  bharder
+
+	* src/nirt/nirt.h:
+	  Add test, macro for c99 fmax(), missing in NetBSD.
+
+2008-04-21 03:55  brlcad
+
+	* sh/news2tracker.sh:
+	  need to be more exact on matching the revision number line. ran
+	  into a revision ID match in the body of one of the commit
+	  messages that referred to an sf tracker id.
+
+2008-04-21 04:20  brlcad
+
+	* sh/news2tracker.sh:
+	  properly quote the quotes
+
+2008-04-21 04:38  brlcad
+
+	* sh/tracker.sh:
+	  sourceforge continues to change the format slightly. match the
+	  category link specifically to avoid catching the earlier new
+	  javascript
+
+2008-04-21 06:43  brlcad
+
+	* sh/tracker.sh:
+	  indent mishap, don't insert a tab before the csv line
+
+2008-04-21 20:27  starseeker
+
+	* src/libwdb/libwdb.3, src/libwdb/wdb.c:
+	  Add mk_arb6 command to libwdb.
+
+2008-04-21 20:37  starseeker
+
+	* src/libwdb/libwdb.3, src/libwdb/wdb.c:
+	  Add mk_arb5 and mk_arb7
+
+2008-04-21 20:42  starseeker
+
+	* include/wdb.h:
+	  Add header entries for new mk_arb commands
+
+2008-04-21 21:21  starseeker
+
+	* src/proc-db/tire.c:
+	  Eliminate invalid arb8 face creation in tread.
+
+2008-04-21 21:25  starseeker
+
+	* NEWS:
+	  added more wdb arb functions
+
+2008-04-21 21:29  bob1961
+
+	* src/rt/view.c:
+	  Mods to set the byte offsets of view_parse at run time. Windows
+	  can't handle initializing this struct with variables that live in
+	  a library.
+
+2008-04-21 22:01  starseeker
+
+	* db/Makefile.am, db/pinewood.asc:
+	  Add simple pinewood car example.
+
+2008-04-22 06:54  brlcad
+
+	* NEWS:
+	  cliff added a new pinewood boxcar example geometry database,
+	  modeled during dwayne kregel's surviac/survice brl-cad training
+	  course.
+
+2008-04-22 11:01  brlcad
+
+	* NEWS, include/conf/PATCH, misc/nsis/brlcad.nsi,
+	  misc/win32-msvc8/asc2g/asc2g.vcproj:
+	  update version to 7.12.2 and begin release, tagging from trunk
+	  since the merge isn't as well-tested
+
+2008-04-22 11:12  bob1961
+
+	* src/archer/archer.bat, src/mged/mged.bat, src/util/rtwizard.bat:
+	  Update the BRL-CAD version from 7.12.1 to 7.12.2
+

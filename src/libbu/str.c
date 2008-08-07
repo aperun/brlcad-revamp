@@ -19,7 +19,7 @@
  */
 /** @addtogroup vls */
 /** @{ */
-/** @file str.c
+/** @file strl.c
  *
  * Compatibility routines to various string processing functions
  * including strlcat and strlcpy.

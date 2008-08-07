@@ -174,7 +174,6 @@
 ::itcl::body Db::orotate {args} {
     eval $db orotate $args
 }
-
 ::itcl::body Db::oscale {args} {
     eval $db oscale $args
 }

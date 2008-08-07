@@ -17,11 +17,11 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @file libbu/vers.c
+/** @file vers.c
  *
  * version information about LIBBU
  *
- *@author
+ * Author -
  *   Christopher Sean Morrison
  */
 

@@ -91,7 +91,7 @@ set helplib_data(wdb_instance)		{{obj comb [op]} {add instance of obj to comb}}
 set helplib_data(wdb_keep)		{{file object(s)} {save named objects in the specified file}}
 set helplib_data(wdb_kill)		{{<objects>} {kill/delete database objects}}
 set helplib_data(wdb_killall)		{{<objects>} {kill/delete database objects, removing all references}}
-set helplib_data(wdb_killtree)		{{[-a] <objects>} {kill all paths belonging to objects}}
+set helplib_data(wdb_killtree)		{{<objects>} {kill all paths belonging to objects}}
 set helplib_data(wdb_list)		{{[-r] <objects>} {list object information, verbose}}
 set helplib_data(wdb_listeval)		{{}	{lists 'evaluated' path solids}}
 set helplib_data(wdb_ls)		{{[-A name/value pairs] OR [-acrslop] object(s)} {list objects in this database}}
@@ -170,10 +170,10 @@ set helplib_data(vo_zoom)		{{sf} {zoom view by specified scale factor}}
 
 set helplib_data(dgo_assoc)		{{[wdb_obj]} {set/get the associated database object}}
 set helplib_data(dgo_autoview)		{{view_obj} {calculate an appropriate view size and center for view_obj}}
-set helplib_data(dgo_blast)		{{"[-A] [-o] [-C#/#/#] [-s] <object(s) | attribute name/value pairs>"} {erase all currently displayed geometry and draw the specified object(s)}}
+set helplib_data(dgo_blast)		{{"[-A -o -C#/#/# -s] <object(s) | attribute name/value pairs>"} {erase all currently displayed geometry and draw the specified object(s)}}
 set helplib_data(dgo_clear)		{{} {erase all objects from the display}}
-set helplib_data(dgo_draw)		{{"[-A] [-o] [-C#/#/#] [-s] <objects | attribute name/value pairs>"} {prepare object(s) for display}}
-set helplib_data(dgo_E)			{{"[-C#/#/#] [-s] <objects>"} {evaluated display of objects}}
+set helplib_data(dgo_draw)		{{"[-A -o -C#/#/# -s] <objects | attribute name/value pairs>"} {prepare object(s) for display}}
+set helplib_data(dgo_E)			{{[-s] <objects>} {evaluated display of objects}}
 set helplib_data(dgo_erase)		{{<objects>} {erase objects from the display}}
 set helplib_data(dgo_erase_all)		{{<objects>} {erase all occurrences of objects from the display}}
 set helplib_data(dgo_ev)		{{"[-dfnstuvwT] [-P #] <objects>"}	{evaluate objects via NMG tessellation}}

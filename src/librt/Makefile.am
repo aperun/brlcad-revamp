@@ -38,7 +38,6 @@ librt_nil_la_SOURCES = \
 	bool.c \
 	bundle.c \
 	cmd.c \
-	constraint.c \
 	cut.c \
 	db5_alloc.c \
 	db5_bin.c \
@@ -143,7 +142,6 @@ librt_nil_la_SOURCES = \
 	primitives/pipe/pipe.c \
 	primitives/poly/poly.c \
 	primitives/rec/rec.c \
-	primitives/revolve/revolve.c \
 	primitives/rhc/rhc.c \
 	primitives/rpc/rpc.c \
 	primitives/sketch/sketch.c \
@@ -187,7 +185,6 @@ nurb_example_LDADD = \
 
 noinst_HEADERS = \
 	primitives/fixpt.h \
-	primitives/revolve/revolve.h \
 	primitives/xxx/xxx.h
 
 dist_man_MANS = librt.3
@@ -225,7 +222,6 @@ FAST_OBJECTS = \
 	$(librt_nil_la_OBJECTS) \
 	$(librt_la_OBJECTS) \
 	$(lib_LTLIBRARIES) \
-	$(noinst_LTLIBRARIES) \
 	$(comb_OBJECTS) \
 	$(nurb_example_OBJECTS) \
 	$(noinst_PROGRAMS)

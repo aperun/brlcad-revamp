@@ -1,4 +1,4 @@
-/*                           A R B . C
+/*                         G _ A R B . C
  * BRL-CAD
  *
  * Copyright (c) 1985-2008 United States Government as represented by
@@ -17,9 +17,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup primitives */
+/** @addtogroup g_  */
 /** @{ */
-/** @file arb8.c
+/** @file g_arb.c
  *
  * Intersect a ray with an Arbitrary Regular Polyhedron with as many
  * as 8 vertices.
@@ -1763,7 +1763,7 @@ rt_arb_3face_intersect(
  *	 This function migrated from mged/edsol.c.
  */
 int
-rt_arb_calc_planes(struct bu_vls		*error_msg_ret,
+rt_arb_calc_planes(Tcl_Interp			*interp,
 		   struct rt_arb_internal	*arb,
 		   int				type,
 		   plane_t			planes[6],
@@ -1789,8 +1789,12 @@ rt_arb_calc_planes(struct bu_vls		*error_msg_ret,
 			     arb->pt[p2],
 			     arb->pt[p3],
 			     tol) < 0) {
-	    bu_vls_printf(error_msg_ret, "%d %d%d%d%d (bad face)\n",
+	    struct bu_vls tmp_vls;
+
+	    bu_vls_init(&tmp_vls);
+	    bu_vls_printf(&tmp_vls, "%d %d%d%d%d (bad face)\n",
 			  i+1, p1+1, p2+1, p3+1, rt_arb_faces[type][i*4+3]+1);
+	    Tcl_AppendResult(interp, bu_vls_addr(&tmp_vls), (char *)NULL);
 	    return -1;
 	}
     }
@@ -1810,7 +1814,7 @@ rt_arb_calc_planes(struct bu_vls		*error_msg_ret,
  * faces to make sure that they are always "inside".
  */
 int
-rt_arb_move_edge(struct bu_vls		*error_msg_ret,
+rt_arb_move_edge(Tcl_Interp		*interp,
 		 struct rt_arb_internal	*arb,
 		 vect_t			thru,
 		 int			bp1,
@@ -1825,7 +1829,7 @@ rt_arb_move_edge(struct bu_vls		*error_msg_ret,
 
     if (bn_isect_line3_plane(&t1, thru, dir, planes[bp1], tol) < 0 ||
 	bn_isect_line3_plane(&t2, thru, dir, planes[bp2], tol) < 0) {
-	bu_vls_printf(error_msg_ret, "edge (direction) parallel to face normal\n");
+	Tcl_AppendResult(interp, "edge (direction) parallel to face normal\n", (char *)NULL);
 	return (1);
     }
 
@@ -1886,7 +1890,7 @@ rt_arb_move_edge(struct bu_vls		*error_msg_ret,
 #define RT_ARB4_MOVE_POINT_4 3
 
 int
-rt_arb_edit(struct bu_vls		*error_msg_ret,
+rt_arb_edit(Tcl_Interp			*interp,
 	    struct rt_arb_internal	*arb,
 	    int				arb_type,
 	    int				edit_type,
@@ -1972,7 +1976,7 @@ rt_arb_edit(struct bu_vls		*error_msg_ret,
 
 	    break;
 	default:
-	    bu_vls_printf(error_msg_ret, "rt_arb_edit: unknown ARB type\n");
+	    Tcl_AppendResult(interp, "rt_arb_edit: unknown ARB type\n", (char *)NULL);
 
 	    return(1);
     }
@@ -2000,7 +2004,7 @@ rt_arb_edit(struct bu_vls		*error_msg_ret,
 	bp2 = *edptr++;
 
 	/* move the edge */
-	if (rt_arb_move_edge(error_msg_ret, arb, pos_model, bp1, bp2, pt1, pt2,
+	if (rt_arb_move_edge(interp, arb, pos_model, bp1, bp2, pt1, pt2,
 			     edge_dir, planes, tol))
 	    goto err;
     }
@@ -2010,7 +2014,7 @@ rt_arb_edit(struct bu_vls		*error_msg_ret,
     newp = *edptr++; 	/* plane to redo */
 
     if (newp == 9)	/* special flag --> redo all the planes */
-	if (rt_arb_calc_planes(error_msg_ret, arb, arb_type, planes, tol))
+	if (rt_arb_calc_planes(interp, arb, arb_type, planes, tol))
 	    goto err;
 
     if (newp >= 0 && newp < 6) {
@@ -2095,20 +2099,17 @@ rt_arb_edit(struct bu_vls		*error_msg_ret,
 
  err:
     /* Error handling */
-    bu_vls_printf(error_msg_ret, "cannot move edge: %d%d\n", pt1+1,pt2+1);
+    {
+	struct bu_vls tmp_vls;
+
+	bu_vls_init(&tmp_vls);
+	bu_vls_printf(&tmp_vls, "cannot move edge: %d%d\n", pt1+1,pt2+1);
+	Tcl_AppendResult(interp, bu_vls_addr(&tmp_vls), (char *)NULL);
+	bu_vls_free(&tmp_vls);
+    }
+
     return(1);		/* BAD */
 }
-
-/**
- * R T _ A R B _ P A R A M S
- *
- */
-int
-rt_arb_params(struct pc_pc_set * ps, const struct rt_db_internal *ip)
-{
-    return(0);			/* OK */
-}
-
 /** @} */
 
 /*

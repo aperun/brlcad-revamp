@@ -48,9 +48,9 @@
 #include "vmath.h"
 #include "dg.h"
 #include "mater.h"
-
 #include "./sedit.h"
 #include "./mged.h"
+#include "./mged_solid.h"
 #include "./mged_dm.h"
 #include "./qray.h"
 #include "./cmd.h"
@@ -2310,12 +2310,8 @@ f_vnirt(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
 	argv[0] = buf;
     }
 
-#if 1
-    /*XXX Temporalily not available */
-    return TCL_OK;
-#else
+
     return dgo_vnirt_cmd(dgop, view_state->vs_vop, interp, argc, argv);
-#endif
 #else
     register int i;
     int status;

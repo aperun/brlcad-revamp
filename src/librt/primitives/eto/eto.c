@@ -1,4 +1,4 @@
-/*                           E T O . C
+/*                         G _ E T O . C
  * BRL-CAD
  *
  * Copyright (c) 1992-2008 United States Government as represented by
@@ -17,9 +17,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup primitives */
+/** @addtogroup g_  */
 /** @{ */
-/** @file eto.c
+/** @file g_eto.c
  *
  * Intersect a ray with an Elliptical Torus.
  *
@@ -1435,16 +1435,6 @@ rt_eto_ifree(struct rt_db_internal *ip)
 
     bu_free( (char *)tip, "eto ifree" );
     ip->idb_ptr = GENPTR_NULL;	/* sanity */
-}
-
-/**
- * R T _ E T O _ P A R A M S
- *
- */
-int
-rt_eto_params(struct pc_pc_set * ps, const struct rt_db_internal *ip)
-{
-    return(0);			/* OK */
 }
 
 /** @} */

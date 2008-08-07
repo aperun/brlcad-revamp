@@ -183,7 +183,6 @@ static struct cmdtab cmdtab[] = {
     {"keypoint", f_keypoint},
     {"kill", cmd_kill},
     {"killall", cmd_killall},
-    {"killrefs", cmd_killrefs},
     {"killtree", cmd_killtree},
     {"knob", f_knob},
     {"l", cmd_list},
@@ -447,7 +446,7 @@ cmd_setup(void)
     Bu_Init(interp);
     Bn_Init(interp);
     Rt_Init(interp);
-    Go_Init(interp);
+    Ged_Init(interp);
 
     tkwin = NULL;
 
@@ -557,7 +556,7 @@ mged_setup(void)
     }
 
     /* Initialize libged */
-    if (Go_Init(interp) == TCL_ERROR) {
+    if (Ged_Init(interp) == TCL_ERROR) {
 	bu_log("Ged_Init ERROR:\n%s\n", Tcl_GetStringResult(interp));
 	Tcl_ResetResult(interp);
     }
@@ -588,10 +587,8 @@ mged_setup(void)
     bu_vls_printf( &str, "%s(state)", MGED_DISPLAY_VAR );
     Tcl_SetVar(interp, bu_vls_addr(&str), state_str[state], TCL_GLOBAL_ONLY);
 
-#if 0
     /* initialize "Query Ray" variables */
     init_qray();
-#endif
 
     Tcl_ResetResult(interp);
 

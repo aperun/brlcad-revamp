@@ -1,4 +1,4 @@
-# $Id$
+# $Id: Makefile.am 31160 2008-05-22 02:37:12Z brlcad $
 
 EXTRA_DIST= \
 	asc2g/asc2g.vcproj \
@@ -125,7 +125,6 @@ EXTRA_DIST= \
 	rtfrac/rtfrac.vcproj \
 	rtg3/rtg3.vcproj \
 	rthide/rthide.vcproj \
-	rtmlt/rtmlt.vcproj \
 	rtpp/rtpp.vcproj \
 	rtrad/rtrad.vcproj \
 	rtrange/rtrange.vcproj \

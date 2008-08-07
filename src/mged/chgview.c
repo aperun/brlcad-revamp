@@ -38,6 +38,7 @@
 #include "nmg.h"
 #include "./sedit.h"
 #include "./mged.h"
+#include "./mged_solid.h"
 #include "./mged_dm.h"
 #include "./cmd.h"
 
@@ -835,8 +836,8 @@ mged_freemem(void)
     register struct solid		*sp;
     register struct bn_vlist	*vp;
 
-    FOR_ALL_SOLIDS(sp, &MGED_FreeSolid.l) {
-	GET_SOLID(sp, &MGED_FreeSolid.l);
+    FOR_ALL_SOLIDS(sp, &FreeSolid.l) {
+	GET_SOLID(sp, &FreeSolid.l);
 	bu_free((genptr_t)sp, "mged_freemem: struct solid");
     }
 
@@ -1446,7 +1447,7 @@ eraseobjall(register struct directory **dpp)
 		button(BE_REJECT);
 
 	    BU_LIST_DEQUEUE(&sp->l);
-	    FREE_SOLID(sp, &MGED_FreeSolid.l);
+	    FREE_SOLID(sp, &FreeSolid.l);
 	}
 	sp = nsp;
     }
@@ -1505,7 +1506,7 @@ eraseobj(register struct directory **dpp)
 		button( BE_REJECT );
 
 	    BU_LIST_DEQUEUE(&sp->l);
-	    FREE_SOLID(sp, &MGED_FreeSolid.l);
+	    FREE_SOLID(sp, &FreeSolid.l);
 	}
 	sp = nsp;
     }

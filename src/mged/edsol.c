@@ -43,6 +43,7 @@
 #include "db.h"
 
 #include "./mged.h"
+#include "./mged_solid.h"
 #include "./sedit.h"
 #include "./mged_dm.h"
 
@@ -2461,7 +2462,6 @@ init_sedit(void)
     if ( id == ID_ARB8 )
     {
 	struct rt_arb_internal *arb;
-	struct bu_vls error_msg;
 
 	arb = (struct rt_arb_internal *)es_int.idb_ptr;
 	RT_ARB_CK_MAGIC( arb );
@@ -2469,17 +2469,13 @@ init_sedit(void)
 	type = rt_arb_std_type( &es_int, &mged_tol );
 	es_type = type;
 
-	bu_vls_init(&error_msg);
-	if (rt_arb_calc_planes(&error_msg, arb, es_type, es_peqn, &mged_tol))
+	if (rt_arb_calc_planes(interp, arb, es_type, es_peqn, &mged_tol))
 	{
-	    Tcl_AppendResult(interp, bu_vls_addr(&error_msg),
-			     "\nCannot calculate plane equations for ARB8\n",
+	    Tcl_AppendResult(interp, "Cannot calculate plane equations for ARB8\n",
 			     (char *)NULL);
 	    rt_db_free_internal( &es_int, &rt_uniresource );
-	    bu_vls_free(&error_msg);
 	    return;
 	}
-	bu_vls_free(&error_msg);
     }
     else if ( id == ID_BSPLINE )
     {
@@ -5870,15 +5866,10 @@ sedit(void)
     /* must re-calculate the face plane equations for arbs */
     if ( es_int.idb_type == ID_ARB8 )
     {
-	struct bu_vls error_msg;
-
 	arb = (struct rt_arb_internal *)es_int.idb_ptr;
 	RT_ARB_CK_MAGIC( arb );
 
-	bu_vls_init(&error_msg);
-	if (rt_arb_calc_planes(&error_msg, arb, es_type, es_peqn, &mged_tol < 0))
-	    Tcl_AppendResult( interp, bu_vls_addr(&error_msg), (char *)0);
-	bu_vls_free(&error_msg);
+	(void)rt_arb_calc_planes(interp, arb, es_type, es_peqn, &mged_tol);
     }
 
     /* If the keypoint changed location, find about it here */
@@ -9549,18 +9540,11 @@ f_get_sedit(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
     }
 
     if (argc == 1) {
-	struct bu_vls log;
-
-	bu_vls_init(&log);
-
 	/* get solid type and parameters */
 	RT_CK_DB_INTERNAL(&es_int);
 	RT_CK_FUNCTAB(es_int.idb_meth);
-	status = es_int.idb_meth->ft_get(&log, &es_int, (char *)0);
-	Tcl_AppendResult(interp, bu_vls_addr(&log), (char *)0);
+	status = es_int.idb_meth->ft_tclget(interp, &es_int, (char *)0);
 	pto = Tcl_GetObjResult(interp);
-
-	bu_vls_free(&log);
 
 	pnto = Tcl_NewObj();
 	/* insert solid name, type and parameters */
@@ -9583,14 +9567,7 @@ f_get_sedit(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
     /* get solid type and parameters */
     RT_CK_DB_INTERNAL(&ces_int);
     RT_CK_FUNCTAB(ces_int.idb_meth);
-    {
-	struct bu_vls log;
-
-	bu_vls_init(&log);
-	status = ces_int.idb_meth->ft_get(&log, &ces_int, (char *)0);
-	Tcl_AppendResult(interp, bu_vls_addr(&log), (char *)0);
-	bu_vls_free(&log);
-    }
+    status = ces_int.idb_meth->ft_tclget(interp, &ces_int, (char *)0);
     pto = Tcl_GetObjResult(interp);
 
     pnto = Tcl_NewObj();
@@ -9662,8 +9639,8 @@ f_put_sedit(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
 
     save_magic = *((long *)es_int.idb_ptr);
     *((long *)es_int.idb_ptr) = ftp->ft_internal_magic;
-    if ( bu_tcl_structparse_argv(interp, argc-2, argv+2, ftp->ft_parsetab,
-				 (char *)es_int.idb_ptr )==TCL_ERROR ) {
+    if ( bu_structparse_argv(interp, argc-2, argv+2, ftp->ft_parsetab,
+			     (char *)es_int.idb_ptr )==TCL_ERROR ) {
 	return TCL_ERROR;
     }
     *((long *)es_int.idb_ptr) = save_magic;
@@ -9674,15 +9651,11 @@ f_put_sedit(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
     /* must re-calculate the face plane equations for arbs */
     if ( es_int.idb_type == ID_ARB8 ) {
 	struct rt_arb_internal *arb;
-	struct bu_vls error_msg;
 
 	arb = (struct rt_arb_internal *)es_int.idb_ptr;
 	RT_ARB_CK_MAGIC( arb );
 
-	bu_vls_init(&error_msg);
-	if (rt_arb_calc_planes(&error_msg, arb, es_type, es_peqn, &mged_tol) < 0)
-	    Tcl_AppendResult(interp, bu_vls_addr(&error_msg), (char *)0);
-	bu_vls_free(&error_msg);
+	(void)rt_arb_calc_planes(interp, arb, es_type, es_peqn, &mged_tol);
     }
 
     if (!es_keyfixed)

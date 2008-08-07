@@ -174,6 +174,7 @@ noinst_HEADERS = \
 	mgdev.h \
 	mged.h \
 	mged_dm.h \
+	mged_solid.h \
 	mgedtcl.h \
 	objdir.h \
 	qray.h \

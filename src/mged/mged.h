@@ -160,7 +160,6 @@ extern mat_t	modelchanges;		/* full changes this edit */
 extern mat_t	incr_change;		/* change(s) from last cycle */
 extern point_t	recip_vanishing_point;
 
-
 /*
  * Identity matrix.  Handy to have around. - initialized in e1.c
  */
@@ -183,7 +182,6 @@ extern FILE *infile;
 extern FILE *outfile;
 extern jmp_buf jmp_env;
 extern Tcl_Interp *interp;
-extern struct solid MGED_FreeSolid;	/* Head of freelist */
 
 /*
  * GED functions referenced in more than one source file:
@@ -590,11 +588,6 @@ void vls_long_dpp(
 /* dir.c */
 void dir_summary(int flag);
 int cmd_killall(
-    ClientData clientData,
-    Tcl_Interp *interpreter,
-    int	argc,
-    char	**argv);
-int cmd_killrefs(
     ClientData clientData,
     Tcl_Interp *interpreter,
     int	argc,

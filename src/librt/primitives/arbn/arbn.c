@@ -1,4 +1,4 @@
-/*                          A R B N . C
+/*                        G _ A R B N . C
  * BRL-CAD
  *
  * Copyright (c) 1989-2008 United States Government as represented by
@@ -17,9 +17,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup primitives */
+/** @addtogroup g_  */
 /** @{ */
-/** @file arbn.c
+/** @file g_arbn.c
  *
  * Intersect a ray with an Arbitrary Regular Polyhedron with an
  * arbitrary number of faces.
@@ -1061,7 +1061,7 @@ rt_arbn_ifree(struct rt_db_internal *ip)
 }
 
 /**
- * 		R T _ A R B N _ G E T
+ * 		R T _ A R B N _ T C L G E T
  *
  *	Routine to format the parameters of an ARBN primitive for "db get"
  *
@@ -1073,53 +1073,68 @@ rt_arbn_ifree(struct rt_db_internal *ip)
  */
 
 int
-rt_arbn_get(struct bu_vls *log, const struct rt_db_internal *intern, const char *attr)
+rt_arbn_tclget(Tcl_Interp *interp, const struct rt_db_internal *intern, const char *attr)
 {
     register struct rt_arbn_internal *arbn=(struct rt_arbn_internal *)intern->idb_ptr;
+    Tcl_DString	ds;
+    struct bu_vls	vls;
     int		i;
 
     RT_ARBN_CK_MAGIC( arbn );
 
+    Tcl_DStringInit( &ds );
+    bu_vls_init( &vls );
+
     if ( attr == (char *)NULL ) {
-	bu_vls_strcpy( log, "arbn" );
-	bu_vls_printf( log, " N %d", arbn->neqn );
+	bu_vls_strcpy( &vls, "arbn" );
+	bu_vls_printf( &vls, " N %d", arbn->neqn );
 	for ( i=0; i<arbn->neqn; i++ ) {
-	    bu_vls_printf( log, " P%d {%.25g %.25g %.25g %.25g}", i,
+	    bu_vls_printf( &vls, " P%d {%.25g %.25g %.25g %.25g}", i,
 			   V4ARGS( arbn->eqn[i] ) );
 	}
     }
     else if ( !strcmp( attr, "N" ) )
-	bu_vls_printf( log, "%d", arbn->neqn );
+	bu_vls_printf( &vls, "%d", arbn->neqn );
     else if ( !strcmp( attr, "P" ) ) {
 	for ( i=0; i<arbn->neqn; i++ ) {
-	    bu_vls_printf( log, " P%d {%.25g %.25g %.25g %.25g}", i,
+	    bu_vls_printf( &vls, " P%d {%.25g %.25g %.25g %.25g}", i,
 			   V4ARGS( arbn->eqn[i] ) );
 	}
     }
     else if ( attr[0] == 'P' ) {
 	if ( isdigit( attr[1] ) == 0 ) {
-	    bu_vls_printf(log, "ERROR: Illegal plane number\n");
-	    return BRLCAD_ERROR;
+	    Tcl_SetResult( interp, "ERROR: Illegal plane number\n",
+			   TCL_STATIC );
+	    bu_vls_free( &vls );
+	    return( TCL_ERROR );
 	}
 
 	i = atoi( &attr[1] );
 	if ( i >= arbn->neqn || i < 0 ) {
-	    bu_vls_printf(log, "ERROR: Illegal plane number\n");
-	    return BRLCAD_ERROR;
+	    Tcl_SetResult( interp, "ERROR: Illegal plane number\n",
+			   TCL_STATIC );
+	    bu_vls_free( &vls );
+	    return( TCL_ERROR );
 	}
 
-	bu_vls_printf(log, "%.25g %.25g %.25g %.25g", V4ARGS( arbn->eqn[i] ) );
+	bu_vls_printf( &vls, "%.25g %.25g %.25g %.25g", V4ARGS( arbn->eqn[i] ) );
     }
     else {
-	bu_vls_printf(log, "ERROR: Unknown attribute, choices are N, P, or P#\n");
-	return BRLCAD_ERROR;
+	Tcl_SetResult( interp, "ERROR: Unknown attribute, choices are N, P, or P#\n",
+		       TCL_STATIC );
+	bu_vls_free( &vls );
+	return( TCL_ERROR );
     }
 
-    return BRLCAD_OK;
+    Tcl_DStringAppend( &ds, bu_vls_addr( &vls ), -1 );
+    Tcl_DStringResult( interp, &ds );
+    Tcl_DStringFree( &ds );
+    bu_vls_free( &vls );
+    return( TCL_OK );
 }
 
 /**
- *		R T _ A R B N _ A D J U S T
+ *		R T _ A R B N _ T C L A D J U S T
  *
  *	Routine to modify an arbn via the "db adjust" command
  *
@@ -1131,7 +1146,7 @@ rt_arbn_get(struct bu_vls *log, const struct rt_db_internal *intern, const char 
  */
 
 int
-rt_arbn_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char **argv)
+rt_arbn_tcladjust(Tcl_Interp *interp, struct rt_db_internal *intern, int argc, char **argv)
 {
     struct rt_arbn_internal *arbn;
     unsigned char		*c;
@@ -1159,8 +1174,9 @@ rt_arbn_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char
 		}
 		arbn->neqn = i;
 	    } else {
-		bu_vls_printf(log,
-			      "ERROR: number of planes must be greater than 0\n");
+		Tcl_SetResult( interp,
+			       "ERROR: number of planes must be greater than 0\n",
+			       TCL_STATIC );
 	    }
 	}
 	else if ( !strcmp( argv[0], "P" ) ) {
@@ -1172,14 +1188,15 @@ rt_arbn_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char
 		c++;
 	    }
 	    len = 0;
-	    (void)tcl_list_to_fastf_array( brlcad_interp, argv[1], &new_planes, &len );
+	    (void)tcl_list_to_fastf_array( interp, argv[1], &new_planes, &len );
 
 	    if ( len%4 ) {
-		bu_vls_printf(log,
-			      "ERROR: Incorrect number of plane coefficients\n");
+		Tcl_SetResult( interp,
+			       "ERROR: Incorrect number of plane coefficients\n",
+			       TCL_STATIC );
 		if ( len )
 		    bu_free( (char *)new_planes, "new_planes" );
-		return BRLCAD_ERROR;
+		return( TCL_ERROR );
 	    }
 	    if ( arbn->eqn )
 		bu_free( (char *)arbn->eqn, "arbn->eqn" );
@@ -1199,45 +1216,39 @@ rt_arbn_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char
 	    else if ( isdigit( argv[0][1] ) ) {
 		i = atoi( &argv[0][1] );
 	    } else {
-		bu_vls_printf(log,
-			      "ERROR: illegal argument, choices are P, P#, P+, or N\n");
+		Tcl_SetResult( interp,
+			       "ERROR: illegal argument, choices are P, P#, P+, or N\n",
+			       TCL_STATIC );
 		return( TCL_ERROR );
 	    }
 	    if ( i < 0 || i >= arbn->neqn ) {
-		bu_vls_printf(log,
-			      "ERROR: plane number out of range\n");
-		return BRLCAD_ERROR;
+		Tcl_SetResult( interp,
+			       "ERROR: plane number out of range\n",
+			       TCL_STATIC );
+		return( TCL_ERROR );
 	    }
 	    len = 4;
 	    array = (fastf_t *)&arbn->eqn[i];
-	    if ( tcl_list_to_fastf_array( brlcad_interp, argv[1],
+	    if ( tcl_list_to_fastf_array( interp, argv[1],
 					  &array, &len ) != 4 ) {
-		bu_vls_printf(log,
-			      "ERROR: incorrect number of coefficients for a plane\n");
-		return BRLCAD_ERROR;
+		Tcl_SetResult( interp,
+			       "ERROR: incorrect number of coefficients for a plane\n",
+			       TCL_STATIC );
+		return( TCL_ERROR );
 	    }
 	    VUNITIZE( arbn->eqn[i] );
 	}
 	else {
-	    bu_vls_printf(log,
-			  "ERROR: illegal argument, choices are P, P#, P+, or N\n");
-	    return BRLCAD_ERROR;
+	    Tcl_SetResult( interp,
+			   "ERROR: illegal argument, choices are P, P#, P+, or N\n",
+			   TCL_STATIC );
+	    return( TCL_ERROR );
 	}
     cont:
 	argc -= 2;
 	argv += 2;
     }
-    return BRLCAD_OK;
-}
-
-/**
- * R T _ A R B N _ P A R A M S
- *
- */
-int
-rt_arbn_params(struct pc_pc_set * ps, const struct rt_db_internal *ip)
-{
-    return(0);			/* OK */
+    return( TCL_OK );
 }
 
 /** @} */

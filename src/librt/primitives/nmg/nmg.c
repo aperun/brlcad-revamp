@@ -1,4 +1,4 @@
-/*                           N M G . C
+/*                         G _ N M G . C
  * BRL-CAD
  *
  * Copyright (c) 2005-2008 United States Government as represented by
@@ -17,9 +17,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup primitives */
+/** @addtogroup g_  */
 /** @{ */
-/** @file nmg.c
+/** @file g_nmg.c
  *
  * Intersect a ray with an NMG solid.
  *
@@ -2734,9 +2734,11 @@ rt_nmg_ifree(struct rt_db_internal *ip)
 }
 
 int
-rt_nmg_get(struct bu_vls *log, const struct rt_db_internal *intern, const char *attr)
+rt_nmg_tclget(Tcl_Interp *interp, const struct rt_db_internal *intern, const char *attr)
 {
     register struct model *m=(struct model *)intern->idb_ptr;
+    Tcl_DString		ds;
+    struct bu_vls		vls;
     struct bu_ptbl		verts;
     struct nmgregion	*r;
     struct shell		*s;
@@ -2750,34 +2752,39 @@ rt_nmg_get(struct bu_vls *log, const struct rt_db_internal *intern, const char *
 
     NMG_CK_MODEL( m );
 
-    if (attr == (char *)NULL) {
-	bu_vls_strcpy( log, "nmg" );
+    Tcl_DStringInit( &ds );
+    bu_vls_init( &vls );
+
+    if ( attr == (char *)NULL )
+    {
+	bu_vls_strcpy( &vls, "nmg" );
 	bu_ptbl_init( &verts, 256, "nmg verts" );
 	nmg_vertex_tabulate( &verts, &m->magic );
 
 	/* first list all the vertices */
-	bu_vls_strcat( log, " V {" );
+	bu_vls_strcat( &vls, " V {" );
 	for ( i=0; i<BU_PTBL_LEN( &verts ); i++ ) {
 	    v = (struct vertex *) BU_PTBL_GET( &verts, i );
 	    NMG_CK_VERTEX( v );
 	    vg = v->vg_p;
 	    if ( !vg ) {
-		bu_vls_printf( log, "Vertex has no geometry\n");
+		Tcl_SetResult( interp, "Vertex has no geometry\n", TCL_STATIC );
 		bu_ptbl_free( &verts );
-		return BRLCAD_ERROR;
+		bu_vls_free( &vls );
+		return( TCL_ERROR );
 	    }
-	    bu_vls_printf( log, " { %.25g %.25g %.25g }", V3ARGS( vg->coord ) );
+	    bu_vls_printf( &vls, " { %.25g %.25g %.25g }", V3ARGS( vg->coord ) );
 	}
-	bu_vls_strcat( log, " }" );
+	bu_vls_strcat( &vls, " }" );
 
 	/* use the backwards macros here so that "asc2g" will build the same structures */
 	/* now all the nmgregions */
 	for ( BU_LIST_FOR_BACKWARDS( r, nmgregion, &m->r_hd ) ) {
-	    /* bu_vls_strcat( log, " R {" ); */
+	    /* bu_vls_strcat( &vls, " R {" ); */
 
 	    /* and all the shells */
 	    for ( BU_LIST_FOR_BACKWARDS( s, shell, &r->s_hd ) ) {
-		/* bu_vls_strcat( log, " S {" ); */
+		/* bu_vls_strcat( &vls, " S {" ); */
 
 		/* all the faces */
 		if ( BU_LIST_NON_EMPTY( &s->fu_hd ) ) {
@@ -2785,29 +2792,29 @@ rt_nmg_get(struct bu_vls *log, const struct rt_db_internal *intern, const char *
 			if ( fu->orientation != OT_SAME )
 			    continue;
 
-			bu_vls_strcat( log, " F {" );
+			bu_vls_strcat( &vls, " F {" );
 
 			/* all the loops in this face */
 			for ( BU_LIST_FOR_BACKWARDS( lu, loopuse, &fu->lu_hd ) ) {
 
 			    if ( BU_LIST_FIRST_MAGIC( &lu->down_hd ) == NMG_VERTEXUSE_MAGIC ) {
 				vu = BU_LIST_FIRST( vertexuse, &lu->down_hd );
-				bu_vls_printf( log, " %d",
+				bu_vls_printf( &vls, " %d",
 					       bu_ptbl_locate( &verts, (long *)vu->v_p ) );
 			    } else {
-				bu_vls_strcat( log, " {" );
+				bu_vls_strcat( &vls, " {" );
 				for ( BU_LIST_FOR( eu, edgeuse, &lu->down_hd ) ) {
 				    vu = eu->vu_p;
-				    bu_vls_printf( log, " %d",
+				    bu_vls_printf( &vls, " %d",
 						   bu_ptbl_locate( &verts, (long *)vu->v_p ) );
 				}
 				/* end of this loop */
-				bu_vls_strcat( log, " }" );
+				bu_vls_strcat( &vls, " }" );
 			    }
 			}
 
 			/* end of this face */
-			bu_vls_strcat( log, " }" );
+			bu_vls_strcat( &vls, " }" );
 		    }
 		}
 #if 0
@@ -2825,15 +2832,15 @@ rt_nmg_get(struct bu_vls *log, const struct rt_db_internal *intern, const char *
 
 		/* and maybe a single vertexuse */
 		if ( s->vu_p ) {
-		    bu_vls_printf( log, " VU %d", bu_ptbl_locate( &verts, (long *)s->vu_p->v_p ) );
+		    bu_vls_printf( &vls, " VU %d", bu_ptbl_locate( &verts, (long *)s->vu_p->v_p ) );
 		}
 
 		/* end if this shell */
-		bu_vls_strcat( log, " }" );
+		bu_vls_strcat( &vls, " }" );
 #endif
 	    }
 	    /* end of this nmgregion */
-	    /* bu_vls_strcat( log, " }" ); */
+	    /* bu_vls_strcat( &vls, " }" ); */
 	}
 	bu_ptbl_free( &verts );
     } else if ( !strcmp( attr, "V" ) ) {
@@ -2846,23 +2853,29 @@ rt_nmg_get(struct bu_vls *log, const struct rt_db_internal *intern, const char *
 	    NMG_CK_VERTEX( v );
 	    vg = v->vg_p;
 	    if ( !vg ) {
-		bu_vls_printf( log, "Vertex has no geometry\n");
+		Tcl_SetResult( interp, "Vertex has no geometry\n", TCL_STATIC );
 		bu_ptbl_free( &verts );
-		return BRLCAD_ERROR;
+		bu_vls_free( &vls );
+		return( TCL_ERROR );
 	    }
-	    bu_vls_printf( log, " { %.25g %.25g %.25g }", V3ARGS( vg->coord ) );
+	    bu_vls_printf( &vls, " { %.25g %.25g %.25g }", V3ARGS( vg->coord ) );
 	}
 	bu_ptbl_free( &verts );
     } else {
-	bu_vls_printf( log, "Unrecognized parameter\n");
-	return BRLCAD_ERROR;
+	Tcl_SetResult( interp, "Unrecognized parameter\n", TCL_STATIC );
+	return( TCL_ERROR );
     }
 
-    return BRLCAD_OK;
+    Tcl_DStringAppend( &ds, bu_vls_addr( &vls ), -1 );
+    Tcl_DStringResult( interp, &ds );
+    Tcl_DStringFree( &ds );
+    bu_vls_free( &vls );
+
+    return( TCL_OK );
 }
 
 int
-rt_nmg_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char **argv, struct resource *resp)
+rt_nmg_tcladjust( Tcl_Interp *interp, struct rt_db_internal *intern, int argc, char **argv, struct resource *resp)
 {
     struct model	*m;
     struct nmgregion	*r=NULL;
@@ -2886,12 +2899,13 @@ rt_nmg_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char 
     for ( i=0; i<argc; i += 2 ) {
 	if ( !strcmp( argv[i], "V" ) ) {
 	    obj = Tcl_NewStringObj( argv[i+1], -1 );
-	    if ( Tcl_ListObjGetElements( brlcad_interp, obj, &num_verts,
+	    if ( Tcl_ListObjGetElements( interp, obj, &num_verts,
 					 &obj_array) != TCL_OK) {
-		bu_vls_printf(log,
-			      "ERROR: failed to parse vertex list\n");
+		Tcl_SetResult( interp,
+			       "ERROR: failed to parse vertex list\n",
+			       TCL_STATIC );
 		Tcl_DecrRefCount( obj );
-		return BRLCAD_ERROR;
+		return( TCL_ERROR );
 	    }
 	    verts = (struct tmp_v *)bu_calloc( num_verts,
 					       sizeof( struct tmp_v ),
@@ -2899,11 +2913,12 @@ rt_nmg_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char 
 	    for ( j=0; j<num_verts; j++ ) {
 		len = 3;
 		tmp = &verts[j].pt[0];
-		if ( tcl_obj_to_fastf_array( brlcad_interp, obj_array[j],
+		if ( tcl_obj_to_fastf_array( interp, obj_array[j],
 					     &tmp, &len ) != 3 ) {
-		    bu_vls_printf(log,
-				  "ERROR: incorrect number of coordinates for vertex\n");
-		    return BRLCAD_ERROR;
+		    Tcl_SetResult( interp,
+				   "ERROR: incorrect number of coordinates for vertex\n",
+				   TCL_STATIC );
+		    return( TCL_ERROR );
 		}
 	    }
 
@@ -2919,9 +2934,10 @@ rt_nmg_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char 
 	    goto cont;
 	} else if ( !strcmp( argv[0], "F" ) ) {
 	    if ( !verts ) {
-		bu_vls_printf(log,
-			      "ERROR: cannot set faces without vertices\n");
-		return BRLCAD_ERROR;
+		Tcl_SetResult( interp,
+			       "ERROR: cannot set faces without vertices\n",
+			       TCL_STATIC );
+		return( TCL_ERROR );
 	    }
 	    if ( BU_LIST_IS_EMPTY( &m->r_hd ) ) {
 		r = nmg_mrsv( m );
@@ -2931,24 +2947,26 @@ rt_nmg_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char 
 		s = BU_LIST_FIRST( shell, &r->s_hd );
 	    }
 	    obj = Tcl_NewStringObj( argv[1], -1 );
-	    if ( Tcl_ListObjGetElements( brlcad_interp, obj, &num_loops,
+	    if ( Tcl_ListObjGetElements( interp, obj, &num_loops,
 					 &obj_array) != TCL_OK) {
-		bu_vls_printf(log,
-			      "ERROR: failed to parse face list\n");
+		Tcl_SetResult( interp,
+			       "ERROR: failed to parse face list\n",
+			       TCL_STATIC );
 		Tcl_DecrRefCount( obj );
-		return BRLCAD_ERROR;
+		return( TCL_ERROR );
 	    }
 	    for ( i=0, fu=NULL; i<num_loops; i++ ) {
 		struct vertex **loop_verts;
 		/* struct faceuse fu is initialized in earlier scope */
 
 		loop_len = 0;
-		(void)tcl_obj_to_int_array( brlcad_interp, obj_array[i],
+		(void)tcl_obj_to_int_array( interp, obj_array[i],
 					    &loop, &loop_len);
 		if ( !loop_len ) {
-		    bu_vls_printf(log,
-				  "ERROR: unable to parse face list\n");
-		    return BRLCAD_ERROR;
+		    Tcl_SetResult( interp,
+				   "ERROR: unable to parse face list\n",
+				   TCL_STATIC );
+		    return( TCL_ERROR );
 		}
 		if ( i ) {
 		    loop_verts = (struct vertex **)bu_calloc(
@@ -2977,9 +2995,10 @@ rt_nmg_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char 
 		}
 	    }
 	} else {
-	    bu_vls_printf(log,
-			  "ERROR: Unrecognized parameter, must be V or F\n");
-	    return BRLCAD_ERROR;
+	    Tcl_SetResult( interp,
+			   "ERROR: Unrecognized parameter, must be V or F\n",
+			   TCL_STATIC );
+	    return( TCL_ERROR );
 	}
     cont:
 	argc -= 2;
@@ -3007,7 +3026,7 @@ rt_nmg_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char 
 
     nmg_rebound( m, &tol );
 
-    return BRLCAD_OK;
+    return( TCL_OK );
 }
 
 
@@ -3021,16 +3040,6 @@ rt_nmg_make( const struct rt_functab *ftp, struct rt_db_internal *intern, double
     intern->idb_major_type = DB5_MAJORTYPE_BRLCAD;
     intern->idb_type = ID_NMG;
     intern->idb_meth = ftp;
-}
-
-/**
- * R T _ N M G _ P A R A M S
- *
- */
-int
-rt_nmg_params(struct pc_pc_set * ps, const struct rt_db_internal *ip)
-{
-    return(0);			/* OK */
 }
 
 /*

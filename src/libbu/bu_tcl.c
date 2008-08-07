@@ -38,10 +38,10 @@
 
 #include "tcl.h"
 #include "cmd.h"		/* this includes bu.h */
+#include "vmath.h"
+#include "bn.h"
 #include "bu.h"
 
-/*XXX Temporary global interp */
-Tcl_Interp *brlcad_interp = (Tcl_Interp *)0;
 
 #define TINYBUFSIZ	32
 #define SMALLBUFSIZ	256
@@ -58,8 +58,8 @@ static struct bu_cmdtab bu_cmds[] = {
     {"bu_malloc_len_roundup",		bu_tcl_malloc_len_roundup},
     {"bu_prmem",			bu_tcl_prmem},
     {"bu_printb",			bu_tcl_printb},
-    {"bu_get_all_keyword_values",	bu_tcl_get_all_keyword_values},
-    {"bu_get_value_by_keyword",		bu_tcl_get_value_by_keyword},
+    {"bu_get_all_keyword_values",	bu_get_all_keyword_values},
+    {"bu_get_value_by_keyword",		bu_get_value_by_keyword},
     {"bu_rgb_to_hsv",			bu_tcl_rgb_to_hsv},
     {"bu_hsv_to_rgb",			bu_tcl_hsv_to_rgb},
     {"bu_key_eq_to_key_val",		bu_tcl_key_eq_to_key_val},
@@ -118,7 +118,7 @@ bu_badmagic_tcl(Tcl_Interp	*interp,
 
 
 /**
- * b u _ t c l _ s t r u c t p a r s e _ g e t _ t e r s e _ f o r m
+ * b u _ s t r u c t p a r s e _ g e t _ t e r s e _ f o r m
  *
  * Convert the "form" of a bu_structparse table into a TCL result string,
  * with parameter-name data-type pairs:
@@ -135,17 +135,9 @@ bu_badmagic_tcl(Tcl_Interp	*interp,
  * 	void
  */
 void
-bu_tcl_structparse_get_terse_form(Tcl_Interp			*interp,
-				  const struct bu_structparse	*sp)
+bu_structparse_get_terse_form(Tcl_Interp			*interp,
+			      const struct bu_structparse	*sp)
 {
-#if 1
-    struct bu_vls log;
-
-    bu_vls_init(&log);
-    bu_structparse_get_terse_form(&log, sp);
-    Tcl_AppendResult(interp, bu_vls_addr(&log), (char *)NULL);
-    bu_vls_free(&log);
-#else
     struct bu_vls	str;
     int		i;
 
@@ -175,10 +167,8 @@ bu_tcl_structparse_get_terse_form(Tcl_Interp			*interp,
 	++sp;
     }
     bu_vls_free(&str);
-#endif
 }
 
-#if 0
 /**
  * b u _ s p _ s k i p _ s e p
  *
@@ -189,11 +179,10 @@ bu_tcl_structparse_get_terse_form(Tcl_Interp			*interp,
 #define BU_SP_SKIP_SEP(_cp)	\
 	{ while ( *(_cp) && (*(_cp) == ' ' || *(_cp) == '\n' || \
 		*(_cp) == '\t' || *(_cp) == '{' ) )  ++(_cp); }
-#endif
 
 
 /**
- * b u _ t c l _ s t r u c t p a r s e _ a r g v
+ * b u _ s t r u c t p a r s e _ a r g v
  *
  * Support routine for db adjust and db put.  Much like the bu_struct_parse routine
  * which takes its input as a bu_vls. This routine, however, takes the arguments
@@ -213,27 +202,12 @@ bu_tcl_structparse_get_terse_form(Tcl_Interp			*interp,
  * @retval TCL_ERROR on failure
  */
 int
-bu_tcl_structparse_argv(Tcl_Interp			*interp,
-			int				argc,
-			char				**argv,
-			const struct bu_structparse	*desc,
-			char				*base)
+bu_structparse_argv(Tcl_Interp			*interp,
+		    int				argc,
+		    char			**argv,
+		    const struct bu_structparse	*desc,
+		    char			*base)
 {
-#if 1
-    struct bu_vls log;
-    int ret;
-
-    bu_vls_init(&log);
-    ret = bu_structparse_argv(&log, argc, argv, desc, base);
-    Tcl_AppendResult(interp, bu_vls_addr(&log), (char *)NULL);
-    bu_vls_free(&log);
-
-    /* Convert to a Tcl return code */
-    if (ret != BRLCAD_OK)
-	return TCL_ERROR;
-
-    return TCL_OK;
-#else
     register char				*cp, *loc;
     register const struct bu_structparse	*sdp;
     register int				 j;
@@ -639,7 +613,6 @@ bu_tcl_structparse_argv(Tcl_Interp			*interp,
 	}
     }
     return TCL_OK;
-#endif
 }
 
 
@@ -720,7 +693,7 @@ bu_tcl_ck_malloc_ptr(ClientData		clientData,
  * @param argc		- number of elements in argv
  * @param argv		- command name and arguments
  *
- * @return TCL_OK if successful, otherwise, TCL_ERROR.
+ * @Return TCL_OK if successful, otherwise, TCL_ERROR.
  */
 int
 bu_tcl_malloc_len_roundup(ClientData	clientData,
@@ -811,7 +784,7 @@ bu_tcl_printb(ClientData	clientData,
 
 
 /**
- * b u _ t c l _ g e t _ v a l u e _ b y _ k e y w o r d
+ * b u _ g e t _ v a l u e _ b y _ k e y w o r d
  *
  * Given arguments of alternating keywords and values
  * and a specific keyword ("Iwant"),
@@ -837,10 +810,10 @@ bu_tcl_printb(ClientData	clientData,
  * @return TCL_OK if successful, otherwise, TCL_ERROR.
  */
 int
-bu_tcl_get_value_by_keyword(ClientData	clientData,
-			    Tcl_Interp	*interp,
-			    int		argc,
-			    char	**argv)
+bu_get_value_by_keyword(ClientData	clientData,
+			Tcl_Interp	*interp,
+			int		argc,
+			char		**argv)
 {
     int	listc;
     char	**listv;
@@ -919,7 +892,7 @@ bu_tcl_get_value_by_keyword(ClientData	clientData,
 
 
 /**
- * b u _ t c l _ g e t _ a l l _ k e y w o r d _ v a l u e s
+ * b u _ g e t _ a l l _ k e y w o r d _ v a l u e s
  *
  * Given arguments of alternating keywords and values,
  * establish local variables named after the keywords, with the
@@ -961,10 +934,10 @@ bu_tcl_get_value_by_keyword(ClientData	clientData,
  * @return TCL_OK if successful, otherwise, TCL_ERROR.
  */
 int
-bu_tcl_get_all_keyword_values(ClientData	clientData,
-			      Tcl_Interp	*interp,
-			      int		argc,
-			      char		**argv)
+bu_get_all_keyword_values(ClientData	clientData,
+			  Tcl_Interp	*interp,
+			  int		argc,
+			  char		**argv)
 {
     struct bu_vls	variable;
     int	listc;
@@ -1093,7 +1066,7 @@ bu_tcl_rgb_to_hsv(ClientData	clientData,
     rgb[2] = rgb_int[2];
 
     bu_rgb_to_hsv( rgb, hsv );
-    bu_vls_printf(&result, "%g %g %g", hsv[0], hsv[1], hsv[2]);
+    bu_vls_printf(&result, "%g %g %g", V3ARGS(hsv));
     Tcl_AppendResult(interp, bu_vls_addr(&result), (char *)NULL);
     bu_vls_free(&result);
     return TCL_OK;
@@ -1143,7 +1116,7 @@ bu_tcl_hsv_to_rgb(ClientData	clientData,
 	return TCL_ERROR;
     }
 
-    bu_vls_printf(&result, "%d %d %d", rgb[0], rgb[1], rgb[2]);
+    bu_vls_printf(&result, "%d %d %d", V3ARGS(rgb));
     Tcl_AppendResult(interp, bu_vls_addr(&result), (char *)NULL);
     bu_vls_free(&result);
     return TCL_OK;
@@ -1417,7 +1390,7 @@ bu_tcl_units_conversion(ClientData	clientData,
     }
 
     conv_factor = bu_units_conversion(argv[1]);
-    if (conv_factor <= 0.0) {
+    if (NEAR_ZERO(conv_factor, SMALL_FASTF)) {
 	Tcl_AppendResult(interp, "ERROR: bu_units_conversion: Unrecognized units string: ",
 			 argv[1], "\n", (char *)NULL);
 	return TCL_ERROR;
@@ -1443,8 +1416,6 @@ bu_tcl_units_conversion(ClientData	clientData,
 void
 bu_tcl_setup(Tcl_Interp *interp)
 {
-    /*XXX Use of brlcad_interp is temporary */
-    brlcad_interp = interp;
     bu_register_cmds(interp, bu_cmds);
 
     Tcl_SetVar(interp, "BU_DEBUG_FORMAT", BU_DEBUG_FORMAT, TCL_GLOBAL_ONLY);

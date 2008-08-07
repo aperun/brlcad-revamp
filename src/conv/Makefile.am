@@ -31,7 +31,6 @@ SUBDIRS = \
         3dm \
 	comgeom \
 	iges \
-	intaval \
 	jack \
 	off \
 	patch
@@ -138,7 +137,7 @@ euclid_g_SOURCES = euclid-g.c
 euclid_g_LDADD = ${WDB}
 
 euclid_unformat_SOURCES = euclid_unformat.c
-euclid_unformat_LDADD = ${BU} ${BN} ${SYSV}
+euclid_unformat_LDADD = ${BU} ${SYSV}
 
 fast4_g_SOURCES = fast4-g.c
 fast4_g_LDADD = ${WDB}

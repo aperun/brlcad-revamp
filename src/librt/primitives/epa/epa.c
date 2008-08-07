@@ -1,4 +1,4 @@
-/*                           E P A . C
+/*                         G _ E P A . C
  * BRL-CAD
  *
  * Copyright (c) 1990-2008 United States Government as represented by
@@ -17,9 +17,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup primitives */
+/** @addtogroup g_  */
 /** @{ */
-/** @file epa.c
+/** @file g_epa.c
  *
  * Intersect a ray with an Elliptical Paraboloid.
  *
@@ -1708,16 +1708,6 @@ rt_epa_ifree(struct rt_db_internal *ip)
 
     bu_free( (char *)xip, "epa ifree" );
     ip->idb_ptr = GENPTR_NULL;	/* sanity */
-}
-
-/**
- * R T _ E P A _ P A R A M S
- *
- */
-int
-rt_epa_params(struct pc_pc_set * ps, const struct rt_db_internal *ip)
-{
-    return(0);			/* OK */
 }
 
 /** @} */

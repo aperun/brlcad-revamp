@@ -493,7 +493,7 @@ struct soltab {
 /* Add a new primitive id above here (this is will break v5 format)
  * XXX must update the non-geometric object id's below XXX
  */
-#define	ID_MAX_SOLID	41	/**< @brief Maximum defined ID_xxx for solids */
+#define	ID_MAX_SOLID	39	/**< @brief Maximum defined ID_xxx for solids */
 
 /*
  * Non-geometric objects
@@ -502,16 +502,14 @@ struct soltab {
 #define ID_BINEXPM	32	/**< @brief Experimental binary */
 #define ID_BINUNIF	33	/**< @brief Uniform-array binary */
 #define ID_BINMIME	34	/**< @brief MIME-typed binary */
-#define ID_CONSTRAINT   39      /**< @brief Constraint object */
 
 /* XXX - superellipsoid should be 31, but is not v5 compatible */
 #define ID_SUPERELL	35	/**< @brief Superquadratic ellipsoid */
 #define ID_METABALL	36	/**< @brief Metaball */
 #define ID_BREP         37      /**< @brief B-rep object */
 #define ID_HYP		38	/**< @brief Hyperboloid of one sheet */
-#define ID_REVOLVE	40	/**< @brief Solid of Revolutin */
 
-#define ID_MAXIMUM	41	/**< @brief Maximum defined ID_xxx value */
+#define ID_MAXIMUM	39	/**< @brief Maximum defined ID_xxx value */
 
 /**
  * M A T E R _ I N F O
@@ -843,9 +841,7 @@ struct directory  {
 		(_dp)->d_namep = bu_strdup(_name); /* Calls bu_malloc() */ \
 	} }
 
-
-/**
- * Use this macro to free the d_namep member, which is sometimes not
+/** Use this macro to free the d_namep member, which is sometimes not
  * dynamic.
  */
 #define RT_DIR_FREE_NAMEP(_dp)	{ \
@@ -895,7 +891,6 @@ struct rt_comb_internal  {
 #define RT_CHECK_COMB_TCL(_interp, _p)	BU_CKMAG_TCL(interp, _p, RT_COMB_MAGIC, "rt_comb_internal" )
 #define RT_CK_COMB_TCL(_interp, _p)	RT_CHECK_COMB_TCL(_interp, _p)
 
-
 /**
  * R T _ B I N U N I F _ I N T E R N A L
  *
@@ -923,22 +918,6 @@ struct rt_binunif_internal {
 #define RT_CK_BINUNIF(_p)		RT_CHECK_BINUNIF(_p)
 #define RT_CHECK_BINUNIF_TCL(_interp, _p)	BU_CKMAG_TCL(interp, _p, RT_BINUNIF_MAGIC, "rt_binunif_internal" )
 #define RT_CK_BINUNIF_TCL(_interp, _p)	RT_CHECK_BINUNIF_TCL(_interp, _p)
-
-
-/**
- * P C _ C O N S T R A I N T
- *  
- * In-memory format for database "constraint" record
- */
-struct rt_constraint_internal {
-    unsigned long magic;
-    int id;
-    int type; 
-};
-
-#define RT_CHECK_CONSTRAINT(_p)		BU_CKMAG( _p, PC_CONSTRAINT_MAGIC, "pc_constraint_internal" )
-#define RT_CK_CONSTRAINT(_p)		PC_CHECK_CONSTRAINT(_p)
-
 
 /**
  * D B _ T R E E _ S T A T E
@@ -1125,10 +1104,18 @@ struct rt_wdb  {
     struct bu_list	l;
     int			type;
     struct db_i	*	dbip;
+    struct bu_vls	wdb_name;	/**< @brief  database object name */
     struct db_tree_state	wdb_initial_tree_state;
     struct rt_tess_tol	wdb_ttol;
     struct bn_tol	wdb_tol;
     struct resource*	wdb_resp;
+
+    /* for catching log messages */
+    struct bu_vls	wdb_log;
+
+    void		*wdb_result;
+    struct bu_vls	wdb_result_str;
+    unsigned int	wdb_result_flags;
 
     /* variables for name prefixing */
     struct bu_vls	wdb_prestr;
@@ -1140,12 +1127,8 @@ struct rt_wdb  {
     int			wdb_air_default;
     int			wdb_mat_default;/**< @brief  GIFT material code */
     int			wdb_los_default;/**< @brief  Line-of-sight estimate */
-
-    /* These members are marked for removal */
-    struct bu_vls	wdb_name;	/**< @brief  database object name */
     struct bu_observer	wdb_observers;
     Tcl_Interp *	wdb_interp;
-
 };
 
 #define RT_CHECK_WDB(_p)		BU_CKMAG(_p, RT_WDB_MAGIC, "rt_wdb")
@@ -1803,35 +1786,6 @@ struct bezier_seg	/**< @brief  Bezier curve segment */
 };
 
 /**
- * A composite set of parameters constraints with respect to those 
- * parameters. Used for declaration by each geometry object
- */
-struct pc_param {
-    struct bu_list l;
-    struct bu_vls name;
-    struct bu_vls expression;
-    enum ptype {
-	pc_value,
-	pc_point,
-	pc_vector
-    } ptype;
-    union {
-	fastf_t *valuep;
-	pointp_t pointp;
-	vectp_t vectorp;
-    } pval;
-};
-struct pc_constrnt {
-    struct bu_list l;
-    struct bu_vls name;
-    struct bu_vls expression;
-};
-struct pc_pc_set {
-    struct pc_param * ps;
-    struct pc_constrnt * cs;
-};
-
-/**
  * R T _ F U N C T A B
  *
  * Object-oriented interface to BRL-CAD geometry.
@@ -1942,18 +1896,27 @@ struct rt_functab {
     const struct bu_structparse *ft_parsetab;	/**< @brief  rt_xxx_parse */
     size_t ft_internal_size;	/**< @brief  sizeof(struct rt_xxx_internal) */
     unsigned long ft_internal_magic;	/**< @brief  RT_XXX_INTERNAL_MAGIC */
-    int	(*ft_get) BU_ARGS((struct bu_vls *,
-			   const struct rt_db_internal *, const char *item));
-    int	(*ft_adjust) BU_ARGS((struct bu_vls *,
-			      struct rt_db_internal *,
-			      int /*argc*/, char ** /*argv*/,
-			      struct resource * /*resp*/));
-    int	(*ft_form) BU_ARGS((struct bu_vls *,
-			    const struct rt_functab *));
-			    
+#if defined(TCL_OK)
+    int	(*ft_tclget) BU_ARGS((Tcl_Interp *,
+			      const struct rt_db_internal *, const char *item));
+    int	(*ft_tcladjust) BU_ARGS((Tcl_Interp *,
+				 struct rt_db_internal *,
+				 int /*argc*/, char ** /*argv*/,
+				 struct resource * /*resp*/));
+    int	(*ft_tclform) BU_ARGS((const struct rt_functab *,
+			       Tcl_Interp *));
+#else
+    int	(*ft_tclget) BU_ARGS((genptr_t /*interp*/,
+			      const struct rt_db_internal *, const char *item));
+    int	(*ft_tcladjust) BU_ARGS((genptr_t /*interp*/,
+				 struct rt_db_internal *,
+				 int /*argc*/, char ** /*argv*/,
+				 struct resource * /*resp*/));
+    int	(*ft_tclform) BU_ARGS((const struct rt_functab *,
+			       genptr_t /*interp*/));
+#endif
     void (*ft_make) BU_ARGS((const struct rt_functab *,
 			     struct rt_db_internal *, double /*diameter*/));
-    int (*ft_params) BU_ARGS((struct pc_pc_set *,const struct rt_db_internal */*ip*/));
 };
 
 RT_EXPORT extern const struct rt_functab rt_functab[];
@@ -2536,18 +2499,8 @@ RT_EXPORT BU_EXTERN(int wdb_export,
 		     genptr_t gp,
 		     int id,
 		     double local2mm));
-RT_EXPORT BU_EXTERN(void wdb_init,
-		    (struct rt_wdb *wdbp,
-		     struct db_i   *dbip,
-		     int           mode));
 RT_EXPORT BU_EXTERN(void wdb_close,
 		    (struct rt_wdb *wdbp));
-RT_EXPORT BU_EXTERN(int wdb_import_from_path,
-		    (struct bu_vls *log,
-		     struct rt_db_internal *ip,
-		     const char *path,
-		     struct rt_wdb *wdb));
-
 
 /* db_anim.c */
 RT_EXPORT BU_EXTERN(struct animate *db_parse_1anim,
@@ -3311,13 +3264,13 @@ RT_EXPORT BU_EXTERN(int rt_arb_3face_intersect,
 		     int			loc));
 #ifdef __RTGEOM_H__
 RT_EXPORT BU_EXTERN(int rt_arb_calc_planes,
-		    (struct bu_vls		*error_msg_ret,
+		    (Tcl_Interp			*interp,
 		     struct rt_arb_internal	*arb,
 		     int			type,
 		     plane_t			planes[6],
 		     const struct bn_tol	*tol));
 RT_EXPORT BU_EXTERN(int rt_arb_move_edge,
-		    (struct bu_vls		*error_msg_ret,
+		    (Tcl_Interp		*interp,
 		     struct rt_arb_internal	*arb,
 		     vect_t			thru,
 		     int			bp1,
@@ -3328,7 +3281,7 @@ RT_EXPORT BU_EXTERN(int rt_arb_move_edge,
 		     plane_t			planes[6],
 		     const struct bn_tol	*tol));
 RT_EXPORT BU_EXTERN(int rt_arb_edit,
-		    (struct bu_vls		*error_msg_ret,
+		    (Tcl_Interp			*interp,
 		     struct rt_arb_internal	*arb,
 		     int			arb_type,
 		     int			edit_type,

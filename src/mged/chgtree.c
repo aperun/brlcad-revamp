@@ -44,6 +44,7 @@
 
 #include "./sedit.h"
 #include "./mged.h"
+#include "./mged_solid.h"
 #include "./mged_dm.h"
 #include "./cmd.h"
 
@@ -253,28 +254,20 @@ f_arced(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
 {
     Tcl_DString ds;
     int ret;
-    struct ged ged;
     
     CHECK_DBI_NULL;
     CHECK_READ_ONLY;
 
-    /*XXX Temporary */
-#if 1
-    GED_INIT(&ged, wdbp);
-#else
-    GED_INIT_FROM_WDBP(&ged, wdbp);
-#endif
-
-    ret = ged_arced(&ged, argc, argv);
+    ret = ged_arced(wdbp, argc, argv);
 
     /* Convert to Tcl codes */
-    if (ret == BRLCAD_OK)
+    if (ret == GED_OK)
 	ret = TCL_OK;
     else
 	ret = TCL_ERROR;
 
     Tcl_DStringInit(&ds);
-    Tcl_DStringAppend(&ds, bu_vls_addr(&ged.ged_result_str), -1);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&wdbp->wdb_result_str), -1);
     Tcl_DStringResult(interp, &ds);
 
     return ret;

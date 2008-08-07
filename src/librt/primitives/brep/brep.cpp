@@ -1,4 +1,4 @@
-/*                     B R E P . C P P
+/*                     G _ B R E P . C P P
  * BRL-CAD
  *
  * Copyright (c) 2007-2008 United States Government as represented by
@@ -19,7 +19,7 @@
  */
 /** @addtogroup g_  */
 /** @{ */
-/** @file brep.cpp
+/** @file g_brep.cpp
  *
  * Implementation of a generalized Boundary Representation (BREP)
  * primitive using the openNURBS library.
@@ -84,8 +84,7 @@ int
 rt_brep_tclget(Tcl_Interp *interp, const struct rt_db_internal *intern, const char *attr);
 int
 rt_brep_tcladjust(Tcl_Interp *interp, struct rt_db_internal *intern, int argc, char **argv);
-int
-rt_brep_params(struct pc_pc_set *,const struct rt_db_internal *ip);
+
 #ifdef __cplusplus
 }
 #endif
@@ -1388,14 +1387,6 @@ rt_brep_tcladjust(Tcl_Interp *interp, struct rt_db_internal *intern, int argc, c
     return 0;
 }
 
-/**
- *                      R T _ B R E P _ P A R A M S
- */
-int
-rt_brep_params(struct pc_pc_set *,const struct rt_db_internal *ip)
-{
-    return 0;
-}
 /** @} */
 
 /*

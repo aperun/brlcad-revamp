@@ -93,13 +93,11 @@
 #define RT_GRIP_INTERNAL_MAGIC		0x31196205
 #define RT_HALF_INTERNAL_MAGIC		0xaa87bbdd
 #define RT_HF_INTERNAL_MAGIC		0x4846494d
-#define RT_HYP_INTERNAL_MAGIC		0x68797065 /**< hype */
 #define RT_METABALL_INTERNAL_MAGIC      0x62616c6c /**< ball */
 #define RT_NURB_INTERNAL_MAGIC		0x002b2bdd
 #define RT_PART_INTERNAL_MAGIC		0xaaccee87
 #define RT_PG_INTERNAL_MAGIC		0x9bfed887
 #define RT_PIPE_INTERNAL_MAGIC		0x7dd7bb3e
-#define RT_REVOLVE_INTERNAL_MAGIC	0x7265766C /**< revl */
 #define RT_RHC_INTERNAL_MAGIC		0xaaccee89
 #define RT_RPC_INTERNAL_MAGIC		0xaaccee88
 #define RT_SKETCH_INTERNAL_MAGIC	0x736b6574 /**< sket */
@@ -147,7 +145,6 @@
 #define RT_AP_MAGIC			0x4170706c /**< Appl */
 #define RT_CNURB_MAGIC			0x636e7262
 #define RT_COMB_MAGIC			0x436f6d49 /**< ComI */
-#define RT_CONSTRAINT_MAGIC		0x7063696d /**< pcim */
 #define RT_CTS_MAGIC			0x98989123
 #define RT_DBTR_MAGIC			0x64627472 /**< dbtr */
 #define RT_DBTS_MAGIC			0x64627473 /**< dbts */

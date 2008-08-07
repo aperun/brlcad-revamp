@@ -55,6 +55,7 @@
 
 #include "./mged.h"
 #include "./cmd.h"
+#include "./mged_solid.h"
 #include "./mged_dm.h"
 #include "./sedit.h"
 
@@ -180,8 +181,6 @@ cmd_ged_cmd(ClientData clientData, Tcl_Interp *interp, int argc, char *argv[])
     
     CHECK_DBI_NULL;
     CHECK_READ_ONLY;
-
-    return TCL_OK;
 
     /* !!! */
 }
@@ -1984,27 +1983,19 @@ cmd_make_name(ClientData	clientData,
 {
     Tcl_DString ds;
     int ret;
-    struct ged ged;
 
     CHECK_DBI_NULL;
 
-    /*XXX Temporary */
-#if 1
-    GED_INIT(&ged, wdbp);
-#else
-    GED_INIT_FROM_WDBP(&ged, wdbp);
-#endif
-
-    ret = ged_make_name(&ged, argc, argv);
+    ret = ged_make_name(wdbp, argc, argv);
 
     /* Convert to Tcl codes */
-    if (ret == BRLCAD_OK)
+    if (ret == GED_OK)
 	ret = TCL_OK;
     else
 	ret = TCL_ERROR;
 
     Tcl_DStringInit(&ds);
-    Tcl_DStringAppend(&ds, bu_vls_addr(&ged.ged_result_str), -1);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&wdbp->wdb_result_str), -1);
     Tcl_DStringResult(interp, &ds);
 
     return ret;

@@ -3584,8 +3584,8 @@ package provide Archer 1.0
 	    -variable [::itcl::scope mShowScale] \
 	    -command [::itcl::code $this showScale]
 	$itk_component(modesmenu) add checkbutton \
-	    -label "Lighting" \
-	    -offvalue 0 \
+	    -label "Two Sided Lighting" \
+	    -offvalue 1 \
 	    -onvalue 2 \
 	    -variable [::itcl::scope mLighting] \
 	    -command [::itcl::code $this doLighting]

@@ -353,19 +353,18 @@ option add *Mged.height 400 widgetDefault
 }
 
 ::itcl::body Mged::ocenter {args} {
-    return [eval run_cmd ocenter $args]
+    eval $db ocenter $args
 }
 
 ::itcl::body Mged::orotate {args} {
-    return [eval run_cmd orotate $args]
+    eval $db orotate $args
 }
-
 ::itcl::body Mged::oscale {args} {
-    return [eval run_cmd oscale $args]
+    eval $db oscale $args
 }
 
 ::itcl::body Mged::otranslate {args} {
-    return [eval run_cmd otranslate $args]
+    eval $db otranslate $args
 }
 
 ::itcl::body Mged::copyeval {args} {

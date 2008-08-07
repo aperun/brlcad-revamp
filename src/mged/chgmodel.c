@@ -43,6 +43,7 @@
 #include "wdb.h"
 
 #include "./mged.h"
+#include "./mged_solid.h"
 #include "./mged_dm.h"
 #include "./sedit.h"
 #include "./cmd.h"
@@ -63,28 +64,20 @@ f_itemair(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[
 {
     Tcl_DString ds;
     int ret;
-    struct ged ged;
     
     CHECK_DBI_NULL;
     CHECK_READ_ONLY;
 
-    /*XXX Temporary */
-#if 1
-    GED_INIT(&ged, wdbp);
-#else
-    GED_INIT_FROM_WDBP(&ged, wdbp);
-#endif
-
-    ret = ged_item(&ged, argc, argv);
+    ret = ged_item(wdbp, argc, argv);
 
     /* Convert to Tcl codes */
-    if (ret == BRLCAD_OK)
+    if (ret == GED_OK)
 	ret = TCL_OK;
     else
 	ret = TCL_ERROR;
 
     Tcl_DStringInit(&ds);
-    Tcl_DStringAppend(&ds, bu_vls_addr(&ged.ged_result_str), -1);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&wdbp->wdb_result_str), -1);
     Tcl_DStringResult(interp, &ds);
 
     return ret;
@@ -271,28 +264,20 @@ f_edmater(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[
 {
     Tcl_DString ds;
     int ret;
-    struct ged ged;
     
     CHECK_DBI_NULL;
     CHECK_READ_ONLY;
 
-    /*XXX Temporary */
-#if 1
-    GED_INIT(&ged, wdbp);
-#else
-    GED_INIT_FROM_WDBP(&ged, wdbp);
-#endif
-
-    ret = ged_edmater(&ged, argc, argv);
+    ret = ged_edmater(wdbp, argc, argv);
 
     /* Convert to Tcl codes */
-    if (ret == BRLCAD_OK)
+    if (ret == GED_OK)
 	ret = TCL_OK;
     else
 	ret = TCL_ERROR;
 
     Tcl_DStringInit(&ds);
-    Tcl_DStringAppend(&ds, bu_vls_addr(&ged.ged_result_str), -1);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&wdbp->wdb_result_str), -1);
     Tcl_DStringResult(interp, &ds);
 
     return ret;
@@ -304,28 +289,20 @@ f_wmater(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[]
 {
     Tcl_DString ds;
     int ret;
-    struct ged ged;
     
     CHECK_DBI_NULL;
     CHECK_READ_ONLY;
 
-    /*XXX Temporary */
-#if 1
-    GED_INIT(&ged, wdbp);
-#else
-    GED_INIT_FROM_WDBP(&ged, wdbp);
-#endif
-
-    ret = ged_wmater(&ged, argc, argv);
+    ret = ged_wmater(wdbp, argc, argv);
 
     /* Convert to Tcl codes */
-    if (ret == BRLCAD_OK)
+    if (ret == GED_OK)
 	ret = TCL_OK;
     else
 	ret = TCL_ERROR;
 
     Tcl_DStringInit(&ds);
-    Tcl_DStringAppend(&ds, bu_vls_addr(&ged.ged_result_str), -1);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&wdbp->wdb_result_str), -1);
     Tcl_DStringResult(interp, &ds);
 
     return ret;
@@ -337,28 +314,20 @@ f_rmater(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[]
 {
     Tcl_DString ds;
     int ret;
-    struct ged ged;
     
     CHECK_DBI_NULL;
     CHECK_READ_ONLY;
 
-    /*XXX Temporary */
-#if 1
-    GED_INIT(&ged, wdbp);
-#else
-    GED_INIT_FROM_WDBP(&ged, wdbp);
-#endif
-
-    ret = ged_rmater(&ged, argc, argv);
+    ret = ged_rmater(wdbp, argc, argv);
 
     /* Convert to Tcl codes */
-    if (ret == BRLCAD_OK)
+    if (ret == GED_OK)
 	ret = TCL_OK;
     else
 	ret = TCL_ERROR;
 
     Tcl_DStringInit(&ds);
-    Tcl_DStringAppend(&ds, bu_vls_addr(&ged.ged_result_str), -1);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&wdbp->wdb_result_str), -1);
     Tcl_DStringResult(interp, &ds);
 
     return ret;
@@ -376,28 +345,20 @@ f_comb_color(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
 {
     Tcl_DString ds;
     int ret;
-    struct ged ged;
     
     CHECK_DBI_NULL;
     CHECK_READ_ONLY;
 
-    /*XXX Temporary */
-#if 1
-    GED_INIT(&ged, wdbp);
-#else
-    GED_INIT_FROM_WDBP(&ged, wdbp);
-#endif
-
-    ret = ged_comb_color(&ged, argc, (const char **)argv);
+    ret = ged_comb_color(wdbp, argc, argv);
 
     /* Convert to Tcl codes */
-    if (ret == BRLCAD_OK)
+    if (ret == GED_OK)
 	ret = TCL_OK;
     else
 	ret = TCL_ERROR;
 
     Tcl_DStringInit(&ds);
-    Tcl_DStringAppend(&ds, bu_vls_addr(&ged.ged_result_str), -1);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&wdbp->wdb_result_str), -1);
     Tcl_DStringResult(interp, &ds);
 
     return ret;
@@ -416,28 +377,20 @@ f_shader(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
 {
     Tcl_DString ds;
     int ret;
-    struct ged ged;
     
     CHECK_DBI_NULL;
     CHECK_READ_ONLY;
 
-    /*XXX Temporary */
-#if 1
-    GED_INIT(&ged, wdbp);
-#else
-    GED_INIT_FROM_WDBP(&ged, wdbp);
-#endif
-
-    ret = ged_shader(&ged, argc, (const char **)argv);
+    ret = ged_shader(wdbp, argc, argv);
 
     /* Convert to Tcl codes */
-    if (ret == BRLCAD_OK)
+    if (ret == GED_OK)
 	ret = TCL_OK;
     else
 	ret = TCL_ERROR;
 
     Tcl_DStringInit(&ds);
-    Tcl_DStringAppend(&ds, bu_vls_addr(&ged.ged_result_str), -1);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&wdbp->wdb_result_str), -1);
     Tcl_DStringResult(interp, &ds);
 
     return ret;
@@ -453,31 +406,23 @@ f_mirror(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[]
 {
     Tcl_DString ds;
     int ret;
-    struct ged ged;
 
     CHECK_DBI_NULL;
     CHECK_READ_ONLY;
 
-    /*XXX Temporary */
-#if 1
-    GED_INIT(&ged, wdbp);
-#else
-    GED_INIT_FROM_WDBP(&ged, wdbp);
-#endif
-
-    ret = ged_mirror(&ged, argc, argv);
+    ret = ged_mirror(wdbp, argc, argv);
 
     /* Convert to Tcl codes */
-    if (ret == BRLCAD_OK)
+    if (ret == GED_OK)
 	ret = TCL_OK;
     else
 	ret = TCL_ERROR;
 
     Tcl_DStringInit(&ds);
-    Tcl_DStringAppend(&ds, bu_vls_addr(&ged.ged_result_str), -1);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&wdbp->wdb_result_str), -1);
     Tcl_DStringResult(interp, &ds);
 
-    if (ged.ged_result_flags == 0 && ret == TCL_OK) {
+    if (wdbp->wdb_result_flags == 0 && ret == TCL_OK) {
 	const char *av[3];
 
 	av[0] = "draw";
@@ -496,28 +441,20 @@ f_edcomb(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
 {
     Tcl_DString ds;
     int ret;
-    struct ged ged;
     
     CHECK_DBI_NULL;
     CHECK_READ_ONLY;
 
-    /*XXX Temporary */
-#if 1
-    GED_INIT(&ged, wdbp);
-#else
-    GED_INIT_FROM_WDBP(&ged, wdbp);
-#endif
-
-    ret = ged_edcomb(&ged, argc, (const char **)argv);
+    ret = ged_edcomb(wdbp, argc, argv);
 
     /* Convert to Tcl codes */
-    if (ret == BRLCAD_OK)
+    if (ret == GED_OK)
 	ret = TCL_OK;
     else
 	ret = TCL_ERROR;
 
     Tcl_DStringInit(&ds);
-    Tcl_DStringAppend(&ds, bu_vls_addr(&ged.ged_result_str), -1);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&wdbp->wdb_result_str), -1);
     Tcl_DStringResult(interp, &ds);
 
     return ret;
@@ -544,17 +481,9 @@ f_make(ClientData	clientData,
 {
     Tcl_DString ds;
     int ret;
-    struct ged ged;
 
     CHECK_DBI_NULL;
     CHECK_READ_ONLY;
-
-    /*XXX Temporary */
-#if 1
-    GED_INIT(&ged, wdbp);
-#else
-    GED_INIT_FROM_WDBP(&ged, wdbp);
-#endif
 
     if (argc == 3) {
 	char *av[8];
@@ -576,21 +505,21 @@ f_make(ClientData	clientData,
 	av[6] = argv[2];
 	av[7] = (char *)0;
 
-	ret = ged_make(&ged, 7, av);
+	ret = ged_make(wdbp, 7, av);
     } else
-	ret = ged_make(&ged, argc, argv);
+	ret = ged_make(wdbp, argc, argv);
 
     /* Convert to Tcl codes */
-    if (ret == BRLCAD_OK)
+    if (ret == GED_OK)
 	ret = TCL_OK;
     else
 	ret = TCL_ERROR;
 
     Tcl_DStringInit(&ds);
-    Tcl_DStringAppend(&ds, bu_vls_addr(&ged.ged_result_str), -1);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&wdbp->wdb_result_str), -1);
     Tcl_DStringResult(interp, &ds);
 
-    if (ged.ged_result_flags == 0 && ret == TCL_OK) {
+    if (wdbp->wdb_result_flags == 0 && ret == TCL_OK) {
 	const char *av[3];
 
 	av[0] = "draw";

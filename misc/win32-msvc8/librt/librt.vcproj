@@ -284,10 +284,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\librt\constraint.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\librt\cut.c"
 				>
 			</File>
@@ -677,10 +673,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\librt\regionfix.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\librt\primitives\revolve\revolve.c"
 				>
 			</File>
 			<File

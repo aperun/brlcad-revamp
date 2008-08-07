@@ -1,4 +1,4 @@
-/*                           A R S . C
+/*                         G _ A R S . C
  * BRL-CAD
  *
  * Copyright (c) 1985-2008 United States Government as represented by
@@ -17,9 +17,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup primitives */
+/** @addtogroup g_  */
 /** @{ */
-/** @file ars.c
+/** @file g_ars.c
  *
  * Intersect a ray with an ARS (Arbitrary faceted solid).
  *
@@ -1164,30 +1164,35 @@ rt_ars_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
 }
 
 int
-rt_ars_get(struct bu_vls *log, const struct rt_db_internal *intern, const char *attr)
+rt_ars_tclget(Tcl_Interp *interp, const struct rt_db_internal *intern, const char *attr)
 {
     register struct rt_ars_internal *ars=(struct rt_ars_internal *)intern->idb_ptr;
-    int i, j;
+    Tcl_DString	ds;
+    struct bu_vls	vls;
+    int		i, j;
 
     RT_ARS_CK_MAGIC( ars );
 
+    Tcl_DStringInit( &ds );
+    bu_vls_init( &vls );
+
     if ( attr == (char *)NULL ) {
-	bu_vls_strcpy( log, "ars" );
-	bu_vls_printf( log, " NC %d PPC %d", ars->ncurves, ars->pts_per_curve );
+	bu_vls_strcpy( &vls, "ars" );
+	bu_vls_printf( &vls, " NC %d PPC %d", ars->ncurves, ars->pts_per_curve );
 	for ( i=0; i<ars->ncurves; i++ ) {
-	    bu_vls_printf( log, " C%d {", i );
+	    bu_vls_printf( &vls, " C%d {", i );
 	    for ( j=0; j<ars->pts_per_curve; j++ ) {
-		bu_vls_printf( log, " { %.25g %.25g %.25g }",
+		bu_vls_printf( &vls, " { %.25g %.25g %.25g }",
 			       V3ARGS( &ars->curves[i][j*3] ) );
 	    }
-	    bu_vls_printf( log, " }" );
+	    bu_vls_printf( &vls, " }" );
 	}
     }
     else if ( !strcmp( attr, "NC" ) ) {
-	bu_vls_printf( log, "%d", ars->ncurves );
+	bu_vls_printf( &vls, "%d", ars->ncurves );
     }
     else if ( !strcmp( attr, "PPC" ) ) {
-	bu_vls_printf( log, "%d", ars->pts_per_curve );
+	bu_vls_printf( &vls, "%d", ars->pts_per_curve );
     }
     else if ( attr[0] == 'C' ) {
 	char *ptr;
@@ -1195,48 +1200,53 @@ rt_ars_get(struct bu_vls *log, const struct rt_db_internal *intern, const char *
 	if ( attr[1] == '\0' ) {
 	    /* all the curves */
 	    for ( i=0; i<ars->ncurves; i++ ) {
-		bu_vls_printf( log, " C%d {", i );
+		bu_vls_printf( &vls, " C%d {", i );
 		for ( j=0; j<ars->pts_per_curve; j++ ) {
-		    bu_vls_printf( log, " { %.25g %.25g %.25g }",
+		    bu_vls_printf( &vls, " { %.25g %.25g %.25g }",
 				   V3ARGS( &ars->curves[i][j*3] ) );
 		}
-		bu_vls_printf( log, " }" );
+		bu_vls_printf( &vls, " }" );
 	    }
 	}
 	else if ( !isdigit( attr[1] ) ) {
-	    bu_vls_printf(log, 
-			   "ERROR: illegal argument, must be NC, PPC, C, C#, or C#P#\n");
-	    return BRLCAD_ERROR;
+	    Tcl_SetResult( interp,
+			   "ERROR: illegal argument, must be NC, PPC, C, C#, or C#P#\n",
+			   TCL_STATIC );
+	    return( TCL_ERROR );
 	}
 
 	if ( (ptr=strchr( attr, 'P' )) ) {
 	    /* a specific point on a specific curve */
 	    if ( !isdigit( *(ptr+1) ) ) {
-		bu_vls_printf(log, 
-			      "ERROR: illegal argument, must be NC, PPC, C, C#, or C#P#\n");
-		return BRLCAD_ERROR;
+		Tcl_SetResult( interp,
+			       "ERROR: illegal argument, must be NC, PPC, C, C#, or C#P#\n",
+			       TCL_STATIC );
+		return( TCL_ERROR );
 	    }
 	    j = atoi( (ptr+1) );
 	    *ptr = '\0';
 	    i = atoi( &attr[1] );
-	    bu_vls_printf( log, "%.25g %.25g %.25g",
+	    bu_vls_printf( &vls, "%.25g %.25g %.25g",
 			   V3ARGS( &ars->curves[i][j*3] ) );
 	}
 	else {
 	    /* the entire curve */
 	    i = atoi( &attr[1] );
 	    for ( j=0; j<ars->pts_per_curve; j++ ) {
-		bu_vls_printf( log, " { %.25g %.25g %.25g }",
+		bu_vls_printf( &vls, " { %.25g %.25g %.25g }",
 			       V3ARGS( &ars->curves[i][j*3] ) );
 	    }
 	}
     }
-
-    return BRLCAD_OK;
+    Tcl_DStringAppend( &ds, bu_vls_addr( &vls ), -1 );
+    Tcl_DStringResult( interp, &ds );
+    Tcl_DStringFree( &ds );
+    bu_vls_free( &vls );
+    return( TCL_OK );
 }
 
 int
-rt_ars_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char **argv)
+rt_ars_tcladjust(Tcl_Interp *interp, struct rt_db_internal *intern, int argc, char **argv)
 {
     struct rt_ars_internal		*ars;
     int				i, j, k;
@@ -1291,9 +1301,10 @@ rt_ars_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char 
 	    /* change the number of points per curve */
 	    i = atoi( argv[1] );
 	    if ( i < 3 ) {
-		bu_vls_printf(log,
-			      "ERROR: must have at least 3 points per curve\n");
-		return BRLCAD_ERROR;
+		Tcl_SetResult( interp,
+			       "ERROR: must have at least 3 points per curve\n",
+			       TCL_STATIC );
+		return( TCL_ERROR );
 	    }
 	    if ( i < ars->pts_per_curve ) {
 		for ( j=0; j<ars->ncurves; j++ ) {
@@ -1333,11 +1344,12 @@ rt_ars_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char 
 		    j = atoi( ptr+1 );
 		    len = 3;
 		    array = &ars->curves[i][j*3];
-		    if ( tcl_list_to_fastf_array( brlcad_interp, argv[1],
+		    if ( tcl_list_to_fastf_array( interp, argv[1],
 						  &array,
 						  &len )!= len ) {
-			bu_vls_printf(log,
-				      "WARNING: incorrect number of parameters provided for a point\n");
+			Tcl_SetResult( interp,
+				       "WARNING: incorrect number of parameters provided for a point\n",
+				       TCL_STATIC );
 		    }
 		}
 		else {
@@ -1356,40 +1368,33 @@ rt_ars_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char 
 			    sizeof( fastf_t ),
 			    "ars->curves[i]" );
 		    }
-		    if ( tcl_list_to_fastf_array( brlcad_interp, argv[1],
+		    if ( tcl_list_to_fastf_array( interp, argv[1],
 						  &ars->curves[i],
 						  &len ) != len ) {
-			bu_vls_printf(log,
-				      "WARNING: incorrect number of parameters provided for a curve\n");
+			Tcl_SetResult( interp,
+				       "WARNING: incorrect number of parameters provided for a curve\n",
+				       TCL_STATIC );
 		    }
 		}
 	    }
 	    else {
-		bu_vls_printf(log,
-			      "ERROR: Illegal argument, must be NC, PPC, C#, or C#P#\n");
-		return BRLCAD_ERROR;
+		Tcl_SetResult( interp,
+			       "ERROR: Illegal argument, must be NC, PPC, C#, or C#P#\n",
+			       TCL_STATIC );
+		return( TCL_ERROR );
 	    }
 	}
 	else {
-	    bu_vls_printf(log,
-			  "ERROR: Illegal argument, must be NC, PPC, C#, or C#P#\n");
-	    return BRLCAD_ERROR;
+	    Tcl_SetResult( interp,
+			   "ERROR: Illegal argument, must be NC, PPC, C#, or C#P#\n",
+			   TCL_STATIC );
+	    return( TCL_ERROR );
 	}
 	argc -= 2;
 	argv += 2;
     }
 
-    return BRLCAD_OK;
-}
-
-/**
- * R T _ A R S _ P A R A M S
- *
- */
-int
-rt_ars_params(struct pc_pc_set * ps, const struct rt_db_internal *ip)
-{
-    return(0);			/* OK */
+    return( TCL_OK );
 }
 
 /** @} */

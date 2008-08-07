@@ -20,7 +20,6 @@ bin_PROGRAMS = \
 	rtfrac \
 	rtg3 \
 	rthide \
-	rtmlt \
 	rtpp \
 	rtrad \
 	rtrange \
@@ -56,7 +55,6 @@ ALLSRCS = \
 	rtscale.c \
 	rtshot.c \
 	rtwalk.c \
-	scanline.c \
 	sh_tcl.c \
 	view.c \
 	viewarea.c \
@@ -68,7 +66,6 @@ ALLSRCS = \
 	viewfrac.c \
 	viewg3.c \
 	viewhide.c \
-	viewmlt.c \
 	viewpp.c \
 	viewrad.c \
 	viewrange.c \
@@ -89,11 +86,6 @@ hurt_LDADD = \
 	${RT} \
 	${FB}
 
-rtmlt_SOURCES = \
-	$(COMMON) \
-	scanline.c \
-	viewmlt.c
-
 rtregis_SOURCES = \
 	read-rtlog.c \
 	rtregis.c
@@ -105,7 +97,6 @@ rtscale_SOURCES = \
 
 rt_SOURCES = \
 	$(COMMON) \
-	scanline.c \
 	view.c
 
 rt_bot_faces_SOURCES = 	\
@@ -171,8 +162,8 @@ rtxray_SOURCES = \
 
 noinst_HEADERS = \
 	ext.h \
-	rad.h \
-	scanline.h
+	mlt_def.h \
+	rad.h
 
 man_MANS = \
 	reshoot.1 \
@@ -203,7 +194,6 @@ libremrt_a_CFLAGS = -DRTSRV
 libremrt_a_SOURCES = \
 	do.c \
 	opt.c \
-	scanline.c \
 	sh_tcl.c \
 	view.c \
 	worker.c

@@ -47,6 +47,7 @@
 #include "./mged.h"
 #include "./titles.h"
 #include "./sedit.h"
+#include "./mged_solid.h"
 #include "./mged_dm.h"
 
 #define NEED_GUI(_type) ( \

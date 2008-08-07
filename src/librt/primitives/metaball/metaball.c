@@ -17,9 +17,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup primitives */
+/** @addtogroup g_  */
 /** @{ */
-/** @file metaball.c
+/** @file g_metaball.c
  *
  * Intersect a ray with a metaball implicit surface.
  *
@@ -658,16 +658,6 @@ rt_metaball_tnurb(struct nmgregion **r, struct model *m, struct rt_db_internal *
 {
     bu_log("rt_metaball_tnurb called!\n");
     return 0;
-}
-
-/**
- * R T _ M E T A B A L L _ P A R A M S
- *
- */
-int
-rt_metaball_params(struct pc_pc_set * ps, const struct rt_db_internal *ip)
-{
-    return(0);			/* OK */
 }
 
 /*

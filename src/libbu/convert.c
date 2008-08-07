@@ -41,6 +41,7 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "vmath.h"
 #include "bu.h"
 
 

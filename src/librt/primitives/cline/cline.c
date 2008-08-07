@@ -1,4 +1,4 @@
-/*                         C L I N E . C
+/*                       G _ C L I N E . C
  * BRL-CAD
  *
  * Copyright (c) 2000-2008 United States Government as represented by
@@ -17,9 +17,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup primitives */
+/** @addtogroup g_  */
 /** @{ */
-/** @file cline.c
+/** @file g_cline.c
  *
  * Intersect a ray with a FASTGEN4 CLINE element.
  *
@@ -1031,37 +1031,49 @@ rt_cline_tnurb(struct nmgregion **r, struct model *m, struct rt_db_internal *ip,
 }
 
 int
-rt_cline_get(struct bu_vls *log, const struct rt_db_internal *intern, const char *attr)
+rt_cline_tclget(Tcl_Interp *interp, const struct rt_db_internal *intern, const char *attr)
 {
     register struct rt_cline_internal *cli =
 	(struct rt_cline_internal *)intern->idb_ptr;
+    Tcl_DString     ds;
+    struct bu_vls   vls;
+    int ret=TCL_OK;
 
     RT_CLINE_CK_MAGIC( cli );
 
-    if (attr == (char *)NULL) {
-	bu_vls_strcpy( log, "cline" );
-	bu_vls_printf( log, " V {%.25G %.25G %.25G}", V3ARGS( cli->v ) );
-	bu_vls_printf( log, " H {%.25G %.25G %.25G}", V3ARGS( cli->h ) );
-	bu_vls_printf( log, " R %.25G T %.25G", cli->radius, cli->thickness );
+    Tcl_DStringInit( &ds );
+    bu_vls_init( &vls );
+
+    if ( attr == (char *)NULL )
+    {
+	bu_vls_strcpy( &vls, "cline" );
+	bu_vls_printf( &vls, " V {%.25G %.25G %.25G}", V3ARGS( cli->v ) );
+	bu_vls_printf( &vls, " H {%.25G %.25G %.25G}", V3ARGS( cli->h ) );
+	bu_vls_printf( &vls, " R %.25G T %.25G", cli->radius, cli->thickness );
     }
     else if ( *attr == 'V')
-	bu_vls_printf( log, "%.25G %.25G %.25G", V3ARGS( cli->v ) );
+	bu_vls_printf( &vls, "%.25G %.25G %.25G", V3ARGS( cli->v ) );
     else if ( *attr == 'H' )
-	bu_vls_printf( log, "%.25G %.25G %.25G", V3ARGS( cli->h ) );
+	bu_vls_printf( &vls, "%.25G %.25G %.25G", V3ARGS( cli->h ) );
     else if ( *attr == 'R' )
-	bu_vls_printf( log, "%.25G", cli->radius );
+	bu_vls_printf( &vls, "%.25G", cli->radius );
     else if ( *attr == 'T' )
-	bu_vls_printf( log, "%.25G", cli->thickness );
-    else {
-	bu_vls_strcat( log, "ERROR: unrecognized attribute, must be V, H, R, or T!!!" );
-	return BRLCAD_ERROR;
+	bu_vls_printf( &vls, "%.25G", cli->thickness );
+    else
+    {
+	bu_vls_strcat( &vls, "ERROR: unrecognized attribute, must be V, H, R, or T!!!" );
+	ret = TCL_ERROR;
     }
 
-    return BRLCAD_OK;
+    Tcl_DStringAppend( &ds, bu_vls_addr( &vls ), -1 );
+    Tcl_DStringResult( interp, &ds );
+    Tcl_DStringFree( &ds );
+    bu_vls_free( &vls );
+    return( ret );
 }
 
 int
-rt_cline_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, char **argv)
+rt_cline_tcladjust(Tcl_Interp *interp, struct rt_db_internal *intern, int argc, char **argv)
 {
     struct rt_cline_internal *cli =
 	(struct rt_cline_internal *)intern->idb_ptr;
@@ -1077,19 +1089,23 @@ rt_cline_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, cha
 	if ( *argv[0] == 'V' )
 	{
 	    new = cli->v;
-	    if ( tcl_list_to_fastf_array( brlcad_interp, argv[1], &new, &array_len ) !=
+	    if ( tcl_list_to_fastf_array( interp, argv[1], &new, &array_len ) !=
 		 array_len ) {
-		bu_vls_printf(log, "ERROR: Incorrect number of coordinates for vector\n");
-		return BRLCAD_ERROR;
+		Tcl_SetResult( interp,
+			       "ERROR: Incorrect number of coordinates for vector\n",
+			       TCL_STATIC );
+		return( TCL_ERROR );
 	    }
 	}
 	else if ( *argv[0] == 'H' )
 	{
 	    new = cli->h;
-	    if ( tcl_list_to_fastf_array( brlcad_interp, argv[1], &new, &array_len ) !=
+	    if ( tcl_list_to_fastf_array( interp, argv[1], &new, &array_len ) !=
 		 array_len ) {
-		bu_vls_printf(log, "ERROR: Incorrect number of coordinates for point\n");
-		return BRLCAD_ERROR;
+		Tcl_SetResult( interp,
+			       "ERROR: Incorrect number of coordinates for point\n",
+			       TCL_STATIC );
+		return( TCL_ERROR );
 	    }
 	}
 	else if ( *argv[0] == 'R' )
@@ -1101,29 +1117,19 @@ rt_cline_adjust(struct bu_vls *log, struct rt_db_internal *intern, int argc, cha
 	argv += 2;
     }
 
-    return BRLCAD_OK;
+    return( TCL_OK );
 }
 
 int
-rt_cline_form(struct bu_vls *log, const struct rt_functab *ftp)
+rt_cline_tclform( const struct rt_functab *ftp, Tcl_Interp *interp )
 {
     RT_CK_FUNCTAB(ftp);
 
-    bu_vls_printf(log,
-		  "V {%%f %%f %%f} H {%%f %%f %%f} R %%f T %%f");
+    Tcl_AppendResult( interp,
+		      "V {%f %f %f} H {%f %f %f} R %f T %f", (char *)NULL );
 
-    return BRLCAD_OK;
+    return TCL_OK;
 
-}
-
-/**
- * R T _ C L I N E _ P A R A M S
- *
- */
-int
-rt_cline_params(struct pc_pc_set * ps, const struct rt_db_internal *ip)
-{
-    return(0);			/* OK */
 }
 
 /** @} */

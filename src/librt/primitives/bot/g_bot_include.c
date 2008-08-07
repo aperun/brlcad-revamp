@@ -1,4 +1,4 @@
-/*                   G _ B O T _ I N C L U D E . C
+/*                 G _ B O T _ I N C L U D E . C
  * BRL-CAD
  *
  * Copyright (c) 1999-2008 United States Government as represented by
@@ -17,7 +17,7 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup primitives */
+/** @addtogroup g_  */
 /** @{ */
 /** @file g_bot_include.c
  *
@@ -29,7 +29,8 @@
  *		TRI_TYPE == float   -> use the "tri_float_specific" struct
  *		TRI_TYPE == double     -> use the original "tri_specific" struct
  *
- *@author  	John R. Anderson
+ *  Authors -
+ *  	John R. Anderson
  *
  */
 

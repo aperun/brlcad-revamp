@@ -1,4 +1,4 @@
-/*                      S U P E R E L L . C
+/*                    G _ S U P E R E L L . C
  * BRL-CAD
  *
  * Copyright (c) 1985-2008 United States Government as represented by
@@ -17,9 +17,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup primitives */
+/** @addtogroup g_  */
 /** @{ */
-/** @file superell.c
+/** @file g_superell.c
  *
  * Intersect a ray with a Superquadratic Ellipsoid.
  *
@@ -771,8 +771,8 @@ struct superell_vert_strip {
  *	  1
  *	  B
  *	 /\
- *   3  /  \  4
- *   D /____\ E
+ *    3 /  \ 4
+ *    D/____\E
  *    /\    /\
  *   /	\  /  \
  *  /____\/____\
@@ -1055,15 +1055,6 @@ rt_superell_tnurb(struct nmgregion **r, struct model *m, struct rt_db_internal *
     return 0;
 }
 
-/**
- * R T _ S U P E R E L L _ P A R A M S
- *
- */
-int
-rt_superell_params(struct pc_pc_set * ps, const struct rt_db_internal *ip)
-{
-    return(0);			/* OK */
-}
 
 /*
  * Local Variables:

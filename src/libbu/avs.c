@@ -223,9 +223,9 @@ bu_avs_get( const struct bu_attribute_value_set *avsp, const char *name )
  *
  * Remove the given attribute from an attribute set.
  *
- * @return
+ * @Return
  *	-1	attribute not found in set
- * @return
+ * @Return
  *	 0	OK
  */
 int

@@ -19,7 +19,7 @@
  */
 /** @addtogroup librt */
 /** @{ */
-/** @file librt/globals.c
+/** @file globals.c
  *
  * Global variables in LIBRT.
  *

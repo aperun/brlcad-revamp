@@ -34,6 +34,7 @@
 #include "raytrace.h"
 #include "rtgeom.h"
 #include "./mged.h"
+#include "./mged_solid.h"
 #include "./mged_dm.h"
 
 

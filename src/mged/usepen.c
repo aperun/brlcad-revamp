@@ -24,10 +24,11 @@
 #include "common.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include <string.h>
-#include "bio.h"
 
+#include "bio.h"
 #include "bu.h"
 #include "vmath.h"
 #include "bn.h"
@@ -35,6 +36,7 @@
 
 #include "./mged.h"
 #include "./titles.h"
+#include "./mged_solid.h"
 #include "./mged_dm.h"
 
 #include "./sedit.h"

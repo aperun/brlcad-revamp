@@ -38,15 +38,6 @@
 .\" SUCH DAMAGE.
 .\"
 .\".\".\"
-.\"
-.\" File name macro to make listing files easier
-.\"
-.de FN
-\fI\|\\$1\|\fP
-..
-.\"
-.\" Begin actual content
-.\"
 .SH NAME
 buffer \- buffer data from stdin until EOF, then write to stdout
 .SH SYNOPSIS
@@ -71,9 +62,7 @@ fb-pix | pixfilter -flo | buffer | pix-fb
 .fi
 \fP
 .SH FILES
-.TP
-.FN /usr/tmp/bufferXXXXXX
-temporary file used to buffer piped data
+/usr/tmp/bufferXXXXXX
 .SH "BUG REPORTS"
 Reports of bugs or problems should be submitted via electronic
 mail to <devs@brlcad.org>.

@@ -183,10 +183,6 @@ bu_identify_magic(register unsigned long magic)
 	     */
 	case RT_AP_MAGIC:
 	    return "librt application";
-	case RT_COMB_MAGIC:
-	    return "librt rt_comb_internal";
-	case RT_CONSTRAINT_MAGIC:
-	    return "librt rt_constraint_internal";
 	case RT_CTS_MAGIC:
 	    return "librt combined_tree_state";
 	case RT_DB_INTERNAL_MAGIC:

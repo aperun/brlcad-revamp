@@ -31,24 +31,8 @@
 #include <ctype.h>
 #include <signal.h>
 #include <time.h>
-#ifdef HAVE_SYS_TYPES_H
-   /* for select */
-#  include <sys/types.h>
-#endif
-#ifdef HAVE_SYS_TIME_H
-   /* for select */
-#  include <sys/time.h>
-#endif
-#ifdef HAVE_UNISTD_H
-   /* for select */
-#  include <unistd.h>
-#endif
 #ifdef HAVE_SYS_STAT_H
 #  include <sys/stat.h>
-#endif
-#ifdef HAVE_SYS_SELECT_H
-   /* for select */
-#  include <sys/select.h>
 #endif
 #include "bio.h"
 
@@ -66,14 +50,17 @@
 /* private */
 #include "./mged.h"
 #include "./titles.h"
+#include "./mged_solid.h"
 #include "./sedit.h"
 #include "./mged_dm.h"
 #include "./cmd.h"
 #include "brlcad_version.h"
 
-#ifndef COMMAND_LINE_EDITING
-#  define COMMAND_LINE_EDITING 1
-#endif
+char MGEDCopyRight_Notice[] = "@(#) \
+BRL-CAD is Open Source software. \
+This software is Copyright (c) 1985-2008 by the United States Government \
+as represented by the U.S. Army Research Laboratory.  All rights reserved.";
+
 
 #ifdef DEBUG
 #  ifndef _WIN32
@@ -91,7 +78,9 @@
 
 #define SPACES "                                                                                                                                                                                                                                                                                                           "
 
-extern void mged_global_variable_teardown(Tcl_Interp *interp); /* cmd.c */
+extern void mged_setup(void); /* setup.c */
+extern void mged_global_variable_setup(Tcl_Interp *interp); /* cmd.c */
+
 extern void view_ring_init(struct _view_state *vsp1, struct _view_state *vsp2); /* defined in chgview.c */
 
 extern void draw_e_axes(void);
@@ -145,8 +134,7 @@ int (*cmdline_hook)() = NULL;
 jmp_buf	jmp_env;		/* For non-local gotos */
 double frametime;		/* time needed to draw last frame */
 
-struct solid   MGED_FreeSolid;      /* Head of freelist */
-
+int             cmd_stuff_str(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
 void		(*cur_sigint)();	/* Current SIGINT status */
 void		sig2(int);
 void		sig3(int);
@@ -154,7 +142,7 @@ void		reset_input_strings(void);
 void		new_mats(void);
 void		usejoy(double xangle, double yangle, double zangle);
 void            slewview(fastf_t *view_pos);
-int		interactive = 1;	/* >0 means interactive */
+int		interactive = 0;	/* >0 means interactive */
 int             cbreak_mode = 0;        /* >0 means in cbreak_mode */
 #if defined(DM_X) || defined(DM_TK) || defined(DM_OGL) || defined(DM_WGL)
 int		classic_mged=0;
@@ -191,6 +179,7 @@ struct bn_tol		mged_tol;	/* calculation tolerance */
 struct rt_tess_tol	mged_ttol;	/* XXX needs to replace mged_abs_tol, et.al. */
 
 struct bu_vls mged_prompt;
+void pr_prompt(void), pr_beep(void);
 int mged_bomb_hook(genptr_t clientData, genptr_t str);
 
 void mged_view_obj_callback(genptr_t clientData, struct view_obj *vop);
@@ -223,12 +212,13 @@ notify_parent_done(int parent) {
 }
 
 
+#if defined(_WIN32) && !defined(__CYGWIN__)
 void
 mgedInvalidParameterHandler(const wchar_t* expression,
 			    const wchar_t* function, 
 			    const wchar_t* file, 
 			    unsigned int line, 
-			    unsigned int *pReserved)
+			    uintptr_t pReserved)
 {
 /*
  *   Windows, I think you're number one!
@@ -257,28 +247,6 @@ mgedInvalidParameterHandler(const wchar_t* expression,
  *           |                 |
  */
 }
-
-
-void
-pr_prompt(void)
-{
-    if (interactive) {
-	bu_log("%S", &mged_prompt);
-    }
-}
-
-
-void
-pr_beep(void)
-{
-    bu_log("%c", 7);
-}
-
-
-/* so the Windows-specific calls blend in */
-#if !defined(_WIN32) || defined(__CYGWIN__)
-#  define setmode(a,b) /* poof */
-void _set_invalid_parameter_handler(void *callback) { return; }
 #endif
 
 /*
@@ -291,27 +259,29 @@ main(int argc, char **argv)
     int	c;
     int	read_only_flag=0;
 
+#if !defined(_WIN32) || defined(__CYGWIN__)
     pid_t	pid;
-
+#endif
     int	parent_pipe[2];
     int	use_pipe = 0;
     int run_in_foreground=1;
 
-    fd_set set, exception_set;
-    struct timeval timeout;
-    int read_result;
     Tcl_Channel chan;
 
+#if defined(_WIN32) && !defined(__CYGWIN__)
     setmode(fileno(stdin), O_BINARY);
     setmode(fileno(stdout), O_BINARY);
     setmode(fileno(stderr), O_BINARY);
 
     (void)_set_invalid_parameter_handler(mgedInvalidParameterHandler);
+#endif
 
     bu_setprogname(argv[0]);
 
-    while ((c = bu_getopt(argc, argv, "d:hbicnrx:X:")) != EOF) {
-	switch ( c ) {
+    while ((c = bu_getopt(argc, argv, "d:hbicnrx:X:")) != EOF)
+    {
+	switch ( c )
+	{
 	    case 'd':
 		dpy_string = bu_optarg;
 		break;
@@ -319,8 +289,6 @@ main(int argc, char **argv)
 		read_only_flag = 1;
 		break;
 	    case 'n':		/* "not new" == "classic" */
-		bu_log("WARNING: -n is deprecated.  used -c instead.\n");
-		/* fall through */
 	    case 'c':
 		classic_mged = 1;
 		break;
@@ -346,22 +314,26 @@ main(int argc, char **argv)
     argc -= (bu_optind - 1);
     argv += (bu_optind - 1);
 
-    /* check if there is data on stdin (beter than checking if isatty()) */
-    FD_ZERO(&set);
-    FD_ZERO(&exception_set);
-    FD_SET(fileno(stdin), &set);
-    FD_SET(fileno(stdin), &exception_set);
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 1;
-    read_result = select(fileno(stdin)+1, &set, NULL, &exception_set, &timeout);
+    /* Identify ourselves if interactive */
+    if ( argc <= 2 )  {
+	if (isatty(fileno(stdin)) && isatty(fileno(stdout)))
+	    interactive = 1;
 
-    /* hm, might want to recv MSG_OOB when invoked directly to know if
-     * stdin should be closed, but ignoring for now. (tis untested)
-     */
+	if (interactive && classic_mged) {
+	    fprintf(stdout, "%s\n", brlcad_ident("Geometry Editor (MGED)"));
+	    fflush(stdout);
 
-    if (argc > 2 || (read_result == 1 && FD_ISSET(fileno(stdin), &set))) {
-	/* running mged in "run command(s) and exit" mode */
-	interactive = 0;
+	    if (isatty(fileno(stdin)) && isatty(fileno(stdout))) {
+#ifndef COMMAND_LINE_EDITING
+#  define COMMAND_LINE_EDITING 1
+#endif
+#if !defined(_WIN32) || defined(__CYGWIN__)
+		/* Set up for character-at-a-time terminal IO. */
+		cbreak_mode = COMMAND_LINE_EDITING;
+		save_Tty(fileno(stdin));
+#endif
+	    }
+	}
     }
 
 #if defined(SIGPIPE) && defined(SIGINT)
@@ -390,6 +362,10 @@ main(int argc, char **argv)
 
 	pid = fork();
 	if ( pid > 0 ) {
+	    fd_set set;
+	    struct timeval timeout;
+	    int read_result;
+
 	    /* just so it does not appear that MGED has died,
 	     * wait until the gui is up before exiting the
 	     * parent process (child sends us a byte after the
@@ -415,7 +391,6 @@ main(int argc, char **argv)
 		/* no pipe, so just wait a little while */
 		sleep(3);
 	    }
-
 	    /* exit instead of mged_finish as this is the
 	     * parent process.
 	     */
@@ -434,7 +409,8 @@ main(int argc, char **argv)
     }
 
     /* Set up linked lists */
-    BU_LIST_INIT(&MGED_FreeSolid.l);
+    BU_LIST_INIT(&HeadSolid.l);
+    BU_LIST_INIT(&FreeSolid.l);
     BU_LIST_INIT(&rt_g.rtg_vlfree);
     BU_LIST_INIT(&rt_g.rtg_headwdb.l);
     BU_LIST_INIT(&head_run_rt.l);
@@ -535,15 +511,20 @@ main(int argc, char **argv)
     btn_head_menu(0, 0, 0);
     mged_link_vars(curr_dm_list);
 
-    bu_vls_printf(&input_str, "set version \"%s\"", brlcad_ident("Geometry Editor (MGED)"));
-    (void)Tcl_Eval(interp, bu_vls_addr(&input_str));
-    bu_vls_trunc(&input_str, 0);
+
+    {
+	struct bu_vls vls;
+
+	bu_vls_init(&vls);
+	bu_vls_printf(&vls, "set version \"%s\"", brlcad_ident("Geometry Editor (MGED)"));
+	(void)Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+    }
 
     setview(0.0, 0.0, 0.0);
 
-    if (dpy_string == (char *)NULL) {
+    if (dpy_string == (char *)NULL)
 	dpy_string = getenv("DISPLAY");
-    }
 
     if (interactive && !classic_mged) {
 	int status;
@@ -581,22 +562,7 @@ main(int argc, char **argv)
 #endif
     }
 
-
     if (argc >= 2) {
-	/* Identify ourselves if interactive */
-	if (interactive && classic_mged) {
-	    fprintf(stdout, "%s\n", brlcad_ident("Geometry Editor (MGED)"));
-	    fflush(stdout);
-
-	    if (isatty(fileno(stdin)) && isatty(fileno(stdout))) {
-#if !defined(_WIN32) || defined(__CYGWIN__)
-		/* Set up for character-at-a-time terminal IO. */
-		cbreak_mode = COMMAND_LINE_EDITING;
-		save_Tty(fileno(stdin));
-#endif
-	    }
-	}
-
 	/* Open the database, attach a display manager */
 	/* Command line may have more than 2 args, opendb only wants 2 */
 	if (f_opendb( (ClientData)NULL, interp, 2, argv ) == TCL_ERROR) {
@@ -822,6 +788,18 @@ main(int argc, char **argv)
     return(0);
 }
 
+void
+pr_prompt(void)
+{
+    if ( interactive )
+	bu_log("%S", &mged_prompt);
+}
+
+void
+pr_beep(void)
+{
+    bu_log("%c", 7);
+}
 
 /*
  * standard input handling
@@ -976,6 +954,8 @@ static void
 do_tab_expansion()
 {
     int ret;
+    char *obj;
+    char *cmd;
     Tcl_Obj *result;
     Tcl_Obj *newCommand;
     Tcl_Obj *matches;
@@ -1493,10 +1473,7 @@ mged_insert_char(char ch)
 }
 
 
-/**
- * Stuff a string to stdout while leaving the current command-line
- * alone
- */
+/* Stuff a string to stdout while leaving the current command-line alone */
 int
 cmd_stuff_str(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
 {
@@ -1570,14 +1547,15 @@ std_out_or_err(ClientData clientData, int mask)
     Tcl_DecrRefCount(save_result);
 }
 
-/**
- * E V E N T _ C H E C K
+/*
+ *			E V E N T _ C H E C K
  *
- * Check for events, and dispatch them.  Eventually, this will be done
- * entirely by generating commands
+ *  Check for events, and dispatch them.
+ *  Eventually, this will be done entirely by generating commands
  *
- * Returns - recommended new value for non_blocking
+ *  Returns - recommended new value for non_blocking
  */
+
 int
 event_check( int non_blocking )
 {
@@ -2201,9 +2179,8 @@ mged_finish(int exitcode)
     /* Tcl_DeleteInterp(interp); */
 
 #if !defined(_WIN32) || defined(__CYGWIN__)
-    if (cbreak_mode > 0) {
+    if (cbreak_mode > 0)
 	reset_Tty(fileno(stdin));
-    }
 #endif
 
     Tcl_Exit(exitcode);
@@ -2776,10 +2753,9 @@ f_closedb(
 
 
 int
-mged_bomb_hook(genptr_t clientData, genptr_t data)
+mged_bomb_hook(genptr_t clientData, genptr_t str)
 {
     struct bu_vls vls;
-    char *str = (char *)data;
 
     bu_vls_init(&vls);
     bu_vls_printf(&vls, "set mbh_dialog [Dialog .#auto -modality application];");

@@ -1,4 +1,4 @@
-/*                      S U B M O D E L . C
+/*                    G _ S U B M O D E L . C
  * BRL-CAD
  *
  * Copyright (c) 2000-2008 United States Government as represented by
@@ -17,9 +17,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup primitives */
+/** @addtogroup g_  */
 /** @{ */
-/** @file submodel.c
+/** @file g_submodel.c
  *
  *	Intersect a ray with an entire subspace full of geometry,
  *	possibly included from another .g file, with a subordinate
@@ -1028,16 +1028,6 @@ rt_submodel_ifree(struct rt_db_internal *ip)
 
     bu_free( (genptr_t)sip, "submodel ifree" );
     ip->idb_ptr = GENPTR_NULL;	/* sanity */
-}
-
-/**
- * R T _ S U B M O D E L _ P A R A M S
- *
- */
-int
-rt_submodel_params(struct pc_pc_set * ps, const struct rt_db_internal *ip)
-{
-    return(0);			/* OK */
 }
 
 /*

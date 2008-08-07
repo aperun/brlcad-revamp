@@ -19,7 +19,7 @@
  */
 /** @addtogroup poly */
 /** @{ */
-/** @file libbn/poly.c
+/** @file poly.c
  *
  *	Library for dealing with polynomials.
  *

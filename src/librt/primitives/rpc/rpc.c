@@ -1,4 +1,4 @@
-/*                           R P C . C
+/*                         G _ R P C . C
  * BRL-CAD
  *
  * Copyright (c) 1990-2008 United States Government as represented by
@@ -17,9 +17,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup primitives */
+/** @addtogroup g_ */
 /** @{ */
-/** @file rpc.c
+/** @file g_rpc.c
  *
  * Intersect a ray with a Right Parabolic Cylinder.
  *
@@ -1411,16 +1411,6 @@ rt_rpc_ifree(struct rt_db_internal *ip)
 
     bu_free( (char *)xip, "rpc ifree" );
     ip->idb_ptr = GENPTR_NULL;	/* sanity */
-}
-
-/**
- *			R T _ R P C _ P A R A M S
- *
- */
-int
-rt_rpc_params(struct pc_pc_set * ps, const struct rt_db_internal *ip)
-{
-    return(0);			/* OK */
 }
 
 /*

@@ -15,12 +15,6 @@ on-going issues.
 Recent Bugs
 -----------
 
-* Setting FB_FILE to a remote host, e.g. export FB_FILE=mac:/dev/X:0
-  doesn't work - not finding host.
-
-* g2asc of a v4 is apparently writing out the wrong s_cgtypes and
-  otherwise parsing v4 .g files incorrectly
-
 * fast4-g skips lines while processing if there are DOS line endings
 
 * pipe primitive has a BU_GETSTRUCT malloc getting called during
@@ -135,8 +129,8 @@ Recent Bugs
   off-by-many on the edge of the middle ARB8 when using an optimized
   -O3 compile (-fno-unsafe-math-optimizations makes no difference)
 
-* triangulation of some pipe in toyjeep.g fails (rather reliably) on
-  some given bend.  fails in nmg_triangulate model().
+* tessellation of some pipe in toyjeep.g fails (rather reliably) on
+  some given bend
 
 * tgc reports one hit errors though hit point has 0,0,0 direction
   implying that maybe the point was supposedly deleted.

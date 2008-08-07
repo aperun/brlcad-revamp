@@ -46,7 +46,24 @@
 #include "rtgeom.h"
 #include "raytrace.h"
 #include "wdb.h"
-#include "ged.h"
+
+/*XXX The following WDB_ defines need to go inside of a header file */
+#define	WDB_TCL_CHECK_READ_ONLY \
+	if (interp) { \
+		if (wdbp->dbip->dbi_read_only) { \
+			Tcl_AppendResult(interp, "Sorry, this database is READ-ONLY\n", (char *)NULL); \
+			return TCL_ERROR; \
+		} \
+	} else { \
+		bu_log("Sorry, this database is READ-ONLY\n"); \
+	}
+#define	WDB_TCL_ERROR_RECOVERY_SUGGESTION\
+	Tcl_AppendResult(interp, "\
+The in-memory table of contents may not match the status of the on-disk\n\
+database.  The on-disk database should still be intact.  For safety,\n\
+you should exit now, and resolve the I/O problem, before continuing.\n", (char *)NULL)
+
+extern void aexists();
 
 static int Trackpos = 0;
 static int mat_default = 1;
@@ -78,7 +95,7 @@ static int track_mk_comb();
  *	convert integer to ascii  wd format
  */
 static void
-itoa(struct ged *gedp,
+itoa(Tcl_Interp *interp,
      int n,
      char s[],
      int w) {
@@ -93,7 +110,7 @@ itoa(struct ged *gedp,
      */
     for ( j = i; j < w; j++ )	s[j] = ' ';
     if ( i > w )
-	bu_vls_printf(&gedp->ged_result_str, "itoa: field length too small\n");
+	Tcl_AppendResult(interp, "itoa: field length too small\n", (char *)NULL);
     s[w] = '\0';
     /* reverse the array
      */
@@ -106,21 +123,22 @@ itoa(struct ged *gedp,
 
 
 static void
-crname(struct ged	*gedp,
+crname(Tcl_Interp	*interp,
        char		name[],
        int		pos,
        int		maxlen)
 {
     char temp[4];
 
-    itoa(gedp, pos, temp, 1);
+    itoa(interp, pos, temp, 1);
     bu_strlcat(name, temp, maxlen);
 
     return;
 }
 
 static void
-crregion(struct ged	*gedp,
+crregion(struct rt_wdb	*wdbp,
+	 Tcl_Interp	*interp,
 	 char region[],
 	 char op[],
 	 int members[],
@@ -131,21 +149,25 @@ crregion(struct ged	*gedp,
     int i;
     struct bu_list head;
 
+    if (wdbp->dbip == DBI_NULL)
+	return;
+
     BU_LIST_INIT(&head);
 
     for (i=0; i<number; i++) {
 	solidname[grpname_len + extraTypeChars] = '\0';
-	crname(gedp, solidname, members[i], maxlen);
-	if (db_lookup(gedp->ged_wdbp->dbip, solidname, LOOKUP_QUIET) == DIR_NULL) {
-	    bu_vls_printf(&gedp->ged_result_str, "region: %s will skip member: %s\n", region, solidname);
+	crname(interp, solidname, members[i], maxlen);
+	if ( db_lookup( wdbp->dbip, solidname, LOOKUP_QUIET) == DIR_NULL ) {
+	    Tcl_AppendResult(interp, "region: ", region, " will skip member: ",
+			     solidname, "\n", (char *)NULL);
 	    continue;
 	}
-	track_mk_addmember(solidname, &head, NULL, op[i]);
+	track_mk_addmember( solidname, &head, NULL, op[i] );
     }
-    (void)track_mk_comb(gedp->ged_wdbp, region, &head,
-			1, NULL, NULL, NULL,
-			500+Trackpos+i, 0, mat_default, los_default,
-			0, 1, 1);
+    (void)track_mk_comb( wdbp, region, &head,
+			 1, NULL, NULL, NULL,
+			 500+Trackpos+i, 0, mat_default, los_default,
+			 0, 1, 1 );
 }
 
 
@@ -155,8 +177,10 @@ crregion(struct ged	*gedp,
  *
  */
 int
-ged_track(struct ged *gedp, int argc, const char *argv[])
-{
+wdb_track_cmd(struct rt_wdb	*wdbp,
+	      Tcl_Interp	*interp,
+	      int		argc,
+	      char 		**argv) {
     fastf_t fw[3], lw[3], iw[3], dw[3], tr[3];
     char *solname = NULL;
     char *regname = NULL;
@@ -166,32 +190,23 @@ ged_track(struct ged *gedp, int argc, const char *argv[])
     vect_t temp1, temp2;
     int item, mat, los;
     int arg;
-    int edit_result = BRLCAD_OK;
+    int edit_result = TCL_OK;
     struct bu_list head;
     int len;
-    static const char *usage = "basename rX1 rX2 rZ rR dX dZ dR iX iZ iR minX minY th";
 
-    GED_CHECK_DATABASE_OPEN(gedp, BRLCAD_ERROR);
-    GED_CHECK_READ_ONLY(gedp, BRLCAD_ERROR);
-
-    /* initialize result */
-    bu_vls_trunc(&gedp->ged_result_str, 0);
-    gedp->ged_result = GED_RESULT_NULL;
-    gedp->ged_result_flags = 0;
-
-    /* must be wanting help */
-    if (argc == 1) {
-	gedp->ged_result_flags |= GED_RESULT_FLAGS_HELP_BIT;
-	bu_vls_printf(&gedp->ged_result_str, "Usage: %s %s", argv[0], usage);
-	return BRLCAD_OK;
-    }
-
-    if (argc != 15) {
-	bu_vls_printf(&gedp->ged_result_str, "Usage: %s %s", argv[0], usage);
-	return BRLCAD_ERROR;
-    }
+    WDB_TCL_CHECK_READ_ONLY;
 
     BU_LIST_INIT(&head);
+
+    if (argc != 15) {
+	struct bu_vls vls;
+
+	bu_vls_init(&vls);
+	bu_vls_printf(&vls, "helplib_alias wdb_track %s", argv[0]);
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
 
     oper[0] = oper[2] = WMOP_INTERSECT;
     oper[1] = WMOP_SUBTRACT;
@@ -207,106 +222,106 @@ ged_track(struct ged *gedp, int argc, const char *argv[])
 
     /* first road wheel X */
     ++arg;
-    fw[0] = atof(argv[arg]) * gedp->ged_wdbp->dbip->dbi_local2base;
+    fw[0] = atof(argv[arg]) * wdbp->dbip->dbi_local2base;
 
     /* last road wheel X */
     ++arg;
-    lw[0] = atof(argv[arg]) * gedp->ged_wdbp->dbip->dbi_local2base;
+    lw[0] = atof(argv[arg]) * wdbp->dbip->dbi_local2base;
 
     if (fw[0] <= lw[0]) {
-	bu_vls_printf(&gedp->ged_result_str, "First wheel after last wheel - STOP\n");
-	edit_result = BRLCAD_ERROR;
+	Tcl_AppendResult(interp, "First wheel after last wheel - STOP\n", (char *)NULL);
+	edit_result = TCL_ERROR;
 	goto end;
     }
 
     /* road wheel Z */
     ++arg;
-    fw[1] = lw[1] = atof(argv[arg]) * gedp->ged_wdbp->dbip->dbi_local2base;
+    fw[1] = lw[1] = atof(argv[arg]) * wdbp->dbip->dbi_local2base;
 
     /* roadwheel radius */
     ++arg;
-    fw[2] = lw[2] = atof(argv[arg]) * gedp->ged_wdbp->dbip->dbi_local2base;
+    fw[2] = lw[2] = atof(argv[arg]) * wdbp->dbip->dbi_local2base;
 
     if ( fw[2] <= 0 ) {
-	bu_vls_printf(&gedp->ged_result_str, "Radius <= 0 - STOP\n");
-	edit_result = BRLCAD_ERROR;
+	Tcl_AppendResult(interp, "Radius <= 0 - STOP\n", (char *)NULL);
+	edit_result = TCL_ERROR;
 	goto end;
     }
 
     /* drive sprocket X */
     ++arg;
-    dw[0] = atof( argv[arg] ) * gedp->ged_wdbp->dbip->dbi_local2base;
+    dw[0] = atof( argv[arg] ) * wdbp->dbip->dbi_local2base;
 
     if ( dw[0] >= lw[0] ) {
-	bu_vls_printf(&gedp->ged_result_str, "DRIVE wheel not in the rear - STOP \n");
-	edit_result = BRLCAD_ERROR;
+	Tcl_AppendResult(interp, "DRIVE wheel not in the rear - STOP \n", (char *)NULL);
+	edit_result = TCL_ERROR;
 	goto end;
     }
 
     /* drive sprocket Z */
     ++arg;
-    dw[1] = atof( argv[arg] ) * gedp->ged_wdbp->dbip->dbi_local2base;
+    dw[1] = atof( argv[arg] ) * wdbp->dbip->dbi_local2base;
 
     /* drive sprocket radius */
     ++arg;
-    dw[2] = atof( argv[arg] ) * gedp->ged_wdbp->dbip->dbi_local2base;
+    dw[2] = atof( argv[arg] ) * wdbp->dbip->dbi_local2base;
 
     if ( dw[2] <= 0 ) {
-	bu_vls_printf(&gedp->ged_result_str, "Radius <= 0 - STOP\n");
-	edit_result = BRLCAD_ERROR;
+	Tcl_AppendResult(interp, "Radius <= 0 - STOP\n", (char *)NULL);
+	edit_result = TCL_ERROR;
 	goto end;
     }
 
     /* idler wheel X */
     ++arg;
-    iw[0] = atof( argv[arg] ) * gedp->ged_wdbp->dbip->dbi_local2base;
+    iw[0] = atof( argv[arg] ) * wdbp->dbip->dbi_local2base;
 
     if ( iw[0] <= fw[0] ) {
-	bu_vls_printf(&gedp->ged_result_str, "IDLER wheel not in the front - STOP \n");
-	edit_result = BRLCAD_ERROR;
+	Tcl_AppendResult(interp, "IDLER wheel not in the front - STOP \n", (char *)NULL);
+	edit_result = TCL_ERROR;
 	goto end;
     }
 
     /* idler wheel Z */
     ++arg;
-    iw[1] = atof( argv[arg] ) * gedp->ged_wdbp->dbip->dbi_local2base;
+    iw[1] = atof( argv[arg] ) * wdbp->dbip->dbi_local2base;
 
     /* idler wheel radius */
     ++arg;
-    iw[2] = atof( argv[arg] ) * gedp->ged_wdbp->dbip->dbi_local2base;
+    iw[2] = atof( argv[arg] ) * wdbp->dbip->dbi_local2base;
 
     if ( iw[2] <= 0 ) {
-	bu_vls_printf(&gedp->ged_result_str, "Radius <= 0 - STOP\n");
-	edit_result = BRLCAD_ERROR;
+	Tcl_AppendResult(interp, "Radius <= 0 - STOP\n", (char *)NULL);
+	edit_result = TCL_ERROR;
 	goto end;
     }
 
     /* track MIN Y */
     ++arg;
-    tr[2] = tr[0] = atof( argv[arg] ) * gedp->ged_wdbp->dbip->dbi_local2base;
+    tr[2] = tr[0] = atof( argv[arg] ) * wdbp->dbip->dbi_local2base;
 
     /* track MAX Y */
     ++arg;
-    tr[1] = atof( argv[arg] ) * gedp->ged_wdbp->dbip->dbi_local2base;
+    tr[1] = atof( argv[arg] ) * wdbp->dbip->dbi_local2base;
 
     if ( tr[0] == tr[1] ) {
-	bu_vls_printf(&gedp->ged_result_str, "MIN == MAX ... STOP\n");
-	edit_result = BRLCAD_ERROR;
+	Tcl_AppendResult(interp, "MIN == MAX ... STOP\n", (char *)NULL);
+	edit_result = TCL_ERROR;
 	goto end;
     }
     if ( tr[0] > tr[1] ) {
-	bu_vls_printf(&gedp->ged_result_str, "MIN > MAX .... will switch\n");
+	Tcl_AppendResult(interp, "MIN > MAX .... will switch\n", (char *)NULL);
 	tr[1] = tr[0];
 	tr[0] = tr[2];
     }
 
     /* track thickness */
     ++arg;
-    tr[2] = atof( argv[arg] ) * gedp->ged_wdbp->dbip->dbi_local2base;
+    tr[2] = atof( argv[arg] ) * wdbp->dbip->dbi_local2base;
 
     if ( tr[2] <= 0 ) {
-	bu_vls_printf(&gedp->ged_result_str, "Track thickness <= 0 - STOP\n");
-	edit_result = BRLCAD_ERROR;
+	Tcl_AppendResult(interp, "Track thickness <= 0 - STOP\n", (char *)NULL);
+	edit_result = TCL_ERROR;
 	goto end;
     }
 
@@ -344,13 +359,14 @@ ged_track(struct ged *gedp, int argc, const char *argv[])
  */
 
     for (i=0; i<10; i++) {
-	crname(gedp, solname, i, len);
-	crname(gedp, regname, i, len);
-	if ((db_lookup( gedp->ged_wdbp->dbip, solname, LOOKUP_QUIET) != DIR_NULL) ||
-	    (db_lookup( gedp->ged_wdbp->dbip, regname, LOOKUP_QUIET) != DIR_NULL)) {
+	crname(interp, solname, i, len);
+	crname(interp, regname, i, len);
+	if ((db_lookup( wdbp->dbip, solname, LOOKUP_QUIET) != DIR_NULL) ||
+	    (db_lookup( wdbp->dbip, regname, LOOKUP_QUIET) != DIR_NULL)) {
 	    /* name already exists */
-	    bu_vls_printf(&gedp->ged_result_str, "Track: naming error -- STOP\n");
-	    edit_result = BRLCAD_ERROR;
+	    Tcl_AppendResult(interp, "Track: naming error -- STOP\n",
+			     (char *)NULL);
+	    edit_result = TCL_ERROR;
 	    goto end;
 	}
 
@@ -364,14 +380,14 @@ ged_track(struct ged *gedp, int argc, const char *argv[])
 
     /* add the solids */
     /* solid 0 */
-    slope(gedp, fw, iw, tr);
+    slope(interp, fw, iw, tr);
     VMOVE(temp2, &sol.s_values[0]);
-    crname(gedp, solname, 0, len);
+    crname(interp, solname, 0, len);
     bu_strlcpy(sol.s_name, solname, len);
 
     sol.s_type = ID_ARB8;
-    if (wrobj(gedp, solname, DIR_SOLID))
-	return BRLCAD_ERROR;
+    if (wrobj(wdbp, interp, solname, DIR_SOLID))
+	return TCL_ERROR;
 
     solname[grpname_len + extraTypeChars] = '\0';
 
@@ -381,10 +397,10 @@ ged_track(struct ged *gedp, int argc, const char *argv[])
 	sol.s_values[i] = 0.0;
     sol.s_type = ID_TGC;
     trcurve(iw, tr);
-    crname(gedp, solname, 1, len);
+    crname(interp, solname, 1, len);
     bu_strlcpy(sol.s_name, solname, len);
-    if (wrobj(gedp, solname, DIR_SOLID ) )
-	return BRLCAD_ERROR;
+    if (wrobj(wdbp, interp, solname, DIR_SOLID ) )
+	return TCL_ERROR;
     solname[grpname_len + extraTypeChars] = '\0';
     /* idler dummy rcc */
     sol.s_values[6] = iw[2];
@@ -392,34 +408,34 @@ ged_track(struct ged *gedp, int argc, const char *argv[])
     VMOVE(&sol.s_values[12], &sol.s_values[6]);
     VMOVE(&sol.s_values[15], &sol.s_values[9]);
     /* solid 2 */
-    crname(gedp, solname, 2, len);
+    crname(interp, solname, 2, len);
     bu_strlcpy(sol.s_name, solname, len);
-    if (wrobj(gedp, solname, DIR_SOLID ) )
-	return BRLCAD_ERROR;
+    if (wrobj(wdbp, interp, solname, DIR_SOLID ) )
+	return TCL_ERROR;
     solname[grpname_len + extraTypeChars] = '\0';
 
     /* solid 3 */
     /* find idler track dummy arb8 */
     for (i=0; i<24; i++)
 	sol.s_values[i] = 0.0;
-    crname(gedp, solname, 3, len);
+    crname(interp, solname, 3, len);
     bu_strlcpy(sol.s_name, solname, len);
     sol.s_type = ID_ARB8;
     crdummy(iw, tr, 1);
-    if (wrobj(gedp, solname, DIR_SOLID) )
-	return BRLCAD_ERROR;
+    if (wrobj(wdbp, interp, solname, DIR_SOLID) )
+	return TCL_ERROR;
     solname[grpname_len + extraTypeChars] = '\0';
 
     /* solid 4 */
     /* track slope to drive */
     for (i=0; i<24; i++)
 	sol.s_values[i] = 0.0;
-    slope(gedp, lw, dw, tr);
+    slope(interp, lw, dw, tr);
     VMOVE(temp1, &sol.s_values[0]);
-    crname(gedp, solname, 4, len);
+    crname(interp, solname, 4, len);
     bu_strlcpy(sol.s_name, solname, len);
-    if (wrobj(gedp, solname, DIR_SOLID))
-	return BRLCAD_ERROR;
+    if (wrobj(wdbp, interp, solname, DIR_SOLID))
+	return TCL_ERROR;
     solname[grpname_len + extraTypeChars] = '\0';
 
     /* solid 5 */
@@ -428,10 +444,10 @@ ged_track(struct ged *gedp, int argc, const char *argv[])
 	sol.s_values[i] = 0.0;
     sol.s_type = ID_TGC;
     trcurve(dw, tr);
-    crname(gedp, solname, 5, len);
+    crname(interp, solname, 5, len);
     bu_strlcpy(sol.s_name, solname, len);
-    if (wrobj(gedp, solname, DIR_SOLID) )
-	return BRLCAD_ERROR;
+    if (wrobj(wdbp, interp, solname, DIR_SOLID) )
+	return TCL_ERROR;
     solname[grpname_len + extraTypeChars] = '\0';
 
     /* solid 6 */
@@ -440,32 +456,32 @@ ged_track(struct ged *gedp, int argc, const char *argv[])
     sol.s_values[11] = dw[2];
     VMOVE(&sol.s_values[12], &sol.s_values[6]);
     VMOVE(&sol.s_values[15], &sol.s_values[9]);
-    crname(gedp, solname, 6, len);
+    crname(interp, solname, 6, len);
     bu_strlcpy(sol.s_name, solname, len);
-    if (wrobj(gedp, solname, DIR_SOLID) )
-	return BRLCAD_ERROR;
+    if (wrobj(wdbp, interp, solname, DIR_SOLID) )
+	return TCL_ERROR;
     solname[grpname_len + extraTypeChars] = '\0';
 
     /* solid 7 */
     /* drive dummy arb8 */
     for (i=0; i<24; i++)
 	sol.s_values[i] = 0.0;
-    crname(gedp, solname, 7, len);
+    crname(interp, solname, 7, len);
     bu_strlcpy(sol.s_name, solname, len);
     sol.s_type = ID_ARB8;
     crdummy(dw, tr, 2);
-    if (wrobj(gedp, solname, DIR_SOLID) )
-	return BRLCAD_ERROR;
+    if (wrobj(wdbp, interp, solname, DIR_SOLID) )
+	return TCL_ERROR;
     solname[grpname_len + extraTypeChars] = '\0';
 
     /* solid 8 */
     /* track bottom */
     temp1[1] = temp2[1] = tr[0];
     bottom(temp1, temp2, tr);
-    crname(gedp, solname, 8, len);
+    crname(interp, solname, 8, len);
     bu_strlcpy(sol.s_name, solname, len);
-    if (wrobj(gedp, solname, DIR_SOLID) )
-	return BRLCAD_ERROR;
+    if (wrobj(wdbp, interp, solname, DIR_SOLID) )
+	return TCL_ERROR;
     solname[grpname_len + extraTypeChars] = '\0';
 
     /* solid 9 */
@@ -476,10 +492,10 @@ ged_track(struct ged *gedp, int argc, const char *argv[])
     temp2[0] = iw[0];
     temp2[2] = iw[1] + iw[2];
     top(temp1, temp2, tr);
-    crname(gedp, solname, 9, len);
+    crname(interp, solname, 9, len);
     bu_strlcpy(sol.s_name, solname, len);
-    if (wrobj(gedp, solname, DIR_SOLID) )
-	return BRLCAD_ERROR;
+    if (wrobj(wdbp, interp, solname, DIR_SOLID) )
+	return TCL_ERROR;
     solname[grpname_len + extraTypeChars] = '\0';
 
     /* add the regions */
@@ -493,53 +509,53 @@ ged_track(struct ged *gedp, int argc, const char *argv[])
     /* region 1 */
     memb[0] = 0;
     memb[1] = 3;
-    crname(gedp, regname, 0, len);
-    crregion(gedp, regname, oper, memb, 2, solname, len);
+    crname(interp, regname, 0, len);
+    crregion(wdbp, interp, regname, oper, memb, 2, solname, len);
     solname[grpname_len + extraTypeChars] = '\0';
     regname[grpname_len + extraTypeChars] = '\0';
 
     /* region 1 */
-    crname(gedp, regname, 1, len);
+    crname(interp, regname, 1, len);
     memb[0] = 1;
     memb[1] = 2;
     memb[2] = 3;
-    crregion(gedp, regname, oper, memb, 3, solname, len);
+    crregion(wdbp, interp, regname, oper, memb, 3, solname, len);
     solname[grpname_len + extraTypeChars] = '\0';
     regname[grpname_len + extraTypeChars] = '\0';
 
     /* region 4 */
-    crname(gedp, regname, 4, len);
+    crname(interp, regname, 4, len);
     memb[0] = 4;
     memb[1] = 7;
-    crregion(gedp, regname, oper, memb, 2, solname, len);
+    crregion(wdbp, interp, regname, oper, memb, 2, solname, len);
     solname[grpname_len + extraTypeChars] = '\0';
     regname[grpname_len + extraTypeChars] = '\0';
 
     /* region 5 */
-    crname(gedp, regname, 5, len);
+    crname(interp, regname, 5, len);
     memb[0] = 5;
     memb[1] = 6;
     memb[2] = 7;
-    crregion(gedp, regname, oper, memb, 3, solname, len);
+    crregion(wdbp, interp, regname, oper, memb, 3, solname, len);
     solname[grpname_len + extraTypeChars] = '\0';
     regname[grpname_len + extraTypeChars] = '\0';
 
     /* region 8 */
-    crname(gedp, regname, 8, len);
+    crname(interp, regname, 8, len);
     memb[0] = 8;
     memb[1] = 0;
     memb[2] = 4;
     oper[2] = WMOP_SUBTRACT;
-    crregion(gedp, regname, oper, memb, 3, solname, len);
+    crregion(wdbp, interp, regname, oper, memb, 3, solname, len);
     solname[grpname_len + extraTypeChars] = '\0';
     regname[grpname_len + extraTypeChars] = '\0';
 
     /* region 9 */
-    crname(gedp, regname, 9, len);
+    crname(interp, regname, 9, len);
     memb[0] = 9;
     memb[1] = 3;
     memb[2] = 7;
-    crregion(gedp, regname, oper, memb, 3, solname, len);
+    crregion(wdbp, interp, regname, oper, memb, 3, solname, len);
     solname[grpname_len + extraTypeChars] = '\0';
     regname[grpname_len + extraTypeChars] = '\0';
 
@@ -548,20 +564,23 @@ ged_track(struct ged *gedp, int argc, const char *argv[])
 	if (i == 2 || i == 3 || i == 6 || i == 7)
 	    continue;
 	regname[grpname_len + extraTypeChars] = '\0';
-	crname(gedp, regname, i, len);
-	if (db_lookup( gedp->ged_wdbp->dbip, regname, LOOKUP_QUIET) == DIR_NULL) {
-	    bu_vls_printf(&gedp->ged_result_str, "group: %s will skip member: %s\n", grpname, regname);
+	crname(interp, regname, i, len);
+	if (db_lookup( wdbp->dbip, regname, LOOKUP_QUIET) == DIR_NULL) {
+	    Tcl_AppendResult(interp, "group: ", grpname, " will skip member: ",
+			     regname, "\n", (char *)NULL);
 	    continue;
 	}
 	track_mk_addmember(regname, &head, NULL, WMOP_UNION);
     }
 
     /* Add them all at once */
-    if (track_mk_comb( gedp->ged_wdbp, grpname, &head,
+    if (track_mk_comb( wdbp, grpname, &head,
 		       0, NULL, NULL, NULL,
 		       0, 0, 0, 0,
 		       0, 1, 1) < 0) {
-	bu_vls_printf(&gedp->ged_result_str, "An error has occured while adding '%s' to the database.\n", grpname);
+	Tcl_AppendResult(interp,
+			 "An error has occured while adding '",
+			 grpname, "' to the database.\n", (char *)NULL);
     }
 
     Trackpos += 10;
@@ -587,28 +606,31 @@ ged_track(struct ged *gedp, int argc, const char *argv[])
 
 
 static int
-wrobj(struct ged	*gedp,
+wrobj(struct rt_wdb	*wdbp,
+      Tcl_Interp	*interp,
       char		name[],
       int		flags) {
     struct directory *tdp;
     struct rt_db_internal intern;
     int i;
 
-    if (gedp->ged_wdbp->dbip == DBI_NULL)
+    if (wdbp->dbip == DBI_NULL)
 	return 0;
 
-    if (db_lookup(gedp->ged_wdbp->dbip, name, LOOKUP_QUIET) != DIR_NULL) {
-	bu_vls_printf(&gedp->ged_result_str, "track naming error: %s already exists\n", name);
-	return BRLCAD_ERROR;
+    if ( db_lookup( wdbp->dbip, name, LOOKUP_QUIET) != DIR_NULL ) {
+	Tcl_AppendResult(interp, "track naming error: ", name,
+			 " already exists\n", (char *)NULL);
+	return(-1);
     }
 
-    if (flags != DIR_SOLID) {
-	bu_vls_printf(&gedp->ged_result_str, "wrobj can only write solids, aborting\n");
-	return BRLCAD_ERROR;
+    if ( flags != DIR_SOLID )
+    {
+	Tcl_AppendResult(interp, "wrobj can only write solids, aborting\n" );
+	return( -1 );
     }
 
-    RT_INIT_DB_INTERNAL(&intern);
-    switch (sol.s_type)
+    RT_INIT_DB_INTERNAL( &intern );
+    switch ( sol.s_type )
     {
 	case ID_ARB8:
 	{
@@ -650,30 +672,29 @@ wrobj(struct ged	*gedp,
 	}
 	break;
 	default:
-	    bu_vls_printf(&gedp->ged_result_str, "Unrecognized solid type in 'wrobj', aborting\n");
-	    return BRLCAD_ERROR;
+	    Tcl_AppendResult(interp, "Unrecognized solid type in 'wrobj', aborting\n", (char *)NULL );
+	    return( -1 );
     }
 
-    if ( (tdp = db_diradd( gedp->ged_wdbp->dbip, name, -1L, 0, flags, (genptr_t)&intern.idb_type)) == DIR_NULL )
+    if ( (tdp = db_diradd( wdbp->dbip, name, -1L, 0, flags, (genptr_t)&intern.idb_type)) == DIR_NULL )
     {
 	rt_db_free_internal( &intern, &rt_uniresource );
-	bu_vls_printf(&gedp->ged_result_str, "Cannot add '%s' to directory, aborting\n", name);
-	return BRLCAD_ERROR;
+	Tcl_AppendResult(interp, "Cannot add '", name, "' to directory, aborting\n", (char *)NULL );
+	return( -1 );
     }
 
-    if ( rt_db_put_internal( tdp, gedp->ged_wdbp->dbip, &intern, &rt_uniresource ) < 0 )
+    if ( rt_db_put_internal( tdp, wdbp->dbip, &intern, &rt_uniresource ) < 0 )
     {
 	rt_db_free_internal( &intern, &rt_uniresource );
-	bu_vls_printf(&gedp->ged_result_str, "wrobj(gedp, %s):  write error\n", name);
-	bu_vls_printf(&gedp->ged_result_str, "The in-memory table of contents may not match the status of the on-disk\ndatabase.  The on-disk database should still be intact.  For safety,\nyou should exit now, and resolve the I/O problem, before continuing.\n");
-
-	return BRLCAD_ERROR;
+	Tcl_AppendResult(interp, "wrobj(wdbp, interp, ", name, "):  write error\n", (char *)NULL);
+	WDB_TCL_ERROR_RECOVERY_SUGGESTION;
+	return( -1 );
     }
     return(0);
 }
 
 static void
-tancir(struct ged *gedp,
+tancir(Tcl_Interp	*interp,
        register fastf_t cir1[],
        register fastf_t cir2[]) {
     static fastf_t mag;
@@ -688,7 +709,7 @@ tancir(struct ged *gedp,
     if ( mag > 1.0e-20 || mag < -1.0e-20 )  {
 	f = 1.0/mag;
     }  else {
-	bu_vls_printf(&gedp->ged_result_str, "tancir():  0-length vector!\n");
+	Tcl_AppendResult(interp, "tancir():  0-length vector!\n", (char *)NULL);
 	return;
     }
     VSCALE(work, work, f);
@@ -710,7 +731,7 @@ tancir(struct ged *gedp,
 }
 
 static void
-slope(struct ged *gedp,
+slope(Tcl_Interp *interp,
       fastf_t wh1[],
       fastf_t wh2[],
       fastf_t t[]) {
@@ -729,7 +750,7 @@ slope(struct ged *gedp,
 	    wh2[i] = temp;
 	}
     }
-    tancir(gedp, wh1, wh2);
+    tancir(interp, wh1, wh2);
     if ( switchs ) {
 	for (i=0; i<3; i++) {
 	    temp = wh1[i];

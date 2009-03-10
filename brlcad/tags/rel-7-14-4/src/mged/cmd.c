@@ -1,0 +1,2025 @@
+/*                           C M D . C
+ * BRL-CAD
+ *
+ * Copyright (c) 1985-2009 United States Government as represented by
+ * the U.S. Army Research Laboratory.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * version 2.1 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this file; see the file named COPYING for more
+ * information.
+ */
+/** @file cmd.c
+ *
+ * The hooks to most of mged's commands when running in console mode.
+ *
+ */
+
+#include "common.h"
+
+#include <stdlib.h>
+#include <math.h>
+#include <signal.h>
+#include <time.h>
+#include <string.h>
+#ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>
+#endif
+#ifdef HAVE_SYS_TYPES_H
+#  include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_WAIT_H
+#  include <sys/wait.h>
+#endif
+#include "bio.h"
+
+#include "tcl.h"
+#include "tk.h"
+
+#include "itcl.h"
+
+#include "bu.h"
+#include "vmath.h"
+#include "bn.h"
+#include "rtgeom.h"
+#include "dg.h"
+#include "tclcad.h"
+
+#include "./mged.h"
+#include "./cmd.h"
+#include "./mged_dm.h"
+#include "./sedit.h"
+
+
+extern void update_grids(fastf_t sf);		/* in grid.c */
+extern void set_localunit_TclVar(void);		/* in chgmodel.c */
+extern void init_qray(void);			/* in qray.c */
+extern int gui_setup(char *dstr);		/* in attach.c */
+extern int mged_default_dlist;			/* in attach.c */
+extern int classic_mged;
+struct cmd_list head_cmd_list;
+struct cmd_list *curr_cmd_list;
+
+extern int db_warn;
+extern int db_upgrade;
+extern int db_version;
+
+int glob_compat_mode = 1;
+int output_as_return = 1;
+Tk_Window tkwin = NULL;
+
+/* The following is for GUI output hooks: contains name of function to
+ * run with output.
+ */
+static struct bu_vls tcl_output_hook;
+
+
+
+/**
+ *                        O U T P U T _ C A T C H
+ *
+ * Gets the output from bu_log and appends it to clientdata vls.
+ */
+HIDDEN int
+output_catch(genptr_t clientdata, genptr_t str)
+{
+    register struct bu_vls *vp = (struct bu_vls *)clientdata;
+    register int len;
+
+    BU_CK_VLS(vp);
+    len = bu_vls_strlen(vp);
+    bu_vls_strcat(vp, str);
+    len = bu_vls_strlen(vp) - len;
+
+    return len;
+}
+
+/**
+ *                 S T A R T _ C A T C H I N G _ O U T P U T
+ *
+ * Sets up hooks to bu_log so that all output is caught in the given vls.
+ *
+ */
+void
+start_catching_output(struct bu_vls *vp)
+{
+    bu_log_add_hook(output_catch, (genptr_t)vp);
+}
+
+/**
+ *                 S T O P _ C A T C H I N G _ O U T P U T
+ *
+ * Turns off the output catch hook.
+ */
+void
+stop_catching_output(struct bu_vls *vp)
+{
+    bu_log_delete_hook(output_catch, (genptr_t)vp);
+}
+
+/**
+ *                            G U I _ O U T P U T
+ *
+ * Used as a hook for bu_log output.  Sends output to the Tcl procedure whose
+ * name is contained in the vls "tcl_output_hook".  Useful for user interface
+ * building.
+ */
+int
+gui_output(genptr_t clientData, genptr_t str)
+{
+    Tcl_DString tclcommand;
+    Tcl_Obj *save_result;
+    static int level = 0;
+
+    if (level > 50) {
+	bu_log_delete_hook(gui_output, clientData);
+	/* Now safe to run bu_log? */
+	bu_log("Ack! Something horrible just happened recursively.\n");
+	return 0;
+    }
+
+    Tcl_DStringInit(&tclcommand);
+    (void)Tcl_DStringAppendElement(&tclcommand, bu_vls_addr(&tcl_output_hook));
+    (void)Tcl_DStringAppendElement(&tclcommand, str);
+
+    save_result = Tcl_GetObjResult(interp);
+    Tcl_IncrRefCount(save_result);
+    ++level;
+    Tcl_Eval((Tcl_Interp *)clientData, Tcl_DStringValue(&tclcommand));
+    --level;
+    Tcl_SetObjResult(interp, save_result);
+    Tcl_DecrRefCount(save_result);
+
+    Tcl_DStringFree(&tclcommand);
+    return strlen(str);
+}
+
+int
+cmd_ged_edit_wrapper(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[])
+{
+    int ret;
+    Tcl_DString ds;
+    const char *av[3];
+    struct cmdtab *ctp = (struct cmdtab *)clientData;
+
+    if (gedp == GED_NULL)
+	return TCL_OK;
+
+    ret = (*ctp->ged_func)(gedp, argc, (const char **)argv);
+    Tcl_DStringInit(&ds);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&gedp->ged_result_str), -1);
+    Tcl_DStringResult(interp, &ds);
+
+    if (ret == BRLCAD_HELP)
+	return TCL_OK;
+
+    if (ret != BRLCAD_OK)
+	return TCL_ERROR;
+
+    av[0] = "draw";
+    av[1] = argv[argc-1];
+    av[2] = NULL;
+    cmd_draw(clientData, interp, 2, av);
+
+    return TCL_OK;
+}
+
+int
+cmd_ged_erase_wrapper(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[])
+{
+    int ret;
+    Tcl_DString ds;
+    struct cmdtab *ctp = (struct cmdtab *)clientData;
+
+    if (gedp == GED_NULL)
+	return TCL_OK;
+
+    ret = (*ctp->ged_func)(gedp, argc, (const char **)argv);
+    Tcl_DStringInit(&ds);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&gedp->ged_result_str), -1);
+    Tcl_DStringResult(interp, &ds);
+
+    if (ret != BRLCAD_OK)
+	return TCL_ERROR;
+
+    solid_list_callback();
+    update_views = 1;
+
+    return TCL_OK;
+}
+
+int
+cmd_ged_gqa(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[])
+{
+    register char **vp;
+    register int i;
+    int ret;
+    Tcl_DString ds;
+    struct cmdtab *ctp = (struct cmdtab *)clientData;
+
+    if (gedp == GED_NULL)
+	return TCL_OK;
+
+    vp = &gedp->ged_gdp->gd_rt_cmd[0];
+
+    /* Grab command name and any options */
+    *vp++ = argv[0];
+    for (i=1; i < argc; i++) {
+	if (argv[i][0] != '-')
+	    break;
+
+	if (argv[i][0] == '-' &&
+	    argv[i][1] == '-' &&
+	    argv[i][2] == '\0') {
+	    ++i;
+	    break;
+	}
+
+	*vp++ = (char *)argv[i];
+    }
+
+    /*
+     * Append remaining args, if any. Otherwise, append currently displayed objects.
+     */
+    if (i < argc) {
+	while (i < argc)
+	    *vp++ = (char *)argv[i++];
+	gedp->ged_gdp->gd_rt_cmd_len = vp - gedp->ged_gdp->gd_rt_cmd;
+	*vp = 0;
+	vp = &gedp->ged_gdp->gd_rt_cmd[0];
+	while (*vp)
+	    bu_vls_printf(&gedp->ged_result_str, "%s ", *vp++);
+
+	bu_vls_printf(&gedp->ged_result_str, "\n");
+    } else {
+	gedp->ged_gdp->gd_rt_cmd_len = vp - gedp->ged_gdp->gd_rt_cmd;
+	gedp->ged_gdp->gd_rt_cmd_len += ged_build_tops(gedp,
+						       vp,
+						       &gedp->ged_gdp->gd_rt_cmd[MAXARGS]);
+    }
+
+    ret = (*ctp->ged_func)(gedp, gedp->ged_gdp->gd_rt_cmd_len, gedp->ged_gdp->gd_rt_cmd);
+    Tcl_DStringInit(&ds);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&gedp->ged_result_str), -1);
+    Tcl_DStringResult(interp, &ds);
+
+    if (ret == BRLCAD_HELP)
+	return TCL_OK;
+
+    if (ret != BRLCAD_OK)
+	return TCL_ERROR;
+
+    update_views = 1;
+
+    return TCL_OK;
+}
+
+int
+cmd_ged_in(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[])
+{
+    int ret;
+    Tcl_DString ds;
+    struct cmdtab *ctp = (struct cmdtab *)clientData;
+    const char *new_cmd[3];
+    int c;
+    int do_solid_edit = 0;
+    int dont_draw = 0;
+
+    if (gedp == GED_NULL)
+	return TCL_OK;
+
+    /* Parse options. */
+    bu_optind = 1;		/* re-init bu_getopt() */
+    bu_opterr = 0;          /* suppress bu_getopt()'s error message */
+    while ((c=bu_getopt(argc, (char * const *)argv, "sf")) != EOF) {
+	switch (c)  {
+	    case 's':
+		do_solid_edit = 1;
+		break;
+	    case 'f':
+		dont_draw = 1;
+		break;
+	    default:
+	    {
+		struct bu_vls tmp_vls;
+
+		bu_vls_init(&tmp_vls);
+		bu_vls_printf(&tmp_vls, "in: option '%c' unknown\n", bu_optopt);
+		Tcl_AppendResult(interp, bu_vls_addr(&tmp_vls), (char *)NULL);
+		bu_vls_free(&tmp_vls);
+	    }
+
+	    break;
+	}
+    }
+    argc -= bu_optind-1;
+    argv += bu_optind-1;
+
+    ret = (*ctp->ged_func)(gedp, argc, (const char **)argv);
+    Tcl_DStringInit(&ds);
+    if (ret == BRLCAD_MORE_ARGS)
+	Tcl_DStringAppend(&ds, MORE_ARGS_STR, -1);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&gedp->ged_result_str), -1);
+    Tcl_DStringResult(interp, &ds);
+
+    if (dont_draw) {
+	if (ret == BRLCAD_HELP || ret == BRLCAD_OK)
+	    return TCL_OK;
+
+	return TCL_ERROR;
+    }
+
+    if (ret == BRLCAD_HELP)
+	return TCL_OK;
+
+    if (ret != BRLCAD_OK)
+	return TCL_ERROR;
+
+    /* draw the newly "made" solid */
+    new_cmd[0] = "draw";
+    new_cmd[1] = argv[1];
+    new_cmd[2] = (char *)NULL;
+    (void)cmd_draw( clientData, interp, 2, new_cmd );
+
+    if ( do_solid_edit )  {
+	/* Also kick off solid edit mode */
+	new_cmd[0] = "sed";
+	new_cmd[1] = argv[1];
+	new_cmd[2] = (char *)NULL;
+	(void)f_sed( clientData, interp, 2, new_cmd );
+    }
+    return TCL_OK;
+}
+
+int
+cmd_ged_more_wrapper(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[])
+{
+    int ret;
+    Tcl_DString ds;
+    struct cmdtab *ctp = (struct cmdtab *)clientData;
+    const char *new_cmd[3];
+
+    if (gedp == GED_NULL)
+	return TCL_OK;
+
+    if (setjmp(jmp_env) == 0)
+	(void)signal(SIGINT, sig3);  /* allow interrupts */
+    else
+	return TCL_OK;
+
+    ret = (*ctp->ged_func)(gedp, argc, (const char **)argv);
+    Tcl_DStringInit(&ds);
+    if (ret == BRLCAD_MORE_ARGS)
+	Tcl_DStringAppend(&ds, MORE_ARGS_STR, -1);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&gedp->ged_result_str), -1);
+    Tcl_DStringResult(interp, &ds);
+
+    if (ret == BRLCAD_HELP)
+	return TCL_OK;
+
+    if (ret != BRLCAD_OK)
+	return TCL_ERROR;
+
+    /* draw the "inside" solid */
+    new_cmd[0] = "draw";
+    if (ctp->ged_func == ged_3ptarb)
+	new_cmd[1] = argv[1];
+    else if (ctp->ged_func == ged_inside)
+	new_cmd[1] = argv[2];
+    else {
+	(void)signal(SIGINT, SIG_IGN);
+	return TCL_OK;
+    }
+
+    new_cmd[2] = (char *)NULL;
+    (void)cmd_draw( clientData, interp, 2, new_cmd );
+
+    (void)signal(SIGINT, SIG_IGN);
+
+    return TCL_OK;
+}
+
+int
+cmd_ged_plain_wrapper(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[])
+{
+    int ret;
+    Tcl_DString ds;
+    struct cmdtab *ctp = (struct cmdtab *)clientData;
+
+    if (gedp == GED_NULL)
+	return TCL_OK;
+
+    ret = (*ctp->ged_func)(gedp, argc, (const char **)argv);
+    Tcl_DStringInit(&ds);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&gedp->ged_result_str), -1);
+    Tcl_DStringResult(interp, &ds);
+
+    if (ret == BRLCAD_HELP || ret == BRLCAD_OK)
+	return TCL_OK;
+
+    return TCL_ERROR;
+}
+
+int
+cmd_ged_view_wrapper(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[])
+{
+    int ret;
+    Tcl_DString ds;
+    struct cmdtab *ctp = (struct cmdtab *)clientData;
+
+    if (gedp == GED_NULL)
+	return TCL_OK;
+
+    if (!gedp->ged_gvp)
+	gedp->ged_gvp = view_state->vs_gvp;
+
+    ret = (*ctp->ged_func)(gedp, argc, (const char **)argv);
+    Tcl_DStringInit(&ds);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&gedp->ged_result_str), -1);
+    Tcl_DStringResult(interp, &ds);
+
+    if (ret == BRLCAD_HELP)
+	return TCL_OK;
+
+    if (ret != BRLCAD_OK)
+	return TCL_ERROR;
+
+    (void)mged_svbase();
+    view_state->vs_flag = 1;
+
+    return TCL_OK;
+}
+
+/**
+ *                     C M D _ T K
+ *
+ *  Command for initializing the Tk window and defaults.
+ *
+ *  Usage:  loadtk [displayname[.screennum]]
+ */
+int
+cmd_tk(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+{
+    int status;
+
+    if (argc < 1 || 2 < argc) {
+	struct bu_vls vls;
+
+	bu_vls_init(&vls);
+	bu_vls_printf(&vls, "help loadtk");
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
+
+    if (argc == 1)
+	status = gui_setup((char *)NULL);
+    else
+	status = gui_setup(argv[1]);
+
+    return status;
+}
+
+/**
+ *   C M D _ O U T P U T _ H O O K
+ *
+ *   Hooks the output to the given output hook.
+ *   Removes the existing output hook!
+ */
+int
+cmd_output_hook(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+{
+    struct bu_vls infocommand;
+    int status;
+
+    if (argc < 1 || 2 < argc) {
+	struct bu_vls vls;
+
+	bu_vls_init(&vls);
+	bu_vls_printf(&vls, "helpdevel output_hook");
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
+
+    bu_log_delete_hook(gui_output, (genptr_t)interp);/* Delete the existing hook */
+
+    if (argc < 2)
+	return TCL_OK;
+
+    /* Make sure the command exists before putting in the hook! */
+    /* Note - the parameters to proc could be wrong and/or the proc could still disappear later */
+    bu_vls_init(&infocommand);
+    bu_vls_strcat(&infocommand, "info commands ");
+    bu_vls_strcat(&infocommand, argv[1]);
+    status = Tcl_Eval(interp, bu_vls_addr(&infocommand));
+    bu_vls_free(&infocommand);
+
+    if (status != TCL_OK || Tcl_GetStringResult(interp)[0] == '\0') {
+	Tcl_AppendResult(interp, "command does not exist", (char *)NULL);
+	return TCL_ERROR;
+    }
+
+    /* Also, don't allow silly infinite loops. */
+
+    if (strcmp(argv[1], argv[0]) == 0) {
+	Tcl_AppendResult(interp, "Don't be silly.", (char *)NULL);
+	return TCL_ERROR;
+    }
+
+    /* Set up the hook! */
+    bu_vls_init(&tcl_output_hook);
+    bu_vls_strcpy(&tcl_output_hook, argv[1]);
+    bu_log_add_hook(gui_output, (genptr_t)interp);
+
+    Tcl_ResetResult(interp);
+    return TCL_OK;
+}
+
+
+/**
+ *			C M D _ N O P
+ */
+int
+cmd_nop(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+{
+    return TCL_OK;
+}
+
+
+/**
+ *			C M D _ G E T _ P T R
+ *
+ *  Returns an appropriately-formatted string that can later be reinterpreted
+ *  (using atol() and a cast) as a a pointer.
+ */
+int
+cmd_get_ptr(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+{
+    char buf[128];
+
+    sprintf(buf, "%ld", (long)(*((void **)&dbip)));
+    Tcl_AppendResult(interp, buf, (char *)NULL);
+    return TCL_OK;
+}
+
+
+int
+cmd_cmd_win(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+{
+    struct bu_vls vls;
+
+    bu_vls_init(&vls);
+
+    if (argc < 2) {
+	bu_vls_printf(&vls, "helpdevel cmd_win");
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
+
+    if (strcmp(argv[1], "open") == 0) {
+	struct cmd_list *clp;
+	int name_not_used = 1;
+
+	if (argc != 3) {
+	    bu_vls_printf(&vls, "helpdevel cmd_win");
+	    Tcl_Eval(interp, bu_vls_addr(&vls));
+	    bu_vls_free(&vls);
+	    return TCL_ERROR;
+	}
+
+	/* Search to see if there exists a command window with this name */
+	for (BU_LIST_FOR (clp, cmd_list, &head_cmd_list.l))
+	    if (!strcmp(argv[2], bu_vls_addr(&clp->cl_name))) {
+		name_not_used = 0;
+		break;
+	    }
+
+	if (name_not_used) {
+	    clp = (struct cmd_list *)bu_malloc(sizeof(struct cmd_list), "cmd_list");
+	    memset((void *)clp, 0, sizeof(struct cmd_list));
+	    BU_LIST_APPEND(&head_cmd_list.l, &clp->l);
+	    clp->cl_cur_hist = head_cmd_list.cl_cur_hist;
+	    bu_vls_init(&clp->cl_more_default);
+	    bu_vls_init(&clp->cl_name);
+	    bu_vls_strcpy(&clp->cl_name, argv[2]);
+	}
+
+	bu_vls_free(&vls);
+	return TCL_OK;
+    }
+
+    if (strcmp(argv[1], "close") == 0) {
+	struct cmd_list *clp;
+
+	if (argc != 3) {
+	    bu_vls_printf(&vls, "helpdevel cmd_win");
+	    Tcl_Eval(interp, bu_vls_addr(&vls));
+	    bu_vls_free(&vls);
+	    return TCL_ERROR;
+	}
+
+	/* First, search to see if there exists a command window with the name
+	   in argv[2] */
+	for (BU_LIST_FOR (clp, cmd_list, &head_cmd_list.l))
+	    if (!strcmp(argv[2], bu_vls_addr(&clp->cl_name)))
+		break;
+
+	if (clp == &head_cmd_list) {
+	    if (!strcmp(argv[2], "mged"))
+		Tcl_AppendResult(interp, "cmd_close: not allowed to close \"mged\"",
+				 (char *)NULL);
+	    else
+		Tcl_AppendResult(interp, "cmd_close: did not find \"", argv[2],
+				 "\"", (char *)NULL);
+	    return TCL_ERROR;
+	}
+
+	if (clp == curr_cmd_list)
+	    curr_cmd_list = &head_cmd_list;
+
+	BU_LIST_DEQUEUE(&clp->l);
+	if (clp->cl_tie != NULL)
+	    clp->cl_tie->dml_tie = CMD_LIST_NULL;
+	bu_vls_free(&clp->cl_more_default);
+	bu_vls_free(&clp->cl_name);
+	bu_free((genptr_t)clp, "cmd_close: clp");
+
+	bu_vls_free(&vls);
+	return TCL_OK;
+    }
+
+    if (strcmp(argv[1], "get") == 0) {
+	if (argc != 2) {
+	    bu_vls_printf(&vls, "helpdevel cmd_win");
+	    Tcl_Eval(interp, bu_vls_addr(&vls));
+	    bu_vls_free(&vls);
+
+	    return TCL_ERROR;
+	}
+
+	Tcl_AppendElement(interp, bu_vls_addr(&curr_cmd_list->cl_name));
+
+	bu_vls_free(&vls);
+	return TCL_OK;
+    }
+
+    if (strcmp(argv[1], "set") == 0) {
+	if (argc != 3) {
+	    bu_vls_printf(&vls, "helpdevel cmd_win");
+	    Tcl_Eval(interp, bu_vls_addr(&vls));
+	    bu_vls_free(&vls);
+	    return TCL_ERROR;
+	}
+
+	for (BU_LIST_FOR (curr_cmd_list, cmd_list, &head_cmd_list.l)) {
+	    if (strcmp(bu_vls_addr(&curr_cmd_list->cl_name), argv[2]))
+		continue;
+
+	    break;
+	}
+
+	if (curr_cmd_list->cl_tie) {
+	    curr_dm_list = curr_cmd_list->cl_tie;
+
+	    if (gedp != GED_NULL)
+		gedp->ged_gvp = view_state->vs_gvp;
+	}
+
+	bu_vls_trunc(&curr_cmd_list->cl_more_default, 0);
+	bu_vls_free(&vls);
+	return TCL_OK;
+    }
+
+    bu_vls_printf(&vls, "helpdevel cmd_win");
+    Tcl_Eval(interp, bu_vls_addr(&vls));
+    bu_vls_free(&vls);
+
+    return TCL_ERROR;
+}
+
+
+int
+cmd_get_more_default(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+{
+    if (argc != 1) {
+	struct bu_vls vls;
+
+	bu_vls_init(&vls);
+	bu_vls_printf(&vls, "helpdevel get_more_default");
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
+
+    Tcl_AppendResult(interp, bu_vls_addr(&curr_cmd_list->cl_more_default), (char *)NULL);
+    return TCL_OK;
+}
+
+int
+cmd_set_more_default(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+{
+    if (argc != 2) {
+	struct bu_vls vls;
+
+	bu_vls_init(&vls);
+	bu_vls_printf(&vls, "helpdevel set_more_default");
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
+
+    bu_vls_strcpy(&curr_cmd_list->cl_more_default, argv[1]);
+    return TCL_OK;
+}
+
+
+/**
+ * debackslash, backslash_specials, mged_compat: routines for original
+ *   mged emulation mode
+ */
+void
+debackslash(struct bu_vls *dest, struct bu_vls *src)
+{
+    char *ptr;
+
+    ptr = bu_vls_addr(src);
+    while (*ptr) {
+	if (*ptr == '\\')
+	    ++ptr;
+	if (*ptr == '\0')
+	    break;
+	bu_vls_putc(dest, *ptr++);
+    }
+}
+
+
+void
+backslash_specials(struct bu_vls *dest, struct bu_vls *src)
+{
+    int backslashed;
+    char *ptr, buf[2];
+
+    buf[1] = '\0';
+    backslashed = 0;
+    for (ptr = bu_vls_addr(src); *ptr; ptr++) {
+	if (*ptr == '[' && !backslashed)
+	    bu_vls_strcat(dest, "\\[");
+	else if (*ptr == ']' && !backslashed)
+	    bu_vls_strcat(dest, "\\]");
+	else if (backslashed) {
+	    bu_vls_strcat(dest, "\\");
+	    buf[0] = *ptr;
+	    bu_vls_strcat(dest, buf);
+	    backslashed = 0;
+	} else if (*ptr == '\\')
+	    backslashed = 1;
+	else {
+	    buf[0] = *ptr;
+	    bu_vls_strcat(dest, buf);
+	}
+    }
+}
+
+
+/**
+ *                    M G E D _ C O M P A T
+ *
+ * This routine is called to perform wildcard expansion and character quoting
+ * on the given vls (typically input from the keyboard.)
+ */
+void
+mged_compat(struct bu_vls *dest, struct bu_vls *src, int use_first)
+{
+    char *start, *end;          /* Start and ends of words */
+    int regexp;                 /* Set to TRUE when word is a regexp */
+    int backslashed;
+    int firstword;
+    struct bu_vls word;         /* Current word being processed */
+    struct bu_vls temp;
+
+    if (dbip == DBI_NULL) {
+	bu_vls_vlscat(dest, src);
+	return;
+    }
+
+    bu_vls_init(&word);
+    bu_vls_init(&temp);
+
+    start = end = bu_vls_addr(src);
+    firstword = 1;
+    while (*end != '\0') {
+	/* Run through entire string */
+
+	/* First, pass along leading whitespace. */
+
+	start = end;                   /* Begin where last word ended */
+	while (*start != '\0') {
+	    if (*start == ' '  ||
+		*start == '\t' ||
+		*start == '\n')
+		bu_vls_putc(dest, *start++);
+	    else
+		break;
+	}
+	if (*start == '\0')
+	    break;
+
+	/* Next, advance "end" pointer to the end of the word, while adding
+	   each character to the "word" vls.  Also make a note of any
+	   unbackslashed wildcard characters. */
+
+	end = start;
+	bu_vls_trunc(&word, 0);
+	regexp = 0;
+	backslashed = 0;
+	while (*end != '\0') {
+	    if (*end == ' '  ||
+		*end == '\t' ||
+		*end == '\n')
+		break;
+	    if ((*end == '*' || *end == '?' || *end == '[') && !backslashed)
+		regexp = 1;
+	    if (*end == '\\' && !backslashed)
+		backslashed = 1;
+	    else
+		backslashed = 0;
+	    bu_vls_putc(&word, *end++);
+	}
+
+	if (firstword && !use_first)
+	    regexp = 0;
+
+	/* Now, if the word was suspected of being a wildcard, try to match
+	   it to the database. */
+
+	if (regexp) {
+	    bu_vls_trunc(&temp, 0);
+	    if (db_regexp_match_all(&temp, dbip,
+				    bu_vls_addr(&word)) == 0) {
+		debackslash(&temp, &word);
+		backslash_specials(dest, &temp);
+	    } else
+		bu_vls_vlscat(dest, &temp);
+	} else {
+	    debackslash(dest, &word);
+	}
+
+	firstword = 0;
+    }
+
+    bu_vls_free(&temp);
+    bu_vls_free(&word);
+}
+
+
+#ifdef _WIN32
+/* limited to seconds only */
+void gettimeofday(struct timeval *tp, struct timezone *tzp)
+{
+
+    time_t ltime;
+
+    time(&ltime);
+
+    tp->tv_sec = ltime;
+    tp->tv_usec = 0;
+
+}
+#endif
+
+
+/**
+ *			C M D L I N E
+ *
+ *  This routine is called to process a vls full of commands.
+ *  Each command is newline terminated.
+ *  The input string will not be altered in any way.
+ *
+ *  Returns -
+ *	!0	when a prompt needs to be printed.
+ *	 0	no prompt needed.
+ */
+int
+cmdline(struct bu_vls *vp, int record)
+{
+    int	status;
+    struct bu_vls globbed;
+    struct bu_vls tmp_vls;
+    struct bu_vls save_vp;
+    struct timeval start, finish;
+    size_t len;
+    extern struct bu_vls mged_prompt;
+    char *cp;
+    const char *result;
+
+    BU_CK_VLS(vp);
+
+    if (bu_vls_strlen(vp) <= 0)
+	return CMD_OK;
+
+    bu_vls_init(&globbed);
+    bu_vls_init(&tmp_vls);
+    bu_vls_init(&save_vp);
+    bu_vls_vlscat(&save_vp, vp);
+
+    /* MUST MAKE A BACKUP OF THE INPUT STRING AND USE THAT IN THE CALL TO
+       Tcl_Eval!!!
+
+       You never know who might change the string (append to it...)
+       (f_mouse is notorious for adding things to the input string)
+       If it were to change while it was still being evaluated, Horrible Things
+       could happen.
+    */
+
+    if (glob_compat_mode) {
+	mged_compat(&globbed, vp, 0);
+    } else {
+	bu_vls_vlscat(&globbed, vp);
+    }
+
+    gettimeofday(&start, (struct timezone *)NULL);
+    status = Tcl_Eval(interp, bu_vls_addr(&globbed));
+    gettimeofday(&finish, (struct timezone *)NULL);
+    result = Tcl_GetStringResult(interp);
+
+    /* Contemplate the result reported by the Tcl interpreter. */
+
+    switch (status) {
+	case TCL_RETURN:
+	case TCL_OK:
+	    if (setjmp(jmp_env) == 0) {
+		len = strlen(result);
+
+		/* If the command had something to say, print it out. */
+		if (len > 0) {
+		    (void)signal(SIGINT, sig3);  /* allow interrupts */
+
+		    bu_log("%s%s", result,
+			   result[len-1] == '\n' ? "" : "\n");
+
+		    (void)signal(SIGINT, SIG_IGN);
+		}
+
+		/* A user typed this command so let everybody see, then record
+		   it in the history. */
+		if (record && tkwin != NULL) {
+		    bu_vls_printf(&tmp_vls, "distribute_text {} {%s} {%s}",
+				  bu_vls_addr(&save_vp), result);
+		    Tcl_Eval(interp, bu_vls_addr(&tmp_vls));
+		    Tcl_SetResult(interp, "", TCL_STATIC);
+		}
+
+		if (record)
+		    history_record(&save_vp, &start, &finish, CMD_OK);
+
+	    } else {
+/* XXXXXX */
+		bu_semaphore_release(BU_SEM_SYSCALL);
+		bu_log("\n");
+	    }
+
+	    bu_vls_strcpy(&mged_prompt, MGED_PROMPT);
+	    status = CMD_OK;
+	    goto end;
+
+	case TCL_ERROR:
+	default:
+
+	    /* First check to see if it's a secret message. */
+
+	    if ((cp = strstr(result, MORE_ARGS_STR)) != NULL) {
+		if (cp == result) {
+		    bu_vls_trunc(&mged_prompt, 0);
+		    bu_vls_printf(&mged_prompt, "\r%s",
+				  result+sizeof(MORE_ARGS_STR)-1);
+		} else {
+		    len = cp - result;
+		    bu_log("%*s%s", len, result, result[len-1] == '\n' ? "" : "\n");
+		    bu_vls_trunc(&mged_prompt, 0);
+		    bu_vls_printf(&mged_prompt, "\r%s",
+				  result+sizeof(MORE_ARGS_STR)-1+len);
+		}
+
+		status = CMD_MORE;
+		goto end;
+	    }
+
+	    /* Otherwise, it's just a regular old error. */
+
+	    len = strlen(result);
+	    if (len > 0) bu_log("%s%s", result,
+				result[len-1] == '\n' ? "" : "\n");
+
+	    if (record)
+		history_record(&save_vp, &start, &finish, CMD_BAD);
+
+	    bu_vls_strcpy(&mged_prompt, MGED_PROMPT);
+	    status = CMD_BAD;
+
+	    /* Fall through to end */
+    }
+
+ end:
+    bu_vls_free(&globbed);
+    bu_vls_free(&tmp_vls);
+    bu_vls_free(&save_vp);
+
+    return status;
+}
+
+
+void
+mged_print_result(int status)
+{
+    int len;
+    const char *result = Tcl_GetStringResult(interp);
+
+#if 0
+    switch (status) {
+	case TCL_OK:
+	    len = strlen(result);
+
+	    /* If the command had something to say, print it out. */
+	    if (len > 0) {
+		bu_log("%s%s", result,
+		       result[len-1] == '\n' ? "" : "\n");
+
+		pr_prompt(interactive);
+	    }
+
+	    break;
+
+	case TCL_ERROR:
+	default:
+	    len = strlen(result);
+	    if (len > 0) {
+		bu_log("%s%s", result,
+		       result[len-1] == '\n' ? "" : "\n");
+
+		pr_prompt(interactive);
+	    }
+
+	    break;
+    }
+#else
+    len = strlen(result);
+    if (len > 0) {
+	bu_log("%s%s", result,
+	       result[len-1] == '\n' ? "" : "\n");
+
+	pr_prompt(interactive);
+    }
+#endif
+
+    Tcl_ResetResult(interp);
+}
+
+/**
+ *			M G E D _ C M D
+ *
+ *  Check a table for the command, check for the correct minimum and maximum
+ *  number of arguments, and pass control to the proper function.  If the
+ *  number of arguments is incorrect, print out a short help message.
+ */
+int
+mged_cmd(
+    int argc,
+    char **argv,
+    struct funtab in_functions[])
+{
+    register struct funtab *ftp;
+    struct funtab *functions;
+
+    if (argc == 0)
+	return CMD_OK;	/* No command entered, that's fine */
+
+    /* if no function table is provided, use the default mged function table */
+    if (in_functions == (struct funtab *)NULL) {
+	bu_log("mged_cmd: failed to supply function table!\n");
+	return CMD_BAD;
+    }
+    else
+	functions = in_functions;
+
+    for (ftp = &functions[1]; ftp->ft_name; ftp++) {
+	if (strcmp(ftp->ft_name, argv[0]) != 0)
+	    continue;
+	/* We have a match */
+	if ((ftp->ft_min <= argc) && (argc <= ftp->ft_max)) {
+	    /* Input has the right number of args.
+	     * Call function listed in table, with
+	     * main(argc, argv) style args
+	     */
+
+	    switch (ftp->ft_func(argc, argv)) {
+		case CMD_OK:
+		    return CMD_OK;
+		case CMD_BAD:
+		    return CMD_BAD;
+		case CMD_MORE:
+		    return CMD_MORE;
+		default:
+		    Tcl_AppendResult(interp, "mged_cmd(): Invalid return from ",
+				     ftp->ft_name, "\n", (char *)NULL);
+		    return CMD_BAD;
+	    }
+	}
+
+	Tcl_AppendResult(interp, "Usage: ", functions[0].ft_name, ftp->ft_name,
+			 " ", ftp->ft_parms, "\n\t(", ftp->ft_comment,
+			 ")\n", (char *)NULL);
+	return CMD_BAD;
+    }
+
+    Tcl_AppendResult(interp, functions[0].ft_name, argv[0],
+		     ": no such command, type '", functions[0].ft_name,
+		     "?' for help\n", (char *)NULL);
+    return CMD_BAD;
+}
+
+/**
+ * Let the user temporarily escape from the editor
+ * Format: %
+ */
+int
+f_comm(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[])
+{
+    register int pid, rpid;
+    int retcode;
+
+    if (argc != 1 || !classic_mged || curr_cmd_list != &head_cmd_list) {
+	struct bu_vls vls;
+
+	bu_vls_init(&vls);
+	bu_vls_printf(&vls, "help %s", argv[0]);
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
+
+#ifndef _WIN32
+    (void)signal(SIGINT, SIG_IGN);
+    if ((pid = fork()) == 0) {
+	(void)signal(SIGINT, SIG_DFL);
+	(void)execl("/bin/sh", "-", (char *)NULL);
+	perror("/bin/sh");
+	mged_finish(11);
+    }
+
+    while ((rpid = wait(&retcode)) != pid && rpid != -1)
+	;
+#endif
+
+    Tcl_AppendResult(interp, "Returning to MGED\n", (char *)NULL);
+
+    return TCL_OK;
+}
+
+/**
+ * Quit and exit gracefully
+ * Format: q
+ */
+int
+f_quit(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+{
+    if (argc < 1 || 1 < argc) {
+	struct bu_vls vls;
+
+	bu_vls_init(&vls);
+	bu_vls_printf(&vls, "help %s", argv[0]);
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
+
+    if (state != ST_VIEW)
+	button(BE_REJECT);
+
+    quit();			/* Exiting time */
+    /* NOTREACHED */
+    return TCL_OK;
+}
+
+/**
+ *			H E L P C O M M
+ *
+ *  Common code for help commands
+ */
+HIDDEN int
+helpcomm(int argc, char **argv, struct funtab *functions)
+{
+    register struct funtab *ftp;
+    register int	i, bad;
+
+    bad = 0;
+
+    /* Help command(s) */
+    for (i=1; i<argc; i++) {
+	for (ftp = functions+1; ftp->ft_name; ftp++) {
+	    if (strcmp(ftp->ft_name, argv[i]) != 0)
+		continue;
+
+	    Tcl_AppendResult(interp, "Usage: ", functions->ft_name, ftp->ft_name,
+			     " ", ftp->ft_parms, "\n\t(", ftp->ft_comment, ")\n", (char *)NULL);
+	    break;
+	}
+	if (!ftp->ft_name) {
+	    Tcl_AppendResult(interp, functions->ft_name, argv[i],
+			     ": no such command, type '", functions->ft_name,
+			     "?' for help\n", (char *)NULL);
+	    bad = 1;
+	}
+    }
+
+    return bad ? TCL_ERROR : TCL_OK;
+}
+
+/**
+ *			F _ H E L P
+ *
+ *  Print a help message, two lines for each command.
+ *  Or, help with the indicated commands.
+ */
+int
+f_help2(int argc, char **argv, struct funtab *functions)
+{
+    register struct funtab *ftp;
+
+    if (argc <= 1) {
+	Tcl_AppendResult(interp, "The following commands are available:\n", (char *)NULL);
+	for (ftp = functions+1; ftp->ft_name; ftp++) {
+	    Tcl_AppendResult(interp,  functions->ft_name, ftp->ft_name, " ",
+			     ftp->ft_parms, "\n\t(", ftp->ft_comment, ")\n", (char *)NULL);
+	}
+	return TCL_OK;
+    }
+    return helpcomm(argc, argv, functions);
+}
+
+int
+f_fhelp2(int argc, char **argv, struct funtab *functions)
+{
+    register struct funtab *ftp;
+    struct bu_vls		str;
+
+    if (argc <= 1) {
+	bu_vls_init(&str);
+	Tcl_AppendResult(interp, "The following ", functions->ft_name,
+			 " commands are available:\n", (char *)NULL);
+	for (ftp = functions+1; ftp->ft_name; ftp++) {
+	    vls_col_item(&str, ftp->ft_name);
+	}
+	vls_col_eol(&str);
+	Tcl_AppendResult(interp, bu_vls_addr(&str), (char *)NULL);
+	bu_vls_free(&str);
+	return TCL_OK;
+    }
+    return helpcomm(argc, argv, functions);
+}
+
+/**
+ * SYNOPSIS
+ *	tie [cw [dm]]
+ *	tie -u cw
+ *
+ * DESCRIPTION
+ *	This command ties/associates a command window (cw) to a display manager window (dm).
+ *	When a command window is tied to a display manager window, all commands issued from
+ *	this window will be directed at a particular display manager. Otherwise, the
+ *	commands issued will be directed at the current display manager window.
+ *
+ * EXAMPLES
+ *	tie		--->	returns a list of the command_window/display_manager associations
+ *	tie cw1		--->	returns the display_manager, if it exists, associated with cw1
+ *	tie cw1 dm1	--->	associated cw1 with dm1
+ *	tie -u cw1	--->	removes the association, if it exists, cw1 has with a display manager
+ */
+int
+f_tie(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+{
+    register int uflag = 0;		/* untie flag */
+    struct cmd_list *clp;
+    struct dm_list *dlp;
+    struct bu_vls vls;
+
+    bu_vls_init(&vls);
+
+    if (argc < 1 || 3 < argc) {
+	bu_vls_printf(&vls, "helpdevel tie");
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
+
+    if (argc == 1) {
+	for (BU_LIST_FOR (clp, cmd_list, &head_cmd_list.l)) {
+	    bu_vls_trunc(&vls, 0);
+	    if (clp->cl_tie) {
+		bu_vls_printf(&vls, "%V %V", &clp->cl_name,
+			      &clp->cl_tie->dml_dmp->dm_pathName);
+		Tcl_AppendElement(interp, bu_vls_addr(&vls));
+	    } else {
+		bu_vls_printf(&vls, "%V {}", &clp->cl_name);
+		Tcl_AppendElement(interp, bu_vls_addr(&vls));
+	    }
+	}
+
+	bu_vls_trunc(&vls, 0);
+	if (clp->cl_tie) {
+	    bu_vls_printf(&vls, "%V %V", &clp->cl_name,
+			  &clp->cl_tie->dml_dmp->dm_pathName);
+	    Tcl_AppendElement(interp, bu_vls_addr(&vls));
+	} else {
+	    bu_vls_printf(&vls, "%V {}", &clp->cl_name);
+	    Tcl_AppendElement(interp, bu_vls_addr(&vls));
+	}
+
+	bu_vls_free(&vls);
+	return TCL_OK;
+    }
+
+    if (argv[1][0] == '-' && argv[1][1] == 'u') {
+	uflag = 1;
+	--argc;
+	++argv;
+    }
+
+    if (argc < 2) {
+	bu_vls_printf(&vls, "help tie");
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
+
+    for (BU_LIST_FOR (clp, cmd_list, &head_cmd_list.l))
+	if (!strcmp(bu_vls_addr(&clp->cl_name), argv[1]))
+	    break;
+
+    if (clp == &head_cmd_list &&
+	(strcmp(bu_vls_addr(&head_cmd_list.cl_name), argv[1]))) {
+	Tcl_AppendResult(interp, "f_tie: unrecognized command_window - ", argv[1],
+			 "\n", (char *)NULL);
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
+
+    if (uflag) {
+	if (clp->cl_tie)
+	    clp->cl_tie->dml_tie = (struct cmd_list *)NULL;
+
+	clp->cl_tie = (struct dm_list *)NULL;
+
+	bu_vls_free(&vls);
+	return TCL_OK;
+    }
+
+    /* print out the display manager that we're tied to */
+    if (argc == 2) {
+	if (clp->cl_tie)
+	    Tcl_AppendElement(interp, bu_vls_addr(&clp->cl_tie->dml_dmp->dm_pathName));
+	else
+	    Tcl_AppendElement(interp, "");
+
+	bu_vls_free(&vls);
+	return TCL_OK;
+    }
+
+    if (*argv[2] != '.')
+	bu_vls_printf(&vls, ".%s", argv[2]);
+    else
+	bu_vls_strcpy(&vls, argv[2]);
+
+    FOR_ALL_DISPLAYS(dlp, &head_dm_list.l)
+	if (!bu_vls_strcmp(&vls, &dlp->dml_dmp->dm_pathName))
+	    break;
+
+    if (dlp == &head_dm_list) {
+	Tcl_AppendResult(interp, "f_tie: unrecognized pathName - ",
+			 bu_vls_addr(&vls), "\n", (char *)NULL);
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
+
+    /* already tied */
+    if (clp->cl_tie)
+	clp->cl_tie->dml_tie = (struct cmd_list *)NULL;
+
+    clp->cl_tie = dlp;
+
+    /* already tied */
+    if (dlp->dml_tie)
+	dlp->dml_tie->cl_tie = (struct dm_list *)NULL;
+
+    dlp->dml_tie = clp;
+
+    bu_vls_free(&vls);
+    return TCL_OK;
+}
+
+int
+f_ps(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+{
+    int status;
+    char *av[2];
+    struct dm_list *dml;
+    struct _view_state *vsp;
+
+    if (argc < 2) {
+	struct bu_vls vls;
+
+	bu_vls_init(&vls);
+	bu_vls_printf(&vls, "help ps");
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
+
+    if (gedp == GED_NULL)
+	return TCL_OK;
+
+    dml = curr_dm_list;
+    gedp->ged_gvp = view_state->vs_gvp;
+    status = mged_attach(&which_dm[DM_PS_INDEX], argc, argv);
+    if (status == TCL_ERROR)
+	return TCL_ERROR;
+
+    vsp = view_state;  /* save state info pointer */
+
+    bu_free((genptr_t)menu_state, "f_ps: menu_state");
+    menu_state = dml->dml_menu_state;
+
+    scroll_top = dml->dml_scroll_top;
+    scroll_active = dml->dml_scroll_active;
+    scroll_y = dml->dml_scroll_y;
+    memmove((void *)scroll_array, (void *)dml->dml_scroll_array, sizeof(struct scroll_item *) * 6);
+
+    dirty = 1;
+    refresh();
+
+    view_state = vsp;  /* restore state info pointer */
+    av[0] = "release";
+    av[1] = NULL;
+    status = f_release(clientData, interp, 1, av);
+    curr_dm_list = dml;
+    gedp->ged_gvp = view_state->vs_gvp;
+
+    return status;
+}
+
+/**
+ * Experimental - like f_plot except we attach to dm-plot, passing along
+ *                any arguments.
+ */
+int
+f_pl(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+{
+    int status;
+    char *av[2];
+    struct dm_list *dml;
+    struct _view_state *vsp;
+
+    if (argc < 2) {
+	struct bu_vls vls;
+
+	bu_vls_init(&vls);
+	bu_vls_printf(&vls, "help pl");
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
+
+    if (gedp == GED_NULL)
+	return TCL_OK;
+
+    dml = curr_dm_list;
+    gedp->ged_gvp = view_state->vs_gvp;
+    status = mged_attach(&which_dm[DM_PLOT_INDEX], argc, argv);
+    if (status == TCL_ERROR)
+	return TCL_ERROR;
+
+    vsp = view_state;  /* save state info pointer */
+    view_state = dml->dml_view_state;  /* use dml's state info */
+    *mged_variables = *dml->dml_mged_variables; /* struct copy */
+
+    bu_free((genptr_t)menu_state, "f_pl: menu_state");
+    menu_state = dml->dml_menu_state;
+
+    scroll_top = dml->dml_scroll_top;
+    scroll_active = dml->dml_scroll_active;
+    scroll_y = dml->dml_scroll_y;
+    memmove((void *)scroll_array, (void *)dml->dml_scroll_array, sizeof(struct scroll_item *) * 6);
+
+    dirty = 1;
+    refresh();
+
+    view_state = vsp;  /* restore state info pointer */
+    av[0] = "release";
+    av[1] = NULL;
+    status = f_release(clientData, interp, 1, av);
+    curr_dm_list = dml;
+    gedp->ged_gvp = view_state->vs_gvp;
+
+    return status;
+}
+
+int
+f_winset(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+{
+    register struct dm_list *p;
+
+    if (argc < 1 || 2 < argc) {
+	struct bu_vls vls;
+
+	bu_vls_init(&vls);
+	bu_vls_printf(&vls, "helpdevel winset");
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+	return TCL_ERROR;
+    }
+
+    /* print pathname of drawing window with primary focus */
+    if (argc == 1) {
+	Tcl_AppendResult(interp, bu_vls_addr(&pathName), (char *)NULL);
+	return TCL_OK;
+    }
+
+    /* change primary focus to window argv[1] */
+    FOR_ALL_DISPLAYS(p, &head_dm_list.l) {
+	if (!strcmp(argv[1], bu_vls_addr(&p->dml_dmp->dm_pathName))) {
+	    curr_dm_list = p;
+
+	    if (curr_dm_list->dml_tie)
+		curr_cmd_list = curr_dm_list->dml_tie;
+	    else
+		curr_cmd_list = &head_cmd_list;
+
+	    if (gedp != GED_NULL)
+		gedp->ged_gvp = view_state->vs_gvp;
+
+	    return TCL_OK;
+	}
+    }
+
+    Tcl_AppendResult(interp, "Unrecognized pathname - ", argv[1],
+		     "\n", (char *)NULL);
+    return TCL_ERROR;
+}
+
+void
+mged_global_variable_setup(Tcl_Interp *interp)
+{
+    Tcl_LinkVar(interp, "mged_default(dlist)", (char *)&mged_default_dlist, TCL_LINK_INT);
+    Tcl_LinkVar(interp, "mged_default(db_warn)", (char *)&db_warn, TCL_LINK_INT);
+    Tcl_LinkVar(interp, "mged_default(db_upgrade)", (char *)&db_upgrade, TCL_LINK_INT);
+    Tcl_LinkVar(interp, "mged_default(db_version)", (char *)&db_version, TCL_LINK_INT);
+
+    Tcl_LinkVar(interp, "edit_class", (char *)&es_edclass, TCL_LINK_INT);
+    Tcl_LinkVar(interp, "edit_solid_flag", (char *)&es_edflag, TCL_LINK_INT);
+    Tcl_LinkVar(interp, "edit_object_flag", (char *)&edobj, TCL_LINK_INT);
+}
+
+
+void
+mged_global_variable_teardown(Tcl_Interp *interp)
+{
+    Tcl_UnlinkVar(interp, "mged_default(dlist)");
+    Tcl_UnlinkVar(interp, "mged_default(db_warn)");
+    Tcl_UnlinkVar(interp, "mged_default(db_upgrade)");
+    Tcl_UnlinkVar(interp, "mged_default(db_version)");
+
+    Tcl_UnlinkVar(interp, "edit_class");
+    Tcl_UnlinkVar(interp, "edit_solid_flag");
+    Tcl_UnlinkVar(interp, "edit_object_flag");
+}
+
+
+int
+f_bomb(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[])
+{
+    char buffer[1024] = {0};
+    struct bu_vls vls;
+
+    if (argc > 1) {
+	argc--; argv++;
+
+	bu_vls_init(&vls);
+	bu_vls_from_argv(&vls, argc, argv);
+	snprintf(buffer, 1024, "%s", bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+    }
+
+    bu_exit(EXIT_FAILURE, buffer);
+
+    /* This is never reached */
+
+    return TCL_OK;
+}
+
+int
+cmd_rt_gettrees(ClientData	clientData,
+		Tcl_Interp	*interp,
+		int		argc,
+		char		**argv)
+{
+    CHECK_DBI_NULL;
+
+    return wdb_rt_gettrees_cmd(wdbp, interp, argc, argv);
+}
+
+int
+cmd_nmg_collapse(ClientData clientData, Tcl_Interp *interp, int argc, char **argv)
+{
+    const char *av[3];
+    int ret;
+    Tcl_DString ds;
+
+    if (gedp == GED_NULL)
+	return TCL_OK;
+
+    ret = ged_nmg_collapse(gedp, argc, (const char **)argv);
+    Tcl_DStringInit(&ds);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&gedp->ged_result_str), -1);
+    Tcl_DStringResult(interp, &ds);
+
+    if (ret != BRLCAD_OK)
+	return TCL_ERROR;
+
+    av[0] = "e";
+    av[1] = argv[2];
+    av[2] = NULL;
+
+    return cmd_draw(clientData, interp, 2, av);
+}
+
+
+
+/**
+ *			C M D _ U N I T S
+ *
+ * Change the local units of the description.
+ * Base unit is fixed in mm, so this just changes the current local unit
+ * that the user works in.
+ */
+int
+cmd_units(ClientData	clientData,
+	  Tcl_Interp	*interp,
+	  int		argc,
+	  char		**argv)
+{
+    int ret;
+    Tcl_DString ds;
+    fastf_t sf;
+
+    if (gedp == GED_NULL)
+	return TCL_OK;
+
+    ret = ged_units(gedp, argc, (const char **)argv);
+    Tcl_DStringInit(&ds);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&gedp->ged_result_str), -1);
+    Tcl_DStringResult(interp, &ds);
+
+    if (ret != BRLCAD_OK)
+	return TCL_ERROR;
+
+    set_localunit_TclVar();
+    sf = dbip->dbi_base2local / sf;
+    update_grids(sf);
+    update_views = 1;
+
+    return TCL_OK;
+}
+
+/**
+ *  			C M D _ S E A R C H 
+ *
+ *  Search command in the style of the Unix find command 
+ *  for db objects.
+ */
+int
+cmd_search(ClientData	clientData,
+	   Tcl_Interp	*interp,
+	   int		argc,
+	   char		**argv)
+{
+    CHECK_DBI_NULL;
+
+    return wdb_search_cmd(wdbp, interp, argc, argv);
+}
+
+/**
+ *			C M D _ L M
+ *
+ *	List regions based on values of their MUVES_Component attribute
+ */
+int
+cmd_lm(ClientData	clientData,
+       Tcl_Interp	*interp,
+       int		argc,
+       char		**argv)
+{
+    struct bu_attribute_value_set avs;
+    struct bu_vls vls;
+    struct bu_ptbl *tbl;
+    struct directory *dp;
+    int i;
+    int last_opt=0;
+    int new_arg_count=1;
+    int new_argc;
+    int ret;
+    char **new_argv;
+    Tcl_DString ds;
+
+    bu_vls_init(&vls);
+    bu_vls_strcat(&vls, argv[0]);
+    for (i=1; i<argc; i++) {
+	if (*argv[i] == '-') {
+	    bu_vls_putc(&vls, ' ');
+	    bu_vls_strcat(&vls, argv[i]);
+	    last_opt = i;
+	    new_arg_count++;
+	} else {
+	    break;
+	}
+    }
+
+    bu_avs_init(&avs, argc - last_opt, "cmd_lm avs");
+    for (i=last_opt+1; i<argc; i++) {
+	bu_avs_add_nonunique(&avs, "MUVES_Component", argv[i]);
+    }
+
+    tbl = db_lookup_by_attr(dbip, DIR_REGION, &avs, 2);
+    if (!tbl) {
+	Tcl_AppendResult(interp, "ERROR: db_lookup_by_attr() failed!\n", (char *)NULL);
+	bu_vls_free(&vls);
+	bu_avs_free(&avs);
+	return TCL_ERROR;
+    }
+
+    if (BU_PTBL_LEN(tbl) == 0) {
+	/* no matches */
+	bu_vls_free(&vls);
+	bu_avs_free(&avs);
+	bu_ptbl_free(tbl);
+	bu_free((char *)tbl, "cmd_lm ptbl");
+	return TCL_OK;
+    }
+
+    for (i=0; i<BU_PTBL_LEN(tbl); i++) {
+	dp = (struct directory *)BU_PTBL_GET(tbl, i);
+	bu_vls_putc(&vls, ' ');
+	bu_vls_strcat(&vls, dp->d_namep);
+	new_arg_count++;
+    }
+
+    bu_ptbl_free(tbl);
+    bu_free((char *)tbl, "cmd_lm ptbl");
+
+    /* create a new argc and argv to pass to the cmd_ls routine */
+    new_argv = (char **)bu_calloc(new_arg_count+1, sizeof(char *), "cmd_lm new_argv");
+    new_argc = bu_argv_from_string(new_argv, new_arg_count, bu_vls_addr(&vls));
+
+    ret = ged_ls(gedp, argc, (const char **)argv);
+    bu_vls_free(&vls);
+    bu_free((char *)new_argv, "cmd_lm new_argv");
+
+    Tcl_DStringInit(&ds);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&gedp->ged_result_str), -1);
+    Tcl_DStringResult(interp, &ds);
+
+    if (ret == BRLCAD_OK)
+	return TCL_OK;
+
+    return TCL_ERROR;
+}
+
+
+/**
+ *			F _ T O L
+ *
+ *  "tol"	displays current settings
+ *  "tol abs #"	sets absolute tolerance.  # > 0.0
+ *  "tol rel #"	sets relative tolerance.  0.0 < # < 1.0
+ *  "tol norm #" sets normal tolerance, in degrees.
+ *  "tol dist #" sets calculational distance tolerance
+ *  "tol perp #" sets calculational normal tolerance.
+ */
+int
+cmd_tol(ClientData	clientData,
+	Tcl_Interp	*interp,
+	int		argc,
+	char		**argv)
+{
+    int ret;
+    Tcl_DString ds;
+
+    if (gedp == GED_NULL)
+	return TCL_OK;
+
+    ret = ged_tol(gedp, argc, (const char **)argv);
+    Tcl_DStringInit(&ds);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&gedp->ged_result_str), -1);
+    Tcl_DStringResult(interp, &ds);
+
+    if (ret != BRLCAD_OK)
+	return TCL_ERROR;
+
+    /* hack to keep mged tolerance settings current */
+    mged_ttol = wdbp->wdb_ttol;
+    mged_tol = wdbp->wdb_tol;
+    mged_abs_tol = mged_ttol.abs;
+    mged_rel_tol = mged_ttol.rel;
+    mged_nrm_tol = mged_ttol.norm;
+
+    return TCL_OK;
+}
+
+/* defined in chgview.c */
+extern int edit_com(int argc, const char *argv[], int kind, int catch_sigint);
+
+/**
+ * ZAP the display -- then edit anew
+ * Format: B object
+ */
+int
+cmd_blast(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[])
+{
+    const char *av[2];
+
+    if (gedp == GED_NULL)
+	return TCL_OK;
+
+    av[0] = "Z";
+    av[1] = (char *)0;
+
+    if (ged_zap(gedp, 1, av) == BRLCAD_ERROR)
+	return TCL_ERROR;
+        
+    if (argc == 1) /* "B" alone is same as "Z" */
+	return TCL_OK;
+
+    return edit_com(argc, argv, 1, 1);
+}
+
+/**
+ * Edit something (add to visible display)
+ * Format: e object
+ */
+int
+cmd_draw(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[])
+{
+    return edit_com(argc, argv, 1, 1);
+}
+
+extern int emuves_com(int argc, char **argv);	/* from chgview.c */
+
+/**
+ * Add regions with attribute MUVES_Component haveing the specified values
+ * Format: em value [value value ...]
+ */
+int
+cmd_emuves(ClientData	clientData,
+	   Tcl_Interp	*interp,
+	   int		argc,
+	   char		**argv)
+{
+    return emuves_com(argc, argv);
+}
+
+/**
+ * Format: ev objects
+ */
+int
+cmd_ev(ClientData	clientData,
+       Tcl_Interp *interp,
+       int	argc,
+       const char *argv[])
+{
+    return edit_com(argc, argv, 3, 1);
+}
+
+/**
+ *			C M D _ E
+ *
+ *  The "Big E" command.
+ *  Evaluated Edit something (add to visible display)
+ *  Usage: E object(s)
+ */
+int
+cmd_E(ClientData	clientData,
+      Tcl_Interp	*interp,
+      int		argc,
+      const char	**argv)
+{
+    return edit_com(argc, argv, 2, 1);
+}
+
+int
+cmd_shaded_mode(ClientData	clientData,
+		Tcl_Interp	*interp,
+		int     	argc,
+		char    	**argv)
+{
+    int ret;
+    Tcl_DString ds;
+
+    /* check to see if we have -a or -auto */
+    if (argc == 3 &&
+	strlen(argv[1]) >= 2 &&
+	argv[1][0] == '-' &&
+	argv[1][1] == 'a') {
+	struct bu_vls vls;
+
+	/* set zbuffer, zclip and lighting for all */
+	bu_vls_init(&vls);
+	bu_vls_printf(&vls, "mged_shaded_mode_helper %s", argv[2]);
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+
+	/* skip past -a */
+	--argc;
+	++argv;
+    }
+
+    ret = ged_shaded_mode(gedp, argc, (const char **)argv);
+    Tcl_DStringInit(&ds);
+    Tcl_DStringAppend(&ds, bu_vls_addr(&gedp->ged_result_str), -1);
+    Tcl_DStringResult(interp, &ds);
+
+    if (ret != BRLCAD_OK)
+	return TCL_ERROR;
+
+    return TCL_OK;
+}
+
+/* XXX needs to be provided from points header */
+extern int parse_point_file(ClientData clientData, Tcl_Interp *interp, int argc, char **argv);
+
+int
+cmd_parse_points(ClientData	clientData,
+		 Tcl_Interp	*interp,
+		 int     	argc,
+		 char    	**argv)
+{
+
+#ifndef BC_WITH_PARSERS
+    bu_log("parse_points was disabled in this compilation of mged due to system limitations\n");
+    return TCL_ERROR;
+#else
+    if (argc != 2) {
+	bu_log("parse_points only supports a single file name right now\n");
+	bu_log("doing nothing\n");
+	return TCL_ERROR;
+    }
+    return parse_point_file(clientData, interp, argc-1, &(argv[1]));
+#endif
+}
+
+int
+cmd_has_embedded_fb(ClientData	clientData,
+		    Tcl_Interp	*interp,
+		    int     	argc,
+		    char    	**argv)
+{
+    Tcl_DString ds;
+
+    Tcl_DStringInit(&ds);
+#ifdef USE_FBSERV
+    Tcl_DStringAppend(&ds, "1", -1);
+#else
+    Tcl_DStringAppend(&ds, "0", -1);
+#endif
+    Tcl_DStringResult(interp, &ds);
+
+    return TCL_OK;
+}
+
+int
+cmd_stub(ClientData	clientData,
+	 Tcl_Interp	*interp,
+	 int		argc,
+	 char		**argv)
+{
+    CHECK_DBI_NULL;
+
+    return wdb_stub_cmd(wdbp, interp, argc, argv);
+}
+
+/*
+ * Local Variables:
+ * mode: C
+ * tab-width: 8
+ * indent-tabs-mode: t
+ * c-file-style: "stroustrup"
+ * End:
+ * ex: shiftwidth=4 tabstop=8
+ */

@@ -1,0 +1,3023 @@
+2009-04-03 21:13  brlcad
+
+	* [r34150] BUGS:
+	  verified another bug in the facetize -n commmand with lee where
+	  it is giving spurious 'color index out of range' errors on (at
+	  least) some 3-manifold surfaces. the painting algorithm in
+	  nmg_manif.c seems incomplete/flawed.
+
+2009-04-03 21:09  brlcad
+
+	* [r34149] BUGS:
+	  keep with a lot of objects in mged isn't working right. just
+	  prints out a usage statement. I haz test case. reported by lee
+	  and verified.
+
+2009-04-03 20:08  starseeker
+
+	* [r34148] doc/docbook/BRL-CAD_db_format.xml:
+	  Add content for spec up to tables in Padding and Length Rounding
+	  - need to check those more carefully before redoing.
+
+2009-04-03 19:54  brlcad
+
+	* [r34147] misc/win32-msvc8/g_diff/g_diff.vcproj:
+	  g_diff needs libtclcad, oops on r34146
+
+2009-04-03 19:51  brlcad
+
+	* [r34146] NEWS, TODO, include/conf/PATCH, src/archer/archer.bat,
+	  src/gtools/g_diff.c, src/mged/mged.bat,
+	  src/mged/points/points_scan.l, src/util/rtwizard.bat:
+	  peanut butter release time, peanut butter release 7.14.6 with a
+	  baseball bat
+
+2009-04-02 19:48  brlcad
+
+	* [r34144] bench/run.sh:
+	  typo
+
+2009-04-02 19:30  brlcad
+
+	* [r34143] include/sysv.h:
+	  hah, missed committing this fracking declaration
+
+2009-04-02 18:09  brlcad
+
+	* [r34142] src/gtools/g_diff.c:
+	  include sysv.h for bcmp()
+
+2009-04-02 18:07  brlcad
+
+	* [r34141] misc/win32-msvc8/brlcad/brlcad.sln,
+	  misc/win32-msvc8/g_lint/g_lint.vcproj,
+	  misc/win32-msvc8/g_qa/g_qa.vcproj,
+	  misc/win32-msvc8/g_transfer/g_transfer.vcproj:
+	  update uuids
+
+2009-04-01 23:50  brlcad
+
+	* [r34140] BUGS:
+	  windows build seems jacked up. stuff compiling in the wrong
+	  order.
+
+2009-04-01 23:48  brlcad
+
+	* [r34139] NEWS:
+	  verified that they now compile, annotate that g_lint, g_transfer,
+	  and g_diff are ported to windows given they now compile (and seem
+	  to run).
+
+2009-04-01 23:43  brlcad
+
+	* [r34138] src/gtools/g_lint.c:
+	  use rand() instead of random() since the precision isn't that
+	  important here and one isn't available on Windows.
+
+2009-04-01 23:43  brlcad
+
+	* [r34137] src/gtools/Makefile.am:
+	  g_diff uses libtclcad for tclcad_auto_path() and
+	  tclcad_tcl_library()
+
+2009-04-01 23:31  brlcad
+
+	* [r34136] src/gtools/g_transfer.c:
+	  make sure we have SIGPIPE for Windows
+
+2009-04-01 23:28  brlcad
+
+	* [r34135] misc/win32-msvc8/libsysv/libsysv.vcproj,
+	  misc/win32-msvc9/libsysv/libsysv.vcproj,
+	  src/libsysv/CMakeLists.txt:
+	  add bcmp.c to the other build files
+
+2009-04-01 23:24  brlcad
+
+	* [r34134] src/libsysv/Makefile.am, src/libsysv/bcmp.c:
+	  add support for bcmp() for windows. g_diff uses it and windows
+	  (98) doesn't seem to have it, so implement a simple PD version.
+
+2009-04-01 23:20  brlcad
+
+	* [r34133] configure.ac:
+	  check for the old BSD bcmp() function for Windows even though it
+	  is part of POSIX 1003.1-2001
+
+2009-04-01 23:18  brlcad
+
+	* [r34132] include/config_win.h:
+	  remove dead code, define off_t instead of typedef it for some
+	  reason
+
+2009-04-01 22:22  brlcad
+
+	* [r34131] misc/win32-msvc8/Makefile.am,
+	  misc/win32-msvc8/brlcad/brlcad.sln,
+	  misc/win32-msvc8/bwish/bwish.vcproj, misc/win32-msvc8/libBLT,
+	  misc/win32-msvc8/libtclcad/libtclcad.vcproj,
+	  misc/win32-msvc9/Makefile.am, misc/win32-msvc9/brlcad/brlcad.sln,
+	  misc/win32-msvc9/bwish/bwish.vcproj, misc/win32-msvc9/libBLT,
+	  misc/win32-msvc9/libtclcad/libtclcad.vcproj:
+	  remove BLT from windows build
+
+2009-04-01 20:41  brlcad
+
+	* [r34130] NEWS:
+	  note that richard and keith added support to rtarea to computer
+	  center of presented/exposed area. this is related to sf patch
+	  1942589 (Exposed & Presented Region Area Center points) from
+	  andrecastelo but it was determined that the patch was
+	  incomplete/unusable. this feature has been requested by analyst
+	  users (specifically from r. dibelka as well).
+
+2009-04-01 19:58  brlcad
+
+	* [r34129] doc/README.Linux:
+	  note that ubuntu/debian folks should install xserver-org-dev
+	  libx11-dev and libxi-dev
+
+2009-03-31 22:44  starseeker
+
+	* [r34128] TODO:
+	  Add a note to look into reorganizing the headers so it is clearer
+	  which .h files pertain to individual libraries.
+
+2009-03-31 21:25  r_weiss
+
+	* [r34127] doc/docbook/system/man1/en/rtarea.xml, src/rt/rtarea.1:
+	  updates to rtarea documentation
+
+2009-03-31 20:32  r_weiss
+
+	* [r34126] doc/docbook/system/man1/en/rtarea.xml, src/rt/rtarea.1,
+	  src/rt/viewarea.c:
+	  updates to rtarea adding center computations
+
+2009-03-31 19:45  erikgreenwald
+
+	* [r34125] src/adrt/librender/cut.c:
+	  pointer wrangling.
+
+2009-03-31 18:05  brlcad
+
+	* [r34124] src/external/Makefile.am:
+	  aha, fix distcheck for when Cubit isn't being built
+
+2009-03-31 16:59  brlcad
+
+	* [r34123] TODO:
+	  annotate intent to add material objects, shader objects, and
+	  image objects to v5 as has been discussed and mused over the
+	  years. really need material objects soon, which implies having
+	  shader objects even sooner. image objects can wait, though.
+
+2009-03-30 22:47  brlcad
+
+	* [r34122] src/rt/main.c, src/rt/opt.c, src/rt/viewarea.c:
+	  revert r34121 due to a variety of issues given I'm about to tag a
+	  source release. most pertinent to the release is the addition of
+	  an rt option (-y) that doesn't apply to any of the other raytrace
+	  applications.
+
+2009-03-30 20:34  r_weiss
+
+	* [r34121] src/rt/main.c, src/rt/opt.c, src/rt/viewarea.c:
+	  updates to rtarea adding center computations
+
+2009-03-30 16:46  brlcad
+
+	* [r34120] TODO:
+	  might not 'compile', but g_lint is hooked into the windows build
+	  now so remove the todo until we know there's a problem.
+
+2009-03-30 16:43  brlcad
+
+	* [r34119] TODO, include/ged.h:
+	  annotate the fixme items that the wdb and view objects in libged
+	  still need to be refactored/renamed
+
+2009-03-30 16:37  brlcad
+
+	* [r34118] misc/win32-msvc8/g_diff/g_diff.vcproj:
+	  g_diff does use libged for the blasted wdb_obj funcs like
+	  wdb_create_cmd, wdb_get_tcl, and wdb_init_obj.
+
+2009-03-30 16:35  brlcad
+
+	* [r34117] src/gtools/g_diff.c:
+	  ugh, libged atrociously still has wdb_obj and friends (e.g.,
+	  wdb_create_cmd) so DO have to include ged.h here. suckage.
+
+2009-03-30 16:33  brlcad
+
+	* [r34116] src/gtools/g_diff.c, src/gtools/g_lint.c,
+	  src/gtools/g_qa.c, src/gtools/g_transfer.c:
+	  ws, style consistency cleanup
+
+2009-03-30 16:12  brlcad
+
+	* [r34115] src/gtools/g_diff.c:
+	  g_diff doesn't use ged
+
+2009-03-30 16:11  brlcad
+
+	* [r34114] misc/win32-msvc8/g_diff/g_diff.vcproj,
+	  misc/win32-msvc8/g_lint/g_lint.vcproj,
+	  misc/win32-msvc8/g_qa/g_qa.vcproj,
+	  misc/win32-msvc8/g_transfer/g_transfer.vcproj:
+	  update the deps. only g_qa needs libged, g_transfer needs libpkg
+	  and winsock
+
+2009-03-30 16:06  brlcad
+
+	* [r34113] misc/win32-msvc8/brlcad/brlcad.sln:
+	  can't imagine the uuid's are right, but this will hook the three
+	  new gtools into the windows build -- g_diff, g_lint, and
+	  g_transfer.
+
+2009-03-30 16:04  brlcad
+
+	* [r34112] misc/win32-msvc8/g_diff/g_diff.vcproj,
+	  misc/win32-msvc8/g_lint/g_lint.vcproj,
+	  misc/win32-msvc8/g_transfer/g_transfer.vcproj:
+	  last step, update content to compile the right source files.
+	  probably still need minor source file changes to compile on
+	  windows.
+
+2009-03-30 16:01  brlcad
+
+	* [r34111] misc/win32-msvc8/Makefile.am,
+	  misc/win32-msvc8/g_diff/g_diff.vcproj,
+	  misc/win32-msvc8/g_diff/g_qa.vcproj,
+	  misc/win32-msvc8/g_lint/g_lint.vcproj,
+	  misc/win32-msvc8/g_lint/g_qa.vcproj,
+	  misc/win32-msvc8/g_transfer/g_qa.vcproj,
+	  misc/win32-msvc8/g_transfer/g_transfer.vcproj:
+	  step closer on gtools stub using g_qa.vcproj as forked base
+
+2009-03-30 15:59  brlcad
+
+	* [r34110] misc/win32-msvc8/Makefile.am, misc/win32-msvc8/g_diff,
+	  misc/win32-msvc8/g_lint, misc/win32-msvc8/g_transfer:
+	  start of stubs for the rest of the gtools
+
+2009-03-30 15:51  brlcad
+
+	* [r34109] TODO:
+	  bob made the inside command work on edit primitives (this was
+	  on-schedule, just hadn't been moved up for current release)
+
+2009-03-30 15:51  brlcad
+
+	* [r34108] TODO:
+	  downgrade expected list of items for next release until later
+	  save for a few relatively simple ones
+
+2009-03-30 15:48  brlcad
+
+	* [r34107] TODO:
+	  reverting a very old decision. separate the nmg routines from
+	  librt into their own library.
+
+2009-03-30 15:43  brlcad
+
+	* [r34106] src/librt/bezier_2d_isect.c, src/librt/comb.c,
+	  src/librt/cut.c, src/librt/db5_bin.c, src/librt/db5_types.c:
+	  apparently don't need to include nmg.h, not using nmg
+	  routines/structures.
+
+2009-03-30 15:33  brlcad
+
+	* [r34105] src/external/Cubit/Makefile.am,
+	  src/external/Cubit/g-sat.cpp, src/external/Cubit/g-sat.cxx:
+	  Rename g-sat.cxx to g-sat.cpp to be consistent with the other C++
+	  sources in the 'brlcad' module.
+
+2009-03-30 04:19  brlcad
+
+	* [r34104] src/tclscripts/archer/ArcherCore.tcl:
+	  try catching the error in case we're using a system iwidgets that
+	  doesn't have bob's patch for referencing the unitialized _ret var
+	  in panedwindow
+
+2009-03-29 19:32  brlcad
+
+	* [r34103] TODO:
+	  coil has a manual page, just in doc/docbook give it's new-style
+
+2009-03-29 18:01  brlcad
+
+	* [r34102] TODO:
+	  there is a coil tool now, but needs a manual page
+
+2009-03-29 18:00  brlcad
+
+	* [r34101] NEWS:
+	  annotate the 7.14.4 release with emphasis on the gqa enhancements
+	  in mged and the new coil shape tool
+
+2009-03-28 01:11  ralith
+
+	* [r34099] misc/pkgconfig/libbn.pc.in,
+	  misc/pkgconfig/libbrlcad.pc.in, misc/pkgconfig/libbu.pc.in,
+	  misc/pkgconfig/libdm.pc.in, misc/pkgconfig/libfb.pc.in,
+	  misc/pkgconfig/libfft.pc.in, misc/pkgconfig/libgcv.pc.in,
+	  misc/pkgconfig/libged.pc.in,
+	  misc/pkgconfig/libmultispectral.pc.in,
+	  misc/pkgconfig/liboptical.pc.in, misc/pkgconfig/libpkg.pc.in,
+	  misc/pkgconfig/librt.pc.in, misc/pkgconfig/libwdb.pc.in:
+	  Fixed fatal dependent variable mis-ordering
+
+2009-03-27 16:14  starseeker
+
+	* [r34098] doc/TODO.BREP:
+	  Add some notes/brainstorming related to the question of deciding
+	  if two points are the same point when they have error bounds.
+
+2009-03-27 08:07  d_rossberg
+
+	* [r34093] src/libged/CMakeLists.txt:
+	  added bu_flip.c and bu_sync.c to stay in sync with Makefile.am
+
+2009-03-27 08:05  d_rossberg
+
+	* [r34092] include/bu.h, src/libbu/avs.c:
+	  added const specifiers to bu_avs_add_nonunique()'s parameters
+
+2009-03-26 21:02  brlcad
+
+	* [r34091] NEWS:
+	  reduced archer's initial and maximum window size from 2048x1600
+	  to 1400x1100 (with max at 1600x1200)
+
+2009-03-26 20:51  brlcad
+
+	* [r34090] NEWS:
+	  bob changed archer/bwish to no longer use BLT. annotate the
+	  change to our external dependencies.
+
+2009-03-26 19:52  bob1961
+
+	* [r34089] src/tclscripts/archer/ArcherCore.tcl:
+	  Minor cleanup.
+
+2009-03-26 19:52  bob1961
+
+	* [r34088] src/tclscripts/archer/GeometryEditFrame.tcl:
+	  Modified the buildComboBox method to use ttk::combobox.
+
+2009-03-26 19:33  bob1961
+
+	* [r34087] src/tclscripts/archer/Archer.tcl,
+	  src/tclscripts/archer/ArcherCore.tcl:
+	  Modified the buildComboBox method to use ttk::combobox.
+
+2009-03-26 18:41  bob1961
+
+	* [r34086] src/other/tk/library/panedwindow.tcl:
+	  Hack to get around the occassional complaining from the
+	  panedwindow about identify being a bad option.
+
+2009-03-26 18:19  bob1961
+
+	* [r34085] src/archer/archer:
+	  Make the initial window size a little smaller. Eventually, the
+	  window size and location will be saved and used at startup.
+
+2009-03-26 14:42  bob1961
+
+	* [r34084] configure.ac:
+	  Blt is no longer needed.
+
+2009-03-26 14:39  bob1961
+
+	* [r34083] src/other/Makefile.am, src/other/blt:
+	  Blt is no longer needed so removing from repository.
+
+2009-03-26 14:36  bob1961
+
+	* [r34082] src/libtclcad/Makefile.am, src/libtclcad/tclcad.c,
+	  src/libtclcad/tclcadAutoPath.c:
+	  Remove use of Blt from libtclcad.
+
+2009-03-26 13:44  bob1961
+
+	* [r34081] src/archer/archer, src/bwish/Makefile.am,
+	  src/bwish/cadAppInit.c, src/bwish/main.c,
+	  src/tclscripts/archer/Archer.tcl,
+	  src/tclscripts/archer/ArcherCore.tcl,
+	  src/tclscripts/archer/CombEditFrame.tcl,
+	  src/tclscripts/archer/bgerror.tcl,
+	  src/tclscripts/archer/cursor.tcl:
+	  Modify bwish and archer to NOT use BLT.
+
+2009-03-26 06:37  ralith
+
+	* [r34080] src/burst/Makefile.am, src/burst/grid.c,
+	  src/burst/paint.c, src/burst/plot.c, src/burst/prnt.c,
+	  src/burst/vecmath.h:
+	  Removed another redundant vecmath.h from burst, replacing uses
+	  with vmath.h macros.
+
+2009-03-26 05:39  ralith
+
+	* [r34079] src/lgt/Makefile.am, src/lgt/do_options.c,
+	  src/lgt/glob.c, src/lgt/grid_rotate.c, src/lgt/ir.c,
+	  src/lgt/lgt.c, src/lgt/lgt_db.c, src/lgt/mat_db.c,
+	  src/lgt/octree.c, src/lgt/prnt.c, src/lgt/reflect.c,
+	  src/lgt/sgi_dep.c, src/lgt/trie.c, src/lgt/vecmath.h:
+	  Removed the largely redundant vecmath.h from lgt, replacing uses
+	  with vmath macros.
+
+2009-03-25 21:45  starseeker
+
+	* [r34078] doc/docbook/BRL-CAD_db_format.xml:
+	  Add spec contents up to Object Length.
+
+2009-03-25 18:54  starseeker
+
+	* [r34077] doc/docbook/BRL-CAD_db_format.xml:
+	  Add geometry attributes minor type section.
+
+2009-03-25 18:45  starseeker
+
+	* [r34076] doc/docbook/BRL-CAD_db_format.xml:
+	  Add in content up to geometry minor types table.
+
+2009-03-25 16:07  d_rossberg
+
+	* [r34073] src/conv/CMakeLists.txt:
+	  included g5-g4 downgrade tool
+
+2009-03-24 19:02  starseeker
+
+	* [r34072] doc/docbook/BRL-CAD_db_format.xml:
+	  Add Flags descriptions to spec.
+
+2009-03-24 18:53  brlcad
+
+	* [r34071] NEWS:
+	  back by popular demand, you can now run the 'inside' command on
+	  edit state objects again. bob restored this feature after the
+	  backwards-compatibility and efficiency concerns were raised by
+	  victor cericole at an arl configuration change meeting. the
+	  feature raises a whole category of concerns on how to best handle
+	  edit state objects with libged (and as yet unresolved).
+
+2009-03-24 18:03  starseeker
+
+	* [r34070] doc/docbook/BRL-CAD_db_format.xml:
+	  Add H/A/Bflags table to BRL-CAD db v5 spec.
+
+2009-03-24 17:28  starseeker
+
+	* [r34069] doc/docbook/BRL-CAD_db_format.xml:
+	  Add on-disk format table to BRL-CAD db v5 spec.
+
+2009-03-24 16:28  bob1961
+
+	* [r34068] include/ged.h, include/raytrace.h,
+	  misc/win32-msvc8/libged/libged.vcproj, src/libdm/dm-ogl.c,
+	  src/libdm/dm-wgl.c, src/libged/Makefile.am,
+	  src/libged/bot_flip.c, src/libged/bot_sync.c,
+	  src/librt/primitives/bot/bot.c, src/mged/setup.c:
+	  Added rt_bot_flip, rot_bot_sync, ged_bot_flip and ged_bot_sync
+	  functions. Also added bot_flip and bot_sync commands to MGED.
+
+2009-03-24 04:22  starseeker
+
+	* [r34065] doc/docbook/BRL-CAD_db_format.xml,
+	  doc/docbook/Makefile.am:
+	  Start working on converting
+	  http://brlcad.org/OLD/newdb/newdb.html to docbook.
+
+2009-03-23 19:25  starseeker
+
+	* [r34064] configure.ac:
+	  Whoops - update configure.ac to not expect awf.
+
+2009-03-23 18:15  starseeker
+
+	* [r34063] NEWS, src/brlman/Makefile.am, src/brlman/awf.in,
+	  src/brlman/brlman.1, src/brlman/brlman.in:
+	  Switch brlman from a wrapper invoking awf to a wrapper invoking
+	  the system man command. awf is not able to correctly handle
+	  output generated by the new docbook man page generation process.
+	  The brlman shortcut is preserved for those not wishing to
+	  manually specify the path to the BRL-CAD man pages. awf
+	  originally was intended to supply man page reading functionality
+	  on systems without their own man command, but nowadays the only
+	  major environment without a man command supported by BRL-CAD is
+	  Windows, and the awf solution doesn't work and has never worked
+	  there. For platforms without any man command the new solution is
+	  to view the HTML versions of the man pages. For other platforms
+	  with a man command, man pages such as search should now display
+	  correctly when brought up with brlman.
+
+2009-03-23 17:50  starseeker
+
+	* [r34062] db/goliath.asc:
+	  Add source attribute to goliath model.
+
+2009-03-19 20:06  bob1961
+
+	* [r34059] include/ged.h, src/libged/inside.c, src/mged/cmd.c,
+	  src/mged/cmd.h, src/mged/setup.c:
+	  Added ged_inside_internal() to libged and modified ged_inside()
+	  to call it. Mged also calls this when getting the inside of
+	  something being edited.
+
+2009-03-19 20:00  bob1961
+
+	* [r34058] src/librt/tree.c:
+	  Minor formatting.
+
+2009-03-19 16:46  bob1961
+
+	* [r34057] src/librt/shoot.c:
+	  A slightly better mod to rt_res_pieces_clean() that skips
+	  uninitialized rt_piecestate structures.
+
+2009-03-18 19:09  bob1961
+
+	* [r34056] src/librt/shoot.c:
+	  Modified rt_res_pieces_clean() to skip uninitialized
+	  rt_piecestate structures.
+
+2009-03-18 12:18  indianlarry
+
+	* [r34055] src/other/step/src/cldai/Makefile.am,
+	  src/other/step/src/cleditor/Makefile.am,
+	  src/other/step/src/clstepcore/Makefile.am,
+	  src/other/step/src/clutils/Makefile.am:
+	  Added standard C++ library via LIBSTDCXX variable to build where
+	  needed.
+
+2009-03-17 19:55  starseeker
+
+	* [r34054] db/Makefile.am, db/goliath.asc:
+	  Add Goliath Tracked Mine model by Stephen Kennedy and Stephanie
+	  Weaver
+
+2009-03-17 02:24  brlcad
+
+	* [r34053] TODO:
+	  need a bot-nmg capability
+
+2009-03-17 01:46  brlcad
+
+	* [r34052] NEWS:
+	  keith updated the clone command to utilize the same naming
+	  convention as build_region. this implements a long standing
+	  request from dwayne to change clone's naming conventions.
+	  implements sf bug/feature request 2663102 (clone does not name
+	  correctly)
+
+2009-03-17 01:39  brlcad
+
+	* [r34051] NEWS:
+	  keith fixed another bug reported by dwayne where the mirror
+	  command was incorrectly handling an rcc's radii resulting in
+	  non-perpendicular height vectors. this was reported in sf bug
+	  2679693 (mirror error).
+
+2009-03-17 01:34  brlcad
+
+	* [r34050] NEWS:
+	  keith changed the rpp vertex ordering affecting typein and
+	  display with rpp's now matching arb8 vertex ordering. this
+	  addresses an unexpected behavior bug reported by dwaynelk in sf
+	  bug 2663183 (arb8/rpp vertex order different)
+
+2009-03-17 00:21  brlcad
+
+	* [r34049] src/archer/archer.bat, src/mged/mged.bat,
+	  src/util/rtwizard.bat:
+	  bah, these weren't updated for release. *really* should not have
+	  version numbers in these files, nor should it be necessary to set
+	  BRLCAD_DATA even on Windows.
+
+2009-03-17 00:04  brlcad
+
+	* [r34048] AUTHORS:
+	  additional info about indianlarry
+
+2009-03-17 00:02  brlcad
+
+	* [r34047] NEWS:
+	  annotate keith bowman's first commit. he fixed mged's qorot
+	  command to properly rotate around a vector. this fixes sf bug
+	  2663014 (qorot does not rotate around vector) reported by dwayne.
+	  was previously rotating around the origin instead of the provided
+	  xyz point.
+
+2009-03-16 23:13  brlcad
+
+	* [r34046] NEWS:
+	  bob fixed a tiny memory leak in gqa making it free the rtip
+
+2009-03-16 21:40  starseeker
+
+	* [r34045] src/other/step/README:
+	  Add a few notes on the current state of the STEP libraries. Since
+	  things are now passing distcheck, pass the baton over to the
+	  'make functionality fixes and develop new functionality' folk.
+
+2009-03-16 18:32  bob1961
+
+	* [r34044] src/libged/gqa.c:
+	  Added code to free rtip.
+
+2009-03-16 17:20  brlcad
+
+	* [r34043] TODO:
+	  implement a jitter-style averaging option for rt
+
+2009-03-16 07:27  brlcad
+
+	* [r34042] NEWS:
+	  implement support to actually utilize the perspective mode
+	  setting (apparently it was never wired up). this makes it work
+	  though there still flimsy (need the main view). this was noticed
+	  and requested by a few folks on and off the cad team (gillich and
+	  various analysts iirc).
+
+2009-03-16 07:24  brlcad
+
+	* [r34041] src/tclscripts/rtwizard/lib/MGEDpage.itk,
+	  src/tclscripts/rtwizard/lib/PictureTypeBase.itcl:
+	  implement support to actually utilize the perspective mode
+	  setting (apparently it was never wired up). this makes it work
+	  though there is still some quirk where you sometimes need to
+	  display one of the other render 'steps' so that it finds the
+	  setting.
+
+2009-03-15 12:29  brlcad
+
+	* [r34040] src/tclscripts/rtwizard/lib/MGEDpage.itk:
+	  fix two bugs in rtwizard: 1) perspective mode changes aren't
+	  applied when you hit cancel, they actually revert back now and 2)
+	  occlusion mode no longer spews an error about an unknown
+	  variable, and subsequently no longer provides superfluous
+	  apply/cancel buttons either.
+
+2009-03-15 02:56  brlcad
+
+	* [r34039] misc/win32-msvc8/asc2g/asc2g.vcproj,
+	  misc/win32-msvc9/asc2g/asc2g.vcproj:
+	  fixed a bug in the windows installer where the havoc model was
+	  getting installed as havog.g
+
+2009-03-14 22:40  brlcad
+
+	* [r34038] HACKING:
+	  fix an incouraged typo alex_joni noticed as well as a half-dozen
+	  others noticed.
+
+2009-03-14 19:11  brlcad
+
+	* [r34037] src/other/step/src/Makefile.am,
+	  src/other/step/src/clstepcore/Makefile.am,
+	  src/other/step/src/express/.Sanitize,
+	  src/other/step/src/fedex_plus/.pure:
+	  more distcheck fixes. few files missing from dist and a few that
+	  can die with the old build system gone.
+
+2009-03-14 04:37  starseeker
+
+	* [r34036] configure.ac, src/other/Makefile.am:
+	  FINALLY - make distcheck passes with src/other/step added in.
+	  Need to revisit the handling of yylineno in express, but
+	  otherwise no major known issues. Right now no test logic is
+	  hooked up, and probably isn't needed for BRL-CAD purposes.
+
+2009-03-14 03:26  starseeker
+
+	* [r34035] src/other/step/src/express/Makefile.am:
+	  Add BUILT_SOURCES to EXTRA_DIST for step
+
+2009-03-13 22:03  starseeker
+
+	* [r34034] src/other/tcl/Makefile.am, src/other/tk/Makefile.am:
+	  config.status doesn't belong in EXTRA_DIST, was breaking make
+	  distcheck.
+
+2009-03-13 21:13  homovulgaris
+
+	* [r34033] src/libpc/pcMathGrammar.h:
+	  Complete description of the Expression Grammar : Stage 1/4
+
+2009-03-13 21:04  starseeker
+
+	* [r34032] src/other/step/Makefile.am, src/other/step/autogen.sh:
+	  Don't need autogen.sh in this directory while step is acting as a
+	  part of brlcad
+
+2009-03-13 18:47  starseeker
+
+	* [r34029] src/other/step/Makefile.am:
+	  Add configure to DISTCLEANFILES. Previous commit message was
+	  incorrected - added configure.ac to EXTRA_DIST files, NOT
+	  DISTCLEANFILES.
+
+2009-03-13 18:33  starseeker
+
+	* [r34027] src/other/step/Makefile.am:
+	  Oops, step's configure.ac should be in the DISTCLEANFILES list.
+
+2009-03-13 18:07  homovulgaris
+
+	* [r34026] src/libpc/pcMathVM.cpp, src/libpc/pcMathVM.h:
+	  adding BranchNode definition and methods to pcMathVM
+
+2009-03-12 22:00  brlcad
+
+	* [r34025] configure.ac:
+	  make a nop mod to hopefully unstick cruisecontrol failures
+
+2009-03-12 21:48  brlcad
+
+	* [r34024] BUGS:
+	  dwayne reports that rtwizard won't display line drawings for
+	  objects that are inside other objects, like a vehicle with crew
+	  inside. select vehicle as ghost, crew as solid, and crew as line.
+
+2009-03-12 19:51  starseeker
+
+	* [r34021] src/other/step/src/express/Makefile.am:
+	  OK, looks like a flag may be needed for flex
+
+2009-03-12 19:39  starseeker
+
+	* [r34020] src/other/step/configure.ac,
+	  src/other/step/include/Makefile.am, src/other/step/include/exppp,
+	  src/other/step/include/exppp/Makefile.am,
+	  src/other/step/include/exppp/exppp.h,
+	  src/other/step/include/express,
+	  src/other/step/include/express/Makefile.am,
+	  src/other/step/include/express/alg.h,
+	  src/other/step/include/express/basic.h,
+	  src/other/step/include/express/caseitem.h,
+	  src/other/step/include/express/de_end.h,
+	  src/other/step/include/express/decstart.h,
+	  src/other/step/include/express/defstart.h,
+	  src/other/step/include/express/dict.h,
+	  src/other/step/include/express/entity.h,
+	  src/other/step/include/express/error.h,
+	  src/other/step/include/express/expbasic.h,
+	  src/other/step/include/express/expr.h,
+	  src/other/step/include/express/express.h,
+	  src/other/step/include/express/hash.h,
+	  src/other/step/include/express/lexact.h,
+	  src/other/step/include/express/linklist.h,
+	  src/other/step/include/express/memory.h,
+	  src/other/step/include/express/object.h,
+	  src/other/step/include/express/resolve.h,
+	  src/other/step/include/express/schema.h,
+	  src/other/step/include/express/scope.h,
+	  src/other/step/include/express/stmt.h,
+	  src/other/step/include/express/symbol.h,
+	  src/other/step/include/express/type.h,
+	  src/other/step/include/express/variable.h,
+	  src/other/step/src/exppp/Makefile.am,
+	  src/other/step/src/exppp/exppp.h,
+	  src/other/step/src/express/Makefile.am,
+	  src/other/step/src/express/alg.h,
+	  src/other/step/src/express/basic.h,
+	  src/other/step/src/express/caseitem.h,
+	  src/other/step/src/express/de_end.h,
+	  src/other/step/src/express/decstart.h,
+	  src/other/step/src/express/defstart.h,
+	  src/other/step/src/express/dict.h,
+	  src/other/step/src/express/entity.h,
+	  src/other/step/src/express/error.h,
+	  src/other/step/src/express/expbasic.h,
+	  src/other/step/src/express/expr.h,
+	  src/other/step/src/express/express.h,
+	  src/other/step/src/express/hash.h,
+	  src/other/step/src/express/lexact.h,
+	  src/other/step/src/express/linklist.h,
+	  src/other/step/src/express/memory.h,
+	  src/other/step/src/express/object.h,
+	  src/other/step/src/express/resolve.h,
+	  src/other/step/src/express/schema.h,
+	  src/other/step/src/express/scope.h,
+	  src/other/step/src/express/stmt.h,
+	  src/other/step/src/express/symbol.h,
+	  src/other/step/src/express/type.h,
+	  src/other/step/src/express/variable.h,
+	  src/other/step/src/fedex_plus/Makefile.am,
+	  src/other/step/src/fedex_plus/classes.h:
+	  OK, one more time with the step include files.
+
+2009-03-12 17:42  starseeker
+
+	* [r34019] src/other/step/Makefile.am,
+	  src/other/step/config/examples,
+	  src/other/step/config/scl_cf.h.in,
+	  src/other/step/config/sclbuild.current,
+	  src/other/step/config/sclbuild.current.in,
+	  src/other/step/config/setup-arch.current,
+	  src/other/step/config/setup-arch.current.in,
+	  src/other/step/configure.files_notes.txt:
+	  Clean up old config stuff in step
+
+2009-03-12 17:37  starseeker
+
+	* [r34018] src/other/step/include/conf/Makefile.am:
+	  One more misc Makefile.am cleanup
+
+2009-03-12 17:15  starseeker
+
+	* [r34017] src/other/step/configure.ac,
+	  src/other/step/include/Makefile.am,
+	  src/other/step/include/conf/Makefile.am:
+	  Few more fixes for step build system
+
+2009-03-12 17:05  starseeker
+
+	* [r34016] src/other/step/Makefile.am, src/other/step/conf,
+	  src/other/step/configure.ac, src/other/step/include/Makefile.am,
+	  src/other/step/include/conf, src/other/step/include/conf/MAJOR,
+	  src/other/step/include/conf/MINOR,
+	  src/other/step/include/conf/Makefile.am,
+	  src/other/step/include/conf/PATCH,
+	  src/other/step/include/scl_config.h.in,
+	  src/other/step/m4/Makefile.am:
+	  More step build tweaks.
+
+2009-03-12 16:34  starseeker
+
+	* [r34015] src/other/step/m4/prefix.m4:
+	  Whoops - put the right prefix.m4 back
+
+2009-03-12 16:09  homovulgaris
+
+	* [r34014] src/libpc/pcMathGrammar.h, src/libpc/pcMathLF.h,
+	  src/libpc/pcMathVM.cpp, src/libpc/pcMathVM.h,
+	  src/libpc/pcParser.cpp, src/libpc/pcParser.h,
+	  src/libpc/vm_test.cpp:
+	  modifications for the usage of boost::spirit namespace instead of
+	  boost::spirit::classic, generic includes added to be replaced
+	  with the specific header files for the pertinent spirit and
+	  phoenix functions; also code syntax corrections in pcMathGrammar,
+	  pcMathLF and pcMathVM
+
+2009-03-12 16:04  homovulgaris
+
+	* [r34013] src/other/boost/spirit.hpp,
+	  src/other/boost/spirit/dynamic,
+	  src/other/boost/spirit/dynamic/if.hpp,
+	  src/other/boost/spirit/include/classic_functor_parser.hpp,
+	  src/other/boost/spirit/include/classic_if.hpp,
+	  src/other/boost/spirit/include/phoenix_core.hpp,
+	  src/other/boost/spirit/include/phoenix_function.hpp,
+	  src/other/boost/spirit/utility/functor_parser.hpp:
+	  another boost update: spirit and phoenix related
+
+2009-03-12 14:41  indianlarry
+
+	* [r34012] src/libged/clone.c, src/tclscripts/mged/help.tcl:
+	  Added 'clone' to mged_help_data table and added print_usage()
+	  when to few args
+
+2009-03-12 13:01  starseeker
+
+	* [r34011] src/other/step/src/cldai/Makefile.am,
+	  src/other/step/src/cleditor/Makefile.am,
+	  src/other/step/src/clstepcore/Makefile.am:
+	  Oh, yeah - those include links shouldn't assume in-source build
+
+2009-03-12 12:45  starseeker
+
+	* [r34010] src/other/step/configure.ac,
+	  src/other/step/src/cleditor/Makefile.am,
+	  src/other/step/src/clutils/Makefile.am:
+	  Add in some more headers to scl Makefile.ams
+
+2009-03-12 12:32  starseeker
+
+	* [r34009] src/other/step/conf, src/other/step/conf/MAJOR,
+	  src/other/step/conf/MINOR, src/other/step/conf/PATCH:
+	  Ahem - as I was trying to do before the power went out, add in
+	  conf so step configure has some version numbers to work with.
+
+2009-03-12 02:49  starseeker
+
+	* [r34008] src/other/step/src/clstepcore/Makefile.am:
+	  Add the clstepcore headers to Makefile.am as noinst for now.
+
+2009-03-12 02:41  starseeker
+
+	* [r34007] src/other/step/src/exppp/Makefile.am:
+	  Whoops - fix noinst_HEADERS in exppp
+
+2009-03-12 02:31  starseeker
+
+	* [r34006] src/other/step/src/cldai/Makefile.am:
+	  Add includes needed for original header locations in cldai
+
+2009-03-12 02:28  starseeker
+
+	* [r34005] src/other/step/src/cleditor/Makefile.am:
+	  Add includes needed for original header locations in cleditor
+
+2009-03-12 02:25  starseeker
+
+	* [r34004] src/other/step/src/clstepcore/Makefile.am:
+	  Add includes needed for original header locations in clstepcore
+
+2009-03-12 02:04  starseeker
+
+	* [r34003] src/other/step/include/Str.h,
+	  src/other/step/include/dirobj.h,
+	  src/other/step/include/errordesc.h,
+	  src/other/step/include/gennode.h,
+	  src/other/step/include/gennodearray.h,
+	  src/other/step/include/gennodelist.h,
+	  src/other/step/include/scl_char_str_list.h,
+	  src/other/step/include/scl_hash.h,
+	  src/other/step/include/scl_string.h,
+	  src/other/step/include/scldir.h, src/other/step/include/stat.h,
+	  src/other/step/include/str_list.h,
+	  src/other/step/src/clutils/Str.h,
+	  src/other/step/src/clutils/dirobj.h,
+	  src/other/step/src/clutils/errordesc.h,
+	  src/other/step/src/clutils/gennode.h,
+	  src/other/step/src/clutils/gennodearray.h,
+	  src/other/step/src/clutils/gennodelist.h,
+	  src/other/step/src/clutils/scl_char_str_list.h,
+	  src/other/step/src/clutils/scl_hash.h,
+	  src/other/step/src/clutils/scl_string.h,
+	  src/other/step/src/clutils/scldir.h,
+	  src/other/step/src/clutils/stat.h,
+	  src/other/step/src/clutils/str_list.h:
+	  Put clutils headers back where they came from
+
+2009-03-12 02:00  starseeker
+
+	* [r34002] src/other/step/include/ExpDict.h,
+	  src/other/step/include/Registry.h,
+	  src/other/step/include/STEPaggregate.h,
+	  src/other/step/include/STEPattribute.h,
+	  src/other/step/include/STEPattributeList.h,
+	  src/other/step/include/STEPcomplex.h,
+	  src/other/step/include/STEPundefined.h,
+	  src/other/step/include/Select.h,
+	  src/other/step/include/SingleLinkList.h,
+	  src/other/step/include/baseType.h,
+	  src/other/step/include/complexSupport.h,
+	  src/other/step/include/dictdefs.h,
+	  src/other/step/include/read_func.h,
+	  src/other/step/include/scl_osschema.h,
+	  src/other/step/include/sdai.h,
+	  src/other/step/include/sdaiApplication_instance.h,
+	  src/other/step/include/sdaiBinary.h,
+	  src/other/step/include/sdaiEnum.h,
+	  src/other/step/include/sdaiSelect.h,
+	  src/other/step/include/sdaiString.h,
+	  src/other/step/src/clstepcore/ExpDict.h,
+	  src/other/step/src/clstepcore/Registry.h,
+	  src/other/step/src/clstepcore/STEPaggregate.h,
+	  src/other/step/src/clstepcore/STEPattribute.h,
+	  src/other/step/src/clstepcore/STEPattributeList.h,
+	  src/other/step/src/clstepcore/STEPcomplex.h,
+	  src/other/step/src/clstepcore/STEPundefined.h,
+	  src/other/step/src/clstepcore/Select.h,
+	  src/other/step/src/clstepcore/SingleLinkList.h,
+	  src/other/step/src/clstepcore/baseType.h,
+	  src/other/step/src/clstepcore/complexSupport.h,
+	  src/other/step/src/clstepcore/dictdefs.h,
+	  src/other/step/src/clstepcore/read_func.h,
+	  src/other/step/src/clstepcore/scl_osschema.h,
+	  src/other/step/src/clstepcore/sdai.h,
+	  src/other/step/src/clstepcore/sdaiApplication_instance.h,
+	  src/other/step/src/clstepcore/sdaiBinary.h,
+	  src/other/step/src/clstepcore/sdaiEnum.h,
+	  src/other/step/src/clstepcore/sdaiSelect.h,
+	  src/other/step/src/clstepcore/sdaiString.h:
+	  Put clstepcore headers back where they came from
+
+2009-03-12 01:49  starseeker
+
+	* [r34001] src/other/step/include/STEPfile.h,
+	  src/other/step/include/cmdmgr.h,
+	  src/other/step/include/dispnode.h,
+	  src/other/step/include/dispnodelist.h,
+	  src/other/step/include/editordefines.h,
+	  src/other/step/include/instmgr.h,
+	  src/other/step/include/mgrnode.h,
+	  src/other/step/include/mgrnodearray.h,
+	  src/other/step/include/mgrnodelist.h,
+	  src/other/step/include/s_HEADER_SCHEMA.h,
+	  src/other/step/include/seeinfodefault.h,
+	  src/other/step/src/cleditor/STEPfile.h,
+	  src/other/step/src/cleditor/cmdmgr.h,
+	  src/other/step/src/cleditor/dispnode.h,
+	  src/other/step/src/cleditor/dispnodelist.h,
+	  src/other/step/src/cleditor/editordefines.h,
+	  src/other/step/src/cleditor/instmgr.h,
+	  src/other/step/src/cleditor/mgrnode.h,
+	  src/other/step/src/cleditor/mgrnodearray.h,
+	  src/other/step/src/cleditor/mgrnodelist.h,
+	  src/other/step/src/cleditor/s_HEADER_SCHEMA.h,
+	  src/other/step/src/cleditor/seeinfodefault.h:
+	  Put cleditor headers back where they came from
+
+2009-03-12 01:43  starseeker
+
+	* [r34000] src/other/step/include/sdaiApplication_instance_set.h,
+	  src/other/step/include/sdaiDaObject.h,
+	  src/other/step/include/sdaiEntity_extent.h,
+	  src/other/step/include/sdaiEntity_extent_set.h,
+	  src/other/step/include/sdaiModel_contents.h,
+	  src/other/step/include/sdaiModel_contents_list.h,
+	  src/other/step/include/sdaiObject.h,
+	  src/other/step/include/sdaiSession_instance.h,
+	  src/other/step/src/cldai/ErrorMap.hh,
+	  src/other/step/src/cldai/ErrorRpt.hh,
+	  src/other/step/src/cldai/StrUtil.hh,
+	  src/other/step/src/cldai/impconv.hh,
+	  src/other/step/src/cldai/imptypes.hh,
+	  src/other/step/src/cldai/sdaiApplication_instance_set.h,
+	  src/other/step/src/cldai/sdaiDaObject.h,
+	  src/other/step/src/cldai/sdaiEntity_extent.h,
+	  src/other/step/src/cldai/sdaiEntity_extent_set.h,
+	  src/other/step/src/cldai/sdaiModel_contents.h,
+	  src/other/step/src/cldai/sdaiModel_contents_list.h,
+	  src/other/step/src/cldai/sdaiObject.h,
+	  src/other/step/src/cldai/sdaiSession_instance.h:
+	  Put cldai headers back where they came from
+
+2009-03-11 22:02  brlcad
+
+	* [r33999] doc/TODO.BREP:
+	  Breakout of raytracing dependencies
+
+2009-03-11 21:30  brlcad
+
+	* [r33998] doc/TODO.BREP:
+	  Added few more queries.
+
+2009-03-11 20:03  brlcad
+
+	* [r33997] doc/TODO.BREP:
+	  add a missing important plane specialization of surfaces
+	  analogous to lines vs curves
+
+2009-03-11 20:01  starseeker
+
+	* [r33996] src/other/step/Makefile.am:
+	  Stuff the other dirs behind EXTRA_DIST for now, and bring them
+	  out later if they should be elsewhere.
+
+2009-03-11 19:49  starseeker
+
+	* [r33995] configure.ac:
+	  Disable step subconfigure until it's working
+
+2009-03-11 19:40  starseeker
+
+	* [r33994] src/other/Makefile.am:
+	  EXTRA_DIST step for now
+
+2009-03-11 19:33  starseeker
+
+	* [r33993] src/other/step/src/Makefile.am,
+	  src/other/step/src/cldai/ErrorMap.hh,
+	  src/other/step/src/cldai/ErrorRpt.hh,
+	  src/other/step/src/cldai/Makefile.am,
+	  src/other/step/src/cldai/StrUtil.hh,
+	  src/other/step/src/cldai/impconv.hh,
+	  src/other/step/src/cldai/imptypes.hh,
+	  src/other/step/src/cldai/sdaiApplication_instance_set.cc,
+	  src/other/step/src/cldai/sdaiApplication_instance_set.h,
+	  src/other/step/src/cldai/sdaiDaObject.cc,
+	  src/other/step/src/cldai/sdaiDaObject.h,
+	  src/other/step/src/cldai/sdaiEntity_extent.h,
+	  src/other/step/src/cldai/sdaiEntity_extent_set.cc,
+	  src/other/step/src/cldai/sdaiEntity_extent_set.h,
+	  src/other/step/src/cldai/sdaiModel_contents.h,
+	  src/other/step/src/cldai/sdaiModel_contents_list.cc,
+	  src/other/step/src/cldai/sdaiModel_contents_list.h,
+	  src/other/step/src/cldai/sdaiObject.h,
+	  src/other/step/src/cldai/sdaiSession_instance.h,
+	  src/other/step/src/cleditor/Makefile,
+	  src/other/step/src/cleditor/Makefile.am,
+	  src/other/step/src/cleditor/STEPfile.h,
+	  src/other/step/src/cleditor/cmdmgr.h,
+	  src/other/step/src/cleditor/dispnode.h,
+	  src/other/step/src/cleditor/dispnodelist.h,
+	  src/other/step/src/cleditor/editordefines.h,
+	  src/other/step/src/cleditor/instmgr.h,
+	  src/other/step/src/cleditor/mgrnode.h,
+	  src/other/step/src/cleditor/mgrnodearray.h,
+	  src/other/step/src/cleditor/mgrnodelist.h,
+	  src/other/step/src/cleditor/s_HEADER_SCHEMA.h,
+	  src/other/step/src/cleditor/seeinfodefault.h,
+	  src/other/step/src/clstepcore/ExpDict.h,
+	  src/other/step/src/clstepcore/Makefile,
+	  src/other/step/src/clstepcore/Makefile.am,
+	  src/other/step/src/clstepcore/Registry.h,
+	  src/other/step/src/clstepcore/STEPaggregate.h,
+	  src/other/step/src/clstepcore/STEPattribute.cc.31,
+	  src/other/step/src/clstepcore/STEPattribute.h,
+	  src/other/step/src/clstepcore/STEPattributeList.h,
+	  src/other/step/src/clstepcore/STEPcomplex.h,
+	  src/other/step/src/clstepcore/STEPundefined.h,
+	  src/other/step/src/clstepcore/Select.h,
+	  src/other/step/src/clstepcore/SingleLinkList.h,
+	  src/other/step/src/clstepcore/baseType.h,
+	  src/other/step/src/clstepcore/checkout3.0.1.solaris,
+	  src/other/step/src/clstepcore/complexSupport.h,
+	  src/other/step/src/clstepcore/complexSupport.h.err,
+	  src/other/step/src/clstepcore/dictdefs.h,
+	  src/other/step/src/clstepcore/entlist.cc.err,
+	  src/other/step/src/clstepcore/read_func.h,
+	  src/other/step/src/clstepcore/scl_osschema.h,
+	  src/other/step/src/clstepcore/sdai.cc,
+	  src/other/step/src/clstepcore/sdai.h,
+	  src/other/step/src/clstepcore/sdaiApplication_instance.h,
+	  src/other/step/src/clstepcore/sdaiBinary.h,
+	  src/other/step/src/clstepcore/sdaiEnum.h,
+	  src/other/step/src/clstepcore/sdaiSelect.h,
+	  src/other/step/src/clstepcore/sdaiString.h,
+	  src/other/step/src/clutils/Makefile,
+	  src/other/step/src/clutils/Makefile.am,
+	  src/other/step/src/clutils/Str.h,
+	  src/other/step/src/clutils/dirobj.cc,
+	  src/other/step/src/clutils/dirobj.h,
+	  src/other/step/src/clutils/errordesc.h,
+	  src/other/step/src/clutils/gennode.h,
+	  src/other/step/src/clutils/gennodearray.cc,
+	  src/other/step/src/clutils/gennodearray.h,
+	  src/other/step/src/clutils/gennodelist.h,
+	  src/other/step/src/clutils/scl_char_str_list.cc,
+	  src/other/step/src/clutils/scl_char_str_list.h,
+	  src/other/step/src/clutils/scl_hash.h,
+	  src/other/step/src/clutils/scl_string.h,
+	  src/other/step/src/clutils/scldir.h,
+	  src/other/step/src/clutils/stat.h,
+	  src/other/step/src/clutils/str_list.h,
+	  src/other/step/src/exppp/Makefile.am,
+	  src/other/step/src/exppp/exppp-main.c,
+	  src/other/step/src/exppp/exppp.c,
+	  src/other/step/src/exppp/makefile,
+	  src/other/step/src/express/Makefile.am,
+	  src/other/step/src/express/caseitem.c,
+	  src/other/step/src/express/dict.c,
+	  src/other/step/src/express/entity.c,
+	  src/other/step/src/express/error.c,
+	  src/other/step/src/express/error.h,
+	  src/other/step/src/express/expparse.output,
+	  src/other/step/src/express/expparse.y,
+	  src/other/step/src/express/expr.c,
+	  src/other/step/src/express/express.c,
+	  src/other/step/src/express/fedex.c,
+	  src/other/step/src/express/hash.c,
+	  src/other/step/src/express/lexact.c,
+	  src/other/step/src/express/lexact.h,
+	  src/other/step/src/express/makefile,
+	  src/other/step/src/express/memory.c,
+	  src/other/step/src/express/memory.h,
+	  src/other/step/src/express/mkrules,
+	  src/other/step/src/express/mkrules.in,
+	  src/other/step/src/express/object.c,
+	  src/other/step/src/express/resolve.c,
+	  src/other/step/src/express/schema.c,
+	  src/other/step/src/express/scope.c,
+	  src/other/step/src/express/stmt.c,
+	  src/other/step/src/express/symbol.c,
+	  src/other/step/src/express/symbol.h,
+	  src/other/step/src/express/symlink.c,
+	  src/other/step/src/express/type.c,
+	  src/other/step/src/express/variable.c,
+	  src/other/step/src/express/y.output,
+	  src/other/step/src/express/yyvars.c,
+	  src/other/step/src/fedex_plus/Makefile.am,
+	  src/other/step/src/fedex_plus/classes.c,
+	  src/other/step/src/fedex_plus/classes.h,
+	  src/other/step/src/fedex_plus/classes_misc.c,
+	  src/other/step/src/fedex_plus/classes_wrapper.cc,
+	  src/other/step/src/fedex_plus/complexSupport.h,
+	  src/other/step/src/fedex_plus/fedex_idl.c,
+	  src/other/step/src/fedex_plus/fedex_main.c,
+	  src/other/step/src/fedex_plus/fedex_os.c,
+	  src/other/step/src/fedex_plus/makefile,
+	  src/other/step/src/fedex_plus/multpass.c,
+	  src/other/step/src/fedex_plus/selects.c:
+	  Merge in most of the changes made thus far. Probably won't build
+	  yet as new Makefile.am stuff is untested, but getting close
+
+2009-03-11 19:09  starseeker
+
+	* [r33992] src/other/step/data/Makefile.am,
+	  src/other/step/data/ap203/Makefile.am,
+	  src/other/step/data/ap227/Makefile.am,
+	  src/other/step/data/example/Makefile.am,
+	  src/other/step/doc/Makefile.am,
+	  src/other/step/doc/man/Makefile.am,
+	  src/other/step/doc/man/man1/Makefile.am,
+	  src/other/step/include/Makefile.am:
+	  Add some Makefile.am files to various directories
+
+2009-03-11 18:53  homovulgaris
+
+	* [r33991] src/other/boost/any.hpp, src/other/boost/archive,
+	  src/other/boost/archive/archive_exception.hpp,
+	  src/other/boost/bind/mem_fn.hpp,
+	  src/other/boost/concept_check.hpp,
+	  src/other/boost/config/abi/msvc_prefix.hpp,
+	  src/other/boost/config/auto_link.hpp,
+	  src/other/boost/config/compiler/borland.hpp,
+	  src/other/boost/config/compiler/codegear.hpp,
+	  src/other/boost/config/compiler/common_edg.hpp,
+	  src/other/boost/config/compiler/digitalmars.hpp,
+	  src/other/boost/config/compiler/gcc.hpp,
+	  src/other/boost/config/compiler/hp_acc.hpp,
+	  src/other/boost/config/compiler/intel.hpp,
+	  src/other/boost/config/compiler/metrowerks.hpp,
+	  src/other/boost/config/compiler/mpw.hpp,
+	  src/other/boost/config/compiler/pgi.hpp,
+	  src/other/boost/config/compiler/sgi_mipspro.hpp,
+	  src/other/boost/config/compiler/sunpro_cc.hpp,
+	  src/other/boost/config/compiler/vacpp.hpp,
+	  src/other/boost/config/compiler/visualc.hpp,
+	  src/other/boost/config/no_tr1/cmath.hpp,
+	  src/other/boost/config/platform/bsd.hpp,
+	  src/other/boost/config/select_compiler_config.hpp,
+	  src/other/boost/config/select_platform_config.hpp,
+	  src/other/boost/config/stdlib/dinkumware.hpp,
+	  src/other/boost/config/stdlib/libcomo.hpp,
+	  src/other/boost/config/stdlib/libstdcpp3.hpp,
+	  src/other/boost/config/stdlib/modena.hpp,
+	  src/other/boost/config/stdlib/msl.hpp,
+	  src/other/boost/config/stdlib/roguewave.hpp,
+	  src/other/boost/config/stdlib/sgi.hpp,
+	  src/other/boost/config/stdlib/stlport.hpp,
+	  src/other/boost/config/stdlib/vacpp.hpp,
+	  src/other/boost/config/suffix.hpp, src/other/boost/cstdint.hpp,
+	  src/other/boost/date_time/c_time.hpp,
+	  src/other/boost/date_time/compiler_config.hpp,
+	  src/other/boost/date_time/constrained_value.hpp,
+	  src/other/boost/date_time/date_duration.hpp,
+	  src/other/boost/date_time/date_facet.hpp,
+	  src/other/boost/date_time/date_generator_formatter.hpp,
+	  src/other/boost/date_time/date_generator_parser.hpp,
+	  src/other/boost/date_time/date_generators.hpp,
+	  src/other/boost/date_time/filetime_functions.hpp,
+	  src/other/boost/date_time/format_date_parser.hpp,
+	  src/other/boost/date_time/gregorian/conversion.hpp,
+	  src/other/boost/date_time/gregorian/greg_date.hpp,
+	  src/other/boost/date_time/gregorian/greg_duration.hpp,
+	  src/other/boost/date_time/gregorian/greg_duration_types.hpp,
+	  src/other/boost/date_time/gregorian/gregorian_io.hpp,
+	  src/other/boost/date_time/int_adapter.hpp,
+	  src/other/boost/date_time/microsec_time_clock.hpp,
+	  src/other/boost/date_time/period_parser.hpp,
+	  src/other/boost/date_time/posix_time/conversion.hpp,
+	  src/other/boost/date_time/posix_time/posix_time_config.hpp,
+	  src/other/boost/date_time/strings_from_facet.hpp,
+	  src/other/boost/date_time/time.hpp,
+	  src/other/boost/date_time/time_defs.hpp,
+	  src/other/boost/date_time/time_system_split.hpp,
+	  src/other/boost/date_time/wrapping_int.hpp,
+	  src/other/boost/detail/allocator_utilities.hpp,
+	  src/other/boost/detail/call_traits.hpp,
+	  src/other/boost/detail/container_fwd.hpp,
+	  src/other/boost/detail/endian.hpp,
+	  src/other/boost/detail/lightweight_mutex.hpp,
+	  src/other/boost/detail/no_exceptions_support.hpp,
+	  src/other/boost/detail/workaround.hpp,
+	  src/other/boost/dynamic_property_map.hpp,
+	  src/other/boost/exception/exception.hpp,
+	  src/other/boost/function/function_base.hpp,
+	  src/other/boost/function/function_fwd.hpp,
+	  src/other/boost/function/function_template.hpp,
+	  src/other/boost/functional, src/other/boost/functional/hash,
+	  src/other/boost/functional/hash.hpp,
+	  src/other/boost/functional/hash/detail,
+	  src/other/boost/functional/hash/detail/float_functions.hpp,
+	  src/other/boost/functional/hash/detail/hash_float.hpp,
+	  src/other/boost/functional/hash/extensions.hpp,
+	  src/other/boost/functional/hash/hash.hpp,
+	  src/other/boost/functional/hash/hash_fwd.hpp,
+	  src/other/boost/fusion, src/other/boost/fusion/adapted,
+	  src/other/boost/fusion/adapted/mpl,
+	  src/other/boost/fusion/adapted/mpl.hpp,
+	  src/other/boost/fusion/adapted/mpl/detail,
+	  src/other/boost/fusion/adapted/mpl/detail/at_impl.hpp,
+	  src/other/boost/fusion/adapted/mpl/detail/begin_impl.hpp,
+	  src/other/boost/fusion/adapted/mpl/detail/category_of_impl.hpp,
+	  src/other/boost/fusion/adapted/mpl/detail/end_impl.hpp,
+	  src/other/boost/fusion/adapted/mpl/detail/has_key_impl.hpp,
+	  src/other/boost/fusion/adapted/mpl/detail/is_sequence_impl.hpp,
+	  src/other/boost/fusion/adapted/mpl/detail/is_view_impl.hpp,
+	  src/other/boost/fusion/adapted/mpl/detail/size_impl.hpp,
+	  src/other/boost/fusion/adapted/mpl/detail/value_at_impl.hpp,
+	  src/other/boost/fusion/adapted/mpl/mpl_iterator.hpp,
+	  src/other/boost/fusion/algorithm,
+	  src/other/boost/fusion/algorithm/iteration,
+	  src/other/boost/fusion/algorithm/iteration/detail,
+	  src/other/boost/fusion/algorithm/iteration/detail/fold.hpp,
+	  src/other/boost/fusion/algorithm/iteration/fold.hpp,
+	  src/other/boost/fusion/algorithm/query,
+	  src/other/boost/fusion/algorithm/query/detail,
+	  src/other/boost/fusion/algorithm/query/detail/assoc_find.hpp,
+	  src/other/boost/fusion/algorithm/transformation,
+	  src/other/boost/fusion/algorithm/transformation/erase.hpp,
+	  src/other/boost/fusion/algorithm/transformation/erase_key.hpp,
+	  src/other/boost/fusion/algorithm/transformation/insert.hpp,
+	  src/other/boost/fusion/algorithm/transformation/insert_range.hpp,
+	  src/other/boost/fusion/algorithm/transformation/pop_back.hpp,
+	  src/other/boost/fusion/algorithm/transformation/pop_front.hpp,
+	  src/other/boost/fusion/algorithm/transformation/push_back.hpp,
+	  src/other/boost/fusion/algorithm/transformation/push_front.hpp,
+	  src/other/boost/fusion/algorithm/transformation/transform.hpp,
+	  src/other/boost/fusion/container,
+	  src/other/boost/fusion/container/deque,
+	  src/other/boost/fusion/container/deque/deque_fwd.hpp,
+	  src/other/boost/fusion/container/deque/limits.hpp,
+	  src/other/boost/fusion/container/list,
+	  src/other/boost/fusion/container/list/limits.hpp,
+	  src/other/boost/fusion/container/list/list_fwd.hpp,
+	  src/other/boost/fusion/container/map,
+	  src/other/boost/fusion/container/map/limits.hpp,
+	  src/other/boost/fusion/container/map/map_fwd.hpp,
+	  src/other/boost/fusion/container/set,
+	  src/other/boost/fusion/container/set/limits.hpp,
+	  src/other/boost/fusion/container/set/set_fwd.hpp,
+	  src/other/boost/fusion/container/vector,
+	  src/other/boost/fusion/container/vector.hpp,
+	  src/other/boost/fusion/container/vector/convert.hpp,
+	  src/other/boost/fusion/container/vector/detail,
+	  src/other/boost/fusion/container/vector/detail/advance_impl.hpp,
+	  src/other/boost/fusion/container/vector/detail/as_vector.hpp,
+	  src/other/boost/fusion/container/vector/detail/at_impl.hpp,
+	  src/other/boost/fusion/container/vector/detail/begin_impl.hpp,
+	  src/other/boost/fusion/container/vector/detail/convert_impl.hpp,
+	  src/other/boost/fusion/container/vector/detail/deref_impl.hpp,
+	  src/other/boost/fusion/container/vector/detail/distance_impl.hpp,
+	  src/other/boost/fusion/container/vector/detail/end_impl.hpp,
+	  src/other/boost/fusion/container/vector/detail/equal_to_impl.hpp,
+	  src/other/boost/fusion/container/vector/detail/next_impl.hpp,
+	  src/other/boost/fusion/container/vector/detail/prior_impl.hpp,
+	  src/other/boost/fusion/container/vector/detail/value_at_impl.hpp,
+	  src/other/boost/fusion/container/vector/detail/value_of_impl.hpp,
+	  src/other/boost/fusion/container/vector/detail/vector_forward_ctor.hpp,
+	  src/other/boost/fusion/container/vector/detail/vector_n.hpp,
+	  src/other/boost/fusion/container/vector/detail/vector_n_chooser.hpp,
+	  src/other/boost/fusion/container/vector/limits.hpp,
+	  src/other/boost/fusion/container/vector/vector.hpp,
+	  src/other/boost/fusion/container/vector/vector10.hpp,
+	  src/other/boost/fusion/container/vector/vector20.hpp,
+	  src/other/boost/fusion/container/vector/vector30.hpp,
+	  src/other/boost/fusion/container/vector/vector40.hpp,
+	  src/other/boost/fusion/container/vector/vector50.hpp,
+	  src/other/boost/fusion/container/vector/vector_fwd.hpp,
+	  src/other/boost/fusion/container/vector/vector_iterator.hpp,
+	  src/other/boost/fusion/include,
+	  src/other/boost/fusion/include/as_vector.hpp,
+	  src/other/boost/fusion/include/at.hpp,
+	  src/other/boost/fusion/include/begin.hpp,
+	  src/other/boost/fusion/include/is_sequence.hpp,
+	  src/other/boost/fusion/include/mpl.hpp,
+	  src/other/boost/fusion/include/push_back.hpp,
+	  src/other/boost/fusion/include/push_front.hpp,
+	  src/other/boost/fusion/include/size.hpp,
+	  src/other/boost/fusion/include/transform.hpp,
+	  src/other/boost/fusion/include/value_at.hpp,
+	  src/other/boost/fusion/include/value_of.hpp,
+	  src/other/boost/fusion/include/vector.hpp,
+	  src/other/boost/fusion/iterator,
+	  src/other/boost/fusion/iterator/advance.hpp,
+	  src/other/boost/fusion/iterator/deref.hpp,
+	  src/other/boost/fusion/iterator/detail,
+	  src/other/boost/fusion/iterator/detail/adapt_deref_traits.hpp,
+	  src/other/boost/fusion/iterator/detail/adapt_value_traits.hpp,
+	  src/other/boost/fusion/iterator/detail/advance.hpp,
+	  src/other/boost/fusion/iterator/detail/distance.hpp,
+	  src/other/boost/fusion/iterator/distance.hpp,
+	  src/other/boost/fusion/iterator/equal_to.hpp,
+	  src/other/boost/fusion/iterator/iterator_facade.hpp,
+	  src/other/boost/fusion/iterator/mpl,
+	  src/other/boost/fusion/iterator/mpl.hpp,
+	  src/other/boost/fusion/iterator/mpl/convert_iterator.hpp,
+	  src/other/boost/fusion/iterator/mpl/fusion_iterator.hpp,
+	  src/other/boost/fusion/iterator/next.hpp,
+	  src/other/boost/fusion/iterator/prior.hpp,
+	  src/other/boost/fusion/iterator/value_of.hpp,
+	  src/other/boost/fusion/mpl, src/other/boost/fusion/mpl.hpp,
+	  src/other/boost/fusion/mpl/at.hpp,
+	  src/other/boost/fusion/mpl/back.hpp,
+	  src/other/boost/fusion/mpl/begin.hpp,
+	  src/other/boost/fusion/mpl/clear.hpp,
+	  src/other/boost/fusion/mpl/detail,
+	  src/other/boost/fusion/mpl/detail/clear.hpp,
+	  src/other/boost/fusion/mpl/empty.hpp,
+	  src/other/boost/fusion/mpl/end.hpp,
+	  src/other/boost/fusion/mpl/erase.hpp,
+	  src/other/boost/fusion/mpl/erase_key.hpp,
+	  src/other/boost/fusion/mpl/front.hpp,
+	  src/other/boost/fusion/mpl/has_key.hpp,
+	  src/other/boost/fusion/mpl/insert.hpp,
+	  src/other/boost/fusion/mpl/insert_range.hpp,
+	  src/other/boost/fusion/mpl/pop_back.hpp,
+	  src/other/boost/fusion/mpl/pop_front.hpp,
+	  src/other/boost/fusion/mpl/push_back.hpp,
+	  src/other/boost/fusion/mpl/push_front.hpp,
+	  src/other/boost/fusion/mpl/size.hpp,
+	  src/other/boost/fusion/sequence,
+	  src/other/boost/fusion/sequence/convert.hpp,
+	  src/other/boost/fusion/sequence/intrinsic,
+	  src/other/boost/fusion/sequence/intrinsic/at.hpp,
+	  src/other/boost/fusion/sequence/intrinsic/begin.hpp,
+	  src/other/boost/fusion/sequence/intrinsic/empty.hpp,
+	  src/other/boost/fusion/sequence/intrinsic/end.hpp,
+	  src/other/boost/fusion/sequence/intrinsic/has_key.hpp,
+	  src/other/boost/fusion/sequence/intrinsic/size.hpp,
+	  src/other/boost/fusion/sequence/intrinsic/value_at.hpp,
+	  src/other/boost/fusion/support,
+	  src/other/boost/fusion/support/category_of.hpp,
+	  src/other/boost/fusion/support/detail,
+	  src/other/boost/fusion/support/detail/access.hpp,
+	  src/other/boost/fusion/support/detail/as_fusion_element.hpp,
+	  src/other/boost/fusion/support/detail/category_of.hpp,
+	  src/other/boost/fusion/support/detail/is_mpl_sequence.hpp,
+	  src/other/boost/fusion/support/detail/is_view.hpp,
+	  src/other/boost/fusion/support/detail/mpl_iterator_category.hpp,
+	  src/other/boost/fusion/support/is_iterator.hpp,
+	  src/other/boost/fusion/support/is_sequence.hpp,
+	  src/other/boost/fusion/support/is_view.hpp,
+	  src/other/boost/fusion/support/iterator_base.hpp,
+	  src/other/boost/fusion/support/sequence_base.hpp,
+	  src/other/boost/fusion/support/tag_of.hpp,
+	  src/other/boost/fusion/support/tag_of_fwd.hpp,
+	  src/other/boost/fusion/view, src/other/boost/fusion/view/detail,
+	  src/other/boost/fusion/view/detail/strictest_traversal.hpp,
+	  src/other/boost/fusion/view/iterator_range,
+	  src/other/boost/fusion/view/iterator_range/detail,
+	  src/other/boost/fusion/view/iterator_range/detail/at_impl.hpp,
+	  src/other/boost/fusion/view/iterator_range/detail/begin_impl.hpp,
+	  src/other/boost/fusion/view/iterator_range/detail/end_impl.hpp,
+	  src/other/boost/fusion/view/iterator_range/detail/value_at_impl.hpp,
+	  src/other/boost/fusion/view/iterator_range/iterator_range.hpp,
+	  src/other/boost/fusion/view/joint_view,
+	  src/other/boost/fusion/view/joint_view/detail,
+	  src/other/boost/fusion/view/joint_view/detail/begin_impl.hpp,
+	  src/other/boost/fusion/view/joint_view/detail/deref_impl.hpp,
+	  src/other/boost/fusion/view/joint_view/detail/end_impl.hpp,
+	  src/other/boost/fusion/view/joint_view/detail/next_impl.hpp,
+	  src/other/boost/fusion/view/joint_view/detail/value_of_impl.hpp,
+	  src/other/boost/fusion/view/joint_view/joint_view.hpp,
+	  src/other/boost/fusion/view/joint_view/joint_view_iterator.hpp,
+	  src/other/boost/fusion/view/single_view,
+	  src/other/boost/fusion/view/single_view/detail,
+	  src/other/boost/fusion/view/single_view/detail/begin_impl.hpp,
+	  src/other/boost/fusion/view/single_view/detail/deref_impl.hpp,
+	  src/other/boost/fusion/view/single_view/detail/end_impl.hpp,
+	  src/other/boost/fusion/view/single_view/detail/next_impl.hpp,
+	  src/other/boost/fusion/view/single_view/detail/value_of_impl.hpp,
+	  src/other/boost/fusion/view/single_view/single_view.hpp,
+	  src/other/boost/fusion/view/single_view/single_view_iterator.hpp,
+	  src/other/boost/fusion/view/transform_view,
+	  src/other/boost/fusion/view/transform_view/detail,
+	  src/other/boost/fusion/view/transform_view/detail/advance_impl.hpp,
+	  src/other/boost/fusion/view/transform_view/detail/apply_transform_result.hpp,
+	  src/other/boost/fusion/view/transform_view/detail/at_impl.hpp,
+	  src/other/boost/fusion/view/transform_view/detail/begin_impl.hpp,
+	  src/other/boost/fusion/view/transform_view/detail/deref_impl.hpp,
+	  src/other/boost/fusion/view/transform_view/detail/distance_impl.hpp,
+	  src/other/boost/fusion/view/transform_view/detail/end_impl.hpp,
+	  src/other/boost/fusion/view/transform_view/detail/equal_to_impl.hpp,
+	  src/other/boost/fusion/view/transform_view/detail/next_impl.hpp,
+	  src/other/boost/fusion/view/transform_view/detail/prior_impl.hpp,
+	  src/other/boost/fusion/view/transform_view/detail/value_at_impl.hpp,
+	  src/other/boost/fusion/view/transform_view/detail/value_of_impl.hpp,
+	  src/other/boost/fusion/view/transform_view/transform_view.hpp,
+	  src/other/boost/fusion/view/transform_view/transform_view_fwd.hpp,
+	  src/other/boost/fusion/view/transform_view/transform_view_iterator.hpp,
+	  src/other/boost/graph/adjacency_list.hpp,
+	  src/other/boost/graph/detail/adjacency_list.hpp,
+	  src/other/boost/graph/detail/read_graphviz_spirit.hpp,
+	  src/other/boost/graph/graph_concepts.hpp,
+	  src/other/boost/graph/named_graph.hpp,
+	  src/other/boost/graph/numeric_values.hpp,
+	  src/other/boost/graph/subgraph.hpp, src/other/boost/integer,
+	  src/other/boost/integer/static_log2.hpp,
+	  src/other/boost/iterator/detail/config_def.hpp,
+	  src/other/boost/iterator/indirect_iterator.hpp,
+	  src/other/boost/iterator/iterator_adaptor.hpp,
+	  src/other/boost/iterator/iterator_facade.hpp,
+	  src/other/boost/lexical_cast.hpp, src/other/boost/limits.hpp,
+	  src/other/boost/mem_fn.hpp, src/other/boost/mpl/O1_size.hpp,
+	  src/other/boost/mpl/O1_size_fwd.hpp,
+	  src/other/boost/mpl/advance.hpp,
+	  src/other/boost/mpl/advance_fwd.hpp,
+	  src/other/boost/mpl/always.hpp, src/other/boost/mpl/and.hpp,
+	  src/other/boost/mpl/apply.hpp, src/other/boost/mpl/apply_fwd.hpp,
+	  src/other/boost/mpl/apply_wrap.hpp, src/other/boost/mpl/arg.hpp,
+	  src/other/boost/mpl/arg_fwd.hpp, src/other/boost/mpl/assert.hpp,
+	  src/other/boost/mpl/at.hpp, src/other/boost/mpl/at_fwd.hpp,
+	  src/other/boost/mpl/aux_/O1_size_impl.hpp,
+	  src/other/boost/mpl/aux_/adl_barrier.hpp,
+	  src/other/boost/mpl/aux_/advance_backward.hpp,
+	  src/other/boost/mpl/aux_/advance_forward.hpp,
+	  src/other/boost/mpl/aux_/arg_typedef.hpp,
+	  src/other/boost/mpl/aux_/arithmetic_op.hpp,
+	  src/other/boost/mpl/aux_/arity.hpp,
+	  src/other/boost/mpl/aux_/arity_spec.hpp,
+	  src/other/boost/mpl/aux_/at_impl.hpp,
+	  src/other/boost/mpl/aux_/back_impl.hpp,
+	  src/other/boost/mpl/aux_/begin_end_impl.hpp,
+	  src/other/boost/mpl/aux_/clear_impl.hpp,
+	  src/other/boost/mpl/aux_/common_name_wknd.hpp,
+	  src/other/boost/mpl/aux_/comparison_op.hpp,
+	  src/other/boost/mpl/aux_/config/adl.hpp,
+	  src/other/boost/mpl/aux_/config/arrays.hpp,
+	  src/other/boost/mpl/aux_/config/bcc.hpp,
+	  src/other/boost/mpl/aux_/config/bind.hpp,
+	  src/other/boost/mpl/aux_/config/compiler.hpp,
+	  src/other/boost/mpl/aux_/config/ctps.hpp,
+	  src/other/boost/mpl/aux_/config/dmc_ambiguous_ctps.hpp,
+	  src/other/boost/mpl/aux_/config/dtp.hpp,
+	  src/other/boost/mpl/aux_/config/eti.hpp,
+	  src/other/boost/mpl/aux_/config/forwarding.hpp,
+	  src/other/boost/mpl/aux_/config/gcc.hpp,
+	  src/other/boost/mpl/aux_/config/has_apply.hpp,
+	  src/other/boost/mpl/aux_/config/has_xxx.hpp,
+	  src/other/boost/mpl/aux_/config/integral.hpp,
+	  src/other/boost/mpl/aux_/config/intel.hpp,
+	  src/other/boost/mpl/aux_/config/lambda.hpp,
+	  src/other/boost/mpl/aux_/config/msvc.hpp,
+	  src/other/boost/mpl/aux_/config/msvc_typename.hpp,
+	  src/other/boost/mpl/aux_/config/nttp.hpp,
+	  src/other/boost/mpl/aux_/config/operators.hpp,
+	  src/other/boost/mpl/aux_/config/overload_resolution.hpp,
+	  src/other/boost/mpl/aux_/config/pp_counter.hpp,
+	  src/other/boost/mpl/aux_/config/preprocessor.hpp,
+	  src/other/boost/mpl/aux_/config/static_constant.hpp,
+	  src/other/boost/mpl/aux_/config/ttp.hpp,
+	  src/other/boost/mpl/aux_/config/typeof.hpp,
+	  src/other/boost/mpl/aux_/config/use_preprocessed.hpp,
+	  src/other/boost/mpl/aux_/config/workaround.hpp,
+	  src/other/boost/mpl/aux_/contains_impl.hpp,
+	  src/other/boost/mpl/aux_/count_args.hpp,
+	  src/other/boost/mpl/aux_/empty_impl.hpp,
+	  src/other/boost/mpl/aux_/erase_impl.hpp,
+	  src/other/boost/mpl/aux_/erase_key_impl.hpp,
+	  src/other/boost/mpl/aux_/fold_impl.hpp,
+	  src/other/boost/mpl/aux_/fold_impl_body.hpp,
+	  src/other/boost/mpl/aux_/front_impl.hpp,
+	  src/other/boost/mpl/aux_/full_lambda.hpp,
+	  src/other/boost/mpl/aux_/has_apply.hpp,
+	  src/other/boost/mpl/aux_/has_begin.hpp,
+	  src/other/boost/mpl/aux_/has_key_impl.hpp,
+	  src/other/boost/mpl/aux_/has_rebind.hpp,
+	  src/other/boost/mpl/aux_/has_size.hpp,
+	  src/other/boost/mpl/aux_/has_tag.hpp,
+	  src/other/boost/mpl/aux_/has_type.hpp,
+	  src/other/boost/mpl/aux_/include_preprocessed.hpp,
+	  src/other/boost/mpl/aux_/insert_impl.hpp,
+	  src/other/boost/mpl/aux_/insert_range_impl.hpp,
+	  src/other/boost/mpl/aux_/inserter_algorithm.hpp,
+	  src/other/boost/mpl/aux_/integral_wrapper.hpp,
+	  src/other/boost/mpl/aux_/is_msvc_eti_arg.hpp,
+	  src/other/boost/mpl/aux_/iter_apply.hpp,
+	  src/other/boost/mpl/aux_/iter_fold_if_impl.hpp,
+	  src/other/boost/mpl/aux_/iter_fold_impl.hpp,
+	  src/other/boost/mpl/aux_/iter_push_front.hpp,
+	  src/other/boost/mpl/aux_/joint_iter.hpp,
+	  src/other/boost/mpl/aux_/lambda_arity_param.hpp,
+	  src/other/boost/mpl/aux_/lambda_no_ctps.hpp,
+	  src/other/boost/mpl/aux_/lambda_spec.hpp,
+	  src/other/boost/mpl/aux_/lambda_support.hpp,
+	  src/other/boost/mpl/aux_/largest_int.hpp,
+	  src/other/boost/mpl/aux_/logical_op.hpp,
+	  src/other/boost/mpl/aux_/msvc_dtw.hpp,
+	  src/other/boost/mpl/aux_/msvc_eti_base.hpp,
+	  src/other/boost/mpl/aux_/msvc_is_class.hpp,
+	  src/other/boost/mpl/aux_/msvc_never_true.hpp,
+	  src/other/boost/mpl/aux_/msvc_type.hpp,
+	  src/other/boost/mpl/aux_/na.hpp,
+	  src/other/boost/mpl/aux_/na_assert.hpp,
+	  src/other/boost/mpl/aux_/na_fwd.hpp,
+	  src/other/boost/mpl/aux_/na_spec.hpp,
+	  src/other/boost/mpl/aux_/nested_type_wknd.hpp,
+	  src/other/boost/mpl/aux_/nttp_decl.hpp,
+	  src/other/boost/mpl/aux_/numeric_cast_utils.hpp,
+	  src/other/boost/mpl/aux_/numeric_op.hpp,
+	  src/other/boost/mpl/aux_/overload_names.hpp,
+	  src/other/boost/mpl/aux_/pop_back_impl.hpp,
+	  src/other/boost/mpl/aux_/pop_front_impl.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/advance_backward.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/advance_forward.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/and.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/apply.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/apply_fwd.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/apply_wrap.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/arg.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/basic_bind.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/bind.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/bind_fwd.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/bitand.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/bitor.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/bitxor.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/deque.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/divides.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/equal_to.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/fold_impl.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/full_lambda.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/greater.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/greater_equal.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/inherit.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/iter_fold_if_impl.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/iter_fold_impl.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/lambda_no_ctps.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/less.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/less_equal.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/list.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/list_c.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/map.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/minus.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/modulus.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/not_equal_to.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/or.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/placeholders.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/plus.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/quote.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/reverse_fold_impl.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/reverse_iter_fold_impl.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/set.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/set_c.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/shift_left.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/shift_right.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/template_arity.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/times.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/unpack_args.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/vector.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc/vector_c.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/advance_backward.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/advance_forward.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/and.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/apply.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/apply_fwd.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/apply_wrap.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/arg.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/basic_bind.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/bind.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/bind_fwd.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/bitand.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/bitor.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/bitxor.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/deque.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/divides.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/equal_to.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/fold_impl.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/full_lambda.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/greater.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/greater_equal.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/inherit.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/iter_fold_if_impl.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/iter_fold_impl.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/lambda_no_ctps.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/less.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/less_equal.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/list.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/list_c.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/map.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/minus.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/modulus.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/not_equal_to.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/or.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/placeholders.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/plus.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/quote.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/reverse_fold_impl.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/reverse_iter_fold_impl.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/set.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/set_c.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/shift_left.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/shift_right.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/template_arity.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/times.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/unpack_args.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/vector.hpp,
+	  src/other/boost/mpl/aux_/preprocessed/bcc_pre590/vector_c.hpp,
+	  src/other/boost/mpl/aux_/preprocessor/add.hpp,
+	  src/other/boost/mpl/aux_/preprocessor/def_params_tail.hpp,
+	  src/other/boost/mpl/aux_/preprocessor/default_params.hpp,
+	  src/other/boost/mpl/aux_/preprocessor/enum.hpp,
+	  src/other/boost/mpl/aux_/preprocessor/ext_params.hpp,
+	  src/other/boost/mpl/aux_/preprocessor/filter_params.hpp,
+	  src/other/boost/mpl/aux_/preprocessor/params.hpp,
+	  src/other/boost/mpl/aux_/preprocessor/partial_spec_params.hpp,
+	  src/other/boost/mpl/aux_/preprocessor/range.hpp,
+	  src/other/boost/mpl/aux_/preprocessor/repeat.hpp,
+	  src/other/boost/mpl/aux_/preprocessor/sub.hpp,
+	  src/other/boost/mpl/aux_/preprocessor/tuple.hpp,
+	  src/other/boost/mpl/aux_/ptr_to_ref.hpp,
+	  src/other/boost/mpl/aux_/push_back_impl.hpp,
+	  src/other/boost/mpl/aux_/push_front_impl.hpp,
+	  src/other/boost/mpl/aux_/reverse_fold_impl.hpp,
+	  src/other/boost/mpl/aux_/reverse_fold_impl_body.hpp,
+	  src/other/boost/mpl/aux_/reverse_iter_fold_impl.hpp,
+	  src/other/boost/mpl/aux_/sequence_wrapper.hpp,
+	  src/other/boost/mpl/aux_/size_impl.hpp,
+	  src/other/boost/mpl/aux_/static_cast.hpp,
+	  src/other/boost/mpl/aux_/template_arity.hpp,
+	  src/other/boost/mpl/aux_/template_arity_fwd.hpp,
+	  src/other/boost/mpl/aux_/traits_lambda_spec.hpp,
+	  src/other/boost/mpl/aux_/type_wrapper.hpp,
+	  src/other/boost/mpl/aux_/value_wknd.hpp,
+	  src/other/boost/mpl/aux_/yes_no.hpp,
+	  src/other/boost/mpl/back.hpp, src/other/boost/mpl/back_fwd.hpp,
+	  src/other/boost/mpl/back_inserter.hpp,
+	  src/other/boost/mpl/base.hpp, src/other/boost/mpl/begin.hpp,
+	  src/other/boost/mpl/begin_end.hpp,
+	  src/other/boost/mpl/begin_end_fwd.hpp,
+	  src/other/boost/mpl/bind.hpp, src/other/boost/mpl/bind_fwd.hpp,
+	  src/other/boost/mpl/bool.hpp, src/other/boost/mpl/bool_fwd.hpp,
+	  src/other/boost/mpl/clear.hpp, src/other/boost/mpl/clear_fwd.hpp,
+	  src/other/boost/mpl/contains.hpp,
+	  src/other/boost/mpl/contains_fwd.hpp,
+	  src/other/boost/mpl/copy.hpp, src/other/boost/mpl/deref.hpp,
+	  src/other/boost/mpl/distance.hpp,
+	  src/other/boost/mpl/distance_fwd.hpp,
+	  src/other/boost/mpl/empty.hpp, src/other/boost/mpl/empty_fwd.hpp,
+	  src/other/boost/mpl/end.hpp, src/other/boost/mpl/equal_to.hpp,
+	  src/other/boost/mpl/erase.hpp, src/other/boost/mpl/erase_fwd.hpp,
+	  src/other/boost/mpl/erase_key.hpp,
+	  src/other/boost/mpl/erase_key_fwd.hpp,
+	  src/other/boost/mpl/eval_if.hpp, src/other/boost/mpl/find.hpp,
+	  src/other/boost/mpl/find_if.hpp, src/other/boost/mpl/fold.hpp,
+	  src/other/boost/mpl/front.hpp, src/other/boost/mpl/front_fwd.hpp,
+	  src/other/boost/mpl/front_inserter.hpp,
+	  src/other/boost/mpl/greater.hpp, src/other/boost/mpl/has_key.hpp,
+	  src/other/boost/mpl/has_key_fwd.hpp,
+	  src/other/boost/mpl/has_xxx.hpp,
+	  src/other/boost/mpl/identity.hpp, src/other/boost/mpl/if.hpp,
+	  src/other/boost/mpl/insert.hpp,
+	  src/other/boost/mpl/insert_fwd.hpp,
+	  src/other/boost/mpl/insert_range.hpp,
+	  src/other/boost/mpl/insert_range_fwd.hpp,
+	  src/other/boost/mpl/inserter.hpp, src/other/boost/mpl/int.hpp,
+	  src/other/boost/mpl/int_fwd.hpp,
+	  src/other/boost/mpl/integral_c.hpp,
+	  src/other/boost/mpl/integral_c_fwd.hpp,
+	  src/other/boost/mpl/integral_c_tag.hpp,
+	  src/other/boost/mpl/is_placeholder.hpp,
+	  src/other/boost/mpl/is_sequence.hpp,
+	  src/other/boost/mpl/iter_fold.hpp,
+	  src/other/boost/mpl/iter_fold_if.hpp,
+	  src/other/boost/mpl/iterator_category.hpp,
+	  src/other/boost/mpl/iterator_range.hpp,
+	  src/other/boost/mpl/iterator_tags.hpp,
+	  src/other/boost/mpl/joint_view.hpp,
+	  src/other/boost/mpl/key_type_fwd.hpp,
+	  src/other/boost/mpl/lambda.hpp,
+	  src/other/boost/mpl/lambda_fwd.hpp, src/other/boost/mpl/less.hpp,
+	  src/other/boost/mpl/limits/arity.hpp,
+	  src/other/boost/mpl/limits/unrolling.hpp,
+	  src/other/boost/mpl/limits/vector.hpp,
+	  src/other/boost/mpl/logical.hpp, src/other/boost/mpl/long.hpp,
+	  src/other/boost/mpl/long_fwd.hpp, src/other/boost/mpl/min.hpp,
+	  src/other/boost/mpl/min_max.hpp, src/other/boost/mpl/minus.hpp,
+	  src/other/boost/mpl/multiplies.hpp,
+	  src/other/boost/mpl/negate.hpp, src/other/boost/mpl/next.hpp,
+	  src/other/boost/mpl/next_prior.hpp, src/other/boost/mpl/not.hpp,
+	  src/other/boost/mpl/numeric_cast.hpp, src/other/boost/mpl/or.hpp,
+	  src/other/boost/mpl/pair.hpp, src/other/boost/mpl/pair_view.hpp,
+	  src/other/boost/mpl/placeholders.hpp,
+	  src/other/boost/mpl/plus.hpp, src/other/boost/mpl/pop_back.hpp,
+	  src/other/boost/mpl/pop_back_fwd.hpp,
+	  src/other/boost/mpl/pop_front.hpp,
+	  src/other/boost/mpl/pop_front_fwd.hpp,
+	  src/other/boost/mpl/prior.hpp, src/other/boost/mpl/protect.hpp,
+	  src/other/boost/mpl/push_back.hpp,
+	  src/other/boost/mpl/push_back_fwd.hpp,
+	  src/other/boost/mpl/push_front.hpp,
+	  src/other/boost/mpl/push_front_fwd.hpp,
+	  src/other/boost/mpl/quote.hpp, src/other/boost/mpl/remove.hpp,
+	  src/other/boost/mpl/remove_if.hpp,
+	  src/other/boost/mpl/reverse_fold.hpp,
+	  src/other/boost/mpl/reverse_iter_fold.hpp,
+	  src/other/boost/mpl/same_as.hpp,
+	  src/other/boost/mpl/sequence_tag.hpp,
+	  src/other/boost/mpl/sequence_tag_fwd.hpp,
+	  src/other/boost/mpl/set, src/other/boost/mpl/set/aux_,
+	  src/other/boost/mpl/set/aux_/at_impl.hpp,
+	  src/other/boost/mpl/set/aux_/begin_end_impl.hpp,
+	  src/other/boost/mpl/set/aux_/clear_impl.hpp,
+	  src/other/boost/mpl/set/aux_/empty_impl.hpp,
+	  src/other/boost/mpl/set/aux_/erase_impl.hpp,
+	  src/other/boost/mpl/set/aux_/erase_key_impl.hpp,
+	  src/other/boost/mpl/set/aux_/has_key_impl.hpp,
+	  src/other/boost/mpl/set/aux_/insert_impl.hpp,
+	  src/other/boost/mpl/set/aux_/item.hpp,
+	  src/other/boost/mpl/set/aux_/iterator.hpp,
+	  src/other/boost/mpl/set/aux_/key_type_impl.hpp,
+	  src/other/boost/mpl/set/aux_/set0.hpp,
+	  src/other/boost/mpl/set/aux_/size_impl.hpp,
+	  src/other/boost/mpl/set/aux_/tag.hpp,
+	  src/other/boost/mpl/set/aux_/value_type_impl.hpp,
+	  src/other/boost/mpl/set/set0.hpp, src/other/boost/mpl/size.hpp,
+	  src/other/boost/mpl/size_fwd.hpp, src/other/boost/mpl/size_t.hpp,
+	  src/other/boost/mpl/size_t_fwd.hpp, src/other/boost/mpl/tag.hpp,
+	  src/other/boost/mpl/times.hpp, src/other/boost/mpl/transform.hpp,
+	  src/other/boost/mpl/value_type_fwd.hpp,
+	  src/other/boost/mpl/vector.hpp,
+	  src/other/boost/mpl/vector/aux_/O1_size.hpp,
+	  src/other/boost/mpl/vector/aux_/at.hpp,
+	  src/other/boost/mpl/vector/aux_/back.hpp,
+	  src/other/boost/mpl/vector/aux_/begin_end.hpp,
+	  src/other/boost/mpl/vector/aux_/clear.hpp,
+	  src/other/boost/mpl/vector/aux_/empty.hpp,
+	  src/other/boost/mpl/vector/aux_/front.hpp,
+	  src/other/boost/mpl/vector/aux_/include_preprocessed.hpp,
+	  src/other/boost/mpl/vector/aux_/item.hpp,
+	  src/other/boost/mpl/vector/aux_/iterator.hpp,
+	  src/other/boost/mpl/vector/aux_/numbered.hpp,
+	  src/other/boost/mpl/vector/aux_/numbered_c.hpp,
+	  src/other/boost/mpl/vector/aux_/pop_back.hpp,
+	  src/other/boost/mpl/vector/aux_/pop_front.hpp,
+	  src/other/boost/mpl/vector/aux_/push_back.hpp,
+	  src/other/boost/mpl/vector/aux_/push_front.hpp,
+	  src/other/boost/mpl/vector/aux_/size.hpp,
+	  src/other/boost/mpl/vector/aux_/tag.hpp,
+	  src/other/boost/mpl/vector/aux_/vector0.hpp,
+	  src/other/boost/mpl/vector/vector0.hpp,
+	  src/other/boost/mpl/vector/vector0_c.hpp,
+	  src/other/boost/mpl/vector/vector10.hpp,
+	  src/other/boost/mpl/vector/vector10_c.hpp,
+	  src/other/boost/mpl/vector/vector20.hpp,
+	  src/other/boost/mpl/vector/vector20_c.hpp,
+	  src/other/boost/mpl/vector/vector30.hpp,
+	  src/other/boost/mpl/vector/vector30_c.hpp,
+	  src/other/boost/mpl/vector/vector40.hpp,
+	  src/other/boost/mpl/vector/vector40_c.hpp,
+	  src/other/boost/mpl/vector/vector50.hpp,
+	  src/other/boost/mpl/vector/vector50_c.hpp,
+	  src/other/boost/mpl/void.hpp, src/other/boost/mpl/void_fwd.hpp,
+	  src/other/boost/multi_index, src/other/boost/multi_index/detail,
+	  src/other/boost/multi_index/detail/access_specifier.hpp,
+	  src/other/boost/multi_index/detail/adl_swap.hpp,
+	  src/other/boost/multi_index/detail/archive_constructed.hpp,
+	  src/other/boost/multi_index/detail/auto_space.hpp,
+	  src/other/boost/multi_index/detail/base_type.hpp,
+	  src/other/boost/multi_index/detail/bucket_array.hpp,
+	  src/other/boost/multi_index/detail/converter.hpp,
+	  src/other/boost/multi_index/detail/copy_map.hpp,
+	  src/other/boost/multi_index/detail/has_tag.hpp,
+	  src/other/boost/multi_index/detail/hash_index_args.hpp,
+	  src/other/boost/multi_index/detail/hash_index_iterator.hpp,
+	  src/other/boost/multi_index/detail/hash_index_node.hpp,
+	  src/other/boost/multi_index/detail/header_holder.hpp,
+	  src/other/boost/multi_index/detail/index_base.hpp,
+	  src/other/boost/multi_index/detail/index_loader.hpp,
+	  src/other/boost/multi_index/detail/index_matcher.hpp,
+	  src/other/boost/multi_index/detail/index_node_base.hpp,
+	  src/other/boost/multi_index/detail/index_saver.hpp,
+	  src/other/boost/multi_index/detail/invariant_assert.hpp,
+	  src/other/boost/multi_index/detail/is_index_list.hpp,
+	  src/other/boost/multi_index/detail/iter_adaptor.hpp,
+	  src/other/boost/multi_index/detail/modify_key_adaptor.hpp,
+	  src/other/boost/multi_index/detail/msvc_index_specifier.hpp,
+	  src/other/boost/multi_index/detail/no_duplicate_tags.hpp,
+	  src/other/boost/multi_index/detail/node_type.hpp,
+	  src/other/boost/multi_index/detail/ord_index_args.hpp,
+	  src/other/boost/multi_index/detail/prevent_eti.hpp,
+	  src/other/boost/multi_index/detail/safe_ctr_proxy.hpp,
+	  src/other/boost/multi_index/detail/safe_mode.hpp,
+	  src/other/boost/multi_index/detail/scope_guard.hpp,
+	  src/other/boost/multi_index/hashed_index.hpp,
+	  src/other/boost/multi_index/hashed_index_fwd.hpp,
+	  src/other/boost/multi_index/identity.hpp,
+	  src/other/boost/multi_index/identity_fwd.hpp,
+	  src/other/boost/multi_index/indexed_by.hpp,
+	  src/other/boost/multi_index/member.hpp,
+	  src/other/boost/multi_index/ordered_index_fwd.hpp,
+	  src/other/boost/multi_index/safe_mode_errors.hpp,
+	  src/other/boost/multi_index/tag.hpp,
+	  src/other/boost/multi_index_container.hpp,
+	  src/other/boost/multi_index_container_fwd.hpp,
+	  src/other/boost/operators.hpp,
+	  src/other/boost/pending/property.hpp,
+	  src/other/boost/preprocessor/arithmetic/detail,
+	  src/other/boost/preprocessor/arithmetic/detail/div_base.hpp,
+	  src/other/boost/preprocessor/arithmetic/mod.hpp,
+	  src/other/boost/preprocessor/comparison,
+	  src/other/boost/preprocessor/comparison/less_equal.hpp,
+	  src/other/boost/preprocessor/control/deduce_d.hpp,
+	  src/other/boost/preprocessor/logical/not.hpp,
+	  src/other/boost/preprocessor/repetition/enum_shifted.hpp,
+	  src/other/boost/preprocessor/seq/cat.hpp,
+	  src/other/boost/preprocessor/seq/transform.hpp,
+	  src/other/boost/ref.hpp, src/other/boost/scoped_ptr.hpp,
+	  src/other/boost/serialization,
+	  src/other/boost/serialization/access.hpp,
+	  src/other/boost/serialization/base_object.hpp,
+	  src/other/boost/serialization/force_include.hpp,
+	  src/other/boost/serialization/level.hpp,
+	  src/other/boost/serialization/level_enum.hpp,
+	  src/other/boost/serialization/nvp.hpp,
+	  src/other/boost/serialization/pfto.hpp,
+	  src/other/boost/serialization/serialization.hpp,
+	  src/other/boost/serialization/split_member.hpp,
+	  src/other/boost/serialization/strong_typedef.hpp,
+	  src/other/boost/serialization/throw_exception.hpp,
+	  src/other/boost/serialization/tracking.hpp,
+	  src/other/boost/serialization/tracking_enum.hpp,
+	  src/other/boost/serialization/traits.hpp,
+	  src/other/boost/serialization/void_cast_fwd.hpp,
+	  src/other/boost/serialization/wrapper.hpp,
+	  src/other/boost/shared_ptr.hpp, src/other/boost/smart_ptr,
+	  src/other/boost/smart_ptr/bad_weak_ptr.hpp,
+	  src/other/boost/smart_ptr/detail,
+	  src/other/boost/smart_ptr/detail/atomic_count.hpp,
+	  src/other/boost/smart_ptr/detail/atomic_count_gcc.hpp,
+	  src/other/boost/smart_ptr/detail/atomic_count_gcc_x86.hpp,
+	  src/other/boost/smart_ptr/detail/atomic_count_pthreads.hpp,
+	  src/other/boost/smart_ptr/detail/atomic_count_sync.hpp,
+	  src/other/boost/smart_ptr/detail/atomic_count_win32.hpp,
+	  src/other/boost/smart_ptr/detail/lightweight_mutex.hpp,
+	  src/other/boost/smart_ptr/detail/lwm_nop.hpp,
+	  src/other/boost/smart_ptr/detail/lwm_pthreads.hpp,
+	  src/other/boost/smart_ptr/detail/lwm_win32_cs.hpp,
+	  src/other/boost/smart_ptr/detail/operator_bool.hpp,
+	  src/other/boost/smart_ptr/detail/quick_allocator.hpp,
+	  src/other/boost/smart_ptr/detail/shared_count.hpp,
+	  src/other/boost/smart_ptr/detail/shared_ptr_nmt.hpp,
+	  src/other/boost/smart_ptr/detail/sp_convertible.hpp,
+	  src/other/boost/smart_ptr/detail/sp_counted_base.hpp,
+	  src/other/boost/smart_ptr/detail/sp_counted_base_acc_ia64.hpp,
+	  src/other/boost/smart_ptr/detail/sp_counted_base_cw_ppc.hpp,
+	  src/other/boost/smart_ptr/detail/sp_counted_base_gcc_ia64.hpp,
+	  src/other/boost/smart_ptr/detail/sp_counted_base_gcc_ppc.hpp,
+	  src/other/boost/smart_ptr/detail/sp_counted_base_gcc_sparc.hpp,
+	  src/other/boost/smart_ptr/detail/sp_counted_base_gcc_x86.hpp,
+	  src/other/boost/smart_ptr/detail/sp_counted_base_nt.hpp,
+	  src/other/boost/smart_ptr/detail/sp_counted_base_pt.hpp,
+	  src/other/boost/smart_ptr/detail/sp_counted_base_spin.hpp,
+	  src/other/boost/smart_ptr/detail/sp_counted_base_sync.hpp,
+	  src/other/boost/smart_ptr/detail/sp_counted_base_w32.hpp,
+	  src/other/boost/smart_ptr/detail/sp_counted_impl.hpp,
+	  src/other/boost/smart_ptr/detail/sp_has_sync.hpp,
+	  src/other/boost/smart_ptr/detail/spinlock.hpp,
+	  src/other/boost/smart_ptr/detail/spinlock_gcc_arm.hpp,
+	  src/other/boost/smart_ptr/detail/spinlock_nt.hpp,
+	  src/other/boost/smart_ptr/detail/spinlock_pool.hpp,
+	  src/other/boost/smart_ptr/detail/spinlock_pt.hpp,
+	  src/other/boost/smart_ptr/detail/spinlock_sync.hpp,
+	  src/other/boost/smart_ptr/detail/spinlock_w32.hpp,
+	  src/other/boost/smart_ptr/detail/yield_k.hpp,
+	  src/other/boost/smart_ptr/scoped_ptr.hpp,
+	  src/other/boost/smart_ptr/shared_ptr.hpp,
+	  src/other/boost/smart_ptr/weak_ptr.hpp,
+	  src/other/boost/spirit/attribute,
+	  src/other/boost/spirit/attribute/closure.hpp,
+	  src/other/boost/spirit/home/classic/core/parser.hpp,
+	  src/other/boost/spirit/home/classic/core/primitives/impl/numerics.ipp,
+	  src/other/boost/spirit/home/classic/iterator/impl/file_iterator.ipp,
+	  src/other/boost/spirit/home/classic/iterator/impl/position_iterator.ipp,
+	  src/other/boost/spirit/home/classic/iterator/position_iterator.hpp,
+	  src/other/boost/spirit/home/classic/symbols/impl/tst.ipp,
+	  src/other/boost/spirit/home/classic/utility/impl/chset/basic_chset.hpp,
+	  src/other/boost/spirit/home/classic/version.hpp,
+	  src/other/boost/spirit/home/phoenix,
+	  src/other/boost/spirit/home/phoenix.hpp,
+	  src/other/boost/spirit/home/phoenix/algorithm.hpp,
+	  src/other/boost/spirit/home/phoenix/bind,
+	  src/other/boost/spirit/home/phoenix/bind.hpp,
+	  src/other/boost/spirit/home/phoenix/bind/bind_function.hpp,
+	  src/other/boost/spirit/home/phoenix/bind/bind_function_object.hpp,
+	  src/other/boost/spirit/home/phoenix/bind/bind_member_function.hpp,
+	  src/other/boost/spirit/home/phoenix/bind/bind_member_variable.hpp,
+	  src/other/boost/spirit/home/phoenix/bind/detail,
+	  src/other/boost/spirit/home/phoenix/bind/detail/bind_function.hpp,
+	  src/other/boost/spirit/home/phoenix/bind/detail/bind_function_object.hpp,
+	  src/other/boost/spirit/home/phoenix/bind/detail/bind_member_function.hpp,
+	  src/other/boost/spirit/home/phoenix/bind/detail/function_ptr.hpp,
+	  src/other/boost/spirit/home/phoenix/bind/detail/member_function_ptr.hpp,
+	  src/other/boost/spirit/home/phoenix/container.hpp,
+	  src/other/boost/spirit/home/phoenix/core,
+	  src/other/boost/spirit/home/phoenix/core.hpp,
+	  src/other/boost/spirit/home/phoenix/core/actor.hpp,
+	  src/other/boost/spirit/home/phoenix/core/argument.hpp,
+	  src/other/boost/spirit/home/phoenix/core/as_actor.hpp,
+	  src/other/boost/spirit/home/phoenix/core/basic_environment.hpp,
+	  src/other/boost/spirit/home/phoenix/core/compose.hpp,
+	  src/other/boost/spirit/home/phoenix/core/composite.hpp,
+	  src/other/boost/spirit/home/phoenix/core/detail,
+	  src/other/boost/spirit/home/phoenix/core/detail/actor.hpp,
+	  src/other/boost/spirit/home/phoenix/core/detail/basic_environment.hpp,
+	  src/other/boost/spirit/home/phoenix/core/detail/compose.hpp,
+	  src/other/boost/spirit/home/phoenix/core/detail/composite.hpp,
+	  src/other/boost/spirit/home/phoenix/core/detail/composite_eval.hpp,
+	  src/other/boost/spirit/home/phoenix/core/detail/function_eval.hpp,
+	  src/other/boost/spirit/home/phoenix/core/is_actor.hpp,
+	  src/other/boost/spirit/home/phoenix/core/limits.hpp,
+	  src/other/boost/spirit/home/phoenix/core/nothing.hpp,
+	  src/other/boost/spirit/home/phoenix/core/reference.hpp,
+	  src/other/boost/spirit/home/phoenix/core/value.hpp,
+	  src/other/boost/spirit/home/phoenix/detail,
+	  src/other/boost/spirit/home/phoenix/detail/local_reference.hpp,
+	  src/other/boost/spirit/home/phoenix/detail/type_deduction.hpp,
+	  src/other/boost/spirit/home/phoenix/function,
+	  src/other/boost/spirit/home/phoenix/function.hpp,
+	  src/other/boost/spirit/home/phoenix/function/detail,
+	  src/other/boost/spirit/home/phoenix/function/detail/function_call.hpp,
+	  src/other/boost/spirit/home/phoenix/function/function.hpp,
+	  src/other/boost/spirit/home/phoenix/fusion,
+	  src/other/boost/spirit/home/phoenix/fusion.hpp,
+	  src/other/boost/spirit/home/phoenix/fusion/at.hpp,
+	  src/other/boost/spirit/home/phoenix/object,
+	  src/other/boost/spirit/home/phoenix/object.hpp,
+	  src/other/boost/spirit/home/phoenix/object/const_cast.hpp,
+	  src/other/boost/spirit/home/phoenix/object/construct.hpp,
+	  src/other/boost/spirit/home/phoenix/object/delete.hpp,
+	  src/other/boost/spirit/home/phoenix/object/detail,
+	  src/other/boost/spirit/home/phoenix/object/detail/construct.hpp,
+	  src/other/boost/spirit/home/phoenix/object/detail/construct_eval.hpp,
+	  src/other/boost/spirit/home/phoenix/object/detail/new.hpp,
+	  src/other/boost/spirit/home/phoenix/object/detail/new_eval.hpp,
+	  src/other/boost/spirit/home/phoenix/object/dynamic_cast.hpp,
+	  src/other/boost/spirit/home/phoenix/object/new.hpp,
+	  src/other/boost/spirit/home/phoenix/object/reinterpret_cast.hpp,
+	  src/other/boost/spirit/home/phoenix/object/static_cast.hpp,
+	  src/other/boost/spirit/home/phoenix/operator,
+	  src/other/boost/spirit/home/phoenix/operator.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/arithmetic.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/bitwise.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/comparison.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/detail,
+	  src/other/boost/spirit/home/phoenix/operator/detail/binary_compose.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/detail/binary_eval.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/detail/io.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/detail/mem_fun_ptr_eval.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/detail/mem_fun_ptr_gen.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/detail/mem_fun_ptr_return.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/detail/unary_compose.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/detail/unary_eval.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/if_else.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/io.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/logical.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/member.hpp,
+	  src/other/boost/spirit/home/phoenix/operator/self.hpp,
+	  src/other/boost/spirit/home/phoenix/scope,
+	  src/other/boost/spirit/home/phoenix/scope.hpp,
+	  src/other/boost/spirit/home/phoenix/scope/detail,
+	  src/other/boost/spirit/home/phoenix/scope/detail/local_gen.hpp,
+	  src/other/boost/spirit/home/phoenix/scope/detail/local_variable.hpp,
+	  src/other/boost/spirit/home/phoenix/scope/lambda.hpp,
+	  src/other/boost/spirit/home/phoenix/scope/let.hpp,
+	  src/other/boost/spirit/home/phoenix/scope/local_variable.hpp,
+	  src/other/boost/spirit/home/phoenix/scope/scoped_environment.hpp,
+	  src/other/boost/spirit/home/phoenix/statement,
+	  src/other/boost/spirit/home/phoenix/statement.hpp,
+	  src/other/boost/spirit/home/phoenix/statement/detail,
+	  src/other/boost/spirit/home/phoenix/statement/detail/catch_all_eval.hpp,
+	  src/other/boost/spirit/home/phoenix/statement/detail/catch_composite.hpp,
+	  src/other/boost/spirit/home/phoenix/statement/detail/catch_eval.hpp,
+	  src/other/boost/spirit/home/phoenix/statement/detail/switch.hpp,
+	  src/other/boost/spirit/home/phoenix/statement/detail/switch_eval.hpp,
+	  src/other/boost/spirit/home/phoenix/statement/detail/switch_eval.ipp,
+	  src/other/boost/spirit/home/phoenix/statement/do_while.hpp,
+	  src/other/boost/spirit/home/phoenix/statement/for.hpp,
+	  src/other/boost/spirit/home/phoenix/statement/if.hpp,
+	  src/other/boost/spirit/home/phoenix/statement/sequence.hpp,
+	  src/other/boost/spirit/home/phoenix/statement/switch.hpp,
+	  src/other/boost/spirit/home/phoenix/statement/throw.hpp,
+	  src/other/boost/spirit/home/phoenix/statement/try_catch.hpp,
+	  src/other/boost/spirit/home/phoenix/statement/while.hpp,
+	  src/other/boost/spirit/home/phoenix/stl,
+	  src/other/boost/spirit/home/phoenix/stl.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/begin.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/decay_array.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/end.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/has_equal_range.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/has_find.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/has_lower_bound.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/has_remove.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/has_remove_if.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/has_reverse.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/has_sort.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/has_unique.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/has_upper_bound.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/is_std_hash_map.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/is_std_hash_set.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/is_std_list.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/is_std_map.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/is_std_set.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/std_hash_map_fwd.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/std_hash_set_fwd.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/std_list_fwd.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/std_map_fwd.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/detail/std_set_fwd.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/iteration.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/querying.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/algorithm/transformation.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/container,
+	  src/other/boost/spirit/home/phoenix/stl/container.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/container/container.hpp,
+	  src/other/boost/spirit/home/phoenix/stl/container/detail,
+	  src/other/boost/spirit/home/phoenix/stl/container/detail/container.hpp,
+	  src/other/boost/spirit/home/phoenix/version.hpp,
+	  src/other/boost/spirit/include/classic_closure.hpp,
+	  src/other/boost/spirit/include/phoenix.hpp,
+	  src/other/boost/spirit/include/phoenix1_functions.hpp,
+	  src/other/boost/spirit/phoenix/functions.hpp,
+	  src/other/boost/spirit/symbols/symbols.hpp,
+	  src/other/boost/thread/detail/move.hpp,
+	  src/other/boost/thread/locks.hpp,
+	  src/other/boost/thread/win32/basic_timed_mutex.hpp,
+	  src/other/boost/throw_exception.hpp,
+	  src/other/boost/type_traits/add_pointer.hpp,
+	  src/other/boost/type_traits/alignment_of.hpp,
+	  src/other/boost/type_traits/config.hpp,
+	  src/other/boost/type_traits/extent.hpp,
+	  src/other/boost/type_traits/intrinsics.hpp,
+	  src/other/boost/type_traits/is_arithmetic.hpp,
+	  src/other/boost/type_traits/is_array.hpp,
+	  src/other/boost/type_traits/is_base_and_derived.hpp,
+	  src/other/boost/type_traits/is_class.hpp,
+	  src/other/boost/type_traits/is_compound.hpp,
+	  src/other/boost/type_traits/is_const.hpp,
+	  src/other/boost/type_traits/is_function.hpp,
+	  src/other/boost/type_traits/is_fundamental.hpp,
+	  src/other/boost/type_traits/is_integral.hpp,
+	  src/other/boost/type_traits/is_member_function_pointer.hpp,
+	  src/other/boost/type_traits/is_member_pointer.hpp,
+	  src/other/boost/type_traits/is_pointer.hpp,
+	  src/other/boost/type_traits/is_reference.hpp,
+	  src/other/boost/type_traits/is_signed.hpp,
+	  src/other/boost/type_traits/is_unsigned.hpp,
+	  src/other/boost/type_traits/is_void.hpp,
+	  src/other/boost/type_traits/is_volatile.hpp,
+	  src/other/boost/type_traits/rank.hpp,
+	  src/other/boost/type_traits/remove_all_extents.hpp,
+	  src/other/boost/type_traits/remove_bounds.hpp,
+	  src/other/boost/type_traits/remove_extent.hpp,
+	  src/other/boost/type_traits/remove_reference.hpp,
+	  src/other/boost/type_traits/type_with_alignment.hpp,
+	  src/other/boost/utility.hpp, src/other/boost/utility/binary.hpp,
+	  src/other/boost/utility/detail/result_of_iterate.hpp,
+	  src/other/boost/utility/result_of.hpp,
+	  src/other/boost/version.hpp, src/other/boost/weak_ptr.hpp:
+	  boost update particularly phoenix
+
+2009-03-11 18:47  starseeker
+
+	* [r33990] src/other/step/misc, src/other/step/misc/Makefile.am,
+	  src/other/step/misc/Makefile.defs,
+	  src/other/step/misc/flawfinder, src/other/step/misc/libtool.m4:
+	  Add step/misc directory
+
+2009-03-11 18:45  starseeker
+
+	* [r33989] src/other/step/Makefile.am, src/other/step/autogen.sh,
+	  src/other/step/configure, src/other/step/configure.ac,
+	  src/other/step/doc, src/other/step/doc/man,
+	  src/other/step/doc/man/man1,
+	  src/other/step/doc/man/man1/dataprobe.1,
+	  src/other/step/doc/man/man1/fedex.1,
+	  src/other/step/doc/man/man1/fedex_plus.1,
+	  src/other/step/doc/man/man1/mkProbe.1, src/other/step/include,
+	  src/other/step/include/ExpDict.h,
+	  src/other/step/include/Registry.h,
+	  src/other/step/include/STEPaggregate.h,
+	  src/other/step/include/STEPattribute.h,
+	  src/other/step/include/STEPattributeList.h,
+	  src/other/step/include/STEPcomplex.h,
+	  src/other/step/include/STEPfile.h,
+	  src/other/step/include/STEPundefined.h,
+	  src/other/step/include/Select.h,
+	  src/other/step/include/SingleLinkList.h,
+	  src/other/step/include/Str.h, src/other/step/include/baseType.h,
+	  src/other/step/include/cmdmgr.h,
+	  src/other/step/include/complexSupport.h,
+	  src/other/step/include/dictdefs.h,
+	  src/other/step/include/dirobj.h,
+	  src/other/step/include/dispnode.h,
+	  src/other/step/include/dispnodelist.h,
+	  src/other/step/include/editordefines.h,
+	  src/other/step/include/errordesc.h,
+	  src/other/step/include/gennode.h,
+	  src/other/step/include/gennodearray.h,
+	  src/other/step/include/gennodelist.h,
+	  src/other/step/include/instmgr.h,
+	  src/other/step/include/mgrnode.h,
+	  src/other/step/include/mgrnodearray.h,
+	  src/other/step/include/mgrnodelist.h,
+	  src/other/step/include/read_func.h,
+	  src/other/step/include/s_HEADER_SCHEMA.h,
+	  src/other/step/include/scl_char_str_list.h,
+	  src/other/step/include/scl_config.h.in,
+	  src/other/step/include/scl_hash.h,
+	  src/other/step/include/scl_osschema.h,
+	  src/other/step/include/scl_string.h,
+	  src/other/step/include/scldir.h,
+	  src/other/step/include/sclprefixes.h,
+	  src/other/step/include/sdai.h,
+	  src/other/step/include/sdaiApplication_instance.h,
+	  src/other/step/include/sdaiApplication_instance_set.h,
+	  src/other/step/include/sdaiBinary.h,
+	  src/other/step/include/sdaiDaObject.h,
+	  src/other/step/include/sdaiEntity_extent.h,
+	  src/other/step/include/sdaiEntity_extent_set.h,
+	  src/other/step/include/sdaiEnum.h,
+	  src/other/step/include/sdaiModel_contents.h,
+	  src/other/step/include/sdaiModel_contents_list.h,
+	  src/other/step/include/sdaiObject.h,
+	  src/other/step/include/sdaiSelect.h,
+	  src/other/step/include/sdaiSession_instance.h,
+	  src/other/step/include/sdaiString.h,
+	  src/other/step/include/seeinfodefault.h,
+	  src/other/step/include/stat.h, src/other/step/include/str_list.h,
+	  src/other/step/m4, src/other/step/m4/Makefile.am,
+	  src/other/step/m4/args.m4, src/other/step/m4/ax_boost_base.m4,
+	  src/other/step/m4/cache.m4, src/other/step/m4/compiler.m4,
+	  src/other/step/m4/epsilon.m4, src/other/step/m4/mkdirp.m4,
+	  src/other/step/m4/patch.m4, src/other/step/m4/prefix.m4,
+	  src/other/step/m4/python.m4, src/other/step/m4/sdl.m4,
+	  src/other/step/m4/search.m4, src/other/step/m4/stage.m4,
+	  src/other/step/man:
+	  More inching forward in STEP
+
+2009-03-11 18:24  starseeker
+
+	* [r33988] src/other/step/arch_template, src/other/step/bin:
+	  Clear out arch_template and bin
+
+2009-03-11 18:21  starseeker
+
+	* [r33987] src/other/step/AUTHORS, src/other/step/COPYING,
+	  src/other/step/ChangeLog, src/other/step/Makefile,
+	  src/other/step/NEWS, src/other/step/README,
+	  src/other/step/README.projdth, src/other/step/README.scl,
+	  src/other/step/checkout.config, src/other/step/config.log,
+	  src/other/step/config.status, src/other/step/configure.in,
+	  src/other/step/disclaim.txt, src/other/step/whatsnew.2-1.txt,
+	  src/other/step/whatsnew.3-1.txt, src/other/step/whatsnew.3-2.txt:
+	  Start setting up standard README, COPYING, NEWS, etc. files
+
+2009-03-11 17:53  indianlarry
+
+	* [r33986] src/librt/mirror.c:
+	  updated rt_mirror to fix bug 2679693, looks like the radius
+	  vectors were getting paired wrong in the mirror
+
+2009-03-11 17:49  indianlarry
+
+	* [r33985] src/libged/clone.c:
+	  updated clone command to re-number and work with the naming
+	  convention used in 'build_region' tclscript
+
+2009-03-11 17:41  starseeker
+
+	* [r33984] src/other/step/src/cldai/sdaiDaObject.cc:
+	  Add back in the properly named sdaiDaObject.cc
+
+2009-03-11 17:38  starseeker
+
+	* [r33983] src/other/step/Makefile, src/other/step/README.projdth,
+	  src/other/step/arch_template/checkout,
+	  src/other/step/arch_template/make_rules.in,
+	  src/other/step/arch_template/ofiles/dai/Makefile.aside,
+	  src/other/step/arch_template/ofiles/sdaiOrbix/Makefile.aside,
+	  src/other/step/arch_template/ofiles/sdaiOrbix/checkout,
+	  src/other/step/arch_template/ofiles/sdaiOrbix/corbaIncludes.h.in.aside,
+	  src/other/step/arch_template/sclprefixes.h.noOrbixOstore,
+	  src/other/step/arch_template/sclprefixes.h.noOrbixOstore.aside,
+	  src/other/step/arch_template/testbuild/checkout,
+	  src/other/step/arch_template/testbuild/p21read/checkout,
+	  src/other/step/arch_template/testbuild/scl2html/checkout,
+	  src/other/step/arch_template/testbuild/tio/checkout,
+	  src/other/step/arch_template/testbuild/treg/checkout,
+	  src/other/step/arch_template/testbuild/tstatic/checkout,
+	  src/other/step/bin/checkout, src/other/step/config/checkout,
+	  src/other/step/config/examples/checkout,
+	  src/other/step/config/sclbuild.current.in,
+	  src/other/step/configure, src/other/step/configure.in,
+	  src/other/step/src/cldai/checkout,
+	  src/other/step/src/cldai/sdaiDAObject.cc,
+	  src/other/step/src/cleditor/STEPfile.h,
+	  src/other/step/src/cleditor/STEPfile.inline.cc,
+	  src/other/step/src/cleditor/checkout,
+	  src/other/step/src/cleditor/mgrnode.cc,
+	  src/other/step/src/clivfasd/checkout,
+	  src/other/step/src/clivfasd/fasdBitmaps/checkout,
+	  src/other/step/src/clprobe-ui/checkout,
+	  src/other/step/src/clstepcore/ExpDict.cc,
+	  src/other/step/src/clstepcore/ExpDict.h,
+	  src/other/step/src/clstepcore/STEPaggregate.cc,
+	  src/other/step/src/clstepcore/STEPattribute.cc,
+	  src/other/step/src/clstepcore/STEPattribute.h,
+	  src/other/step/src/clstepcore/STEPattributeList.h,
+	  src/other/step/src/clstepcore/STEPundefined.cc,
+	  src/other/step/src/clstepcore/SingleLinkList.h,
+	  src/other/step/src/clstepcore/SingleLinkList.inline.cc,
+	  src/other/step/src/clstepcore/checkout,
+	  src/other/step/src/clstepcore/collect.cc,
+	  src/other/step/src/clstepcore/complexSupport.h,
+	  src/other/step/src/clstepcore/read_func.cc,
+	  src/other/step/src/clstepcore/sdai.cc,
+	  src/other/step/src/clstepcore/sdai.h,
+	  src/other/step/src/clstepcore/sdaiApplication_instance.cc,
+	  src/other/step/src/clstepcore/sdaiBinary.cc,
+	  src/other/step/src/clstepcore/sdaiEnum.cc,
+	  src/other/step/src/clstepcore/sdaiSelect.cc,
+	  src/other/step/src/clstepcore/sdaiString.cc,
+	  src/other/step/src/clutils/checkout,
+	  src/other/step/src/clutils/errordesc.h,
+	  src/other/step/src/clutils/gennode.h,
+	  src/other/step/src/clutils/gennodelist.h,
+	  src/other/step/src/clutils/scl_string.h,
+	  src/other/step/src/exppp/exppp.c,
+	  src/other/step/src/express/.Sanitize,
+	  src/other/step/src/express/basic.h,
+	  src/other/step/src/express/checkout,
+	  src/other/step/src/express/expparse.y,
+	  src/other/step/src/express/express.c,
+	  src/other/step/src/express/fedex.c,
+	  src/other/step/src/express/makefile,
+	  src/other/step/src/express/memory.h,
+	  src/other/step/src/express/mkrules,
+	  src/other/step/src/express/mkrules.in,
+	  src/other/step/src/express/symlink.c,
+	  src/other/step/src/express/y.tok.h,
+	  src/other/step/src/express/yyvars.c,
+	  src/other/step/src/fedex_plus/.pure,
+	  src/other/step/src/fedex_plus/checkout,
+	  src/other/step/src/fedex_plus/classes.c,
+	  src/other/step/src/fedex_plus/classes.h.aside,
+	  src/other/step/src/fedex_plus/collect.cc,
+	  src/other/step/src/fedex_plus/complexSupport.h,
+	  src/other/step/src/fedex_plus/expressbuild.cc,
+	  src/other/step/src/fedex_plus/fedex_idl.c,
+	  src/other/step/src/fedex_plus/makefile,
+	  src/other/step/src/fedex_plus/selects.c,
+	  src/other/step/src/test/checkout,
+	  src/other/step/src/test/tests.h,
+	  src/other/step/src/test/treg/treg.cc:
+	  Update STEP code to version from
+	  http://www.statik.tu-cottbus.de/fileadmin/project_dth/scl/ This
+	  configuration is closer to building on many platforms but will
+	  need special options to configure not supplied by default. As
+	  this is not the final form the libraries will take in the BRL-CAD
+	  tree no attempt is made to work with this build structure. One
+	  more commit will be needed for a file renaming but after that
+	  point modifications will be due to BRL-CAD developers. (Note -
+	  two files named src/fedex_plus/.pure and src/express/.Sanitize
+	  are added here that were also present in the original
+	  distribution but were missed.)
+
+2009-03-11 16:58  starseeker
+
+	* [r33982] configure.ac, src/other/Makefile.am, src/other/step,
+	  src/other/step/INSTALL, src/other/step/Makefile,
+	  src/other/step/README.scl, src/other/step/arch_template,
+	  src/other/step/arch_template/Makefile,
+	  src/other/step/arch_template/Probes,
+	  src/other/step/arch_template/Probes/template-schema,
+	  src/other/step/arch_template/Probes/template-schema/Makefile.personal.in,
+	  src/other/step/arch_template/Probes/template-schema/Makefile.public,
+	  src/other/step/arch_template/README,
+	  src/other/step/arch_template/checkout,
+	  src/other/step/arch_template/make_rules.in,
+	  src/other/step/arch_template/ofiles,
+	  src/other/step/arch_template/ofiles/Makefile,
+	  src/other/step/arch_template/ofiles/dai,
+	  src/other/step/arch_template/ofiles/dai/Makefile,
+	  src/other/step/arch_template/ofiles/dai/Makefile.aside,
+	  src/other/step/arch_template/ofiles/editorCore,
+	  src/other/step/arch_template/ofiles/editorCore/Makefile,
+	  src/other/step/arch_template/ofiles/ivfasd,
+	  src/other/step/arch_template/ofiles/ivfasd/Makefile,
+	  src/other/step/arch_template/ofiles/probe-ui,
+	  src/other/step/arch_template/ofiles/probe-ui/Makefile,
+	  src/other/step/arch_template/ofiles/sdaiOrbix,
+	  src/other/step/arch_template/ofiles/sdaiOrbix/Makefile,
+	  src/other/step/arch_template/ofiles/sdaiOrbix/Makefile.aside,
+	  src/other/step/arch_template/ofiles/sdaiOrbix/appinstance.idl,
+	  src/other/step/arch_template/ofiles/sdaiOrbix/checkout,
+	  src/other/step/arch_template/ofiles/sdaiOrbix/corbaIncludes.h,
+	  src/other/step/arch_template/ofiles/sdaiOrbix/corbaIncludes.h.in,
+	  src/other/step/arch_template/ofiles/sdaiOrbix/corbaIncludes.h.in.aside,
+	  src/other/step/arch_template/ofiles/sdaiOrbix/p26sdai.idl,
+	  src/other/step/arch_template/ofiles/sdaiOrbix/sdaitypes.idl,
+	  src/other/step/arch_template/ofiles/utils,
+	  src/other/step/arch_template/ofiles/utils/Makefile,
+	  src/other/step/arch_template/sclprefixes.h.OrbixOstore,
+	  src/other/step/arch_template/sclprefixes.h.noOrbixOstore,
+	  src/other/step/arch_template/sclprefixes.h.noOrbixOstore.aside,
+	  src/other/step/arch_template/testbuild,
+	  src/other/step/arch_template/testbuild/Makefile,
+	  src/other/step/arch_template/testbuild/checkout,
+	  src/other/step/arch_template/testbuild/generate_express,
+	  src/other/step/arch_template/testbuild/generate_express/Makefile,
+	  src/other/step/arch_template/testbuild/p21read,
+	  src/other/step/arch_template/testbuild/p21read/Makefile,
+	  src/other/step/arch_template/testbuild/p21read/checkout,
+	  src/other/step/arch_template/testbuild/p21read/testfile.step,
+	  src/other/step/arch_template/testbuild/runtests,
+	  src/other/step/arch_template/testbuild/schema-loc,
+	  src/other/step/arch_template/testbuild/schema-loc.in,
+	  src/other/step/arch_template/testbuild/scl2html,
+	  src/other/step/arch_template/testbuild/scl2html/Makefile,
+	  src/other/step/arch_template/testbuild/scl2html/checkout,
+	  src/other/step/arch_template/testbuild/tio,
+	  src/other/step/arch_template/testbuild/tio/Makefile,
+	  src/other/step/arch_template/testbuild/tio/checkout,
+	  src/other/step/arch_template/testbuild/tio/testfile.step,
+	  src/other/step/arch_template/testbuild/treg,
+	  src/other/step/arch_template/testbuild/treg/Makefile,
+	  src/other/step/arch_template/testbuild/treg/checkout,
+	  src/other/step/arch_template/testbuild/tstatic,
+	  src/other/step/arch_template/testbuild/tstatic/Makefile,
+	  src/other/step/arch_template/testbuild/tstatic/checkout,
+	  src/other/step/bin, src/other/step/bin/README.txt,
+	  src/other/step/bin/bison.errors,
+	  src/other/step/bin/bisontokens.sh, src/other/step/bin/checkout,
+	  src/other/step/bin/mkcl, src/other/step/bin/move-if-change,
+	  src/other/step/bin/uniquify_flex,
+	  src/other/step/bin/uniquify_lex,
+	  src/other/step/bin/uniquify_yacc, src/other/step/bin/yaccpar.sun,
+	  src/other/step/bin/yacctokens.sh, src/other/step/checkout.config,
+	  src/other/step/config, src/other/step/config.log,
+	  src/other/step/config.status, src/other/step/config/README,
+	  src/other/step/config/checkout, src/other/step/config/examples,
+	  src/other/step/config/examples/README,
+	  src/other/step/config/examples/build.arch.sun4,
+	  src/other/step/config/examples/build.arch.sunos5,
+	  src/other/step/config/examples/build.centerline.sunos,
+	  src/other/step/config/examples/build.gnu.solaris,
+	  src/other/step/config/examples/build.gnu.solaris.iv,
+	  src/other/step/config/examples/build.gnu.sunos,
+	  src/other/step/config/examples/build.gnu.sunos.4-0,
+	  src/other/step/config/examples/build.sun.solaris,
+	  src/other/step/config/examples/build.sun.solaris.ostore,
+	  src/other/step/config/examples/build.sun.solaris.ostore.orbix,
+	  src/other/step/config/examples/build.sun.sunos,
+	  src/other/step/config/examples/build.sun4-2.sunos,
+	  src/other/step/config/examples/build.sun42.solaris.ostore.orbix,
+	  src/other/step/config/examples/build.t,
+	  src/other/step/config/examples/checkout,
+	  src/other/step/config/mkProbe.current,
+	  src/other/step/config/mkProbe.current.in,
+	  src/other/step/config/scl_cf.h.in,
+	  src/other/step/config/sclbuild.current,
+	  src/other/step/config/sclbuild.current.in,
+	  src/other/step/config/setup-arch.current,
+	  src/other/step/config/setup-arch.current.in,
+	  src/other/step/configure,
+	  src/other/step/configure.files_notes.txt,
+	  src/other/step/configure.in, src/other/step/data,
+	  src/other/step/data/ap203,
+	  src/other/step/data/ap203/203wseds.exp,
+	  src/other/step/data/ap203/README,
+	  src/other/step/data/ap203/cube1.p21,
+	  src/other/step/data/ap203/cube2.p21,
+	  src/other/step/data/ap203/g_r_assembly1.p21,
+	  src/other/step/data/ap203/gasket1.p21,
+	  src/other/step/data/ap203/gasket2.p21,
+	  src/other/step/data/ap203/gasket3.p21,
+	  src/other/step/data/ap203/hex_prism1.p21,
+	  src/other/step/data/ap203/rod_aspect1.p21,
+	  src/other/step/data/ap203/star1.p21, src/other/step/data/ap227,
+	  src/other/step/data/ap227/ap227.exp,
+	  src/other/step/data/ap227/mitre.p21,
+	  src/other/step/data/ap227/mitre.step.txt,
+	  src/other/step/data/example,
+	  src/other/step/data/example/example.exp,
+	  src/other/step/data/pdmnet.exp, src/other/step/data/select.exp,
+	  src/other/step/disclaim.txt, src/other/step/man,
+	  src/other/step/man/man1, src/other/step/man/man1/dataprobe.1,
+	  src/other/step/man/man1/fedex.1,
+	  src/other/step/man/man1/fedex_plus.1,
+	  src/other/step/man/man1/mkProbe.1, src/other/step/src,
+	  src/other/step/src/clSchemas,
+	  src/other/step/src/clSchemas/example,
+	  src/other/step/src/clSchemas/example/SdaiAll.cc,
+	  src/other/step/src/clSchemas/example/SdaiEXAMPLE_SCHEMA.cc,
+	  src/other/step/src/clSchemas/example/SdaiEXAMPLE_SCHEMA.h,
+	  src/other/step/src/clSchemas/example/SdaiEXAMPLE_SCHEMA.init.cc,
+	  src/other/step/src/clSchemas/example/Sdaiclasses.h,
+	  src/other/step/src/clSchemas/example/compstructs.cc,
+	  src/other/step/src/clSchemas/example/make_schema,
+	  src/other/step/src/clSchemas/example/schema.cc,
+	  src/other/step/src/clSchemas/example/schema.h,
+	  src/other/step/src/cldai, src/other/step/src/cldai/ErrorMap.cc,
+	  src/other/step/src/cldai/ErrorMap.hh,
+	  src/other/step/src/cldai/ErrorRpt.cc,
+	  src/other/step/src/cldai/ErrorRpt.hh,
+	  src/other/step/src/cldai/StrUtil.cc,
+	  src/other/step/src/cldai/StrUtil.hh,
+	  src/other/step/src/cldai/checkout,
+	  src/other/step/src/cldai/impconv.hh,
+	  src/other/step/src/cldai/imptypes.hh,
+	  src/other/step/src/cldai/sdaiApplication_instance_set.cc,
+	  src/other/step/src/cldai/sdaiApplication_instance_set.h,
+	  src/other/step/src/cldai/sdaiDAObject.cc,
+	  src/other/step/src/cldai/sdaiDaObject.h,
+	  src/other/step/src/cldai/sdaiEntity_extent.cc,
+	  src/other/step/src/cldai/sdaiEntity_extent.h,
+	  src/other/step/src/cldai/sdaiEntity_extent_set.cc,
+	  src/other/step/src/cldai/sdaiEntity_extent_set.h,
+	  src/other/step/src/cldai/sdaiModel_contents.cc,
+	  src/other/step/src/cldai/sdaiModel_contents.h,
+	  src/other/step/src/cldai/sdaiModel_contents_list.cc,
+	  src/other/step/src/cldai/sdaiModel_contents_list.h,
+	  src/other/step/src/cldai/sdaiObject.cc,
+	  src/other/step/src/cldai/sdaiObject.h,
+	  src/other/step/src/cldai/sdaiSession_instance.cc,
+	  src/other/step/src/cldai/sdaiSession_instance.h,
+	  src/other/step/src/cleditor,
+	  src/other/step/src/cleditor/Makefile,
+	  src/other/step/src/cleditor/README,
+	  src/other/step/src/cleditor/STEPfile.cc,
+	  src/other/step/src/cleditor/STEPfile.h,
+	  src/other/step/src/cleditor/STEPfile.inline.cc,
+	  src/other/step/src/cleditor/checkout,
+	  src/other/step/src/cleditor/cmdmgr.cc,
+	  src/other/step/src/cleditor/cmdmgr.h,
+	  src/other/step/src/cleditor/dispnode.cc,
+	  src/other/step/src/cleditor/dispnode.h,
+	  src/other/step/src/cleditor/dispnodelist.cc,
+	  src/other/step/src/cleditor/dispnodelist.h,
+	  src/other/step/src/cleditor/editordefines.h,
+	  src/other/step/src/cleditor/instmgr.cc,
+	  src/other/step/src/cleditor/instmgr.h,
+	  src/other/step/src/cleditor/mgrnode.cc,
+	  src/other/step/src/cleditor/mgrnode.h,
+	  src/other/step/src/cleditor/mgrnodearray.cc,
+	  src/other/step/src/cleditor/mgrnodearray.h,
+	  src/other/step/src/cleditor/mgrnodelist.cc,
+	  src/other/step/src/cleditor/mgrnodelist.h,
+	  src/other/step/src/cleditor/s_HEADER_SCHEMA.cc,
+	  src/other/step/src/cleditor/s_HEADER_SCHEMA.h,
+	  src/other/step/src/cleditor/s_HEADER_SCHEMA.init.cc,
+	  src/other/step/src/cleditor/seeinfodefault.h,
+	  src/other/step/src/clivfasd,
+	  src/other/step/src/clivfasd/Makefile,
+	  src/other/step/src/clivfasd/checkout,
+	  src/other/step/src/clivfasd/chkin2,
+	  src/other/step/src/clivfasd/ebutton.cc,
+	  src/other/step/src/clivfasd/ebutton.h,
+	  src/other/step/src/clivfasd/errordisplay.cc,
+	  src/other/step/src/clivfasd/errordisplay.h,
+	  src/other/step/src/clivfasd/fasdBitmaps,
+	  src/other/step/src/clivfasd/fasdBitmaps/checkout,
+	  src/other/step/src/clivfasd/fasdBitmaps/m.bm,
+	  src/other/step/src/clivfasd/fasdBitmaps/mHit.bm,
+	  src/other/step/src/clivfasd/fasdBitmaps/menu12.bm,
+	  src/other/step/src/clivfasd/fasdBitmaps/menu12_mask.bm,
+	  src/other/step/src/clivfasd/fasdBitmaps/menu16.bm,
+	  src/other/step/src/clivfasd/fasdBitmaps/menu16_mask.bm,
+	  src/other/step/src/clivfasd/fasdBitmaps/mvmask.bm,
+	  src/other/step/src/clivfasd/fasdBitmaps/pin2mask.bm,
+	  src/other/step/src/clivfasd/fasdBitmaps/pinin2.bm,
+	  src/other/step/src/clivfasd/fasdBitmaps/pinin2Hit.bm,
+	  src/other/step/src/clivfasd/fasdBitmaps/pinout2.bm,
+	  src/other/step/src/clivfasd/fasdBitmaps/pinout2Hit.bm,
+	  src/other/step/src/clivfasd/fasdBitmaps/v.bm,
+	  src/other/step/src/clivfasd/fasdBitmaps/vHit.bm,
+	  src/other/step/src/clivfasd/intstreditor.cc,
+	  src/other/step/src/clivfasd/intstreditor.h,
+	  src/other/step/src/clivfasd/intstreditorsub.cc,
+	  src/other/step/src/clivfasd/intstreditorsub.h,
+	  src/other/step/src/clivfasd/label.cc,
+	  src/other/step/src/clivfasd/label.h,
+	  src/other/step/src/clivfasd/listitemchooser.cc,
+	  src/other/step/src/clivfasd/listitemchooser.h,
+	  src/other/step/src/clivfasd/listmgrcore.cc,
+	  src/other/step/src/clivfasd/listmgrcore.h,
+	  src/other/step/src/clivfasd/mybutton.cc,
+	  src/other/step/src/clivfasd/mybutton.h,
+	  src/other/step/src/clivfasd/mybuttonstate.h,
+	  src/other/step/src/clivfasd/mycontrol.cc,
+	  src/other/step/src/clivfasd/mycontrol.h,
+	  src/other/step/src/clivfasd/myfilebrowser.cc,
+	  src/other/step/src/clivfasd/myfilebrowser.h,
+	  src/other/step/src/clivfasd/myfilechooser.cc,
+	  src/other/step/src/clivfasd/myfilechooser.h,
+	  src/other/step/src/clivfasd/mymenu.cc,
+	  src/other/step/src/clivfasd/mymenu.h,
+	  src/other/step/src/clivfasd/mymessage.cc,
+	  src/other/step/src/clivfasd/mymessage.h,
+	  src/other/step/src/clivfasd/mymessage2.cc,
+	  src/other/step/src/clivfasd/mymessage2.h,
+	  src/other/step/src/clivfasd/mystrbrowser.cc,
+	  src/other/step/src/clivfasd/mystrbrowser.h,
+	  src/other/step/src/clivfasd/sbutton.cc,
+	  src/other/step/src/clivfasd/sbutton.h,
+	  src/other/step/src/clivfasd/strdisplay.cc,
+	  src/other/step/src/clivfasd/strdisplay.h,
+	  src/other/step/src/clivfasd/streditor2.cc,
+	  src/other/step/src/clivfasd/streditor2.h,
+	  src/other/step/src/clivfasd/streditor2sub.cc,
+	  src/other/step/src/clivfasd/streditor2sub.h,
+	  src/other/step/src/clivfasd/subinfo.h,
+	  src/other/step/src/clivfasd/variousmessage.h,
+	  src/other/step/src/clprobe-ui,
+	  src/other/step/src/clprobe-ui/Makefile,
+	  src/other/step/src/clprobe-ui/checkout,
+	  src/other/step/src/clprobe-ui/dpmenuitem.cc,
+	  src/other/step/src/clprobe-ui/dpmenuitem.h,
+	  src/other/step/src/clprobe-ui/headerdisp.cc,
+	  src/other/step/src/clprobe-ui/headerdisp.h,
+	  src/other/step/src/clprobe-ui/instcmdbufdisp.cc,
+	  src/other/step/src/clprobe-ui/instcmdbufdisp.h,
+	  src/other/step/src/clprobe-ui/probe.cc,
+	  src/other/step/src/clprobe-ui/probe.h,
+	  src/other/step/src/clprobe-ui/probemain.cc,
+	  src/other/step/src/clprobe-ui/sclfilechooser.cc,
+	  src/other/step/src/clprobe-ui/sclfilechooser.h,
+	  src/other/step/src/clprobe-ui/seedefines.h,
+	  src/other/step/src/clprobe-ui/seestreditors.cc,
+	  src/other/step/src/clprobe-ui/seestreditors.h,
+	  src/other/step/src/clprobe-ui/seinstdisp.cc,
+	  src/other/step/src/clprobe-ui/seinstdisp.h,
+	  src/other/step/src/clprobe-ui/setypedisp.cc,
+	  src/other/step/src/clprobe-ui/setypedisp.h,
+	  src/other/step/src/clprobe-ui/stepentdescriptor.cc,
+	  src/other/step/src/clprobe-ui/stepentdescriptor.h,
+	  src/other/step/src/clprobe-ui/stepenteditor.cc,
+	  src/other/step/src/clprobe-ui/stepenteditor.h,
+	  src/other/step/src/clstepcore,
+	  src/other/step/src/clstepcore/ExpDict.cc,
+	  src/other/step/src/clstepcore/ExpDict.h,
+	  src/other/step/src/clstepcore/ExpDict.h.s,
+	  src/other/step/src/clstepcore/ExpDict.inline.cc,
+	  src/other/step/src/clstepcore/Makefile,
+	  src/other/step/src/clstepcore/README,
+	  src/other/step/src/clstepcore/Registry.h,
+	  src/other/step/src/clstepcore/Registry.inline.cc,
+	  src/other/step/src/clstepcore/STEPaggregate.cc,
+	  src/other/step/src/clstepcore/STEPaggregate.h,
+	  src/other/step/src/clstepcore/STEPattribute.cc,
+	  src/other/step/src/clstepcore/STEPattribute.cc.31,
+	  src/other/step/src/clstepcore/STEPattribute.h,
+	  src/other/step/src/clstepcore/STEPattribute.inline.cc,
+	  src/other/step/src/clstepcore/STEPattributeList.cc,
+	  src/other/step/src/clstepcore/STEPattributeList.h,
+	  src/other/step/src/clstepcore/STEPcomplex.cc,
+	  src/other/step/src/clstepcore/STEPcomplex.h,
+	  src/other/step/src/clstepcore/STEPundefined.cc,
+	  src/other/step/src/clstepcore/STEPundefined.h,
+	  src/other/step/src/clstepcore/Select.h,
+	  src/other/step/src/clstepcore/SingleLinkList.cc,
+	  src/other/step/src/clstepcore/SingleLinkList.h,
+	  src/other/step/src/clstepcore/SingleLinkList.inline.cc,
+	  src/other/step/src/clstepcore/baseType.h,
+	  src/other/step/src/clstepcore/checkout,
+	  src/other/step/src/clstepcore/checkout3.0.1.solaris,
+	  src/other/step/src/clstepcore/collect.cc,
+	  src/other/step/src/clstepcore/complexSupport.h,
+	  src/other/step/src/clstepcore/complexSupport.h.err,
+	  src/other/step/src/clstepcore/complexlist.cc,
+	  src/other/step/src/clstepcore/dict-pic.txt,
+	  src/other/step/src/clstepcore/dictdefs.h,
+	  src/other/step/src/clstepcore/entlist.cc,
+	  src/other/step/src/clstepcore/entlist.cc.err,
+	  src/other/step/src/clstepcore/entnode.cc,
+	  src/other/step/src/clstepcore/match-ors.cc,
+	  src/other/step/src/clstepcore/multlist.cc,
+	  src/other/step/src/clstepcore/non-ors.cc,
+	  src/other/step/src/clstepcore/notes.txt,
+	  src/other/step/src/clstepcore/orlist.cc,
+	  src/other/step/src/clstepcore/print.cc,
+	  src/other/step/src/clstepcore/read_func.cc,
+	  src/other/step/src/clstepcore/read_func.h,
+	  src/other/step/src/clstepcore/scl_osschema.h,
+	  src/other/step/src/clstepcore/sdai.cc,
+	  src/other/step/src/clstepcore/sdai.h,
+	  src/other/step/src/clstepcore/sdaiApplication_instance.cc,
+	  src/other/step/src/clstepcore/sdaiApplication_instance.h,
+	  src/other/step/src/clstepcore/sdaiBinary.cc,
+	  src/other/step/src/clstepcore/sdaiBinary.h,
+	  src/other/step/src/clstepcore/sdaiEnum.cc,
+	  src/other/step/src/clstepcore/sdaiEnum.h,
+	  src/other/step/src/clstepcore/sdaiSelect.cc,
+	  src/other/step/src/clstepcore/sdaiSelect.h,
+	  src/other/step/src/clstepcore/sdaiString.cc,
+	  src/other/step/src/clstepcore/sdaiString.h,
+	  src/other/step/src/clstepcore/trynext.cc,
+	  src/other/step/src/clutils, src/other/step/src/clutils/Makefile,
+	  src/other/step/src/clutils/README,
+	  src/other/step/src/clutils/Str.cc,
+	  src/other/step/src/clutils/Str.h,
+	  src/other/step/src/clutils/checkout,
+	  src/other/step/src/clutils/dirobj.cc,
+	  src/other/step/src/clutils/dirobj.h,
+	  src/other/step/src/clutils/errordesc.cc,
+	  src/other/step/src/clutils/errordesc.h,
+	  src/other/step/src/clutils/gennode.cc,
+	  src/other/step/src/clutils/gennode.h,
+	  src/other/step/src/clutils/gennodearray.cc,
+	  src/other/step/src/clutils/gennodearray.h,
+	  src/other/step/src/clutils/gennodelist.cc,
+	  src/other/step/src/clutils/gennodelist.h,
+	  src/other/step/src/clutils/scl_char_str_list.cc,
+	  src/other/step/src/clutils/scl_char_str_list.h,
+	  src/other/step/src/clutils/scl_hash.cc,
+	  src/other/step/src/clutils/scl_hash.h,
+	  src/other/step/src/clutils/scl_string.cc,
+	  src/other/step/src/clutils/scl_string.h,
+	  src/other/step/src/clutils/scldir.h,
+	  src/other/step/src/clutils/stat.h,
+	  src/other/step/src/clutils/str_list.h, src/other/step/src/exppp,
+	  src/other/step/src/exppp/README,
+	  src/other/step/src/exppp/exppp-main.c,
+	  src/other/step/src/exppp/exppp.c,
+	  src/other/step/src/exppp/exppp.h,
+	  src/other/step/src/exppp/makefile, src/other/step/src/express,
+	  src/other/step/src/express/Changes,
+	  src/other/step/src/express/README,
+	  src/other/step/src/express/alg.c,
+	  src/other/step/src/express/alg.h,
+	  src/other/step/src/express/basic.h,
+	  src/other/step/src/express/caseitem.c,
+	  src/other/step/src/express/caseitem.h,
+	  src/other/step/src/express/checkout,
+	  src/other/step/src/express/conf.h,
+	  src/other/step/src/express/de_end.h,
+	  src/other/step/src/express/decstart.h,
+	  src/other/step/src/express/defstart.h,
+	  src/other/step/src/express/dict.c,
+	  src/other/step/src/express/dict.h,
+	  src/other/step/src/express/entity.c,
+	  src/other/step/src/express/entity.h,
+	  src/other/step/src/express/error.c,
+	  src/other/step/src/express/error.h,
+	  src/other/step/src/express/expbasic.h,
+	  src/other/step/src/express/expparse.output,
+	  src/other/step/src/express/expparse.y,
+	  src/other/step/src/express/expr.c,
+	  src/other/step/src/express/expr.h,
+	  src/other/step/src/express/express.c,
+	  src/other/step/src/express/express.h,
+	  src/other/step/src/express/expscan.l,
+	  src/other/step/src/express/exptoks.h,
+	  src/other/step/src/express/fedex.c,
+	  src/other/step/src/express/hash.c,
+	  src/other/step/src/express/hash.h,
+	  src/other/step/src/express/inithook.c,
+	  src/other/step/src/express/lexact.c,
+	  src/other/step/src/express/lexact.h,
+	  src/other/step/src/express/linklist.c,
+	  src/other/step/src/express/linklist.h,
+	  src/other/step/src/express/makefile,
+	  src/other/step/src/express/memory.c,
+	  src/other/step/src/express/memory.h,
+	  src/other/step/src/express/mkrules,
+	  src/other/step/src/express/mkrules.in,
+	  src/other/step/src/express/object.c,
+	  src/other/step/src/express/object.h,
+	  src/other/step/src/express/resolve.c,
+	  src/other/step/src/express/resolve.h,
+	  src/other/step/src/express/schema.c,
+	  src/other/step/src/express/schema.h,
+	  src/other/step/src/express/scope.c,
+	  src/other/step/src/express/scope.h,
+	  src/other/step/src/express/stack.h,
+	  src/other/step/src/express/stmt.c,
+	  src/other/step/src/express/stmt.h,
+	  src/other/step/src/express/symbol.c,
+	  src/other/step/src/express/symbol.h,
+	  src/other/step/src/express/symlink.c,
+	  src/other/step/src/express/type.c,
+	  src/other/step/src/express/type.h,
+	  src/other/step/src/express/variable.c,
+	  src/other/step/src/express/variable.h,
+	  src/other/step/src/express/y.output,
+	  src/other/step/src/express/y.tok.h,
+	  src/other/step/src/express/yyvars.c,
+	  src/other/step/src/fedex_plus,
+	  src/other/step/src/fedex_plus/checkout,
+	  src/other/step/src/fedex_plus/classes.c,
+	  src/other/step/src/fedex_plus/classes.h,
+	  src/other/step/src/fedex_plus/classes.h.aside,
+	  src/other/step/src/fedex_plus/classes_misc.c,
+	  src/other/step/src/fedex_plus/classes_wrapper.cc,
+	  src/other/step/src/fedex_plus/collect.cc,
+	  src/other/step/src/fedex_plus/complexSupport.h,
+	  src/other/step/src/fedex_plus/complexlist.cc,
+	  src/other/step/src/fedex_plus/entlist.cc,
+	  src/other/step/src/fedex_plus/entnode.cc,
+	  src/other/step/src/fedex_plus/expressbuild.cc,
+	  src/other/step/src/fedex_plus/fedex_idl.c,
+	  src/other/step/src/fedex_plus/fedex_main.c,
+	  src/other/step/src/fedex_plus/fedex_os.c,
+	  src/other/step/src/fedex_plus/makefile,
+	  src/other/step/src/fedex_plus/match-ors.cc,
+	  src/other/step/src/fedex_plus/multlist.cc,
+	  src/other/step/src/fedex_plus/multpass.c,
+	  src/other/step/src/fedex_plus/non-ors.cc,
+	  src/other/step/src/fedex_plus/orlist.cc,
+	  src/other/step/src/fedex_plus/print.cc,
+	  src/other/step/src/fedex_plus/selects.c,
+	  src/other/step/src/fedex_plus/trynext.cc,
+	  src/other/step/src/fedex_plus/write.cc, src/other/step/src/test,
+	  src/other/step/src/test/Makefile, src/other/step/src/test/README,
+	  src/other/step/src/test/SEarritr.h,
+	  src/other/step/src/test/checkout,
+	  src/other/step/src/test/generate_express,
+	  src/other/step/src/test/generate_express/generate_express.cc,
+	  src/other/step/src/test/needFunc.cc,
+	  src/other/step/src/test/needFunc.h,
+	  src/other/step/src/test/p21read,
+	  src/other/step/src/test/p21read/Makefile,
+	  src/other/step/src/test/p21read/p21read.cc,
+	  src/other/step/src/test/p21read/testfile.step,
+	  src/other/step/src/test/runtests,
+	  src/other/step/src/test/schema-loc,
+	  src/other/step/src/test/scl2html,
+	  src/other/step/src/test/scl2html/Makefile,
+	  src/other/step/src/test/scl2html/scl2html.cc,
+	  src/other/step/src/test/tests.h, src/other/step/src/test/tio,
+	  src/other/step/src/test/tio/Makefile,
+	  src/other/step/src/test/tio/testfile.step,
+	  src/other/step/src/test/tio/tio.cc, src/other/step/src/test/treg,
+	  src/other/step/src/test/treg/Makefile,
+	  src/other/step/src/test/treg/treg.cc,
+	  src/other/step/src/test/tstatic,
+	  src/other/step/src/test/tstatic/Makefile,
+	  src/other/step/src/test/tstatic/tstatic.cc,
+	  src/other/step/whatsnew.2-1.txt, src/other/step/whatsnew.3-1.txt,
+	  src/other/step/whatsnew.3-2.txt:
+	  Begin the process of adding NIST's STEP Class Libraries code to
+	  the BRL-CAD tree. This first commit sets up the build logic for a
+	  src/other/step subconfigure and imports a step tree which is the
+	  original NIST STEP 3.2 release, minus some temporary files and an
+	  old file in src/cldai that causes conflicts on case insensitive
+	  filesystems. This is not expected to be a buildable configuration
+	  - it is included to preserve the original state of the libraries
+	  in case it is needed.
+
+2009-03-10 22:26  brlcad
+
+	* [r33978] doc/TODO.BREP:
+	  few more entities and modifiers
+
+2009-03-10 22:07  brlcad
+
+	* [r33977] doc/Makefile.am, doc/TODO.BREP:
+	  additional BREP notes to go with the brep.txt notes as a general
+	  work breakdown scratch pad
+
+2009-03-10 16:04  starseeker
+
+	* [r33974] src/other/tk/unix/Makefile.in:
+	  Re-add change to Makefile.in from revision 30417
+
+2009-03-10 13:20  indianlarry
+
+	* [r33973] src/libwdb/wdb.c:
+	  changed vertex ordering in mk_rpp() to match new arb8 ordering
+	  
+	  this relates to BUG "[ 2663183 ] arb8/rpp vertex order different"
+
+2009-03-10 12:10  indianlarry
+
+	* [r33972] src/mged/chgmodel.c:
+	  updated f_qorot() to properly rotate around point,direction
+	  related
+	  to BUG "[ 2663014 ] qorot does not rotate around vector".
+
+2009-03-10 02:50  brlcad
+
+	* [r33971] NEWS, README, include/conf/PATCH:
+	  post-release bump revision number to 7.14.5 in anticipation of
+	  7.14.6
+
+2009-03-07 01:46  homovulgaris
+
+	* [r33968] src/libpc/pcMathLF.h:
+	  lazy function implementations for Math parser
+
+2009-03-06 20:23  brlcad
+
+	* [r33967] BUGS:
+	  was finally able to pin down a reproducible-yet-previously just
+	  rumored bug about 'slow renderings' to some problem with remove
+	  fbserv's. Problem minimally occurs with an fbserv running a
+	  /dev/X interface >512 pixels wide for -i or (more interestingly)
+	  >600 without -i.
+
+2009-03-06 19:53  brlcad
+
+	* [r33966] NEWS:
+	  annotate the last-minute injection by bob to fix Pick
+	  Edit-Primitive mouse interaction mode. he fixed it so it works
+	  again.
+
+2009-03-06 19:35  brlcad
+
+	* [r33965] HACKING:
+	  update the merge steps to allow for a little more copy-pasting
+	  love next time. probably could make this into a script using
+	  propsets to track the last merged revision id. something to think
+	  about next month.
+
+2009-03-06 17:57  bob1961
+
+	* [r33964] src/mged/setup.c, src/tclscripts/mged/ray.tcl:
+	  This fixes the "Pick Edit-Primitive" mode in MGED.
+
+2009-03-06 17:52  bob1961
+
+	* [r33963] src/mged/rtif.c:
+	  Modify f_nirt and f_vnirt to strip _mged_ prefix before calling
+	  libged.
+
+2009-03-06 17:51  bob1961
+
+	* [r33962] src/mged/setup.c:
+	  Fixed typo.
+
+2009-03-06 15:44  bob1961
+
+	* [r33961] src/tclscripts/lib/Command.tcl,
+	  src/tclscripts/mged/text.tcl:
+	  Disallow cut operation in command windows.
+
+2009-03-06 15:04  bob1961
+
+	* [r33960] src/tclscripts/lib/Command.tcl:
+	  This applies the same bug fixes that were applied to MGED (i.e.
+	  bug #2555653 - the command line has an extra character at the end
+	  that is not used and cannot be removed; bug #2278235 - can't
+	  cut-n-paste under Windows)
+
+2009-03-06 14:48  brlcad
+
+	* [r33959] NEWS, include/conf/PATCH:
+	  bump it! 2009-03-06 is release day for 7.14.4
+
+2009-03-06 14:44  brlcad
+
+	* [r33958] ChangeLog:
+	  update the changelog with changes since the last release,
+	  2009-02-06. preparing for release 7.14.4
+
+2009-03-06 14:38  brlcad
+
+	* [r33957] NEWS:
+	  bob fixed a bug in mged where the last character would end up
+	  getting ignored. the only key combination he found that produced
+	  that behavior was a control-key-slash binding. overriding the
+	  binding (to do nothing) fixed the issue for bob. no word yet from
+	  peter_gillissen that reported this bug as sf bug 2555653
+	  (Neglecting last character command-line).
+
+2009-03-06 14:34  brlcad
+
+	* [r33956] NEWS:
+	  bob fixed doing a copy action on Windows, and doing a paste for
+	  any platform. previously, pasting would wipe out whatever was
+	  selected (which would normally make sense but not for read-only
+	  command console selections). this addresses sf bug 2278235
+	  reported by lbutler (Can't cut-and-paste under Windows)
+
+2009-03-06 14:27  brlcad
+
+	* [r33955] NEWS:
+	  bob make gqa handle reading in density files better. now handles
+	  arbitrary blank lines and comment lines. also fixed a bug where
+	  it was writing past the end of an array.
+
+2009-03-06 14:24  brlcad
+
+	* [r33954] NEWS:
+	  bob fixed a handful of smp bugs in gqa where there were critical
+	  sections that were not being semaphore-protected.
+
+2009-03-06 14:21  brlcad
+
+	* [r33953] NEWS:
+	  bob added centroids and moments of intertia to the gqa command
+
+2009-03-06 09:21  homovulgaris
+
+	* [r33952] src/libpc/pcMathGrammar.h, src/libpc/pcMathLF.h,
+	  src/libpc/pcMathVM.h:
+	  pcMath VariableGrammar completely defined also taking into
+	  account closures
+
+2009-03-06 06:26  homovulgaris
+
+	* [r33951] src/libpc/pcMathGrammar.h:
+	  adding various operators to the expression grammar
+
+2009-03-05 23:45  starseeker
+
+	* [r33950] misc/NIST_DENSITIES:
+	  Add note that NIST_DENSITIES shouldn't be used for production
+	  analysis
+

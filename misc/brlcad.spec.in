@@ -18,7 +18,7 @@
 # information.
 #
 ###
-# $Id$
+# $Id: brlcad.spec.in 31502 2008-06-20 04:47:59Z brlcad $
 
 Summary: @PACKAGE_NAME@
 Name: @PACKAGE_NAME@

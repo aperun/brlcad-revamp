@@ -101,8 +101,7 @@ rt_eto_brep(ON_Brep **b, const struct rt_db_internal *ip, const struct bn_tol *t
 
     /* Create brep with one face*/
     *b = ON_Brep::New();
-    ON_BrepFace *newface = (*b)->NewFace(*eto_surf);
-    (*b)->FlipFace(*newface);
+    (*b)->NewFace(*eto_surf);
 //    (*b)->Standardize();
  //   (*b)->Compact();
 }

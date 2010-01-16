@@ -135,7 +135,7 @@ test iocmd-4.8 {read command with incorrect combination of arguments} {
     set x [list [catch {read -nonewline $f 20 z} msg] $msg $::errorCode]
     close $f
     set x
-} {1 {wrong # args: should be "read channelId ?numChars?" or "read ?-nonewline? channelId"} NONE}
+} {1 {wrong # args: should be "read channelId ?numChars?" or "read ?-nonewline? channelId"} {TCL WRONGARGS}}
 test iocmd-4.9 {read command} {
     list [catch {read stdin foo} msg] $msg $::errorCode
 } {1 {bad argument "foo": should be "nonewline"} NONE}
@@ -150,25 +150,26 @@ test iocmd-4.11 {read command} {
     string compare [string tolower $x] \
 	[list 1 [format "channel \"%s\" wasn't opened for reading" $f] none]
 } 0
-test iocmd-4.12 {read command} {
+test iocmd-4.12 {read command} -setup {
     set f [open $path(test1)]
-    set x [list [catch {read $f 12z} msg] $msg $::errorCode]
+} -body {
+    list [catch {read $f 12z} msg] $msg $::errorCode
+} -cleanup {
     close $f
-    set x
-} {1 {expected integer but got "12z"} NONE}
+} -result {1 {expected integer but got "12z"} {TCL VALUE NUMBER}}
 
-test iocmd-5.1 {seek command} {
-    list [catch {seek} msg] $msg
-} {1 {wrong # args: should be "seek channelId offset ?origin?"}}
-test iocmd-5.2 {seek command} {
-    list [catch {seek a b c d e f g} msg] $msg
-} {1 {wrong # args: should be "seek channelId offset ?origin?"}}
-test iocmd-5.3 {seek command} {
-    list [catch {seek stdin gugu} msg] $msg
-} {1 {expected integer but got "gugu"}}
-test iocmd-5.4 {seek command} {
-    list [catch {seek stdin 100 gugu} msg] $msg
-} {1 {bad origin "gugu": must be start, current, or end}}
+test iocmd-5.1 {seek command} -returnCodes error -body {
+    seek
+} -result {wrong # args: should be "seek channelId offset ?origin?"}
+test iocmd-5.2 {seek command} -returnCodes error -body {
+    seek a b c d e f g
+} -result {wrong # args: should be "seek channelId offset ?origin?"}
+test iocmd-5.3 {seek command} -returnCodes error -body {
+    seek stdin gugu
+} -result {expected integer but got "gugu"}
+test iocmd-5.4 {seek command} -returnCodes error -body {
+    seek stdin 100 gugu
+} -result {bad origin "gugu": must be start, current, or end}
 
 test iocmd-6.1 {tell command} {
     list [catch {tell} msg] $msg
@@ -182,20 +183,34 @@ test iocmd-6.3 {tell command} {
 
 test iocmd-7.1 {close command} {
     list [catch {close} msg] $msg
-} {1 {wrong # args: should be "close channelId"}}
+} {1 {wrong # args: should be "close channelId ?direction?"}}
 test iocmd-7.2 {close command} {
     list [catch {close a b c d e} msg] $msg
-} {1 {wrong # args: should be "close channelId"}}
+} {1 {wrong # args: should be "close channelId ?direction?"}}
 test iocmd-7.3 {close command} {
     list [catch {close aaa} msg] $msg
 } {1 {can not find channel named "aaa"}}
+test iocmd-7.4 {close command} -setup {
+    set chan [open [info script] r]
+} -body {
+    chan close $chan bar
+} -cleanup {
+    close $chan
+} -returnCodes error -result "bad direction \"bar\": must be read or write"
+test iocmd-7.5 {close command} -setup {
+    set chan [open [info script] r]
+} -body {
+    chan close $chan write
+} -cleanup {
+    close $chan
+} -returnCodes error -result "Half-close of write-side not possible, side not opened or already closed"
 
 test iocmd-8.1 {fconfigure command} {
     list [catch {fconfigure} msg] $msg
-} {1 {wrong # args: should be "fconfigure channelId ?optionName? ?value? ?optionName value?..."}}
+} {1 {wrong # args: should be "fconfigure channelId ?-option value ...?"}}
 test iocmd-8.2 {fconfigure command} {
     list [catch {fconfigure a b c d e f} msg] $msg
-} {1 {wrong # args: should be "fconfigure channelId ?optionName? ?value? ?optionName value?..."}}
+} {1 {wrong # args: should be "fconfigure channelId ?-option value ...?"}}
 test iocmd-8.3 {fconfigure command} {
     list [catch {fconfigure a b} msg] $msg
 } {1 {can not find channel named "a"}}
@@ -338,10 +353,10 @@ test iocmd-8.19 {fconfigure command / win tty channel} -constraints {nonPortable
 
 test iocmd-9.1 {eof command} {
     list [catch {eof} msg] $msg $::errorCode
-} {1 {wrong # args: should be "eof channelId"} NONE}
+} {1 {wrong # args: should be "eof channelId"} {TCL WRONGARGS}}
 test iocmd-9.2 {eof command} {
     list [catch {eof a b} msg] $msg $::errorCode
-} {1 {wrong # args: should be "eof channelId"} NONE}
+} {1 {wrong # args: should be "eof channelId"} {TCL WRONGARGS}}
 test iocmd-9.3 {eof command} {
     catch {close file100}
     list [catch {eof file100} msg] $msg $::errorCode
@@ -526,6 +541,27 @@ test iocmd-13.10.2 {open for append, O_APPEND} -setup {
     # Ensure that channels are gone, even if body failed to do so
     foreach ch $chans {catch {close $ch}}
 } -result {0 1 2 3 4 5 6 7 8 9}
+test ioCmd-13.11 {open ... a+ must not use O_APPEND: Bug 1773127} -setup {
+    set f [makeFile {} ioutil41.tmp]
+    set fid [open $f wb]
+    puts -nonewline $fid 123
+    close $fid
+} -body {
+    set fid [open $f ab+]
+    puts -nonewline $fid 456
+    seek $fid 2
+    set d [read $fid 2]
+    seek $fid 4
+    puts -nonewline $fid x
+    close $fid
+    set fid [open $f rb]
+    append d [read $fid]
+    close $fid
+    return $d
+} -cleanup {
+    removeFile $f
+} -result 341234x6
+
 
 test iocmd-14.1 {file id parsing errors} {
     list [catch {eof gorp} msg] $msg $::errorCode
@@ -616,11 +652,10 @@ close $wfile
 test iocmd-20.0 {chan, wrong#args} {
     catch {chan} msg
     set msg
-} {wrong # args: should be "chan subcommand ?argument ...?"}
-test iocmd-20.1 {chan, unknown method} {
-    catch {chan foo} msg
-    set msg
-} {unknown or ambiguous subcommand "foo": must be blocked, close, configure, copy, create, eof, event, flush, gets, names, pending, postevent, puts, read, seek, tell, or truncate}
+} {wrong # args: should be "chan subcommand ?arg ...?"}
+test iocmd-20.1 {chan, unknown method} -body {
+    chan foo
+} -returnCodes error -match glob -result {unknown or ambiguous subcommand "foo": must be *}
 
 # --- --- --- --------- --------- ---------
 # chan create, and method "initalize"
@@ -980,6 +1015,38 @@ test iocmd-23.8 {chan read, level is squashed} -match glob -body {
     rename foo {}
     set res
 } -result {{read rc* 4096} 1 *bad code* {-code 1 -level 0 -errorcode NONE -errorline 1 -errorinfo *bad code*subcommand "read"*}}
+test iocmd-23.9 {chan read, no data means eof} -match glob -setup {
+    set res {}
+    proc foo {args} {
+	oninit; onfinal; track
+	return ""
+    }
+    set c [chan create {r w} foo]
+} -body {
+    note [read $c 2]
+    note [eof $c]
+    set res
+} -cleanup {
+    close $c
+    rename foo {}
+    unset res
+} -result {{read rc* 4096} {} 1}
+test iocmd-23.10 {chan read, EAGAIN means no data, yet no eof either} -match glob -setup {
+    set res {}
+    proc foo {args} {
+	oninit; onfinal; track
+	error EAGAIN
+    }
+    set c [chan create {r w} foo]
+} -body {
+    note [read $c 2]
+    note [eof $c]
+    set res
+} -cleanup {
+    close $c
+    rename foo {}
+    unset res
+} -result {{read rc* 4096} {} 0}
 
 # --- === *** ###########################
 # method write
@@ -1873,7 +1940,7 @@ test iocmd-32.1 {origin interpreter of moved channel destroyed during access} -m
 	proc foo {args} {
 	    oninit; onfinal; track;
 	    # destroy interpreter during channel access
-	    # Actually not possible for an interp to destory itself.
+	    # Actually not possible for an interp to destroy itself.
 	    interp delete {}
 	    return}
 	set chan [chan create {r w} foo]
@@ -2210,6 +2277,46 @@ test iocmd.tf-23.8 {chan read, level is squashed} -match glob -body {
     rename foo {}
     set res
 } -result {{read rc* 4096} 1 *bad code* {-code 1 -level 0 -errorcode NONE -errorline 1 -errorinfo *bad code*subcommand "read"*}} \
+    -constraints {testchannel testthread}
+test iocmd.tf-23.9 {chan read, no data means eof} -match glob -setup {
+    set res {}
+    proc foo {args} {
+	oninit; onfinal; track
+	return ""
+    }
+    set c [chan create {r w} foo]
+} -body {
+    notes [inthread $c {
+	note [read $c 2]
+	note [eof $c]
+	close $c
+	notes
+    } c]
+    set res
+} -cleanup {
+    rename foo {}
+    unset res
+} -result {{read rc* 4096} {} 1} \
+    -constraints {testchannel testthread}
+test iocmd.tf-23.10 {chan read, EAGAIN means no data, yet no eof either} -match glob -setup {
+    set res {}
+    proc foo {args} {
+	oninit; onfinal; track
+	error EAGAIN
+    }
+    set c [chan create {r w} foo]
+} -body {
+    notes [inthread $c {
+	note [read $c 2]
+	note [eof $c]
+	close $c
+	notes
+    } c]
+    set res
+} -cleanup {
+    rename foo {}
+    unset res
+} -result {{read rc* 4096} {} 0} \
     -constraints {testchannel testthread}
 
 # --- === *** ###########################

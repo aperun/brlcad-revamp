@@ -37,7 +37,9 @@
  */
 
 #define NOBJALLOC	800
-#define NOBJHIGH	1200
+
+/* Actual definition moved to tclInt.h */
+#define NOBJHIGH	ALLOC_NOBJHIGH
 
 /*
  * The following union stores accounting information for each block including
@@ -97,7 +99,9 @@ typedef struct Bucket {
 
 /*
  * The following structure defines a cache of buckets and objs, of which there
- * will be (at most) one per thread.
+ * will be (at most) one per thread. Any changes need to be reflected in the
+ * struct AllocCache defined in tclInt.h, possibly also in the initialisation
+ * code in Tcl_CreateInterp().
  */
 
 typedef struct Cache {
@@ -288,11 +292,25 @@ char *
 TclpAlloc(
     unsigned int reqSize)
 {
-    Cache *cachePtr = TclpGetAllocCache();
+    Cache *cachePtr;
     Block *blockPtr;
     register int bucket;
     size_t size;
 
+#ifndef __LP64__
+    if (sizeof(int) >= sizeof(size_t)) {
+	/* An unsigned int overflow can also be a size_t overflow */
+	const size_t zero = 0;
+	const size_t max = ~zero;
+
+	if (((size_t) reqSize) > max - sizeof(Block) - RCHECK) {
+	    /* Requested allocation exceeds memory */
+	    return NULL;
+	}
+    }
+#endif
+
+    cachePtr = TclpGetAllocCache();
     if (cachePtr == NULL) {
 	cachePtr = GetCache();
     }
@@ -414,7 +432,7 @@ TclpRealloc(
     char *ptr,
     unsigned int reqSize)
 {
-    Cache *cachePtr = TclpGetAllocCache();
+    Cache *cachePtr;
     Block *blockPtr;
     void *newPtr;
     size_t size, min;
@@ -424,6 +442,20 @@ TclpRealloc(
 	return TclpAlloc(reqSize);
     }
 
+#ifndef __LP64__
+    if (sizeof(int) >= sizeof(size_t)) {
+	/* An unsigned int overflow can also be a size_t overflow */
+	const size_t zero = 0;
+	const size_t max = ~zero;
+
+	if (((size_t) reqSize) > max - sizeof(Block) - RCHECK) {
+	    /* Requested allocation exceeds memory */
+	    return NULL;
+	}
+    }
+#endif
+
+    cachePtr = TclpGetAllocCache();
     if (cachePtr == NULL) {
 	cachePtr = GetCache();
     }
@@ -489,6 +521,10 @@ TclpRealloc(
  * Side effects:
  *	May move Tcl_Obj's from shared cached or allocate new Tcl_Obj's if
  *	list is empty.
+ *
+ * Note:
+ *	If this code is updated, the changes need to be reflected in the macro
+ *	TclAllocObjStorageEx() defined in tclInt.h
  *
  *----------------------------------------------------------------------
  */
@@ -558,6 +594,10 @@ TclThreadAllocObj(void)
  *
  * Side effects:
  *	May move free Tcl_Obj's to shared list upon hitting high water mark.
+ *
+ * Note:
+ *	If this code is updated, the changes need to be reflected in the macro
+ *	TclAllocObjStorageEx() defined in tclInt.h
  *
  *----------------------------------------------------------------------
  */
@@ -973,8 +1013,8 @@ TclFinalizeThreadAlloc(void)
     unsigned int i;
 
     for (i = 0; i < NBUCKETS; ++i) {
-        TclpFreeAllocMutex(bucketInfo[i].lockPtr);
-        bucketInfo[i].lockPtr = NULL;
+	TclpFreeAllocMutex(bucketInfo[i].lockPtr);
+	bucketInfo[i].lockPtr = NULL;
     }
 
     TclpFreeAllocMutex(objLockPtr);

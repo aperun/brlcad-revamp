@@ -12,6 +12,9 @@
  * RCS: @(#) $Id$
  */
 
+#ifndef USE_TCL_STUBS
+#   define USE_TCL_STUBS
+#endif
 #include <X11/Intrinsic.h>
 #include "tclInt.h"
 
@@ -596,7 +599,7 @@ FileHandlerEventProc(
 	mask = filePtr->readyMask & filePtr->mask;
 	filePtr->readyMask = 0;
 	if (mask != 0) {
-	    (*filePtr->proc)(filePtr->clientData, mask);
+	    filePtr->proc(filePtr->clientData, mask);
 	}
 	break;
     }

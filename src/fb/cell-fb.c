@@ -18,6 +18,11 @@
  * information.
  *
  */
+/** @file cell-fb.c
+ *
+ *	Original author:	Gary S. Moss
+ *	Modifications by:	Paul J. Tanenbaum
+ */
 
 #include "common.h"
 
@@ -138,7 +143,7 @@ static Cell	*grid;
 
 static char	*usage[] = {
     "",
-    "cell-fb",
+    "cell-fb ($Revision$)",
     "",
     "Usage: cell-fb [options] [file]",
     "Options:",

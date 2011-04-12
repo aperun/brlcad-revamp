@@ -1,0 +1,662 @@
+/*                     D B 5 _ T Y P E S . C
+ * BRL-CAD
+ *
+ * Copyright (c) 2000-2011 United States Government as represented by
+ * the U.S. Army Research Laboratory.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * version 2.1 as published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this file; see the file named COPYING for more
+ * information.
+ */
+/** @addtogroup db5 */
+/** @{ */
+/** @file db5_types.c
+ *
+ * Map between Major_Types/Minor_Types and ASCII strings
+ *
+ */
+
+#include "common.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include "bio.h"
+
+#include "bu.h"
+#include "vmath.h"
+#include "db5.h"
+#include "raytrace.h"
+
+/**
+ * Define standard attribute types in BRL-CAD geometry. (See the
+ * gattributes manual page) these should be a collective enumeration
+ * starting from 0 and increasing without any gaps in the numbers so
+ * db5_standard_attribute() can be used as an index-based iterator.
+ */
+
+enum {
+    ATTR_REGION = 0,
+    ATTR_REGION_ID,
+    ATTR_MATERIAL_ID,
+    ATTR_AIR,
+    ATTR_LOS,
+    ATTR_COLOR,
+    ATTR_SHADER,
+    ATTR_INHERIT,
+    ATTR_NULL
+};
+
+
+struct db5_type {
+    int major_code;
+    int minor_code;
+    int heed_minor;
+    char *tag;
+    char *description;
+};
+
+
+/**
+ * In order to support looking up Major_Types as well as (Major_Type,
+ * Minor_Type) pairs, every Major_Type needs an entry with
+ * heed_minor==0 and it must occur below any of its entries that have
+ * heed_minor==1.
+ */
+static const struct db5_type type_table[] = {
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_TOR, 1, "tor", "torus" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_TGC, 1, "tgc", "truncated general cone" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_ELL, 1, "ell", "ellipsoid" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_ARB8, 1, "arb8", "arb8" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_ARS, 1, "ars", "waterline" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_HALF, 1, "half", "halfspace" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_REC, 1, "rec", "right elliptical cylinder" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_BSPLINE, 1, "bspline", "B-spline" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_SPH, 1, "sph", "sphere" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_NMG, 1, "nmg", "nmg" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_EBM, 1, "ebm", "extruded bitmap" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_VOL, 1, "vol", "voxels" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_ARBN, 1, "arbn", "arbn" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_PIPE, 1, "pipe", "pipe" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_PARTICLE, 1, "particle", "particle" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_RPC, 1, "rpc", "right parabolic cylinder" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_RHC, 1, "rhc", "right hyperbolic cylinder" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_EPA, 1, "epa", "elliptical paraboloid" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_EHY, 1, "ehy", "elliptical hyperboloid" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_ETO, 1, "eto", "elliptical torus" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_GRIP, 1, "grip", "grip" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_JOINT, 1, "joint", "joint" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_DSP, 1, "dsp", "displacement map (height field)" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_SKETCH, 1, "sketch", "sketch" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_EXTRUDE, 1, "extrude", "extrusion" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_SUBMODEL, 1, "submodel", "submodel" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_CLINE, 1, "cline", "cline" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_BOT, 1, "bot", "bag of triangles" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_COMBINATION, 1, "combination", "combination" },
+    { DB5_MAJORTYPE_BRLCAD, DB5_MINORTYPE_BRLCAD_BREP, 1, "brep", "Boundary Representation" },
+    { DB5_MAJORTYPE_BRLCAD, 0, 0, "brlcad", "BRL-CAD geometry" },
+    { DB5_MAJORTYPE_ATTRIBUTE_ONLY, 0, 0, "attribonly", "attribute only" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_FLOAT, 1, "float", "array of floats" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_FLOAT, 1, "f", "array of floats" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_DOUBLE, 1, "double", "array of doubles" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_DOUBLE, 1, "d", "array of doubles" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_8BITINT_U, 1, "u8", "array of unsigned 8-bit ints" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_16BITINT_U, 1, "u16", "array of unsigned 16-bit ints" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_32BITINT_U, 1, "u32", "array of unsigned 32-bit ints" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_32BITINT_U, 1, "uint", "array of unsigned 32-bit ints" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_32BITINT_U, 1, "ui", "array of unsigned 32-bit ints" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_64BITINT_U, 1, "u64", "array of unsigned 64-bit ints" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_8BITINT, 1, "8", "array of 8-bit ints" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_16BITINT, 1, "16", "array of 16-bit ints" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_32BITINT, 1, "32", "array of 32-bit ints" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_32BITINT, 1, "int", "array of 32-bit ints" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_32BITINT, 1, "i", "array of 32-bit ints" },
+    { DB5_MAJORTYPE_BINARY_UNIF, DB5_MINORTYPE_BINU_64BITINT, 1, "64", "array of 64-bit ints" },
+    { DB5_MAJORTYPE_BINARY_UNIF, 0, 0, "binunif", "uniform-array binary" },
+    /* Following entry must be at end of table */
+    { DB5_MAJORTYPE_RESERVED, 0, 0, 0, 0 },
+};
+
+
+int
+db5_type_tag_from_major(char **tag, const int major)
+{
+    register struct db5_type *tp;
+
+    for (tp = (struct db5_type *) type_table;
+	 tp->major_code != DB5_MAJORTYPE_RESERVED;
+	 ++tp) {
+	if ((tp->major_code == major) && !(tp->heed_minor)) {
+	    *tag = tp->tag;
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+
+int
+db5_type_descrip_from_major(char **descrip, const int major)
+{
+    register struct db5_type *tp;
+
+    for (tp = (struct db5_type *) type_table;
+	 tp->major_code != DB5_MAJORTYPE_RESERVED;
+	 ++tp) {
+	if ((tp->major_code == major) && !(tp->heed_minor)) {
+	    *descrip = tp->description;
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+
+int
+db5_type_tag_from_codes(char **tag, const int major, const int minor)
+{
+    register struct db5_type *tp;
+    register int found_minors = 0;
+
+    for (tp = (struct db5_type *) type_table;
+	 tp->major_code != DB5_MAJORTYPE_RESERVED;
+	 ++tp) {
+	if (tp->major_code == major) {
+	    if (tp->heed_minor)
+		found_minors = 1;
+	    if ((tp->minor_code == minor) || !found_minors) {
+		*tag = tp->tag;
+		return 0;
+	    }
+	}
+    }
+    return 1;
+}
+
+
+int
+db5_type_descrip_from_codes(char **descrip, const int major, const int minor)
+{
+    register struct db5_type *tp;
+    register int found_minors = 0;
+
+    for (tp = (struct db5_type *) type_table;
+	 tp->major_code != DB5_MAJORTYPE_RESERVED;
+	 ++tp) {
+	if (tp->major_code == major) {
+	    if (tp->heed_minor)
+		found_minors = 1;
+	    if ((tp->minor_code == minor) || !found_minors) {
+		*descrip = tp->description;
+		return 0;
+	    }
+	}
+    }
+    return 1;
+}
+
+
+int
+db5_type_codes_from_tag(int *major, int *minor, const char *tag)
+{
+    register struct db5_type *tp;
+
+    for (tp = (struct db5_type *) type_table;
+	 tp->major_code != DB5_MAJORTYPE_RESERVED;
+	 ++tp) {
+	if ((*(tp->tag) == *tag) && (BU_STR_EQUAL(tp->tag, tag))) {
+	    *major = tp->major_code;
+	    *minor = tp->minor_code;
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+
+int
+db5_type_codes_from_descrip(int *major, int *minor, const char *descrip)
+{
+    register struct db5_type *tp;
+
+    for (tp = (struct db5_type *) type_table;
+	 tp->major_code != DB5_MAJORTYPE_RESERVED;
+	 ++tp) {
+	if ((*(tp->description) == *descrip)
+	    && (BU_STR_EQUAL(tp->description, descrip))) {
+	    *major = tp->major_code;
+	    *minor = tp->minor_code;
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+
+size_t
+db5_type_sizeof_h_binu(const int minor)
+{
+    switch (minor) {
+	case DB5_MINORTYPE_BINU_FLOAT:
+	    return sizeof(float);
+	case DB5_MINORTYPE_BINU_DOUBLE:
+	    return sizeof(double);
+	case DB5_MINORTYPE_BINU_8BITINT:
+	case DB5_MINORTYPE_BINU_8BITINT_U:
+	    return (size_t) 1;
+	case DB5_MINORTYPE_BINU_16BITINT:
+	case DB5_MINORTYPE_BINU_16BITINT_U:
+	    return (size_t) 2;
+	case DB5_MINORTYPE_BINU_32BITINT:
+	case DB5_MINORTYPE_BINU_32BITINT_U:
+	    return (size_t) 4;
+	case DB5_MINORTYPE_BINU_64BITINT:
+	case DB5_MINORTYPE_BINU_64BITINT_U:
+	    return (size_t) 8;
+    }
+    return 0;
+}
+
+
+size_t
+db5_type_sizeof_n_binu(const int minor)
+{
+    switch (minor) {
+	case DB5_MINORTYPE_BINU_FLOAT:
+	    return (size_t) SIZEOF_NETWORK_FLOAT;
+	case DB5_MINORTYPE_BINU_DOUBLE:
+	    return (size_t) SIZEOF_NETWORK_DOUBLE;
+	case DB5_MINORTYPE_BINU_8BITINT:
+	case DB5_MINORTYPE_BINU_8BITINT_U:
+	    return (size_t) 1;
+	case DB5_MINORTYPE_BINU_16BITINT:
+	case DB5_MINORTYPE_BINU_16BITINT_U:
+	    return (size_t) 2;
+	case DB5_MINORTYPE_BINU_32BITINT:
+	case DB5_MINORTYPE_BINU_32BITINT_U:
+	    return (size_t) 4;
+	case DB5_MINORTYPE_BINU_64BITINT:
+	case DB5_MINORTYPE_BINU_64BITINT_U:
+	    return (size_t) 8;
+    }
+    return 0;
+}
+
+
+const char *
+db5_standard_attribute(int idx)
+{
+    switch (idx) {
+	case ATTR_REGION:
+	    return "region";
+	case ATTR_REGION_ID:
+	    return "region_id";
+	case ATTR_MATERIAL_ID:
+	    return "material_id";
+	case ATTR_AIR:
+	    return "air";
+	case ATTR_LOS:
+	    return "los";
+	case ATTR_COLOR:
+	    return "color";
+	case ATTR_SHADER:
+	    return "shader";
+	case ATTR_INHERIT:
+	    return "inherit";
+	case ATTR_NULL:
+	    return NULL;
+    }
+    /* no match */
+    return NULL;
+}
+
+
+int
+db5_is_standard_attribute(const char *attr_want)
+{
+    int i = 0;
+    const char *attr_have = NULL;
+
+    if (!attr_want)
+	return 0;
+
+    for (i=0; (attr_have = db5_standard_attribute(i)) != NULL; i++) {
+	if (BU_STR_EQUAL(attr_want, attr_have)) return 1;
+    }
+
+    return 0;
+}
+
+
+int
+db5_standardize_attribute(const char *attr)
+{
+    /* FIXME: these should all be converted to case-insensitive
+     * comparisions for the standard attribute names.
+     */
+
+    if (!attr)
+	return ATTR_NULL;
+
+    if (BU_STR_EQUAL(attr, "region"))
+	return ATTR_REGION;
+    if (BU_STR_EQUAL(attr, "REGION"))
+	return ATTR_REGION;
+
+    if (BU_STR_EQUAL(attr, "region_id"))
+	return ATTR_REGION_ID;
+    if (BU_STR_EQUAL(attr, "REGION_ID"))
+	return ATTR_REGION_ID;
+    if (BU_STR_EQUAL(attr, "id"))
+	return ATTR_REGION_ID;
+    if (BU_STR_EQUAL(attr, "ID"))
+	return ATTR_REGION_ID;
+
+    if (BU_STR_EQUAL(attr, "material_id"))
+	return ATTR_MATERIAL_ID;
+    if (BU_STR_EQUAL(attr, "MATERIAL_ID"))
+	return ATTR_MATERIAL_ID;
+    if (BU_STR_EQUAL(attr, "GIFTmater"))
+	return ATTR_MATERIAL_ID;
+    if (BU_STR_EQUAL(attr, "GIFT_MATERIAL"))
+	return ATTR_MATERIAL_ID;
+    if (BU_STR_EQUAL(attr, "mat"))
+	return ATTR_MATERIAL_ID;
+
+    if (BU_STR_EQUAL(attr, "air"))
+	return ATTR_AIR;
+    if (BU_STR_EQUAL(attr, "AIR"))
+	return ATTR_AIR;
+    if (BU_STR_EQUAL(attr, "AIRCODE"))
+	return ATTR_AIR;
+
+    if (BU_STR_EQUAL(attr, "los"))
+	return ATTR_LOS;
+    if (BU_STR_EQUAL(attr, "LOS"))
+	return ATTR_LOS;
+
+    if (BU_STR_EQUAL(attr, "color"))
+	return ATTR_COLOR;
+    if (BU_STR_EQUAL(attr, "COLOR"))
+	return ATTR_COLOR;
+    if (BU_STR_EQUAL(attr, "rgb"))
+	return ATTR_COLOR;
+    if (BU_STR_EQUAL(attr, "RGB"))
+	return ATTR_COLOR;
+
+    if (BU_STR_EQUAL(attr, "oshader"))
+	return ATTR_SHADER;
+    if (BU_STR_EQUAL(attr, "SHADER"))
+	return ATTR_SHADER;
+
+    if (BU_STR_EQUAL(attr, "inherit"))
+	return ATTR_INHERIT;
+    if (BU_STR_EQUAL(attr, "INHERIT"))
+	return ATTR_INHERIT;
+
+    return ATTR_NULL;
+}
+
+
+size_t
+db5_standardize_avs(struct bu_attribute_value_set *avs)
+{
+    size_t conflict = 0;
+    int attr_type;
+
+    const char *stdattr;
+    const char *added;
+
+    struct bu_attribute_value_set newavs;
+    struct bu_attribute_value_pair *avpp;
+
+    /* check inputs */
+    BU_CK_AVS(avs);
+    if (avs->count <= 0)
+	return 0;
+
+    bu_avs_init_empty(&newavs);
+
+    /* FIRST PASS: identify any attributes that are already in
+     * standard form since they take priority if there are duplicates
+     * with different values.
+     */
+    for (BU_AVS_FOR(avpp, avs)) {
+	/* see if this is a standarizable attribute name */
+	attr_type = db5_standardize_attribute(avpp->name);
+
+	/* get the standard name for this type */
+	stdattr = db5_standard_attribute(attr_type);
+
+	/* name is already in standard form, add it */
+	if (attr_type != ATTR_NULL && BU_STR_EQUAL(stdattr, avpp->name))
+	    (void)bu_avs_add(&newavs, stdattr, avpp->value);
+    }
+
+    /* SECOND PASS: check for duplicates and non-standard
+     * attributes.
+     */
+    for (BU_AVS_FOR(avpp, avs)) {
+	/* see if this is a standarizable attribute name */
+	attr_type = db5_standardize_attribute(avpp->name);
+
+	/* get the standard name for this type */
+	stdattr = db5_standard_attribute(attr_type);
+
+	/* see if we already added this attribute */
+	added = bu_avs_get(&newavs, stdattr);
+
+	if (attr_type != ATTR_NULL && added == NULL) {
+
+	    /* case 1: name is "standardizable" and not added */
+
+	    (void)bu_avs_add(&newavs, stdattr, avpp->value);
+	} else if (attr_type != ATTR_NULL && BU_STR_EQUAL(added, avpp->value)) {
+
+	    /* case 2: name is "standardizable", but we already added the same value */
+
+	    /* ignore/skip it (because it's the same value) */
+	} else if (attr_type != ATTR_NULL && !BU_STR_EQUAL(added, avpp->value)) {
+
+	    /* case 3: name is "standardizable", but we already added something else */
+
+	    /* preserve the conflict, keep the old value too */
+	    (void)bu_avs_add(&newavs, avpp->name, avpp->value);
+	    conflict++;
+	} else {
+
+	    /* everything else: add it */
+
+	    (void)bu_avs_add(&newavs, avpp->name, avpp->value);
+	}
+    }
+    bu_avs_free(avs);
+    bu_avs_merge(avs, &newavs);
+    bu_avs_free(&newavs);
+
+    return conflict;
+}
+
+
+void
+db5_apply_std_attributes(struct db_i *dbip, struct directory *dp, struct rt_comb_internal *comb)
+{
+    size_t i;
+    long attr_num_val;
+    int color[3];
+    struct bu_attribute_value_set avs;
+    struct bu_vls newval;
+    bu_vls_init(&newval);
+
+    /* check inputs */
+    RT_CK_DBI(dbip);
+    RT_CK_DIR(dp);
+    RT_CK_COMB(comb);
+
+    bu_avs_init_empty(&avs);
+
+    if (!db5_get_attributes(dbip, &avs, dp)) {
+
+	db5_standardize_avs(&avs);
+
+	/* region flag */
+	bu_vls_sprintf(&newval, "%s", bu_avs_get(&avs, db5_standard_attribute(ATTR_REGION)));
+	if (bu_str_true(bu_vls_addr(&newval))) {
+	    comb->region_flag = 1;
+	    dp->d_flags |= RT_DIR_REGION;
+	} else {
+	    comb->region_flag = 0;
+	    dp->d_flags &= ~RT_DIR_REGION;
+	}
+
+	/* region_id */
+	bu_vls_sprintf(&newval, "%s", bu_avs_get(&avs, db5_standard_attribute(ATTR_REGION_ID)));
+	attr_num_val = atoi(bu_vls_addr(&newval));
+	if (attr_num_val >= 0 || attr_num_val == -1) {
+	    comb->region_id = attr_num_val;
+	} else {
+	    bu_log("Warning - invalid region_id value on comb %s - comb->region_id remains at %d\n", dp->d_namep, comb->region_id);
+	}
+
+	/* material_id */
+	bu_vls_sprintf(&newval, "%s", bu_avs_get(&avs, db5_standard_attribute(ATTR_MATERIAL_ID)));
+	attr_num_val = atoi(bu_vls_addr(&newval));
+	if (attr_num_val >= 0) {
+	    comb->GIFTmater = attr_num_val;
+	} else {
+	    bu_log("Warning - invalid material_id value on comb %s - comb->GIFTmater remains at %d\n", dp->d_namep, comb->GIFTmater);
+	}
+
+	/* air */
+	bu_vls_sprintf(&newval, "%s", bu_avs_get(&avs, db5_standard_attribute(ATTR_AIR)));
+	attr_num_val = atoi(bu_vls_addr(&newval));
+	if (attr_num_val == 0 || attr_num_val == 1) {
+	    comb->aircode = attr_num_val;
+	} else {
+	    bu_log("Warning - invalid Air Code value on comb %s - comb->aircode remains at %d\n", dp->d_namep, comb->aircode);
+	}
+
+	/* los */
+	bu_vls_sprintf(&newval, "%s", bu_avs_get(&avs, db5_standard_attribute(ATTR_LOS)));
+	attr_num_val = atoi(bu_vls_addr(&newval)); /* Is LOS really limited to integer values?? - also, need some sanity checking */
+	comb->los = attr_num_val;
+
+	/* color */
+	bu_vls_sprintf(&newval, "%s", bu_avs_get(&avs, db5_standard_attribute(ATTR_COLOR)));
+	if (bu_avs_get(&avs, "color")) {
+	    if (sscanf(bu_vls_addr(&newval), "%i/%i/%i", color+0, color+1, color+2) == 3) {
+		for (i = 0; i < 3; i++) {
+		    if (color[i] > 255) color[i] = 255;
+		    if (color[i] < 0) color[i] = 0;
+		}
+		comb->rgb[0] = color[0];
+		comb->rgb[1] = color[1];
+		comb->rgb[2] = color[2];
+	    } else {
+		bu_log("Warning - color string on comb %s does not match the R/G/B pattern - color remains at %d/%d/%d\n", dp->d_namep, comb->rgb[0], comb->rgb[1], comb->rgb[2]);
+	    }
+	}
+
+	/* oshader */
+	bu_vls_strcpy(&comb->shader, bu_avs_get(&avs, db5_standard_attribute(ATTR_SHADER)));
+
+	/* inherit */
+	bu_vls_sprintf(&newval, "%s", bu_avs_get(&avs, db5_standard_attribute(ATTR_INHERIT)));
+	if (bu_str_true(bu_vls_addr(&newval))) {
+	    comb->inherit = 1;
+	} else {
+	    comb->inherit = 0;
+	}
+
+	db5_update_attributes(dp, &avs, dbip);
+    }
+    bu_vls_free(&newval);
+}
+
+
+void
+db5_update_std_attributes(struct db_i *dbip, struct directory *dp, const struct rt_comb_internal *comb)
+{
+    struct bu_attribute_value_set avs;
+    struct bu_vls newval;
+
+    /* check inputs */
+    RT_CK_DBI(dbip);
+    RT_CK_DIR(dp);
+    RT_CK_COMB(comb);
+
+    bu_avs_init_empty(&avs);
+    bu_vls_init(&newval);
+
+    if (!db5_get_attributes(dbip, &avs, dp)) {
+	db5_standardize_avs(&avs);
+	if (comb->region_flag) {
+	    (void)bu_avs_add(&avs, "region", "R");
+	} else {
+	    bu_avs_remove(&avs, "region");
+	}
+	if (comb->region_flag && (comb->region_id >=0 || comb->region_id == -1)) {
+	    bu_vls_sprintf(&newval, "%d", comb->region_id);
+	    (void)bu_avs_add_vls(&avs, "region_id", &newval);
+	} else {
+	    bu_avs_remove(&avs, "region_id");
+	}
+	if (comb->GIFTmater >= 0) {
+	    bu_vls_sprintf(&newval, "%d", comb->GIFTmater);
+	    (void)bu_avs_add_vls(&avs, "material_id", &newval);
+	} else {
+	    bu_avs_remove(&avs, "material_id");
+	}
+	if (comb->aircode) {
+	    bu_vls_sprintf(&newval, "%d", comb->aircode);
+	    (void)bu_avs_add_vls(&avs, "air", &newval);
+	} else {
+	    bu_avs_remove(&avs, "air");
+	}
+	if (comb->los) {
+	    bu_vls_sprintf(&newval, "%d", comb->los);
+	    (void)bu_avs_add_vls(&avs, "los", &newval);
+	} else {
+	    bu_avs_remove(&avs, "los");
+	}
+	if (bu_avs_get(&avs, "color") || !(comb->rgb[0] == 0 && comb->rgb[1] == 0 && comb->rgb[2] == 0)) {
+	    bu_vls_sprintf(&newval, "%d/%d/%d", comb->rgb[0], comb->rgb[1], comb->rgb[2]);
+	    (void)bu_avs_add_vls(&avs, "color", &newval);
+	}
+	if (!BU_STR_EQUAL(bu_vls_addr(&comb->shader), "")) {
+	    bu_vls_sprintf(&newval, "%s", bu_vls_addr(&comb->shader));
+	    (void)bu_avs_add_vls(&avs, "oshader", &newval);
+	} else {
+	    bu_avs_remove(&avs, "oshader");
+	}
+	if (comb->inherit) {
+	    bu_vls_sprintf(&newval, "%d", comb->inherit);
+	    (void)bu_avs_add_vls(&avs, "inherit", &newval);
+	} else {
+	    bu_avs_remove(&avs, "inherit");
+	}
+	db5_update_attributes(dp, &avs, dbip);
+    }
+    bu_vls_free(&newval);
+}
+
+
+/** @} */
+/*
+ * Local Variables:
+ * mode: C
+ * tab-width: 8
+ * indent-tabs-mode: t
+ * c-file-style: "stroustrup"
+ * End:
+ * ex: shiftwidth=4 tabstop=8
+ */

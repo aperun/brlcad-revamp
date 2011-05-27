@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -e
+
+F='/usr/share/applications/defaults.list'
+
+if [ -f $F ]; then
+	sed -i '/application\/x-brlcad-/d' $F
+fi
+
+update-desktop-database &> /dev/null || :
+
+update-mime-database /usr/share/mime &> /dev/null || :
+
+touch -c /usr/share/icons/hicolor &>/dev/null || :
+
+gtk-update-icon-cache /usr/share/icons/hicolor &>/dev/null || :

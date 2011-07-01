@@ -1,0 +1,10 @@
+set(LIBICV_SOURCES
+    rot.c
+)
+
+include_directories(
+    ${TCL_INCLUDE_DIRS}
+)
+
+BRLCAD_ADDLIB(libicv "${LIBICV_SOURCES}" libbu)
+SET_TARGET_PROPERTIES(libicv PROPERTIES VERSION 19.0.1 SOVERSION 19)

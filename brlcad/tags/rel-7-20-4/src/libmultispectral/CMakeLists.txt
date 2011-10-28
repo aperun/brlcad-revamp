@@ -1,0 +1,17 @@
+# Include directories needed by libmultispectral users
+SET(MULTISPECTRAL_INCLUDE_DIRS
+	${BRLCAD_BINARY_DIR}/include
+	${BRLCAD_SOURCE_DIR}/include
+	${RT_INCLUDE_DIRS}
+	${OPTICAL_INCLUDE_DIRS}
+	)
+LIST(REMOVE_DUPLICATES MULTISPECTRAL_INCLUDE_DIRS)
+BRLCAD_INCLUDE_DIRS(MULTISPECTRAL_INCLUDE_DIRS)
+
+add_definitions(
+    -DRT_MULTISPECTRAL
+)
+
+BRLCAD_ADDLIB(libmultispectral "init.c sh_temp.c" "liboptical librt librtms-static")
+SET_TARGET_PROPERTIES(libmultispectral PROPERTIES VERSION 19.0.1 SOVERSION 19)
+CMAKEFILES(Makefile.am)

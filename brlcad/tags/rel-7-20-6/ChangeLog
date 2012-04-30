@@ -1,0 +1,343 @@
+2012-04-30 15:10  starseeker
+
+	* [r50370] src/other/libz/CMakeLists.txt:
+	  Add workaround for MSVC2010 64 bit and zlib from trunk r49887
+
+2012-04-30 15:06  starseeker
+
+	* [r50369] src/other/step/src/express/CMakeLists.txt,
+	  src/other/step/src/express/expprint.c:
+	  Remove this file - removed in trunk, not needed, causing build
+	  issue on mac for release build.
+
+2012-04-30 14:35  starseeker
+
+	* [r50368] src/other/CMakeLists.txt:
+	  Don't use numbers for bools
+
+2012-04-30 14:08  starseeker
+
+	* [r50367] CMakeLists.txt:
+	  Correct typo.
+
+2012-04-28 16:32  starseeker
+
+	* [r50354] NEWS, src/libfb/if_ogl.c, src/libfb/if_wgl.c,
+	  src/tclscripts/rtwizard/lib/FbPage.itk:
+	  Merge rtwizard fix to STABLE
+
+2012-04-27 16:53  starseeker
+
+	* [r50349] ChangeLog, NEWS, README, include/conf/PATCH:
+	  Up version numbers, cleanup NEWS, put relevant portion of STABLE
+	  changlog in place. Not sure this will ever actually get tagged
+	  for a release, but this revision of STABLE is exhibiting the
+	  desired behavior on Linux.
+
+2012-04-27 15:39  starseeker
+
+	* [r50345] src/librt/opennurbs_ext.cpp, src/librt/opennurbs_ext.h:
+	  Merge NURBS tweak from trunk r50343
+
+2012-04-26 23:00  starseeker
+
+	* [r50336] configure.ac, doc/Makefile.am, src/other/Makefile.am,
+	  src/tclscripts/mged/Makefile.am:
+	  Don't build docbook with autotools - current docbook methods have
+	  changed significantly, not worth retrofitting.
+
+2012-04-26 21:23  starseeker
+
+	* [r50333] src/tclscripts/mged/tclIndex:
+	  whoops, typo
+
+2012-04-26 20:39  starseeker
+
+	* [r50332] configure.ac:
+	  nevermind pdf building with autotools
+
+2012-04-26 19:57  starseeker
+
+	* [r50329] src/tclscripts/mged/tclIndex:
+	  Add relos to the hardcoded tclIndex file
+
+2012-04-26 18:56  starseeker
+
+	* [r50327] src/shapes/coil.c:
+	  break up line for C90
+
+2012-04-26 18:36  starseeker
+
+	* [r50326] src/libdm/axes.c:
+	  pull the OGL wrapping from trunk for axes.c
+
+2012-04-26 18:07  starseeker
+
+	* [r50325] src/libged/analyze.c:
+	  use C commenting
+
+2012-04-26 17:54  starseeker
+
+	* [r50324] src/libged/analyze.c:
+	  another C++ style comments
+
+2012-04-26 17:49  starseeker
+
+	* [r50323] src/libged/analyze.c:
+	  remove C++ style comments
+
+2012-04-26 13:56  starseeker
+
+	* [r50320] NEWS, src/other/libpng.dist, src/other/libpng/ANNOUNCE,
+	  src/other/libpng/CHANGES, src/other/libpng/CMakeLists.txt,
+	  src/other/libpng/INSTALL, src/other/libpng/LICENSE,
+	  src/other/libpng/Makefile.am, src/other/libpng/README,
+	  src/other/libpng/arm, src/other/libpng/arm/filter_neon.S,
+	  src/other/libpng/configure.ac,
+	  src/other/libpng/contrib/README.txt,
+	  src/other/libpng/contrib/gregbook/rpng2-win.c,
+	  src/other/libpng/contrib/gregbook/rpng2-x.c,
+	  src/other/libpng/contrib/libtests,
+	  src/other/libpng/contrib/libtests/pngvalid.c,
+	  src/other/libpng/contrib/pngminim/decoder/pngusr.h,
+	  src/other/libpng/contrib/pngminim/encoder/pngusr.h,
+	  src/other/libpng/contrib/pngminim/preader/pngusr.h,
+	  src/other/libpng/contrib/pngminus/makefile.std,
+	  src/other/libpng/contrib/visupng/PngFile.c,
+	  src/other/libpng/contrib/visupng/PngFile.h,
+	  src/other/libpng/contrib/visupng/VisualPng.c,
+	  src/other/libpng/example.c, src/other/libpng/libpng-manual.txt,
+	  src/other/libpng/libpng.3, src/other/libpng/libpngpf.3,
+	  src/other/libpng/png.5, src/other/libpng/png.c,
+	  src/other/libpng/png.h, src/other/libpng/pngconf.h,
+	  src/other/libpng/pngerror.c, src/other/libpng/pngget.c,
+	  src/other/libpng/pngmem.c, src/other/libpng/pngpread.c,
+	  src/other/libpng/pngpriv.h, src/other/libpng/pngread.c,
+	  src/other/libpng/pngrtran.c, src/other/libpng/pngrutil.c,
+	  src/other/libpng/pngset.c, src/other/libpng/pngstruct.h,
+	  src/other/libpng/pngtest.c, src/other/libpng/pngtrans.c,
+	  src/other/libpng/pngusr.dfa, src/other/libpng/pngvalid.c,
+	  src/other/libpng/pngwrite.c, src/other/libpng/pngwtran.c,
+	  src/other/libpng/pngwutil.c,
+	  src/other/libpng/projects/owatcom/libpng.wpj,
+	  src/other/libpng/projects/owatcom/pngconfig.mak,
+	  src/other/libpng/projects/owatcom/pngvalid.tgt,
+	  src/other/libpng/projects/vstudio/libpng/libpng.vcxproj,
+	  src/other/libpng/projects/vstudio/pngvalid/pngvalid.vcxproj,
+	  src/other/libpng/projects/vstudio/readme.txt,
+	  src/other/libpng/projects/vstudio/vstudio.sln,
+	  src/other/libpng/projects/vstudio/zlib.props,
+	  src/other/libpng/projects/vstudio/zlib/zlib.vcxproj,
+	  src/other/libpng/scripts/README.txt,
+	  src/other/libpng/scripts/def.dfn,
+	  src/other/libpng/scripts/libpng-config-head.in,
+	  src/other/libpng/scripts/libpng.pc.in,
+	  src/other/libpng/scripts/makefile.cegcc,
+	  src/other/libpng/scripts/makefile.darwin,
+	  src/other/libpng/scripts/makefile.linux,
+	  src/other/libpng/scripts/makefile.ne12bsd,
+	  src/other/libpng/scripts/makefile.netbsd,
+	  src/other/libpng/scripts/makefile.openbsd,
+	  src/other/libpng/scripts/makefile.std,
+	  src/other/libpng/scripts/options.awk,
+	  src/other/libpng/scripts/pnglibconf.dfa,
+	  src/other/libpng/scripts/pnglibconf.h.prebuilt,
+	  src/other/libpng/scripts/pnglibconf.mak,
+	  src/other/libpng/scripts/sym.dfn,
+	  src/other/libpng/scripts/symbols.def,
+	  src/other/libpng/scripts/vers.dfn,
+	  src/other/libpng/test-pngtest.sh,
+	  src/other/libpng/test-pngvalid-full.sh,
+	  src/other/libpng/test-pngvalid-simple.sh:
+	  Update libpng in STABLE to version 1.5.10 (same change as trunk
+	  r50319)
+
+2012-04-25 23:53  starseeker
+
+	* [r50312] NEWS:
+	  Start working up a 7.20.6 NEWS file - will be tagging off of
+	  STABLE this time, since trunk still needs more work to be release
+	  ready. Eventually we'll need to sync the main trunk NEWS file
+	  back up with this one, but for now just work on getting the
+	  release out. For now attaching revision numbers associated with
+	  each change to the news line covering it - those will be taken
+	  out before release is tagged, but for now they help keep straight
+	  what has and has not been merged in from trunk.
+
+2012-04-25 23:24  starseeker
+
+	* [r50311] src/shapes, src/shapes/coil.c:
+	  Grab the coil crash fix from 48470
+
+2012-04-25 23:11  starseeker
+
+	* [r50310] src/sig/d2-c.c:
+	  Add d2-c fix from r48233
+
+2012-04-25 20:54  starseeker
+
+	* [r50305] src/librtserver/CMakeLists.txt,
+	  src/librtserver/rtserver.c, src/librtserver/rtserverTest.c:
+	  Merge MUVEStoORCA translation matrix update to librtserver from
+	  trunk r50300
+
+2012-04-25 18:33  starseeker
+
+	* [r50297] src/librtserver/CMakeLists.txt:
+	  remove explicit java libs from stable too
+
+2012-04-23 15:18  starseeker
+
+	* [r50200] misc/CMake/BRLCAD_CompilerFlags.cmake:
+	  Add the Wno-variadic-macros check to STABLE
+
+2012-04-18 15:09  starseeker
+
+	* [r50170] src/librt/opennurbs_ext.h,
+	  src/librt/primitives/bot/btg.c:
+	  Apply r50164 and r50167 fixes from trunk to STABLE
+
+2012-04-13 02:12  starseeker
+
+	* [r49993] src/rt/viewweight.c:
+	  Backport another MSVC fix from trunk
+
+2012-04-13 02:04  starseeker
+
+	* [r49992] src/libged/analyze.c:
+	  Backport fix for MSVC from trunk
+
+2012-04-13 01:46  starseeker
+
+	* [r49991] src/libdm/dm-ogl.c:
+	  Pull in bu_log statement change from trunk
+
+2012-04-11 20:01  starseeker
+
+	* [r49980] src/librt/primitives/ars/ars.c:
+	  Turn off the ARS custom bbox routine - restore old behavior until
+	  we get ARS bbox routine to produce the correct bbox
+
+2012-03-22 16:41  starseeker
+
+	* [r49789] ., include/dm.h, misc/CMake/CompilerFlags.cmake,
+	  src/bwish/tcl.c, src/libdm/axes.c, src/libdm/dm-Null.c,
+	  src/libdm/dm-X.c, src/libdm/dm-ogl.c, src/libdm/dm-plot.c,
+	  src/libdm/dm-ps.c, src/libdm/dm-rtgl.c, src/libdm/dm-tk.c,
+	  src/libdm/dm-wgl.c, src/libfb/fbserv_obj.c,
+	  src/libged/model2view.c, src/liboptical/photonmap.c,
+	  src/librt/db_alloc.c, src/librt/primitives/brep/brep.cpp,
+	  src/librt/primitives/metaball/metaball.c,
+	  src/librtserver/CMakeLists.txt, src/libtclcad/tclcad_obj.c,
+	  src/mged/fbserv.c, src/mged/mged.c, src/other/lemon/lemon.c,
+	  src/other/lemon/lempar.c, src/other/tkhtml/src/css.c,
+	  src/other/tkhtml/src/cssdynamic.c,
+	  src/other/tkhtml/src/cssparser.c,
+	  src/other/tkhtml/src/cssprop.tcl,
+	  src/other/tkhtml/src/csssearch.c,
+	  src/other/tkhtml/src/htmldecode.c,
+	  src/other/tkhtml/src/htmldraw.c,
+	  src/other/tkhtml/src/htmlfloat.c,
+	  src/other/tkhtml/src/htmlhash.c,
+	  src/other/tkhtml/src/htmlimage.c,
+	  src/other/tkhtml/src/htmlinline.c,
+	  src/other/tkhtml/src/htmllayout.c,
+	  src/other/tkhtml/src/htmllayout.h,
+	  src/other/tkhtml/src/htmlparse.c,
+	  src/other/tkhtml/src/htmlprop.c,
+	  src/other/tkhtml/src/htmlstyle.c,
+	  src/other/tkhtml/src/htmltable.c,
+	  src/other/tkhtml/src/htmltagdb.c, src/other/tkhtml/src/htmltcl.c,
+	  src/other/tkhtml/src/htmltext.c, src/other/tkhtml/src/htmltree.c,
+	  src/other/tkhtml/src/htmlutil.c, src/other/tkhtml/src/main.c,
+	  src/other/tkhtml/src/restrack.c, src/other/tkhtml/src/swproc.c,
+	  src/other/tktable/generic/tkTable.h,
+	  src/tclscripts/archer/Archer.tcl,
+	  src/tclscripts/archer/ArcherCore.tcl,
+	  src/tclscripts/rtwizard/lib/PictureTypeE.itcl, src/util/bwmod.c:
+	  Add changes from trunk revisions 49519, 49524, 49532, 49540,
+	  49562, 49563, 49568, 49572, 49600-49602, 49604-49605,
+	  49607-49614, 49616, 49617, 49648, 49666, 49711, 49753, 49768,
+	  49769, 49782
+
+2012-03-19 16:18  starseeker
+
+	* [r49742] ., src/libtclcad/tclcad_obj.c:
+	  Apply 49150
+
+2012-02-23 20:39  starseeker
+
+	* [r49522] src/librt/primitives/revolve/revolve.c:
+	  merge bugfix from trunk r49516
+
+2012-02-23 20:15  starseeker
+
+	* [r49521] src/tclscripts/rtwizard/lib/MGEDpage.itk:
+	  put rtwizard tweak in stable too.
+
+2012-02-22 19:41  starseeker
+
+	* [r49496] CMakeLists.txt, misc/CMake/BRLCAD_CheckFunctions.cmake:
+	  Same fix for stable logic - this may necessitate manual
+	  intervention for this file in a future merge.
+
+2012-02-21 18:10  starseeker
+
+	* [r49490] src/librtserver/CMakeLists.txt:
+	  Fix form, not just name...
+
+2012-02-21 18:08  starseeker
+
+	* [r49489] src/librtserver/CMakeLists.txt:
+	  Ah, right - too early for that version of the INCLUDE_DIRS macro
+
+2012-02-21 17:57  starseeker
+
+	* [r49488] src/librtserver/CMakeLists.txt:
+	  Add the librtserver build tweaks to STABLE
+
+2012-02-17 21:14  starseeker
+
+	* [r49475] src/libged/analyze.c:
+	  initialize val
+
+2012-02-16 01:27  starseeker
+
+	* [r49438] include/bu.h, include/raytrace.h, include/rtgeom.h,
+	  misc/CMake/distcheck_buildsys.cmake.in, regress/CMakeLists.txt,
+	  regress/analyze.asc, regress/solidspix.asc, regress/weight.sh,
+	  src/adrt/isst.bat, src/archer/archer.bat, src/conv/asc/asc2g.c,
+	  src/conv/g-obj.c, src/conv/intaval/read_dra.cpp,
+	  src/libbn/noise.c, src/libbu/badmagic.c, src/libbu/parse.c,
+	  src/libbu/test_vls.c, src/libged/analyze.c,
+	  src/libged/autoview.c, src/libged/combmem.c,
+	  src/librt/comb/comb.c, src/librt/db5_types.c, src/librt/dir.c,
+	  src/librt/primitives/extrude/extrude.c,
+	  src/librt/primitives/pipe/pipe.c, src/libtclcad/tclcad_obj.c,
+	  src/mged/chgview.c, src/mged/mged.bat, src/mged/mged.c,
+	  src/nirt/if.c, src/nirt/nirt.c, src/nirt/nirt.h,
+	  src/nirt/sfiles/csv-gap.nrt, src/other/lemon/lempar.c,
+	  src/rt/do.c, src/rt/viewedge.c, src/rt/viewweight.c,
+	  src/tclscripts/archer/ArcherCore.tcl,
+	  src/tclscripts/archer/BotUtility.tcl,
+	  src/tclscripts/lib/Command.tcl, src/tclscripts/lib/Ged.tcl,
+	  src/tclscripts/mged/anim.tcl, src/tclscripts/mged/comb.tcl,
+	  src/tclscripts/mged/reid.tcl, src/tclscripts/mged/relos.tcl,
+	  src/tclscripts/mged/remat.tcl, src/tclscripts/mged/text.tcl,
+	  src/tclscripts/rtwizard/examples/PictureTypeA/intro.txt,
+	  src/tclscripts/rtwizard/examples/PictureTypeB/intro.txt,
+	  src/tclscripts/rtwizard/examples/PictureTypeC/intro.txt,
+	  src/tclscripts/rtwizard/examples/PictureTypeE/intro.txt,
+	  src/tclscripts/rtwizard/examples/PictureTypeF/intro.txt,
+	  src/tclscripts/rtwizard/rtwizard.bat:
+	  Sync a variety of fixes to the STABLE branch. Tried to select a
+	  'safe' subset of the changes from trunk - hopefully these should
+	  be viable as a patch to 7.20.4 without introducing major
+	  breakage. CMake regress and distcheck pass. svn revisions: 47458,
+	  47473, 47483-47484, 47656-47659, 47677-46678, 47687, 47695,
+	  47698, 47700, 47723, 47769, 47971, 48195, 48837-48845,
+	  48853-48884, 48887, 48889, 48900-48904, 48907-48909, 49007,
+	  49012, 49014-49015, 49066, 49078-49079, 49081, 49083, 49086,
+	  49092, 49095, 49134, 49136-49138 49202, 49253-49254, 49262,
+	  49414, 49433
+

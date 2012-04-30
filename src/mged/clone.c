@@ -1,7 +1,7 @@
 /*	                  C L O N E . C
  * BRL-CAD
  *
- * Copyright (c) 2005-2012 United States Government as represented by
+ * Copyright (c) 2005-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -59,7 +59,6 @@
 #include "vmath.h"
 #include "db.h"
 #include "raytrace.h"
-#include "obj.h"
 
 #include "./mged.h"
 #include "./cmd.h"
@@ -419,7 +418,7 @@ copy_v5_solid(struct db_i *_dbip, struct directory *proto, struct clone_state *s
 	/* actually copy the primitive to the new name */
 	argv[1] = proto->d_namep;
 	argv[2] = bu_vls_addr(name);
-	ret = wdb_copy_cmd(_dbip->dbi_wdbp, 3, (const char **)argv);
+	ret = wdb_copy_cmd(_dbip->dbi_wdbp, state->interp, 3, argv);
 	if (ret != TCL_OK)
 	    bu_log("WARNING: failure cloning \"%s\" to \"%s\"\n", proto->d_namep, bu_vls_addr(name));
 
@@ -887,8 +886,8 @@ f_tracker(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const cha
 	return TCL_OK;
 
     bu_optind = 1;
-
-    while ((opt = bu_getopt(argc, (char * const *)argv, "fh")) != EOF) {
+    opt = bu_getopt(argc, (char * const *)argv, "fh");
+    while (opt != EOF) {
 	switch (opt) {
 	    case 'f':
 		no_draw = 1;
@@ -930,7 +929,6 @@ f_tracker(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const cha
 
     if (argc < arg+1) {
 	Tcl_AppendResult(interp, MORE_ARGS_STR, "Enter prototype link name: ", (char *)NULL);
-        fclose(points);
 	return TCL_ERROR;
     }
 

@@ -1,7 +1,7 @@
 /*                    P I P E _ B R E P . C P P
  * BRL-CAD
  *
- * Copyright (c) 2008-2012 United States Government as represented by
+ * Copyright (c) 2008-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -67,7 +67,7 @@ make_linear_surfaces(ON_Brep **b, ON_SimpleArray<ON_Curve*> *startoutercurves, O
     endedge.m_tolerance = 0.0;
     startoutercurves->Empty();
     for (int i = 0; i < endoutercurves->Count(); i++) {
-	ON_Curve *curve = (*endoutercurves)[i];
+	ON_Curve *curve = *(endoutercurves[i]);
 	startoutercurves->Append(curve);
     }
     ON_BrepFace *newouterface = (*b)->NewRuledFace(startedge, false, endedge, false);
@@ -88,7 +88,7 @@ make_linear_surfaces(ON_Brep **b, ON_SimpleArray<ON_Curve*> *startoutercurves, O
 	endinneredge.m_tolerance = 0.0;
 	startinnercurves->Empty();
 	for (int i = 0; i < endinnercurves->Count(); i++) {
-    	    ON_Curve *curve = (*endinnercurves)[i];
+    	    ON_Curve *curve = *(endinnercurves[i]);
     	    startinnercurves->Append(curve);
     	}
        	(*b)->NewRuledFace(startinneredge, false, endinneredge, false);
@@ -114,7 +114,7 @@ make_curved_surfaces(ON_Brep **b, ON_SimpleArray<ON_Curve*> *startoutercurves, O
     revsurf->m_curve = *startinnercurves[0];
     revsurf->m_axis = *revaxis;
     revsurf->m_angle = ON_Interval(2*ON_PI - angle, 2*ON_PI);
-    (void)(*b)->NewFace(*revsurf);
+    face = (*b)->NewFace(*revsurf);
     
 }
 

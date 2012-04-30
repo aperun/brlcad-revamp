@@ -51,25 +51,25 @@
  *  Commented out text after #else and #endif.
  *
  * Revision 1.2  91/01/14  13:34:14  silver
- * moeimodified to remove ANSI C compiler warning messages from the
+ * moeimodified to remove ANSI C compiler warning messages from the 
  * preprocessor directives.
- *
+ * 
  * Revision 1.1  91/01/09  15:25:16  laurila
  * Initial revision
- *
+ * 
  * Revision 1.3  90/09/25  10:01:36  clark
  * Beta checkin at SCRA
- *
+ * 
  * Revision 1.3  90/09/25  10:01:36  clark
  * Put wrapper around static_inline stuff,
  *     checking for previous definition.
- *
+ * 
  * Revision 1.2  90/09/04  15:05:51  clark
  * BPR 2.1 alpha
- *
+ * 
  * Revision 1.1  90/06/11  17:04:56  clark
  * Initial revision
- *
+ * 
  */
 
 #include <stdio.h>
@@ -78,46 +78,41 @@
 /* type Boolean and constants */
 /******************************/
 
-#ifdef HAVE_STDBOOL_H
-# include <stdbool.h>
-#else
-# include <scl_stdbool.h>
-#endif
+typedef enum Boolean_ { False, True} Boolean;
 
 /************************/
 /* Generic pointer type */
 /************************/
 
 #ifdef __STDC__
-typedef void * Generic;
-#else
-typedef char * Generic;
+typedef void* Generic;
+#else 
+typedef char* Generic;
 #endif    /*    */
 
 /* other handy macros */
-#define streq(x,y)  (!strcmp((x),(y)))
+#define streq(x,y)	(!strcmp((x),(y)))
 
 
 /**************************/
 /* function pointer types */
 /**************************/
 
-typedef void ( *voidFuncptr )();
-typedef int ( *intFuncptr )();
+typedef void (*voidFuncptr)();
+typedef int (*intFuncptr)();
 
 /******************************/
 /* deal with inline functions */
 /******************************/
 
-/* inline is c99, so use __inline__ extension instead */
-#define static_inline static __inline__
+#define static_inline static inline
 
 /* allow same declarations to suffice for both Standard and Classic C */
 /* ... at least in header files ... */
 
 #ifndef CONST
 # ifdef __STDC__
-#  define CONST     const
+#  define CONST		const
 # else
 #  define CONST
 # endif
@@ -125,13 +120,13 @@ typedef int ( *intFuncptr )();
 
 #ifndef PROTO
 # ifdef __STDC__
-#  define PROTO(x)  x
+#  define PROTO(x)	x
 # else
 
 # ifdef __CLCC__
-# define PROTO(x)   x
+# define PROTO(x)	x
 #else
-# define PROTO(x)   ()
+# define PROTO(x)	()
 # endif
 
 # endif
@@ -144,8 +139,8 @@ typedef int ( *intFuncptr )();
 #endif
 
 /* backward compatibility */
-typedef char * String;
-#define STRINGequal(x,y)    (0 == strcmp((x),(y)))
+typedef char *String;
+#define STRINGequal(x,y)	(0 == strcmp((x),(y)))
 
 
 #endif    /*    */

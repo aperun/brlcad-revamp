@@ -6,6 +6,7 @@ SET(express_HDRS
   express/entity.h
   express/error.h
   express/expbasic.h
+  express/expprint.h
   express/expr.h
   express/express.h
   express/hash.h
@@ -27,3 +28,7 @@ SET(exppp_HDRS
   exppp/exppp.h
 )
 install(FILES ${exppp_HDRS} DESTINATION include/exppp)
+
+SET(SCL_noinst_HEADERS
+  sclprefixes.h
+)

@@ -1,7 +1,7 @@
 /*                         S L A V E . C
  * BRL-CAD / ADRT
  *
- * Copyright (c) 2007-2012 United States Government as represented by
+ * Copyright (c) 2007-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -542,8 +542,7 @@ static void help()
 }
 
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     int		port = 0, c = 0, threads = 0;
     char		host[64], temp[64];
@@ -569,7 +568,7 @@ main(int argc, char **argv)
 #ifdef HAVE_GETOPT_LONG
 	    getopt_long(argc, argv, shortopts, longopts, NULL)
 #else
-	    bu_getopt(argc, argv, shortopts)
+	    getopt(argc, argv, shortopts)
 #endif
 	       )!= -1) {
 	switch (c) {
@@ -578,11 +577,11 @@ main(int argc, char **argv)
 		return EXIT_SUCCESS;
 
 	    case 'p':
-		port = atoi(bu_optarg);
+		port = atoi(optarg);
 		break;
 
 	    case 't':
-		bu_strlcpy(temp, bu_optarg, 5);
+		strncpy(temp, optarg, 4);
 		threads = atoi(temp);
 		if (threads < 0) threads = 0;
 		if (threads > 32) threads = 32;
@@ -598,11 +597,12 @@ main(int argc, char **argv)
 	}
     }
 
-    argc -= bu_optind;
-    argv += bu_optind;
+    argc -= optind;
+    argv += optind;
 
     if (argc) {
-	bu_strlcpy(host, argv[0], 64);
+	strncpy(host, argv[0], 64-1);
+	host[64-1] = '\0'; /* sanity */
     }
 
     if (!host[0]) {

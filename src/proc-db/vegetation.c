@@ -1,7 +1,7 @@
 /*                    V E G E T A T I O N . C
  * BRL-CAD
  *
- * Copyright (c) 1998-2012 United States Government as represented by
+ * Copyright (c) 1998-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -34,9 +34,7 @@
 
 #include "./vegetation.h"
 
-static void
-ageStructure(structure_t *structure)
-{
+static void ageStructure(structure_t *structure) {
     size_t i;
 
     /*
@@ -55,9 +53,7 @@ ageStructure(structure_t *structure)
 }
 
 
-static int
-getSegmentCount(structure_t *structure, unsigned int minAge, unsigned int maxAge)
-{
+static int getSegmentCount(structure_t *structure, unsigned int minAge, unsigned int maxAge) {
     size_t i;
     size_t total;
 
@@ -79,9 +75,7 @@ getSegmentCount(structure_t *structure, unsigned int minAge, unsigned int maxAge
 /* used
  * http://geometryalgorithms.com/Archive/algorithm_0106/algorithm_0106.htm#dist3D_Segment_to_Segment()
  * as reference */
-static float
-segmentToSegmentDistance(const point_t S1P0, const point_t S1P1, const point_t S2P0, const point_t S2P1)
-{
+static float segmentToSegmentDistance(const point_t S1P0, const point_t S1P1, const point_t S2P0, const point_t S2P1) {
     vect_t u;
     vect_t v;
     vect_t w;
@@ -152,7 +146,7 @@ segmentToSegmentDistance(const point_t S1P0, const point_t S1P1, const point_t S
 	else if ((-d + b) > a)
 	    sN = sD;
 	else {
-	    sN = (-d + b);
+	    sN = (-d +  b);
 	    sD = a;
 	}
     }
@@ -169,9 +163,7 @@ segmentToSegmentDistance(const point_t S1P0, const point_t S1P1, const point_t S
 }
 
 
-static segmentList_t *
-findIntersectors(const growthSegment_t * const segment, const structure_t * const structure, const segmentList_t * const exemptList)
-{
+static segmentList_t *findIntersectors(const growthSegment_t * const segment, const structure_t * const structure, const segmentList_t * const exemptList) {
     size_t i, j;
     segmentList_t *bigList = NULL;
     segmentList_t *segList = NULL;
@@ -198,11 +190,6 @@ findIntersectors(const growthSegment_t * const segment, const structure_t * cons
 
     for (i=0; i < structure->subStructureCount; i++) {
 	segList = findIntersectors(segment, structure->subStructure[i], exemptList);
-
-	if(segList == NULL) {
-	    bu_log("segList is null?\n");
-	    return NULL;
-	}
 
 	/* ensure we have enough room */
 	if (bigList->count + segList->count + 1 >= bigList->capacity) {
@@ -282,9 +269,7 @@ findIntersectors(const growthSegment_t * const segment, const structure_t * cons
 }
 
 
-static int
-branchWithProbability(plant_t *plant, structure_t* structure, unsigned int minAge, unsigned int maxAge, double probability)
-{
+static int branchWithProbability(plant_t *plant, structure_t* structure, unsigned int minAge, unsigned int maxAge, double probability) {
     size_t i;
     size_t total;
 
@@ -412,10 +397,7 @@ branchWithProbability(plant_t *plant, structure_t* structure, unsigned int minAg
 
 }
 
-
-static void
-branchGrowthPoints(plant_t *plant)
-{
+static void branchGrowthPoints(plant_t *plant) {
     int totalSegments;
     double segmentProbability;
 
@@ -451,9 +433,7 @@ branchGrowthPoints(plant_t *plant)
 }
 
 
-static void
-growPlant(plant_t *plant)
-{
+static void growPlant(plant_t *plant) {
     size_t i;
     size_t growthSteps;
     size_t retryCount;
@@ -640,8 +620,8 @@ growPlant(plant_t *plant)
 
 	    /* what if there is no structure yet? -- make one */
 	    if (point->structure == NULL) {
-		point->structure = (structure_t *)bu_calloc(1, sizeof(structure_t), "point->structure");
-		INIT_STRUCTURE_T(point->structure);
+		plant->structure = (structure_t *)bu_calloc(1, sizeof(structure_t), "plant->structure");
+		INIT_STRUCTURE_T(plant->structure);
 	    }
 
 	    /* add segment to list of segments for this growth point structure*/
@@ -665,9 +645,7 @@ growPlant(plant_t *plant)
 }
 
 
-static plant_t *
-createPlant(unsigned int age, vect_t position, double radius, vect_t direction, characteristic_t *characteristic)
-{
+static plant_t *createPlant(unsigned int age, vect_t position, double radius, vect_t direction, characteristic_t *characteristic) {
     plant_t *plant;
 
     /* List of growth points */
@@ -732,9 +710,7 @@ createPlant(unsigned int age, vect_t position, double radius, vect_t direction, 
 }
 
 
-static int
-writeStructureToDisk(struct rt_wdb *fp, structure_t *structure, outputCounter_t *oc)
-{
+static int writeStructureToDisk(struct rt_wdb *fp, structure_t *structure, outputCounter_t *oc) {
     size_t i;
     vect_t height;
 
@@ -779,9 +755,7 @@ writeStructureToDisk(struct rt_wdb *fp, structure_t *structure, outputCounter_t 
 }
 
 
-static int
-writePlantToDisk(struct rt_wdb *fp, plant_t *plant)
-{
+static int writePlantToDisk(struct rt_wdb *fp, plant_t *plant) {
     outputCounter_t oc;
 
     printf ("Writing a plant at %f %f %f of age %d to disk\n", plant->position[X], plant->position[Y], plant->position[Z], plant->age);
@@ -803,9 +777,7 @@ writePlantToDisk(struct rt_wdb *fp, plant_t *plant)
 }
 
 
-static void
-destroyPlant(plant_t *plant)
-{
+static void destroyPlant(plant_t *plant) {
     size_t i;
 
     /* get rid of the plant structure properly */
@@ -848,10 +820,7 @@ destroyPlant(plant_t *plant)
 
 }
 
-
-static int
-invalidCharacteristics(const characteristic_t * const c)
-{
+static int invalidCharacteristics(const characteristic_t * const c) {
     if (c->totalHeight <= 0.0) {
 	fprintf(stderr, "Need positive plant height\n");
 	return 1;
@@ -878,9 +847,8 @@ invalidCharacteristics(const characteristic_t * const c)
 }
 
 
-int
-main(int argc, char *argv[])
-{
+int main (int argc, char *argv[]) {
+
     struct rt_wdb *fp;
     plant_t *plant;
     characteristic_t c;
@@ -901,32 +869,18 @@ main(int argc, char *argv[])
     if (argc > 1) {
 	age = atoi(argv[1]);
     }
-    if (age == 0)
-	age = 1;
-    if (age > UINT32_MAX)
-	age = UINT32_MAX;
-
     printf("Growing for %d years\n", age);
     if (argc > 2) {
 	height = atof(argv[2]);
     }
-    if (height < (SMALL_FASTF * 1000.0))
-	height = (SMALL_FASTF * 1000.0);
-
     printf("Growing to about %f meters in height\n", height / 1000);
     if (argc > 3) {
 	trunkRadius = atof(argv[3]);
     }
-    if (trunkRadius < (SMALL_FASTF * 1000.0))
-	trunkRadius = (SMALL_FASTF * 1000.0);
-
     printf("Growing from a base width of %f meters\n", trunkRadius / 1000);
     if (argc > 4) {
 	branchingRate = atof(argv[4]);
     }
-    if (branchingRate < SMALL_FASTF)
-	branchingRate = SMALL_FASTF;
-
     if (argc > 5) {
 	seed = atol(argv[5]);
     }
@@ -1000,7 +954,6 @@ main(int argc, char *argv[])
     wdb_close(fp);
     return 0;
 }
-
 
 /*
  * Local Variables:

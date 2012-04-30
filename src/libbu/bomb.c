@@ -1,7 +1,7 @@
 /*                          B O M B . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -29,22 +29,8 @@
 #include "bu.h"
 
 
-/**
- * list of callbacks to call during bu_bomb.
- */
-struct bu_hook_list bomb_hook_list = {
-    {
-	BU_LIST_HEAD_MAGIC,
-	&bomb_hook_list.l,
-	&bomb_hook_list.l
-    },
-    NULL,
-    GENPTR_NULL
-};
-
-
 /* failsafe storage to help ensure graceful shutdown */
-static char *bomb_failsafe = NULL;
+static char *_bu_bomb_failsafe = NULL;
 
 /* used for tty printing */
 static int fd = -1;
@@ -56,11 +42,11 @@ static char tracefile[512] = {0};
 
 /* release memory on application exit */
 static void
-_freebomb_failsafe(void)
+_free_bu_bomb_failsafe(void)
 {
-    if (bomb_failsafe) {
-	free(bomb_failsafe);
-	bomb_failsafe = NULL;
+    if (_bu_bomb_failsafe) {
+	free(_bu_bomb_failsafe);
+	_bu_bomb_failsafe = NULL;
     }
 }
 
@@ -68,20 +54,13 @@ _freebomb_failsafe(void)
 int
 bu_bomb_failsafe_init(void)
 {
-    if (bomb_failsafe) {
+    if (_bu_bomb_failsafe) {
 	return 1;
     }
     /* cannot use bu_*alloc here */
-    bomb_failsafe = (char *)malloc(65536);
-    atexit(_freebomb_failsafe);
+    _bu_bomb_failsafe = (char *)malloc(65536);
+    atexit(_free_bu_bomb_failsafe);
     return 1;
-}
-
-
-void
-bu_bomb_add_hook(bu_hook_t func, genptr_t clientdata)
-{
-    bu_hook_add(&bomb_hook_list, func, clientdata);
 }
 
 
@@ -101,11 +80,11 @@ bu_bomb(const char *str)
     }
 
     /* release the failsafe allocation to help get through to the end */
-    _freebomb_failsafe();
+    _free_bu_bomb_failsafe();
 
     /* MGED would like to be able to additional logging, do callbacks. */
-    if (BU_LIST_NON_EMPTY(&bomb_hook_list.l)) {
-	bu_hook_call(&bomb_hook_list, (genptr_t)str);
+    if (BU_LIST_NON_EMPTY(&bu_bomb_hook_list.l)) {
+	bu_call_hook(&bu_bomb_hook_list, (genptr_t)str);
     }
 
     if (bu_setjmp_valid) {
@@ -156,7 +135,7 @@ bu_bomb(const char *str)
 	 */
 	bu_semaphore_acquire(BU_SEM_MAPPEDFILE);
 	snprintf(tracefile, 512, "%s-%d-bomb.log", bu_getprogname(), bu_process_id());
-	if (LIKELY(!bu_file_exists(tracefile, NULL))) {
+	if (LIKELY(!bu_file_exists(tracefile))) {
 	    bu_semaphore_acquire(BU_SEM_SYSCALL);
 	    fputs("Saving stack trace to ", stderr);
 	    fputs(tracefile, stderr);
@@ -202,9 +181,11 @@ bu_exit(int status, const char *fmt, ...)
 {
     if (LIKELY(fmt && strlen(fmt) > 0)) {
 	va_list ap;
-	struct bu_vls message = BU_VLS_INIT_ZERO;
+	struct bu_vls message;
 
 	va_start(ap, fmt);
+
+	bu_vls_init(&message);
 
 	bu_vls_vprintf(&message, fmt, ap);
 

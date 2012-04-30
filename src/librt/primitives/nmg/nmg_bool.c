@@ -1,7 +1,7 @@
 /*                      N M G _ B O O L . C
  * BRL-CAD
  *
- * Copyright (c) 1993-2012 United States Government as represented by
+ * Copyright (c) 1993-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -420,21 +420,26 @@ nmg_classify_shared_edges_verts(struct shell *sA, struct shell *sB, char **class
  */
 
 void
-nmg_kill_anti_loops(struct shell *s)
+nmg_kill_anti_loops(struct shell *s, const struct bn_tol *tol)
 {
     struct bu_ptbl loops;
     struct faceuse *fu;
     struct loopuse *lu;
-    register int i, j;
+    int i, j;
+
+    NMG_CK_SHELL(s);
+    BN_CK_TOL(tol);
 
     bu_ptbl_init(&loops, 64, " &loops");
 
     for (BU_LIST_FOR(fu, faceuse, &s->fu_hd)) {
+	NMG_CK_FACEUSE(fu);
 
 	if (fu->orientation != OT_SAME)
 	    continue;
 
 	for (BU_LIST_FOR(lu, loopuse, &fu->lu_hd)) {
+	    NMG_CK_LOOPUSE(lu);
 
 	    if (BU_LIST_FIRST_MAGIC(&lu->down_hd) != NMG_EDGEUSE_MAGIC)
 		continue;
@@ -449,19 +454,23 @@ nmg_kill_anti_loops(struct shell *s)
 	struct vertex *v1;
 
 	lu1 = (struct loopuse *)BU_PTBL_GET(&loops, i);
+	NMG_CK_LOOPUSE(lu1);
 
 	eu1_start = BU_LIST_FIRST(edgeuse, &lu1->down_hd);
+	NMG_CK_EDGEUSE(eu1_start);
 	v1 = eu1_start->vu_p->v_p;
+	NMG_CK_VERTEX(v1);
 
 	for (j=i+1; j<BU_PTBL_END(&loops); j++) {
-	    register struct loopuse *lu2;
-	    register struct edgeuse *eu1;
-	    register struct edgeuse *eu2;
-	    register struct vertexuse *vu2;
-	    register struct faceuse *fu1, *fu2;
+	    struct loopuse *lu2;
+	    struct edgeuse *eu1;
+	    struct edgeuse *eu2;
+	    struct vertexuse *vu2;
+	    struct faceuse *fu1, *fu2;
 	    int anti=1;
 
 	    lu2 = (struct loopuse *)BU_PTBL_GET(&loops, j);
+	    NMG_CK_LOOPUSE(lu2);
 
 	    /* look for v1 in lu2 */
 	    vu2 = nmg_find_vertex_in_lu(v1, lu2);
@@ -471,6 +480,7 @@ nmg_kill_anti_loops(struct shell *s)
 
 	    /* found common vertex, now look for the rest */
 	    eu2 = vu2->up.eu_p;
+	    NMG_CK_EDGEUSE(eu2);
 	    eu1 = eu1_start;
 	    do {
 		eu2 = BU_LIST_PNEXT_CIRC(edgeuse, &eu2->l);
@@ -491,12 +501,6 @@ nmg_kill_anti_loops(struct shell *s)
 	    if (fu1 == fu2)
 		continue;
 
-	    /* remove from loops prior to kill so we don't pass around
-	     * free'd pointers.  fine for ptbl, but misleading.
-	     */
-	    bu_ptbl_rm(&loops, (long *)lu1);
-	    bu_ptbl_rm(&loops, (long *)lu2);
-
 	    if (nmg_klu(lu1)) {
 		if (nmg_kfu(fu1))
 		    goto out;
@@ -506,6 +510,8 @@ nmg_kill_anti_loops(struct shell *s)
 		    goto out;
 	    }
 
+	    bu_ptbl_rm(&loops, (long *)lu1);
+	    bu_ptbl_rm(&loops, (long *)lu2);
 	    i--;
 	    break;
 	}
@@ -569,7 +575,7 @@ static struct shell * nmg_bool(struct shell *sA, struct shell *sB, const int ope
      * can skip most of the steps to perform the boolean operation
      */
     if (!V3RPP_OVERLAP_TOL(sA->sa_p->min_pt, sA->sa_p->max_pt, 
-                           sB->sa_p->min_pt, sB->sa_p->max_pt, tol->dist)) {
+                           sB->sa_p->min_pt, sB->sa_p->max_pt, tol)) {
         switch (oper) {
             case NMG_BOOL_ADD: {
                 struct faceuse *fu;
@@ -718,8 +724,8 @@ static struct shell * nmg_bool(struct shell *sA, struct shell *sB, const int ope
 
     (void)nmg_model_vertex_fuse(m, tol);
 
-    (void)nmg_kill_anti_loops(sA);
-    (void)nmg_kill_anti_loops(sB);
+    (void)nmg_kill_anti_loops(sA, tol);
+    (void)nmg_kill_anti_loops(sB, tol);
 
     nmg_m_reindex(m, 0);
 
@@ -771,31 +777,20 @@ static struct shell * nmg_bool(struct shell *sA, struct shell *sB, const int ope
 	}
     }
 
-    if (rt_g.NMG_debug & DEBUG_BOOL) {
-        int dangle_error = 0;
-        if (nmg_has_dangling_faces((uint32_t *)rA, (char *)NULL)) {
-            dangle_error = 1;
-            bu_log("nmg_bool(): Dangling faces detected in rA before classification\n");
-        }
-        if (nmg_has_dangling_faces((uint32_t *)rB, (char *)NULL)) {
-            dangle_error = 1;
-            bu_log("nmg_bool(): Dangling faces detected in rB before classification\n");
-        }
-        if (nmg_has_dangling_faces((uint32_t *)m, (char *)NULL)) {
-            dangle_error = 1;
-            bu_log("nmg_bool(): Dangling faces detected in model before classification\n");
-        }
-        if (dangle_error) {
-            nmg_stash_model_to_file("dangle.g", m, "After Boolean");
-            bu_bomb("nmg_bool(): Dangling faces detected before classification\n");
-        }
-    }
+    /* Temporary search */
+    if (nmg_has_dangling_faces((uint32_t *)rA, (char *)NULL))
+	bu_log("Dangling faces detected in rA before classification\n");
+    if (nmg_has_dangling_faces((uint32_t *)rB, (char *)NULL))
+	bu_log("Dangling faces detected in rB before classification\n");
+    if (nmg_has_dangling_faces((uint32_t *)m, (char *)NULL))
+	bu_log("Dangling faces detected in model before classification\n");
 
     if (rt_g.NMG_debug & DEBUG_VERIFY) {
 	/* Sometimes the tessllations of non-participating regions
 	 * are damaged during a boolean operation.  Check everything.
 	 */
 	nmg_vmodel(m);
+
     }
 
     /*
@@ -868,12 +863,6 @@ static struct shell * nmg_bool(struct shell *sA, struct shell *sB, const int ope
 	nmg_show_broken_classifier_stuff((uint32_t *)sB, &classlist[4], 1, 1, "unclassed sB");
     }
 
-    if (m->manifolds) {
-        bu_free((char *)m->manifolds, "free manifolds table");
-        m->manifolds = (char *)NULL;
-    }
-    m->manifolds = nmg_manifolds(m);
-
     /*
      * Classify A -vs- B, then B -vs- A.
      * Carry onAonBshared and onAonBanti classifications forward
@@ -891,11 +880,6 @@ static struct shell * nmg_bool(struct shell *sA, struct shell *sB, const int ope
 	   (char *)classlist[0+NMG_CLASS_AoutB],
 	   nelem*sizeof(char));
     nmg_class_shells(sB, sA, &classlist[4], tol);
-
-    if (m->manifolds) {
-        bu_free((char *)m->manifolds, "free manifolds table");
-        m->manifolds = (char *)NULL;
-    }
 
     if (rt_g.NMG_debug & (DEBUG_GRAPHCL|DEBUG_PL_LOOP)) {
 	nmg_class_nothing_broken = 1;
@@ -920,12 +904,12 @@ static struct shell * nmg_bool(struct shell *sA, struct shell *sB, const int ope
     nmg_s_radial_check(sA, tol);
     nmg_s_radial_check(sB, tol);
     nmg_evaluate_boolean(sA, sB, oper, classlist, tol);
-    sB = NULL; /* sanity, killed during boolean eval */
 
     if (rt_g.NMG_debug & DEBUG_BOOL) {
 	bu_log("Just after nmg_evaluate_boolean:\nShell A:\n");
 	nmg_pr_s_briefly(sA, 0);
-	bu_log("Shell B:\nFreed.");
+	bu_log("Shell B:\n");
+	nmg_pr_s_briefly(sB, 0);
     }
 
     if (rt_g.NMG_debug & DEBUG_VERIFY) {
@@ -943,32 +927,17 @@ static struct shell * nmg_bool(struct shell *sA, struct shell *sB, const int ope
      * can not be accomplished this far down in the subroutine tree.
      */
     if (!nmg_shell_is_empty(sA)) {
-
 	nmg_s_radial_check(sA, tol);
-
-        if (rt_g.NMG_debug & DEBUG_BOOL) {
-            int dangle_error = 0;
-            if (nmg_has_dangling_faces((uint32_t *)rA, (char *)NULL)) {
-                dangle_error = 1;
-                bu_log("nmg_bool(): Dangling faces detected in rA after boolean\n");
-            }
-            if (nmg_has_dangling_faces((uint32_t *)rB, (char *)NULL)) {
-                dangle_error = 1;
-                bu_log("nmg_bool(): Dangling faces detected in rB after boolean\n");
-            }
-            if (nmg_has_dangling_faces((uint32_t *)m, (char *)NULL)) {
-                dangle_error = 1;
-                bu_log("nmg_bool(): Dangling faces detected in m after boolean\n");
-            }
-            if (dangle_error) {
-                nmg_stash_model_to_file("dangle.g", m, "After Boolean");
-                bu_bomb("nmg_bool(): Dangling faces detected after boolean\n");
-            }
-        } else {
-            if (nmg_has_dangling_faces((uint32_t *)rA, (char *)NULL)) {
-	        bu_bomb("nmg_bool(): Dangling faces detected in rA after boolean\n");
-            }
-        }
+	/* Temporary search */
+	if (nmg_has_dangling_faces((uint32_t *)rA, (char *)NULL))
+	    bu_log("Dangling faces detected in rA after boolean\n");
+	if (nmg_has_dangling_faces((uint32_t *)rB, (char *)NULL))
+	    bu_log("Dangling faces detected in rB after boolean\n");
+	if (nmg_has_dangling_faces((uint32_t *)m, (char *)NULL)) {
+	    if (rt_g.NMG_debug)
+		nmg_stash_model_to_file("dangle.g", m, "After Boolean");
+	    bu_bomb("nmg_bool() Dangling faces detected after boolean\n");
+	}
 
 	/* Do this before table size changes */
 	if (rt_g.NMG_debug & (DEBUG_GRAPHCL|DEBUG_PL_LOOP)) {
@@ -990,6 +959,8 @@ static struct shell * nmg_bool(struct shell *sA, struct shell *sB, const int ope
 	if (rt_g.NMG_debug & DEBUG_BOOL) {
 	    bu_log("Just after nmg_simplify_shell:\nShell A:\n");
 	    nmg_pr_s_briefly(sA, 0);
+	    bu_log("Shell B:\n");
+	    nmg_pr_s_briefly(sB, 0);
 	}
 
 	/* Bounding boxes may have changed */
@@ -1097,7 +1068,7 @@ union tree *
 nmg_booltree_leaf_tess(struct db_tree_state *tsp, const struct db_full_path *pathp, struct rt_db_internal *ip, genptr_t UNUSED(client_data))
 {
     struct model *m;
-    struct nmgregion *r1 = (struct nmgregion *)NULL;
+    struct nmgregion *r1;
     union tree *curtree;
     struct directory *dp;
 
@@ -1291,7 +1262,7 @@ nmg_booltree_evaluate(register union tree *tp, const struct bn_tol *tol, struct 
         /* left-r != null && right-r == null */
         RT_CK_TREE(tp);
         db_free_tree(tp->tr_b.tb_right, resp);
-        if (op == NMG_BOOL_ISECT) {
+        if ( op == NMG_BOOL_ISECT ) {
             /* OP_INTERSECT '+' */
             RT_CK_TREE(tp);
             db_free_tree(tl, resp);
@@ -1320,7 +1291,7 @@ nmg_booltree_evaluate(register union tree *tp, const struct bn_tol *tol, struct 
         /* left-r == null && right-r != null */
         RT_CK_TREE(tp);
         db_free_tree(tp->tr_b.tb_left, resp);
-        if (op == NMG_BOOL_ADD) {
+        if ( op == NMG_BOOL_ADD ) {
             /* OP_UNION 'u' */
             /* copy everything from tr to tp no matter which union type
              * could probably have done a mem-copy

@@ -1,7 +1,7 @@
 /*                 TrimmingSelect.h
  * BRL-CAD
  *
- * Copyright (c) 1994-2012 United States Government as represented by
+ * Copyright (c) 1994-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -31,18 +31,15 @@
 
 class CartesianPoint;
 
-class TrimmingSelect : virtual public STEPEntity {
-public:
-	enum trimming_select_type {
-		CARTESIAN_POINT,
-		PARAMETER_VALUE,
-		UNKNOWN
-	};
-
+class TrimmingSelect : public STEPEntity {
 private:
 	static string entityname;
 
 protected:
+	enum trimming_select_type {
+		CARTESIAN_POINT,
+		PARAMETER_VALUE
+	};
 	CartesianPoint *cartesian_point;
 	double parameter_value;
 	trimming_select_type type;
@@ -54,11 +51,11 @@ public:
 	double GetParameterTrim();
 	const double *GetPointTrim();
 	bool IsParameterTrim();
-	bool Load(STEPWrapper *sw,SDAI_Select *sse);
+	bool Load(STEPWrapper *sw,SCLP23(Select) *sse);
 	virtual void Print(int level);
 
 	//static methods
-	static STEPEntity *Create(STEPWrapper *sw,SDAI_Application_instance *sse);
+	static STEPEntity *Create(STEPWrapper *sw,SCLP23(Application_instance) *sse);
 };
 
 #endif /* TRIMMINGSELECT_H_ */

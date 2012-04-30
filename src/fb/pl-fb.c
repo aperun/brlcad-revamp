@@ -1,7 +1,7 @@
 /*                         P L - F B . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2012 United States Government as represented by
+ * Copyright (c) 1986-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -182,8 +182,13 @@ typedef struct descr {
 } stroke; 			/* rasterization descriptor */
 #define STROKE_MAGIC 0x12997601	/* Magic number */
 
-#define CK_STROKE(_sp) BU_CKMAG(&((_sp)->magic), STROKE_MAGIC, "stroke struct")
-
+#define CK_STROKE(_sp) { \
+	if ((_sp)->magic != STROKE_MAGIC) {  \
+		fprintf(stderr, "Bad stroke struct, ptr=%p, magic was x%lx, s/b=x%lx, at file %s, line %d\n",  \
+			(void *)(_sp), (unsigned long)((_sp)->magic), (unsigned long)STROKE_MAGIC,  \
+			__FILE__, __LINE__);  \
+		abort();  \
+	} }
 
 /* Global data allocations:	*/
 
@@ -690,7 +695,7 @@ prep_dda(stroke *vp, coords *pt1, coords *pt2)
  * banded buffered mode, we link the descriptor(s) into its starting
  * point band(s).
  */
-static void
+static int
 BuildStr(coords *pt1, coords *pt2)		/* returns true or dies */
     /* endpoints */
 {
@@ -739,6 +744,7 @@ BuildStr(coords *pt1, coords *pt2)		/* returns true or dies */
 	    /* link descriptor into band corresponding to starting scan */
 	    Requeue(&band[v2->pixel.y / lines_per_band], v2);
     }
+    return true;
 }
 
 
@@ -926,7 +932,7 @@ put_vector_char(char c, coords *pos)
 	end.y = Y_CHAR_SIZE - rv->y + pos->y;
 	edgelimit(&start);
 	edgelimit(&end);
-	BuildStr(&start, &end);
+	BuildStr(&start, &end);	/* pixels */
 	start = end;
     }
     pos->x += X_CHAR_SIZE;
@@ -1037,8 +1043,6 @@ DoFile(void)	/* returns vpl status code */
 		    if (debug)
 			fprintf(stderr, "Line3\n");
 
-		    /* line: fall through */
-
 		case 'N':	/* continue3 */
 		case 'P':	/* point3 */
 		    if (!Get3Coords(&newpos))
@@ -1051,7 +1055,8 @@ DoFile(void)	/* returns vpl status code */
 			if (debug)
 			    fprintf(stderr, "cont3\n");
 
-		    BuildStr(&virpos, &newpos);
+		    if (!BuildStr(&virpos, &newpos))
+			return Foo(-10);
 		    plotted = true;
 		    virpos = newpos;
 		    continue;
@@ -1082,7 +1087,8 @@ DoFile(void)	/* returns vpl status code */
 			if (debug)
 			    fprintf(stderr, "cont\n");
 
-		    BuildStr(&virpos, &newpos);
+		    if (!BuildStr(&virpos, &newpos))
+			return Foo(-10);
 		    plotted = true;
 		    virpos = newpos;
 		    continue;
@@ -1101,8 +1107,6 @@ DoFile(void)	/* returns vpl status code */
 		    if (debug)
 			fprintf(stderr, "dLine3\n");
 
-		    /* line: fall through */
-
 		case 'Q':	/* continue3 */
 		case 'X':	/* point3 */
 		    if (!Get3DCoords(&newpos))
@@ -1115,7 +1119,8 @@ DoFile(void)	/* returns vpl status code */
 			if (debug)
 			    fprintf(stderr, "dcont3\n");
 
-		    BuildStr(&virpos, &newpos);
+		    if (!BuildStr(&virpos, &newpos))
+			return Foo(-10);
 		    plotted = true;
 		    virpos = newpos;
 		    continue;
@@ -1146,7 +1151,8 @@ DoFile(void)	/* returns vpl status code */
 			if (debug)
 			    fprintf(stderr, "dcont\n");
 
-		    BuildStr(&virpos, &newpos);
+		    if (!BuildStr(&virpos, &newpos))
+			return Foo(-10);
 		    plotted = true;
 		    virpos = newpos;
 		    continue;

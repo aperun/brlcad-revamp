@@ -1,7 +1,7 @@
 /*                    B O O L E A N I Z E . C
  * BRL-CAD
  *
- * Copyright (c) 2010-2012 United States Government as represented by
+ * Copyright (c) 2010-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -33,7 +33,7 @@ bu_str_true(const char *str)
 {
     long val;
     size_t len;
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
     const char *newstr;
     char *endptr;
 
@@ -41,6 +41,7 @@ bu_str_true(const char *str)
     if (!str)
 	return 0;
 
+    bu_vls_init(&vls);
     bu_vls_strcpy(&vls, str);
     bu_vls_trimspace(&vls);
     newstr = bu_vls_addr(&vls);

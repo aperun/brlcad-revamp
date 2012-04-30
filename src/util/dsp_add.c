@@ -1,7 +1,7 @@
 /*                       D S P _ A D D . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -190,15 +190,9 @@ main(int ac, char *av[])
 
     /* Open the files */
 
-    in1 = fopen(av[next_arg], "r");
-    if (!in1) {
+    if (stat(av[next_arg], &sb) ||
+	(in1 = fopen(av[next_arg], "r"))  == (FILE *)NULL) {
 	perror(av[next_arg]);
-	return -1;
-    }
-
-    if(fstat(fileno(in1), &sb)) {
-	perror(av[next_arg]);
-	fclose(in1);
 	return -1;
     }
 
@@ -207,25 +201,14 @@ main(int ac, char *av[])
 
     next_arg++;
 
-    in2 = fopen(av[next_arg], "r");
-    if (!in2) {
+    if (stat(av[next_arg], &sb) ||
+	(in2 = fopen(av[next_arg], "r"))  == (FILE *)NULL) {
 	perror(av[next_arg]);
-	fclose(in1);
 	return -1;
     }
 
-    if (fstat(fileno(in2), &sb)) {
-	perror(av[next_arg]);
-	fclose(in1);
-	fclose(in2);
-	return -1;
-    }
-
-    if ((size_t)sb.st_size != count) {
-	fclose(in1);
-	fclose(in2);
+    if ((size_t)sb.st_size != count)
 	bu_exit(EXIT_FAILURE, "**** ERROR **** file size mis-match\n");
-    }
 
     buf2 = bu_malloc((size_t)sb.st_size, "buf2");
 

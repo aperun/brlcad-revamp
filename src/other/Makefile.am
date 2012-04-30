@@ -61,16 +61,6 @@ else !BUILD_TERMLIB
 TERMLIBDIR=
 endif
 
-if BUILD_TKHTML
-if WITH_TK
-TKHTMLDIR=tkhtml
-else
-TKHTMLDIR=
-endif
-else
-TKHTMLDIR=
-endif
-
 #if BUILD_TOGL
 #if WITH_TK
 #TOGLDIR=togl
@@ -169,9 +159,9 @@ endif
 
 EXTRA_DIST = \
 	boost \
-	clipper \
 	togl \
 	hv3 \
+	tkhtml \
 	CMakeLists.txt \
 	itcl.dist \
 	itk.dist \
@@ -202,8 +192,6 @@ EXTRA_DIST = \
 	osl/shaders/image.osl \
 	osl/shaders/glass.osl \
 	osl/shaders/gen_color.osl \
-	perplex \
-	perplex.dist \
 	re2c \
 	re2c.dist \
 	step \
@@ -215,8 +203,7 @@ EXTRA_DIST = \
 	tktable.dist \
 	togl.dist \
 	URToolkit.dist \
-	xsltproc \
-	xsltproc.dist
+	uce-dirent/uce-dirent.h
 
 # FIXME: need to only traverse tcl/tk if configured
 DIST_SUBDIRS = \
@@ -232,7 +219,6 @@ DIST_SUBDIRS = \
 	tcl \
 	tk \
 	tkpng \
-	tkhtml \
 	tktable \
 	tnt
 

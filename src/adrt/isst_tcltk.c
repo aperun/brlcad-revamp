@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2012 United States Government as represented by
+ * Copyright (c) 2005-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -50,7 +50,7 @@
 #endif
 
 /* ISST functions */
-RT_EXPORT extern int (Issttcltk_Init)(Tcl_Interp *interp);
+TIE_EXPORT extern int (Issttcltk_Init)(Tcl_Interp *interp);
 
 void resize_isst(struct isst_s *);
 
@@ -125,9 +125,11 @@ isst_load_g(ClientData UNUSED(clientData), Tcl_Interp *interp, int objc,
     char **argv;
     int argc;
     double az, el;
-    struct bu_vls tclstr = BU_VLS_INIT_ZERO;
+    struct bu_vls tclstr;
     vect_t vec;
     Togl   *togl;
+
+    bu_vls_init(&tclstr);    
 
     if (objc < 4) {
         Tcl_WrongNumArgs(interp, 1, objv, "load_g pathname object");
@@ -140,7 +142,7 @@ isst_load_g(ClientData UNUSED(clientData), Tcl_Interp *interp, int objc,
 
     isst = (struct isst_s *) Togl_GetClientData(togl);
 
-    argv = (char **)malloc(sizeof(char *) * (strlen(Tcl_GetString(objv[3])) + 1));	/* allocate way too much. */
+    argv = (char **)malloc(sizeof(char *) * (strlen(Tcl_GetString(objv[3]) + 1)));	/* allocate way too much. */
     argc = bu_argv_from_string(argv, strlen(Tcl_GetString(objv[3])), Tcl_GetString(objv[3]));
     
     load_g(isst->tie, Tcl_GetString(objv[2]), argc, (const char **)argv, &(isst->meshes));
@@ -183,7 +185,8 @@ list_geometry(ClientData UNUSED(clientData), Tcl_Interp *interp, int objc, Tcl_O
     static struct db_i *dbip;
     struct directory *dp;   
     int i;
-    struct bu_vls tclstr = BU_VLS_INIT_ZERO;
+    struct bu_vls tclstr;
+    bu_vls_init(&tclstr);
 
     if (objc < 3) {
         Tcl_WrongNumArgs(interp, 1, objv, "file varname");
@@ -384,7 +387,6 @@ render_mode(ClientData UNUSED(clientData), Tcl_Interp *interp, int objc, Tcl_Obj
     isst = (struct isst_s *) Togl_GetClientData(togl);
 
     /* pack the 'rest' into buf - probably should use a vls for this*/
-    buf[0] = '\0';
 
     isst->dirty = 1;
 
@@ -555,7 +557,9 @@ aerotate(ClientData UNUSED(clientData), Tcl_Interp *interp, int objc, Tcl_Obj *c
     double x, y;
     double az, el;
     double mag_pos, mag_focus;
-    struct bu_vls tclstr = BU_VLS_INIT_ZERO;
+    struct bu_vls tclstr;
+    bu_vls_init(&tclstr);    
+
 
     if (objc < 4) {
         Tcl_WrongNumArgs(interp, 1, objv, "pathName x y");

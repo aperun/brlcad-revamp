@@ -1,7 +1,7 @@
 /*                         P P - F B . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2012 United States Government as represented by
+ * Copyright (c) 1986-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -125,7 +125,7 @@ main(int argc, char **argv)
     int	c;
     char *cp;
     char cs[4];
-    int i, j, k, lclr, ichg=0, gclr(void), cclr(char *pc);
+    int i, j, k, lclr, iquit=0, ichg=0, gclr(void), cclr(char *pc);
     int il, iu, iclr, iskp, jclr, bsp(void);
     int scr_w=512, scr_h=512, scr_set=0;
     int ret;
@@ -151,7 +151,7 @@ main(int argc, char **argv)
 	} else if (BU_STR_EQUAL("-N", argv[i])) {
 	    sscanf(argv[++i], "%d", &scr_h);
 	    scr_set=1;
-	} else if (bu_strncmp("-", argv[i], 1)==0) {
+	} else if (strncmp("-", argv[i], 1)==0) {
 	    printf("Unknown option: %s\n", argv[i]);
 	    bu_exit(10, NULL);
 /* get plot file */
@@ -340,7 +340,8 @@ main(int argc, char **argv)
 	    case 'p':
 		paint();
 		break;
-	    case 'q': /* quit */
+	    case 'q':
+		iquit=1;
 	    case 'v':
 		if (ichg!=0) {
 		    ssize_t writeret;
@@ -361,10 +362,7 @@ main(int argc, char **argv)
 		    }
 		    ichg=0;
 		}
-		if (c == 'q') {
-		    /* quit */
-		    bu_exit(0, NULL);
-		}
+		if (iquit!=0) bu_exit(0, NULL);
 		loct=loce;
 		lseek(ifd, (off_t)loce, 0);
 		ic=0;
@@ -447,9 +445,6 @@ main(int argc, char **argv)
 		    prtsmu(1);
 		    prtclr(1);
 		    goto again;
-		} else {
-		    bu_log("error: unrecognized key sequence.\n");
-		    continue;
 		}
 		printf("%c%5ld %-7s%c\n", 13, itm[i],
 		       colortab[itmc[i]].name, 13);
@@ -721,8 +716,8 @@ char gc(void)
 }
 int gclr(void)
 {
-    char cs[3];
-    int i, c;
+    char c, cs[3];
+    int i;
     for (i=0;i<3;i++) {
 	while ((c=getchar())<97||c>122) {
 	    if (c==2) return -2;
@@ -731,9 +726,8 @@ int gclr(void)
 	    if (c==22) return -22;
 	    if (c==32) return -32;
 	    if (c=='?') return -63;
-	    if (c==EOF) return EOF;
 	}
-	cs[i]=(char)c;
+	cs[i]=c;
     }
     return cclr(cs);
 }

@@ -1,7 +1,7 @@
 /*                     R T E X A M P L E . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -99,7 +99,7 @@ hit(struct application *ap, struct partition *PartHeadp, struct seg *UNUSED(segs
     struct soltab *stp;
 
     /* will contain surface curvature information at the entry */
-    struct curvature cur = RT_CURVATURE_INIT_ZERO;
+    struct curvature cur;
 
     /* will contain our hit point coordinate */
     point_t pt;

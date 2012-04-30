@@ -1,7 +1,7 @@
 /*                           E L L . C
  * BRL-CAD
  *
- * Copyright (c) 1985-2012 United States Government as represented by
+ * Copyright (c) 1985-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -320,7 +320,7 @@ rt_ell_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip)
     }
 
     /* Solid is OK, compute constant terms now */
-    BU_GET(ell, struct ell_specific);
+    BU_GETSTRUCT(ell, ell_specific);
     stp->st_specific = (genptr_t)ell;
 
     VMOVE(ell->ell_V, eip->v);
@@ -1704,19 +1704,19 @@ rt_ell_params(struct pc_pc_set *UNUSED(pcs), const struct rt_db_internal *UNUSED
     pcs->ps = bu_calloc(pcs->n_params, sizeof (struct pc_param), "pc_param");
     pcs->cs = bu_calloc(pcs->n_constraints, sizeof (struct pc_constrnt), "pc_constrnt");
 
-    bu_vls_strcpy(&(pcs->ps[0].name), "V");
+    strcpy(pcs->ps[0].pname, "V");
     pcs->ps[0].ptype = pc_point;
     pcs->ps[0].pval.pointp = (pointp_t) &(eip->v);
 
-    bu_vls_strcpy(&(pcs->ps[1].name), "A");
+    strcpy(pcs->ps[1].pname, "A");
     pcs->ps[1].ptype = pc_vector;
     pcs->ps[1].pval.vectorp = (vectp_t) &(eip->a);
 
-    bu_vls_strcpy(&(pcs->ps[2].name), "B");
+    strcpy(pcs->ps[2].pname, "B");
     pcs->ps[2].ptype = pc_vector;
     pcs->ps[2].pval.vectorp = (vectp_t)  &(eip->b);
 
-    bu_vls_strcpy(&(pcs->ps[3].name), "C");
+    strcpy(pcs->ps[3].pname, "C");
     pcs->ps[3].ptype = pc_value;
     pcs->ps[3].pval.vectorp = (vectp_t) &(eip->c);
 #endif

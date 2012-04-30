@@ -1,7 +1,7 @@
 /*                     R B _ S E A R C H . C
  * BRL-CAD
  *
- * Copyright (c) 1998-2012 United States Government as represented by
+ * Copyright (c) 1998-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -51,17 +51,17 @@ _rb_search(struct bu_rb_node *root, int order_nm, int (*order) (/* ??? */), void
     RB_CKORDER(tree, order_nm);
 
     while (1) {
-	if (root == RB_NULL(root->rbn_tree))
+	if (root == rb_null(root->rbn_tree))
 	    break;
-	if ((result = (*order)(data, RB_DATA(root, order_nm))) == 0)
+	if ((result = (*order)(data, rb_data(root, order_nm))) == 0)
 	    break;
 	else if (result < 0)
-	    root = RB_LEFT_CHILD(root, order_nm);
+	    root = rb_left_child(root, order_nm);
 	else	/* result > 0 */
-	    root = RB_RIGHT_CHILD(root, order_nm);
+	    root = rb_right_child(root, order_nm);
 	BU_CKMAG(root, BU_RB_NODE_MAGIC, "red-black node");
     }
-    RB_CURRENT(tree) = root;
+    rb_current(tree) = root;
     return root;
 }
 
@@ -75,12 +75,12 @@ void *bu_rb_search (struct bu_rb_tree *tree, int order, void *data)
     BU_CKMAG(tree, BU_RB_TREE_MAGIC, "red-black tree");
     RB_CKORDER(tree, order);
 
-    compare = RB_ORDER_FUNC(tree, order);
-    node = _rb_search(RB_ROOT(tree, order), order, compare, data);
-    if (node == RB_NULL(tree))
+    compare = rb_order_func(tree, order);
+    node = _rb_search(rb_root(tree, order), order, compare, data);
+    if (node == rb_null(tree))
 	return NULL;
     else
-	return RB_DATA(node, order);
+	return rb_data(node, order);
 }
 
 

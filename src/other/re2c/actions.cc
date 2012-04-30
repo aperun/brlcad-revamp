@@ -6,7 +6,7 @@
 #include <cctype>
 
 #include "globals.h"
-#include "re2c_parser.h"
+#include "parser.h"
 #include "dfa.h"
 
 namespace re2c

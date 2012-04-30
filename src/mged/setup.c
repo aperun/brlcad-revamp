@@ -1,7 +1,7 @@
 /*                         S E T U P . C
  * BRL-CAD
  *
- * Copyright (c) 1985-2012 United States Government as represented by
+ * Copyright (c) 1985-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -317,7 +317,6 @@ static struct cmdtab mged_cmdtab[] = {
     {"sed_apply", f_sedit_apply, GED_FUNC_PTR_NULL},
     {"sed_reset", f_sedit_reset, GED_FUNC_PTR_NULL},
     {"sedit", f_be_s_edit, GED_FUNC_PTR_NULL},
-    {"select", cmd_ged_plain_wrapper, ged_select},
     {"set_more_default", cmd_set_more_default, GED_FUNC_PTR_NULL},
     {"setview", cmd_setview, GED_FUNC_PTR_NULL},
     {"shaded_mode", cmd_shaded_mode, GED_FUNC_PTR_NULL},
@@ -361,7 +360,7 @@ static struct cmdtab mged_cmdtab[] = {
     {"v2m_point", cmd_ged_plain_wrapper, ged_v2m_point},
     {"vars", f_set, GED_FUNC_PTR_NULL},
     {"vdraw", cmd_ged_plain_wrapper, ged_vdraw},
-    {"view", cmd_ged_view_wrapper, ged_view_func},
+    {"view", cmd_ged_view_wrapper, ged_view},
     {"view_ring", f_view_ring, GED_FUNC_PTR_NULL},
 #if 0
     {"viewget", cmd_viewget, GED_FUNC_PTR_NULL},
@@ -409,7 +408,7 @@ HIDDEN void
 cmd_setup(void)
 {
     struct cmdtab *ctp;
-    struct bu_vls temp = BU_VLS_INIT_ZERO;
+    struct bu_vls temp;
     const char *pathname;
     char buffer[1024];
 
@@ -417,6 +416,7 @@ cmd_setup(void)
     extern int glob_compat_mode;
     extern int output_as_return;
 
+    bu_vls_init(&temp);
     for (ctp = mged_cmdtab; ctp->name != NULL; ctp++) {
 	bu_vls_strcpy(&temp, "_mged_");
 	bu_vls_strcat(&temp, ctp->name);
@@ -438,13 +438,10 @@ cmd_setup(void)
     Tcl_LinkVar(INTERP, "output_as_return", (char *)&output_as_return, TCL_LINK_BOOLEAN);
 
     /* Provide Tcl interfaces to the fundamental BRL-CAD libraries */
-    if (Bu_Init(INTERP) == TCL_ERROR) {
-      bu_log("Bu_Init ERROR:\n%s\n", Tcl_GetStringResult(INTERP));
-    }
+    Bu_Init(INTERP);
     Bn_Init(INTERP);
     Rt_Init(INTERP);
     Go_Init(INTERP);
-    Wdb_Init(INTERP);
 
     tkwin = NULL;
 
@@ -462,7 +459,7 @@ mged_setup(Tcl_Interp **interpreter)
 
     int init_tcl = 1;
     int init_itcl = 1;
-    struct bu_vls str = BU_VLS_INIT_ZERO;
+    struct bu_vls str;
     const char *name = bu_argv0_full_path();
 
     /* locate our run-time binary (must be called before Tcl_CreateInterp()) */
@@ -472,12 +469,7 @@ mged_setup(Tcl_Interp **interpreter)
 	Tcl_FindExecutable("mged");
     }
 
-    if (!interpreter ) {
-      bu_log("mged_setup Error - interpreter is NULL!\n");
-      return;
-    }
-
-    if (*interpreter != NULL)
+    if (interpreter && *interpreter != NULL)
 	Tcl_DeleteInterp(*interpreter);
 
     /* Create the interpreter */
@@ -576,7 +568,7 @@ mged_setup(Tcl_Interp **interpreter)
 	Tcl_ResetResult(*interpreter);
     }
 
-    BU_GET(view_state->vs_gvp, struct ged_view);
+    BU_GETSTRUCT(view_state->vs_gvp, ged_view);
     ged_view_init(view_state->vs_gvp);
 
     view_state->vs_gvp->gv_callback = mged_view_callback;
@@ -587,7 +579,7 @@ mged_setup(Tcl_Interp **interpreter)
 	/* release any allocated memory */
 	ged_free(gedp);
     } else {
-	BU_GET(gedp, struct ged);
+	BU_GETSTRUCT(gedp, ged);
     }
     GED_INIT(gedp, NULL);
 
@@ -599,6 +591,7 @@ mged_setup(Tcl_Interp **interpreter)
     mged_variable_setup(*interpreter);
 
     /* Tcl needs to write nulls onto subscripted variable names */
+    bu_vls_init(&str);
     bu_vls_printf(&str, "%s(state)", MGED_DISPLAY_VAR);
     Tcl_SetVar(*interpreter, bu_vls_addr(&str), state_str[STATE], TCL_GLOBAL_ONLY);
 

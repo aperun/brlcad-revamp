@@ -17,6 +17,7 @@ qnx
 treebuild.xml
 watcom
 win32
+zconf.h.in
 zconf.h
 zlib.3
 zlib.3.pdf

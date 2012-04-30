@@ -12,13 +12,14 @@
 
 #include "common.h"
 
+
 #ifndef ORLE_EXPORT
-#  if defined(ORLE_DLL_EXPORTS) && defined(ORLE_DLL_IMPORTS)
-#    error "Only ORLE_DLL_EXPORTS or ORLE_DLL_IMPORTS can be defined, not both."
-#  elif defined(ORLE_DLL_EXPORTS)
-#    define ORLE_EXPORT __declspec(dllexport)
-#  elif defined(ORLE_DLL_IMPORTS)
-#    define ORLE_EXPORT __declspec(dllimport)
+#  if defined(_WIN32) && !defined(__CYGWIN__) && defined(BRLCAD_DLL)
+#    ifdef ORLE_EXPORT_DLL
+#      define ORLE_EXPORT __declspec(dllexport)
+#    else
+#      define ORLE_EXPORT __declspec(dllimport)
+#    endif
 #  else
 #    define ORLE_EXPORT
 #  endif

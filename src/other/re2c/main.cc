@@ -11,7 +11,7 @@
 #include <string.h>
 
 #include "globals.h"
-#include "re2c_parser.h"
+#include "parser.h"
 #include "dfa.h"
 #include "mbo_getopt.h"
 

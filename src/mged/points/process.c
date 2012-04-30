@@ -1,7 +1,7 @@
 /*                       P R O C E S S . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -87,8 +87,11 @@ create_cyl(point_line_t **plta, int count) {
     point_line_t *plt = NULL;
     const char *result;
 
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
-    struct bu_vls vls2 = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
+    struct bu_vls vls2;
+
+    bu_vls_init(&vls);
+    bu_vls_init(&vls2);
 
     for (i = 0; i < count; i++) {
 	plt = &(*plta)[i];
@@ -118,12 +121,15 @@ create_sphere(point_line_t **plta, int count) {
     point_line_t *plt = NULL;
     const char *result;
 
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
-    struct bu_vls vls2 = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
+    struct bu_vls vls2;
+
+    bu_vls_init(&vls);
+    bu_vls_init(&vls2);
 
     for (i = 0; i < count; i++) {
 	plt = &(*plta)[i];
-	if (plt && plt->type)
+	if (plt && plt->type) 
 	    bu_vls_printf(&vls, " %f %f %f  ", plt->val[X], plt->val[Y], plt->val[Z]);
     }
     bu_vls_printf(&vls2, "sph { %V }", &vls);
@@ -466,8 +472,11 @@ create_plate(point_line_t **plta, int count) {
     point_line_t *plt = NULL;
     const char *result;
 
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
-    struct bu_vls vls2 = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
+    struct bu_vls vls2;
+
+    bu_vls_init(&vls);
+    bu_vls_init(&vls2);
 
     for (i = 0; i < count; i++) {
 	plt = &(*plta)[i];
@@ -497,8 +506,11 @@ create_arb(point_line_t **plta, int count) {
     point_line_t *plt = NULL;
     const char *result;
 
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
-    struct bu_vls vls2 = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
+    struct bu_vls vls2;
+
+    bu_vls_init(&vls);
+    bu_vls_init(&vls2);
 
     for (i = 0; i < count; i++) {
 	plt = &(*plta)[i];
@@ -528,8 +540,11 @@ create_cylinder(point_line_t **plta, int count) {
     point_line_t *plt = NULL;
     const char *result;
 
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
-    struct bu_vls vls2 = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
+    struct bu_vls vls2;
+
+    bu_vls_init(&vls);
+    bu_vls_init(&vls2);
 
     for (i = 0; i < count; i++) {
 	plt = &(*plta)[i];
@@ -558,8 +573,11 @@ create_pipe(point_line_t **plta, int count) {
     point_line_t *plt = NULL;
     const char *result;
 
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
-    struct bu_vls vls2 = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
+    struct bu_vls vls2;
+
+    bu_vls_init(&vls);
+    bu_vls_init(&vls2);
 
     for (i = 0; i < count; i++) {
 	plt = &(*plta)[i];
@@ -588,8 +606,11 @@ create_points(point_line_t **plta, int count) {
     point_line_t *plt = NULL;
     const char *result;
 
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
-    struct bu_vls vls2 = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
+    struct bu_vls vls2;
+
+    bu_vls_init(&vls);
+    bu_vls_init(&vls2);
 
     for (i = 0; i < count; i++) {
 	plt = &(*plta)[i];

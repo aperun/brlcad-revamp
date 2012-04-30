@@ -1,44 +1,52 @@
 # Include directories needed by libtclcad users
-set(TCLCAD_INCLUDE_DIRS
-  ${BRLCAD_BINARY_DIR}/include
-  ${BRLCAD_SOURCE_DIR}/include
-  ${DM_INCLUDE_DIRS}
-  ${GED_INCLUDE_DIRS}
-  )
+SET(TCLCAD_INCLUDE_DIRS
+	${BRLCAD_BINARY_DIR}/include
+	${BRLCAD_SOURCE_DIR}/include
+	${DM_INCLUDE_DIRS}
+	${GED_INCLUDE_DIRS}
+	)
+BRLCAD_INCLUDE_DIRS(TCLCAD_INCLUDE_DIRS)
 
 # We need to guarantee internal Tcl headers
-set(TCLCAD_LOCAL_INCLUDE_DIRS
+include_directories(
   ${CMAKE_SOURCE_DIR}/src/other/tcl/generic
   ${CMAKE_SOURCE_DIR}/src/other/tcl/unix
   ${CMAKE_SOURCE_DIR}/src/other/incrTcl/itcl/generic
   ${CMAKE_SOURCE_DIR}/src/other/incrTcl/itk/generic
   ${PNG_INCLUDE_DIR}
-  )
+)
 
-BRLCAD_LIB_INCLUDE_DIRS(tclcad TCLCAD_INCLUDE_DIRS TCLCAD_LOCAL_INCLUDE_DIRS)
+IF(WIN32 AND BRLCAD-ENABLE_OPENGL)
+  SET(TCLCAD_DEFINES "${TCLCAD_DEFINES} -DDM_WGL -DIF_WGL")
+ENDIF(WIN32 AND BRLCAD-ENABLE_OPENGL)
+
+IF(BRLCAD-ENABLE_X11)
+  SET(TCLCAD_DEFINES  "${TCLCAD_DEFINES} -DDM_X -DIF_X")
+ENDIF(BRLCAD-ENABLE_X11)
+
+IF(BRLCAD-ENABLE_X11 AND BRLCAD-ENABLE_OPENGL)
+  SET(TCLCAD_DEFINES "${TCLCAD_DEFINES} -DDM_OGL -DIF_OGL")
+ENDIF(BRLCAD-ENABLE_X11 AND BRLCAD-ENABLE_OPENGL)
+
+IF(BRLCAD-ENABLE_TK)
+  SET(TCLCAD_DEFINES "${TCLCAD_DEFINES} -DDM_TK -DIF_TK")
+ENDIF(BRLCAD-ENABLE_TK)
 
 add_definitions(
-  ${C99_FLAG}
-  ${XOPEN_DEFINE}
-  )
+	${TCLCAD_DEFINES}
+	${C99_FLAG}
+	${XOPEN_DEFINE}
+)
 
-set(TCLCAD_XLIBS ${TCLCAD_XLIBS} ${X11_LIBRARIES})
-set(LIBTCLCAD_SRCS
-  tclcad.c
-  tclcadAutoPath.c
-  tclcad_obj.c
-  tkImgFmtPIX.c
-  cmdhist_obj.c
-  )
-BRLCAD_ADDLIB(libtclcad "${LIBTCLCAD_SRCS}" "libged;libdm;${TCLCAD_XLIBS};${X11_Xi_LIB}")
+FOREACH(xlib ${X11_LIBRARIES})
+	SET(TCLCAD_XLIBS "${TCLCAD_XLIBS} ${xlib}")
+ENDFOREACH(xlib ${X11_LIBRARIES})
+SET(LIBTCLCAD_SRCS
+	tclcad.c
+	tclcadAutoPath.c
+	tkImgFmtPIX.c
+	tclcad_obj.c
+	)
+BRLCAD_ADDLIB(libtclcad "${LIBTCLCAD_SRCS}" "libged libdm ${TCLCAD_XLIBS} ${X11_Xi_LIB}")
 SET_TARGET_PROPERTIES(libtclcad PROPERTIES VERSION 19.0.1 SOVERSION 19)
-set(tclcad_ignore_files tclcad_private.h)
-CMAKEFILES(${tclcad_ignore_files})
 CMAKEFILES(Makefile.am)
-
-# Local Variables:
-# tab-width: 8
-# mode: cmake
-# indent-tabs-mode: t
-# End:
-# ex: shiftwidth=2 tabstop=8

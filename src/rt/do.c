@@ -1,7 +1,7 @@
 /*                            D O . C
  * BRL-CAD
  *
- * Copyright (c) 1987-2012 United States Government as represented by
+ * Copyright (c) 1987-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -44,7 +44,6 @@
 #include "raytrace.h"
 #include "fb.h"
 #include "bu.h"
-#include "icv.h"
 
 #include "./rtuif.h"
 #include "./ext.h"
@@ -71,7 +70,7 @@ extern int finalframe;		/* frame to halt at */
 /***** end variables shared with rt.c *****/
 
 /***** variables shared with viewg3.c *****/
-struct bu_vls ray_data_file = BU_VLS_INIT_ZERO;  /* file name for ray data output */
+struct bu_vls ray_data_file;  /* file name for ray data output */
 /***** end variables shared with viewg3.c *****/
 
 /***** variables for frame buffer black pixel rendering *****/
@@ -83,8 +82,7 @@ void do_ae(double azim, double elev);
 void res_pr(void);
 void memory_summary(void);
 
-extern struct icv_image_file *bif;
-
+extern struct bu_image_file *bif;
 
 /**
  * O L D _ F R A M E
@@ -194,7 +192,7 @@ int cm_start(int argc, char **argv)
 
 	cp = buf;
 	while (*cp && isspace(*cp)) cp++;	/* skip spaces */
-	if (bu_strncmp(cp, "start", 5) != 0) continue;
+	if (strncmp(cp, "start", 5) != 0) continue;
 	while (*cp && !isspace(*cp)) cp++;	/* skip keyword */
 	while (*cp && isspace(*cp)) cp++;	/* skip spaces */
 	frame = atoi(cp);
@@ -316,12 +314,13 @@ int cm_end(int UNUSED(argc), char **UNUSED(argv))
 int cm_tree(int argc, const char **argv)
 {
     register struct rt_i *rtip = APP.a_rt_i;
-    struct bu_vls times = BU_VLS_INIT_ZERO;
+    struct bu_vls times;
 
     if (argc <= 1) {
 	def_tree(rtip);		/* Load the default trees */
 	return 0;
     }
+    bu_vls_init(&times);
 
     rt_prep_timer();
     if (rt_gettrees(rtip, argc-1, &argv[1], npsw) < 0)
@@ -442,8 +441,7 @@ struct bu_structparse set_parse[] = {
     {"%f",	1, "rt_cline_radius",		bu_byteoffset(rt_cline_radius),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
 #endif
     {"%V",	1, "ray_data_file",		bu_byteoffset(ray_data_file),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
-    /* daisy-chain to additional app-specific parameters */
-    {"%p",	1, "Application-Specific Parameters", bu_byteoffset(view_parse[0]),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%p", bu_byteoffset(view_parse[0]), "View_Module-Specific Parameters", 0,		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"",	0, (char *)0,		0,						BU_STRUCTPARSE_FUNC_NULL, NULL, NULL }
 };
 
@@ -455,14 +453,14 @@ struct bu_structparse set_parse[] = {
  */
 int cm_set(int argc, char **argv)
 {
-    struct bu_vls str = BU_VLS_INIT_ZERO;
+    struct bu_vls str;
 
     if (argc <= 1) {
 	bu_struct_print("Generic and Application-Specific Parameter Values",
 			set_parse, (char *)0);
 	return 0;
     }
-
+    bu_vls_init(&str);
     bu_vls_from_argv(&str, argc-1, (const char **)argv+1);
     if (bu_struct_parse(&str, set_parse, (char *)0) < 0) {
 	bu_vls_free(&str);
@@ -513,10 +511,11 @@ int cm_opt(int argc, char **argv)
 void
 def_tree(register struct rt_i *rtip)
 {
-    struct bu_vls times = BU_VLS_INIT_ZERO;
+    struct bu_vls times;
 
     RT_CK_RTI(rtip);
 
+    bu_vls_init(&times);
     rt_prep_timer();
     if (rt_gettrees(rtip, nobjs, (const char **)objtab, npsw) < 0)
 	bu_log("rt_gettrees(%s) FAILED\n", objtab[0]);
@@ -537,7 +536,7 @@ def_tree(register struct rt_i *rtip)
 void
 do_prep(struct rt_i *rtip)
 {
-    struct bu_vls times = BU_VLS_INIT_ZERO;
+    struct bu_vls times;
 
     RT_CHECK_RTI(rtip);
     if (rtip->needprep) {
@@ -545,6 +544,7 @@ do_prep(struct rt_i *rtip)
 	view_setup(rtip);
 
 	/* Allow RT library to prepare itself */
+	bu_vls_init(&times);
 	rt_prep_timer();
 	rt_prep_parallel(rtip, npsw);
 
@@ -576,7 +576,7 @@ do_prep(struct rt_i *rtip)
 int
 do_frame(int framenumber)
 {
-    struct bu_vls times = BU_VLS_INIT_ZERO;
+    struct bu_vls times;
     char framename[128] = {0};		/* File name to hold current frame */
     struct rt_i *rtip = APP.a_rt_i;
     double utime = 0.0;			/* CPU time used */
@@ -642,7 +642,7 @@ do_frame(int framenumber)
 	 */
 	{
 	    mat_t rotscale, xlate;
-	    mat_t newmat;
+	    mat_t new;
 	    quat_t newquat;
 
 	    bn_mat_print("model2view", model2view);
@@ -650,9 +650,9 @@ do_frame(int framenumber)
 	    rotscale[15] = 0.5 * viewsize;
 	    MAT_IDN(xlate);
 	    MAT_DELTAS_VEC_NEG(xlate, eye_model);
-	    bn_mat_mul(newmat, rotscale, xlate);
-	    bn_mat_print("reconstructed m2v", newmat);
-	    quat_mat2quat(newquat, newmat);
+	    bn_mat_mul(new, rotscale, xlate);
+	    bn_mat_print("reconstructed m2v", new);
+	    quat_mat2quat(newquat, new);
 	    HPRINT("reconstructed orientation:", newquat);
 	}
 #endif
@@ -719,10 +719,10 @@ do_frame(int framenumber)
      * be gentle to the machine.
      */
     if (!interactive) {
-	if (npix > 512*512)
-	    bu_nice_set(14);
-	else if (npix > 256*256)
+	if (npix > 256*256)
 	    bu_nice_set(10);
+	else if (npix > 512*512)
+	    bu_nice_set(14);
     }
 
     /*
@@ -754,34 +754,23 @@ do_frame(int framenumber)
 	 * reading and writing, but must do its own positioning.
 	 */
 	{
-	    int fd;
-	    int ret;
 	    struct stat sb;
-
-	    if (bu_file_exists(framename, NULL)) {
-		/* File exists, maybe with partial results */
-		fd = open(framename, 2);
-		outfp = fdopen(fd, "r+");
-		if (fd < 0 || !outfp) {
+	    if (stat(framename, &sb) >= 0 &&
+		sb.st_size > 0 &&
+		(size_t)sb.st_size < width*height*sizeof(RGBpixel)) {
+		/* File exists, with partial results */
+		register int fd;
+		if ((fd = open(framename, 2)) < 0 ||
+		    (outfp = fdopen(fd, "r+")) == NULL) {
 		    perror(framename);
-
-		    if (matflag)
-			return 0; /* OK: some undocumented reason */
-
-		    return -1; /* BAD: oops, disappeared */
+		    if (matflag) return 0;	/* OK */
+		    return -1;			/* Bad */
 		}
-
-		/* check if partial result */
-		ret = fstat(fd, &sb);
-		if (ret >= 0 && sb.st_size > 0 && (size_t)sb.st_size < width*height*sizeof(RGBpixel)) {
-
-		    /* Read existing pix data into the frame buffer */
-		    if (sb.st_size > 0) {
-			size_t bytes_read = fread(pixmap, 1, (size_t)sb.st_size, outfp);
-			if (bytes_read < (size_t)sb.st_size)
-			    return -1;
-		    }
-
+		/* Read existing pix data into the frame buffer */
+		if (sb.st_size > 0) {
+		    size_t ret = fread(pixmap, 1, (size_t)sb.st_size, outfp);
+		    if (ret < (size_t)sb.st_size)
+			return -1;
 		}
 	    }
 	}
@@ -792,7 +781,7 @@ do_frame(int framenumber)
 	    /* FIXME: in the case of rtxray, this is wrong.  it writes
 	     * out a bw image so depth should be just 1, not 3.
 	     */
-	    bif = icv_image_save_open(framename, ICV_IMAGE_AUTO_NO_PIX, width, height, 3);
+	    bif = bu_image_save_open(framename, BU_IMAGE_AUTO_NO_PIX, width, height, 3);
 	    if (bif == NULL && (outfp = fopen(framename, "w+b")) == NULL) {
 		perror(framename);
 		if (matflag) return 0;	/* OK */
@@ -855,6 +844,7 @@ do_frame(int framenumber)
 	pix_start = 0;
 	pix_end = height*width - 1;
     }
+    bu_vls_init(&times);
     utime = rt_get_timer(&times, &wallclock);
 
     /*
@@ -929,12 +919,12 @@ do_frame(int framenumber)
 	       wallclock, ((double)(rtip->rti_nrays))/wallclock);
     }
     if (bif != NULL)
-	icv_image_save_close(bif);
+	bu_image_save_close(bif);
     bif = NULL;
     if (outfp != NULL) {
 	/* Protect finished product */
 	if (outputfile != (char *)0)
-	    (void)bu_fchmod(fileno(outfp), 0444);
+	    (void)bu_fchmod(outfp, 0444);
 
 	(void)fclose(outfp);
 	outfp = NULL;

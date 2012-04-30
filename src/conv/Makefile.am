@@ -10,6 +10,7 @@ INTAVALDIR=intaval
 EXTRA_DIST = \
 	CMakeLists.txt \
 	Formats.csv \
+	comgeom/try.sh \
 	dbclean.sh \
 	g-xxx.c \
 	g-xxx_facets.c \
@@ -38,15 +39,13 @@ else !ONLY_BENCHMARK
 
 SUBDIRS = \
 	${IGESDIR} \
-	${INTAVALDIR} \
-	${STEPDIR} \
-	vdeck
+	${INTAVALDIR}
+	${STEPDIR}
 
 DIST_SUBDIRS = \
 	iges \
 	intaval \
-	step \
-	vdeck
+	step
 
 bin_PROGRAMS = \
 	3dm-g \
@@ -372,6 +371,7 @@ walk_example_LDADD = ${RT}
 dist_bin_SCRIPTS = intaval-g.py
 
 noinst_HEADERS = \
+	comgeom/3d.h \
 	dxf/dxf.h \
 	patch/patch-g.h \
 	shp/shapelib/shapefil.h

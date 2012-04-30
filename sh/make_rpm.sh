@@ -2,7 +2,7 @@
 #                     M A K E _ R P M . S H
 # BRL-CAD
 #
-# Copyright (c) 2005-2012 United States Government as represented by
+# Copyright (c) 2005-2011 United States Government as represented by
 # the U.S. Army Research Laboratory.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -72,11 +72,8 @@ if test ! -x "`which rpm 2>/dev/null`" ; then
 fi
 fcheck(){
     if ! `rpm -q $1 &>/dev/null` ; then
-	echo "* Missing $1..."
 	LLIST=$LLIST" "$1
 	E=1
-    else
-        echo "Found package $1..."
     fi
 }
 
@@ -86,6 +83,8 @@ if test "$DNAME" = "fedora" ;then
     fcheck gcc-c++
     fcheck make
     fcheck cmake
+    fcheck libtool
+    fcheck bc
     fcheck sed
     fcheck bison
     fcheck flex
@@ -101,6 +100,8 @@ if test "$DNAME" = "openSUSE" ;then
     fcheck gcc-c++
     fcheck make
     fcheck cmake
+    fcheck libtool
+    fcheck bc
     fcheck sed
     fcheck bison
     fcheck flex
@@ -131,7 +132,7 @@ else
     ferror "Unknown architecture. \"`gcc -dumpmachine`\"" "Exiting..."
 fi
 
-NJOBS=`getconf _NPROCESSORS_ONLN`
+NJOBS=`getconf _NPROCESSORS_ONLN | sed "s/.*/&*2-1/" | bc`
 if test ! $NJOBS -gt 0 2>/dev/null ;then
     NJOBS=1
 fi
@@ -142,14 +143,14 @@ mkdir -p $TMPDIR/tmp
 cp -Rf misc/debian/* $TMPDIR
 
 # compile and install in tmp dir
-cmake -DBRLCAD_BUNDLED_LIBS=ON \
-      -DBRLCAD_FLAGS_OPTIMIZATION=ON \
-      -DBRLCAD_ENABLE_STRICT=OFF \
-      -DBRLCAD_FLAGS_DEBUG=OFF \
+cmake -DBRLCAD-ENABLE_OPTIMIZED_BUILD=ON \
+      -DBRLCAD-ENABLE_ALL_LOCAL_LIBS=ON \
+      -DBRLCAD-ENABLE_STRICT=OFF \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_INSTALL_PREFIX=/usr/brlcad \
       -DDATA_DIR=share \
-      -DMAN_DIR=share/man
+      -DMAN_DIR=share/man \
+      -DBRLCAD_BUNDLED_LIBS=BUNDLED
 make -j$NJOBS
 fakeroot make install DESTDIR=`pwd`"/$TMPDIR/tmp"
 

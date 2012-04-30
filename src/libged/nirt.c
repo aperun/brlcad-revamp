@@ -1,7 +1,7 @@
 /*                          N I R T . C
  * BRL-CAD
  *
- * Copyright (c) 1988-2012 United States Government as represented by
+ * Copyright (c) 1988-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -103,9 +103,9 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
     struct solid *sp = NULL;
     char line[RT_MAXLINE] = {0};
     char *val = NULL;
-    struct bu_vls o_vls = BU_VLS_INIT_ZERO;
-    struct bu_vls p_vls = BU_VLS_INIT_ZERO;
-    struct bu_vls t_vls = BU_VLS_INIT_ZERO;
+    struct bu_vls o_vls;
+    struct bu_vls p_vls;
+    struct bu_vls t_vls;
     struct bn_vlblock *vbp = NULL;
     struct qray_dataList *ndlp = NULL;
     struct qray_dataList HeadQRayData;
@@ -115,7 +115,7 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
     int args;
 
     /* for bu_fgets space trimming */
-    struct bu_vls v = BU_VLS_INIT_ZERO;
+    struct bu_vls v;
 
     GED_CHECK_DATABASE_OPEN(gedp, GED_ERROR);
     GED_CHECK_DRAWABLE(gedp, GED_ERROR);
@@ -164,6 +164,7 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
     VMOVEN(dir, gedp->ged_gvp->gv_rotation + 8, 3);
     VSCALE(dir, dir, -1.0);
 
+    bu_vls_init(&p_vls);
     bu_vls_printf(&p_vls, "xyz %lf %lf %lf;",
 		  cml[X], cml[Y], cml[Z]);
     bu_vls_printf(&p_vls, "dir %lf %lf %lf; s",
@@ -195,6 +196,8 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
 	    char *cp;
 	    int count = 0;
 
+	    bu_vls_init(&o_vls);
+
 	    /* get 'r' format now; prepend its' format string with a newline */
 	    val = bu_vls_addr(&gedp->ged_gdp->gd_qray_fmts[0].fmt);
 
@@ -217,10 +220,7 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
 	    if (*val == '\0')
 		bu_vls_printf(&o_vls, " fmt r \"\\n\" ");
 	    else {
-		struct bu_vls tmp = BU_VLS_INIT_ZERO;
-		bu_vls_strncpy(&tmp, val, count);
-		bu_vls_printf(&o_vls, " fmt r \"\\n%V\" ", &tmp);
-		bu_vls_free(&tmp);
+		bu_vls_printf(&o_vls, " fmt r \"\\n%*s\" ", count, val);
 
 		if (count)
 		    val += count + 1;
@@ -235,6 +235,8 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
     }
 
     if (DG_QRAY_TEXT(gedp->ged_gdp)) {
+
+	bu_vls_init(&t_vls);
 
 	/* load vp with formats for printing */
 	for (; gedp->ged_gdp->gd_qray_fmts[i].type != (char)0; ++i)
@@ -258,7 +260,7 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
     *vp++ = "-e";
     *vp++ = bu_vls_addr(&p_vls);
 
-    for (i = 1; i < argc; i++)
+    for (i=1; i < argc; i++)
 	*vp++ = (char *)argv[i];
     *vp++ = gedp->ged_wdbp->dbip->dbi_filename;
 
@@ -317,7 +319,7 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
 	(void)close(pipe_out[1]);
 	(void)close(pipe_err[0]);
 	(void)close(pipe_err[1]);
-	for (i = 3; i < 20; i++)
+	for (i=3; i < 20; i++)
 	    (void)close(i);
 	(void)signal(SIGINT, SIG_DFL);
 	(void)execvp(gedp->ged_gdp->gd_rt_cmd[0], gedp->ged_gdp->gd_rt_cmd);
@@ -405,9 +407,9 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
     snprintf(line1, rem, "%s ", gedp->ged_gdp->gd_rt_cmd[0]);
     rem -= strlen(line1) - 1;
 
-    for (i = 1; i < gedp->ged_gdp->gd_rt_cmd_len; i++) {
+    for (i=1; i<gedp->ged_gdp->gd_rt_cmd_len; i++) {
 	/* skip commands */
-	if (BU_STR_EQUAL(gedp->ged_gdp->gd_rt_cmd[i], "-e"))
+	if (!strcmp(gedp->ged_gdp->gd_rt_cmd[i], "-e"))
 	    ++i;
 	else {
 	    /* append other arguments (i.e. options, file and obj(s)) */
@@ -432,7 +434,7 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
     fp_in = _fdopen(_open_osfhandle((intptr_t)pipe_inDup, _O_TEXT), "w");
 
     /* send commands down the pipe */
-    for (i = 1; i < gedp->ged_gdp->gd_rt_cmd_len - 2; i++)
+    for (i=1; i<gedp->ged_gdp->gd_rt_cmd_len-2; i++)
 	if (strstr(gedp->ged_gdp->gd_rt_cmd[i], "-e") != NULL)
 	    fprintf(fp_in, "%s\n", gedp->ged_gdp->gd_rt_cmd[++i]);
 
@@ -450,6 +452,8 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
 
 #endif
 
+    bu_vls_init(&v);
+
     bu_vls_free(&p_vls);   /* use to form "partition" part of nirt command above */
     if (DG_QRAY_GRAPHICS(gedp->ged_gdp)) {
 
@@ -460,6 +464,7 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
 
 	/* handle partitions */
 	while (bu_fgets(line, RT_MAXLINE, fp_out) != (char *)NULL) {
+	    bu_vls_trunc(&v, 0);
 	    bu_vls_strcpy(&v, line);
 	    bu_vls_trimspace(&v);
 
@@ -468,7 +473,7 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
 		break;
 	    }
 
-	    BU_GET(ndlp, struct qray_dataList);
+	    BU_GETSTRUCT(ndlp, qray_dataList);
 	    BU_LIST_APPEND(HeadQRayData.l.back, &ndlp->l);
 
 	    ret = sscanf(bu_vls_addr(&v), "%le %le %le %le", &ndlp->x_in, &ndlp->y_in, &ndlp->z_in, &ndlp->los);
@@ -486,6 +491,7 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
 
 	/* handle overlaps */
 	while (bu_fgets(line, RT_MAXLINE, fp_out) != (char *)NULL) {
+	    bu_vls_trunc(&v, 0);
 	    bu_vls_strcpy(&v, line);
 	    bu_vls_trimspace(&v);
 
@@ -494,7 +500,7 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
 		break;
 	    }
 
-	    BU_GET(ndlp, struct qray_dataList);
+	    BU_GETSTRUCT(ndlp, qray_dataList);
 	    BU_LIST_APPEND(HeadQRayData.l.back, &ndlp->l);
 
 	    ret = sscanf(bu_vls_addr(&v), "%le %le %le %le",
@@ -504,6 +510,7 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
 		break;
 	    }
 	}
+	bu_vls_free(&v);
 
 	vbp = rt_vlblock_init();
 	qray_data_to_vlist(gedp, vbp, &HeadQRayData, dir, 1);
@@ -516,6 +523,7 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
 	bu_vls_free(&t_vls);
 
 	while (bu_fgets(line, RT_MAXLINE, fp_out) != (char *)NULL) {
+	    bu_vls_trunc(&v, 0);
 	    bu_vls_strcpy(&v, line);
 	    bu_vls_trimspace(&v);
 	    bu_vls_printf(gedp->ged_result_str, "%s\n", bu_vls_addr(&v));
@@ -525,6 +533,7 @@ ged_nirt(struct ged *gedp, int argc, const char *argv[])
     (void)fclose(fp_out);
 
     while (bu_fgets(line, RT_MAXLINE, fp_err) != (char *)NULL) {
+	bu_vls_trunc(&v, 0);
 	bu_vls_strcpy(&v, line);
 	bu_vls_trimspace(&v);
 	bu_vls_printf(gedp->ged_result_str, "%s\n", bu_vls_addr(&v));
@@ -572,9 +581,9 @@ ged_vnirt(struct ged *gedp, int argc, const char *argv[])
     fastf_t sf = 1.0 * DG_INV_GED;
     vect_t view_ray_orig;
     vect_t center_model;
-    struct bu_vls x_vls = BU_VLS_INIT_ZERO;
-    struct bu_vls y_vls = BU_VLS_INIT_ZERO;
-    struct bu_vls z_vls = BU_VLS_INIT_ZERO;
+    struct bu_vls x_vls;
+    struct bu_vls y_vls;
+    struct bu_vls z_vls;
     char **av;
     static const char *usage = "vnirt options vX vY";
 
@@ -619,6 +628,9 @@ ged_vnirt(struct ged *gedp, int argc, const char *argv[])
     MAT4X3PNT(center_model, gedp->ged_gvp->gv_view2model, view_ray_orig);
     VSCALE(center_model, center_model, gedp->ged_wdbp->dbip->dbi_base2local);
 
+    bu_vls_init(&x_vls);
+    bu_vls_init(&y_vls);
+    bu_vls_init(&z_vls);
     bu_vls_printf(&x_vls, "%lf", center_model[X]);
     bu_vls_printf(&y_vls, "%lf", center_model[Y]);
     bu_vls_printf(&z_vls, "%lf", center_model[Z]);

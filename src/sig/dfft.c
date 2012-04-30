@@ -1,7 +1,7 @@
 /*                          D F F T . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -37,6 +37,7 @@
 #include "vmath.h"
 
 #define MAXFFT 4096
+#define MAXOUT 2048		/* MAXFFT/2 XXX (Actually + 1) */
 
 double data[MAXFFT];		/* Data buffer: 2*Points in spectrum */
 
@@ -54,7 +55,7 @@ double cbsum;
 void fftdisp(double *dat, int N);
 void fftmag2(double *mags, double *dat, int N);
 void fftphase(double *dat, int N);
-void rfft(double *dat, int N);
+void rfft();
 void LintoLog(double *in, double *out, int num);
 
 static const char usage[] = "\
@@ -76,7 +77,7 @@ int main(int argc, char **argv)
 	bu_exit(1, "%s", usage);
     }
 
-    while ((c = bu_getopt(argc, argv, "d:clpLANh")) != -1) {
+    while ((c = bu_getopt(argc, argv, "d:clpLANh")) != -1)
 	switch (c) {
 	    case 'd': mindB = -atof(bu_optarg); break;
 	    case 'c': cflag++; break;
@@ -90,6 +91,9 @@ int main(int argc, char **argv)
 	    case '?':
 	    default:  printf("Unknown argument: %c\n%s\n", c, usage); return EXIT_FAILURE;
 	}
+
+    if (L > MAXFFT) {
+	bu_exit(2, "dfft: can't go over %d\n", MAXFFT);
     }
 
     /* Calculate Critical Band filter weights */
@@ -124,7 +128,7 @@ void
 fftdisp(double *dat, int N)
 {
     int i, j;
-    double mags[MAXFFT];
+    double mags[MAXOUT];
     size_t ret;
 
     /* Periodogram scaling */
@@ -135,7 +139,7 @@ fftdisp(double *dat, int N)
 
     /* Interp to Log freq scale */
     if (lflag) {
-	double logout[MAXFFT];
+	double logout[MAXOUT+1];
 
 	LintoLog(mags, logout, N/2);
 	/* put result back in mags */
@@ -146,7 +150,7 @@ fftdisp(double *dat, int N)
     /* Critical Band Filter */
     if (cflag) {
 	double sum;
-	double tmp[MAXFFT];
+	double tmp[MAXOUT];
 
 	/* save working copy */
 	for (i = 0; i < N/2; i++)

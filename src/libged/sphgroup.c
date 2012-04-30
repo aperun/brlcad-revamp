@@ -1,7 +1,7 @@
 /*                         G R O U P . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2012 United States Government as represented by
+ * Copyright (c) 2008-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -64,8 +64,7 @@ ged_sphgroup(struct ged *gedp, int argc, const char *argv[])
 	bu_vls_printf(gedp->ged_result_str, "Specified bounding sphere %s not found\n", argv[argc-1]);
 	return GED_ERROR;
     } else {
-	if (rt_db_get_internal(&sph_intern, sphdp, gedp->ged_wdbp->dbip, (fastf_t *)NULL, &rt_uniresource) < 0)
-	  return GED_ERROR;
+	rt_db_get_internal(&sph_intern, sphdp, gedp->ged_wdbp->dbip, (fastf_t *)NULL, &rt_uniresource);
 	if ((sph_intern.idb_minor_type != DB5_MINORTYPE_BRLCAD_ELL) && (sph_intern.idb_minor_type != DB5_MINORTYPE_BRLCAD_SPH)) {
 	    bu_vls_printf(gedp->ged_result_str, "Specified bounding object %s not a sphere\n", argv[argc-1]);
 	    return GED_ERROR;

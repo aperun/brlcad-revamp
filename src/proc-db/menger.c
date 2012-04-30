@@ -1,7 +1,7 @@
 /*                        M E N G E R . C
  * BRL-CAD
  *
- * Copyright (c) 2011-2012 United States Government as represented by
+ * Copyright (c) 2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -222,17 +222,17 @@ slice(struct rt_wdb *fp, point_t origin, fastf_t depth, fastf_t width, fastf_t h
 	mk_rpp(fp, bu_vls_addr(&ext), minpt, maxpt);
 
 	/* make interiors */
-	if (xyz & XDIR) {
+	if (xyz | XDIR) {
 	    VSET(minpt, origin[X], origin[Y] + (depth / 3.0), origin[Z] + (height / 3.0));
 	    VSET(maxpt, minpt[X] + width, minpt[Y] + (depth / 3.0), minpt[Z] + (height / 3.0));
 	    mk_rpp(fp, bu_vls_addr(&inX), minpt, maxpt);
 	}
-	if (xyz & YDIR) {
+	if (xyz | YDIR) {
 	    VSET(minpt, origin[X] + (width / 3.0), origin[Y], origin[Z] + (height / 3.0));
 	    VSET(maxpt, minpt[X] + (width / 3.0), minpt[Y] + depth, minpt[Z] + (height / 3.0));
 	    mk_rpp(fp, bu_vls_addr(&inY), minpt, maxpt);
 	}
-	if (xyz & ZDIR) {
+	if (xyz | ZDIR) {
 	    VSET(minpt, origin[X] + (width / 3.0), origin[Y] + (depth / 3.0), origin[Z]);
 	    VSET(maxpt, minpt[X] + (width / 3.0), minpt[Y] + (depth / 3.0), minpt[Z] + height);
 	    mk_rpp(fp, bu_vls_addr(&inZ), minpt, maxpt);
@@ -277,7 +277,7 @@ mengerize(struct rt_wdb *fp, point_t origin, fastf_t extent, axes xyz, const cha
 
     /* initialize */
     levels = bu_calloc(repeat * strlen(pattern), sizeof(struct wmember *), "alloc uts array");
-    BU_GET(final, struct wmember);
+    BU_GETSTRUCT(final, wmember);
     BU_LIST_INIT(&(final->l));
 
     /* do the pattern */
@@ -285,15 +285,15 @@ mengerize(struct rt_wdb *fp, point_t origin, fastf_t extent, axes xyz, const cha
 	for (j = 0; j < strlen(pattern); j++) {
 	    const int slot = (i * strlen(pattern)) + j;
 
-	    BU_GET(levels[slot], struct wmember);
+	    BU_GETSTRUCT(levels[slot], wmember);
 	    BU_LIST_INIT(&(levels[slot]->l));
 
 	    bu_log("%s %.2zu: %s%s%s width=%lf\n",
 		   (pattern[j] != 'i') ? "EXTERIOR" : "INTERIOR",
 		   slot,
-		   (xyz & XDIR) ? "X" : "",
-		   (xyz & YDIR) ? "Y" : "",
-		   (xyz & ZDIR) ? "Z" : "",
+		   (xyz | XDIR) ? "X" : "",
+		   (xyz | YDIR) ? "Y" : "",
+		   (xyz | ZDIR) ? "Z" : "",
 		   extent / pow(3.0, slot));
 	    bu_vls_trunc(&cut, 0);
 	    bu_vls_printf(&cut, "box%zu_", slot);
@@ -314,7 +314,7 @@ mengerize(struct rt_wdb *fp, point_t origin, fastf_t extent, axes xyz, const cha
     }
 
     /* make the final combination */
-    BU_GET(comb, struct bu_vls);
+    BU_GETSTRUCT(comb, bu_vls);
     BU_VLS_INIT(comb);
     bu_vls_strcat(comb, "sponge.c");
     mk_comb(fp, bu_vls_addr(comb), &(final->l), 0, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0);
@@ -343,8 +343,7 @@ main(int ac, char *av[])
     struct bu_vls filename = BU_VLS_INIT_ZERO;
     struct bu_vls pattern = BU_VLS_INIT_ZERO;
     size_t repeat = 0;
-    axes xyz;
-    int xyz_mask = 0;
+    axes xyz = 0;
 
     point_t origin = VINIT_ZERO;
     struct rt_wdb *fp = NULL;
@@ -363,20 +362,20 @@ main(int ac, char *av[])
 	switch (c) {
 	    case 'x':
 	    case 'X':
-		xyz_mask |= XDIR;
+		xyz |= XDIR;
 		break;
 	    case 'y':
 	    case 'Y':
-		xyz_mask |= YDIR;
+		xyz |= YDIR;
 		break;
 	    case 'z':
 	    case 'Z':
-		xyz_mask |= ZDIR;
+		xyz |= ZDIR;
 		break;
 	    case 'o':
 	    case 'O':
 		bu_vls_strcpy(&filename, bu_optarg);
-		if (bu_file_exists(bu_vls_addr(&filename), NULL)) {
+		if (bu_file_exists(bu_vls_addr(&filename))) {
 		    bu_exit(4, "ERROR: Output file [%V] already exists\n", &filename);
 		}
 		break;
@@ -431,10 +430,9 @@ main(int ac, char *av[])
     }
 
     /* no specified axis implies all three */
-    if (xyz_mask == 0) {
-	xyz_mask = XDIR | YDIR | ZDIR;
+    if (xyz == 0) {
+	xyz = XDIR | YDIR | ZDIR;
     }
-    xyz = (axes)xyz_mask;
 
     bu_log("--------------------------------\n");
     bu_log("---  Creating Menger Sponge  ---\n");
@@ -490,11 +488,11 @@ main(int ac, char *av[])
 	struct wmember *light1 = NULL;
 	struct wmember *sponge = NULL;
 
-	BU_GET(menger, struct wmember);
-	BU_GET(ground, struct wmember);
-	BU_GET(light0, struct wmember);
-	BU_GET(light1, struct wmember);
-	BU_GET(sponge, struct wmember);
+	BU_GETSTRUCT(menger, wmember);
+	BU_GETSTRUCT(ground, wmember);
+	BU_GETSTRUCT(light0, wmember);
+	BU_GETSTRUCT(light1, wmember);
+	BU_GETSTRUCT(sponge, wmember);
 
 	BU_LIST_INIT(&(menger->l));
 	BU_LIST_INIT(&(ground->l));

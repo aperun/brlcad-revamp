@@ -1,7 +1,7 @@
 /*                      P A R A L L E L . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -40,9 +40,8 @@
 #  include <sys/sysinfo.h>
 #endif
 
-#if defined(__FreeBSD__) || defined(__OpenBSD__)
+#ifdef __FreeBSD__
 #  include <sys/types.h>
-#  include <sys/param.h>
 #  include <sys/time.h>
 #  include <sys/resource.h>
 #  include <sys/sysctl.h>
@@ -215,21 +214,21 @@ void
 bu_cpulimit_set(int sec)
 {
 #ifdef CRAY
-    long prev;		/* seconds */
-    long curr;		/* seconds */
+    long old;		/* seconds */
+    long new;		/* seconds */
     long newtick;	/* 64-bit clock counts */
     extern long limit();
 
-    prev = bu_cpulimit_get();
-    curr = prev + sec;
-    if (curr <= 0 || curr >= INT_MAX)
-	curr = INT_MAX;	/* no limit, for practical purposes */
-    newtick = curr * HZ;
+    old = bu_cpulimit_get();
+    new = old + sec;
+    if (new <= 0 || new >= INT_MAX)
+	new = INT_MAX;	/* no limit, for practical purposes */
+    newtick = new * HZ;
     if (limit(C_PROC, 0, L_CPU, newtick) < 0) {
 	perror("bu_cpulimit_set: CPU limit(set)");
     }
     bu_log("Cray CPU limit changed from %d to %d seconds\n",
-	   prev, newtick/HZ);
+	   old, newtick/HZ);
 
     /* Eliminate any memory limit */
     if (limit(C_PROC, 0, L_MEM, 0) < 0) {
@@ -320,6 +319,7 @@ bu_avail_cpus(void)
 	size_t len;
 	len = 4;
 	if (sysctlbyname("hw.ncpu", &maxproc, &len, NULL, 0) == -1) {
+	    ncpu = 1;
 	    perror("sysctlbyname");
 	} else {
 	    ncpu = maxproc;
@@ -337,6 +337,7 @@ bu_avail_cpus(void)
 	len = sizeof(maxproc);
 	if (sysctl(mib, 2, &maxproc, &len, NULL, 0) == -1) {
 	    perror("sysctl");
+	    ncpu = 1;
 	} else {
 	    ncpu = maxproc; /* should be able to get sysctl to return maxproc */
 	}
@@ -357,6 +358,7 @@ bu_avail_cpus(void)
 	ncpu = sysconf(_SC_NPROCESSORS_ONLN);
 	if (ncpu < 0) {
 	    perror("Unable to get the number of available CPUs");
+	    ncpu = 1;
 	}
     }
 #endif
@@ -366,6 +368,7 @@ bu_avail_cpus(void)
 	ncpu = sysconf(_SC_NPROC_ONLN);
 	if (ncpu < 0) {
 	    perror("Unable to get the number of available CPUs");
+	    ncpu = 1;
 	}
     }
 #endif
@@ -376,6 +379,7 @@ bu_avail_cpus(void)
 	ncpu = sysconf(_SC_CRAY_NCPU);
 	if (ncpu < 0) {
 	    perror("Unable to get the number of available CPUs");
+	    ncpu = 1;
 	}
     }
 #  endif
@@ -394,18 +398,24 @@ bu_avail_cpus(void)
 	FILE *fp;
 	char buf[128];
 
+	ncpu = 0;
+
 	fp = fopen (CPUINFO_FILE, "r");
 
 	if (fp == NULL) {
+	    ncpu = 1;
 	    perror (CPUINFO_FILE);
 	} else {
-	    ncpu = 0;
 	    while (bu_fgets(buf, 80, fp) != NULL) {
-		if (bu_strncmp (buf, "processor", 9) == 0) {
-		    ncpu++;
+		if (strncmp (buf, "processor", 9) == 0) {
+		    ++ ncpu;
 		}
 	    }
 	    fclose (fp);
+
+	    if (ncpu <= 0) {
+		ncpu = 1;
+	    }
 	}
     }
 #  endif
@@ -473,13 +483,13 @@ bu_get_public_cpus(void)
 	return public_cpus;
     }
 
-    bu_file_delete(PUBLIC_CPUS1);
-    bu_file_delete(PUBLIC_CPUS2);
+    (void)unlink(PUBLIC_CPUS1);
+    (void)unlink(PUBLIC_CPUS2);
     if ((fp = fopen(PUBLIC_CPUS1, "wb")) != NULL ||
 	(fp = fopen(PUBLIC_CPUS2, "wb")) != NULL)
     {
 	fprintf(fp, "%d\n", avail_cpus);
-	bu_fchmod(fileno(fp), 0666);
+	bu_fchmod(fp, 0666);
 	fclose(fp);
     }
 #endif
@@ -528,7 +538,7 @@ bu_set_realtime(void)
 
 
 HIDDEN int
-parallel_worker_tbl_not_empty(int tbl[MAX_PSW])
+_bu_worker_tbl_not_empty(int tbl[MAX_PSW])
 {
     register int i;
     register int children=0;
@@ -541,17 +551,17 @@ parallel_worker_tbl_not_empty(int tbl[MAX_PSW])
 
 
 HIDDEN void
-parallel_kill_workers(int tbl[MAX_PSW])
+_bu_kill_workers(int tbl[MAX_PSW])
 {
     register int i;
 
     for (i=1; i < MAX_PSW; ++i) {
 	if (tbl[i]) {
 	    if (kill(tbl[i], 9)) {
-		perror("parallel_kill_workers(): SIGKILL to child process");
+		perror("_bu_kill_workers(): SIGKILL to child process");
 	    }
 	    else {
-		bu_log("parallel_kill_workers(): child pid %d killed\n", tbl[i]);
+		bu_log("_bu_kill_workers(): child pid %d killed\n", tbl[i]);
 	    }
 	}
     }
@@ -563,13 +573,15 @@ parallel_kill_workers(int tbl[MAX_PSW])
 /* non-published global */
 extern int bu_pid_of_initiating_thread;
 
-static int parallel_nthreads_started = 0;	/* # threads started */
-static int parallel_nthreads_finished = 0;	/* # threads properly finished */
-static genptr_t parallel_arg;	/* User's arg to his threads */
-static void (*parallel_func)(int, genptr_t);	/* user function to run in parallel */
+static int _bu_nthreads_started = 0;	/* # threads started */
+static int _bu_nthreads_finished = 0;	/* # threads properly finished */
+static genptr_t _bu_parallel_arg;	/* User's arg to his threads */
+static void (*_bu_parallel_func)(int, genptr_t);	/* user function to run in parallel */
 
 
 /**
+ * B U _ P A R A L L E L _ I N T E R F A C E
+ *
  * Interface layer between bu_parallel and the user's function.
  * Necessary so that we can provide unique thread numbers as a
  * parameter to the user's function, and to decrement the global
@@ -583,18 +595,18 @@ static void (*parallel_func)(int, genptr_t);	/* user function to run in parallel
  * may be active at any one time.
  */
 HIDDEN void
-parallel_interface(void)
+_bu_parallel_interface(void)
 {
     register int cpu;		/* our CPU (thread) number */
 
     bu_semaphore_acquire(BU_SEM_SYSCALL);
-    cpu = parallel_nthreads_started++;
+    cpu = _bu_nthreads_started++;
     bu_semaphore_release(BU_SEM_SYSCALL);
 
-    (*parallel_func)(cpu, parallel_arg);
+    (*_bu_parallel_func)(cpu, _bu_parallel_arg);
 
     bu_semaphore_acquire(BU_SEM_SYSCALL);
-    parallel_nthreads_finished++;
+    _bu_nthreads_finished++;
     bu_semaphore_release(BU_SEM_SYSCALL);
 
 #  if defined(SGI_4D) || defined(IRIX)
@@ -611,10 +623,12 @@ parallel_interface(void)
 
 #ifdef SGI_4D
 /**
+ * B U _ P R _ F I L E
+ *
  * SGI-specific.  Formatted printing of stdio's FILE struct.
  */
 HIDDEN void
-parallel_pr_FILE(char *title, FILE *fp)
+bu_pr_FILE(char *title, FILE *fp)
 {
     bu_log("FILE structure '%s', at x%x:\n", title, fp);
     bu_log(" _cnt = x%x\n", fp->_cnt);
@@ -647,7 +661,7 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
     int x;
 
 #  if defined(SGI_4D) || defined(CRAY)
-    int curr;
+    int new;
 #  endif
 
 #  ifdef sgi
@@ -686,10 +700,10 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
 	bu_log("WARNING: bu_parallel() ncpu(%d) > MAX_PSW(%d), adjusting ncpu\n", ncpu, MAX_PSW);
 	ncpu = MAX_PSW;
     }
-    parallel_nthreads_started = 0;
-    parallel_nthreads_finished = 0;
-    parallel_func = func;
-    parallel_arg = arg;
+    _bu_nthreads_started = 0;
+    _bu_nthreads_finished = 0;
+    _bu_parallel_func = func;
+    _bu_parallel_arg = arg;
 
     /* if we're in debug mode, allow additional cpus */
     if (!(bu_debug & BU_DEBUG_PARALLEL)) {
@@ -701,23 +715,23 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
     }
 
 #  ifdef HEP
-    parallel_nthreads_started = 1;
-    parallel_nthreads_finished = 1;
+    _bu_nthreads_started = 1;
+    _bu_nthreads_finished = 1;
     for (x=1; x<ncpu; x++) {
 	/* This is more expensive when GEMINUS>1 */
-	Dcreate(parallel_interface);
+	Dcreate(_bu_parallel_interface);
     }
     (*func)(0, arg);	/* avoid wasting this task */
 #  endif /* HEP */
 
 #  ifdef CRAY
-    parallel_nthreads_started = 1;
-    parallel_nthreads_finished = 1;
+    _bu_nthreads_started = 1;
+    _bu_nthreads_finished = 1;
     /* Create any extra worker tasks */
     for (x=1; x<ncpu; x++) {
 	bu_taskcontrol[x].tsk_len = 3;
 	bu_taskcontrol[x].tsk_value = x;
-	TSKSTART(&bu_taskcontrol[x], parallel_interface);
+	TSKSTART(&bu_taskcontrol[x], _bu_parallel_interface);
     }
     (*func)(0, arg);	/* avoid wasting this task */
 
@@ -733,8 +747,8 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
 #	undef __STDC__
 #	define __STDC__ 2
 
-    /* Calls parallel_interface in parallel "ncpu" times */
-    concurrent_call(CNCALL_COUNT|CNCALL_NO_QUIT, parallel_interface, ncpu);
+    /* Calls _bu_parallel_interface in parallel "ncpu" times */
+    concurrent_call(CNCALL_COUNT|CNCALL_NO_QUIT, _bu_parallel_interface, ncpu);
 
 #	else
     {
@@ -742,7 +756,7 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
 	asm("	subql #1, d0");
 	asm("	cstart d0");
 	asm("super_loop:");
-	parallel_interface();		/* d7 has current index, like magic */
+	_bu_parallel_interface();		/* d7 has current index, like magic */
 	asm("	crepeat super_loop");
     }
 #	endif
@@ -751,27 +765,27 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
 #  if defined(alliant) && defined(i860)
 #pragma loop cncall
     for (x=0; x<ncpu; x++) {
-	parallel_interface();
+	_bu_parallel_interface();
     }
 #  endif
 
 #  if defined(convex) || defined(__convex__)
     /*$dir force_parallel */
     for (x=0; x<ncpu; x++) {
-	parallel_interface();
+	_bu_parallel_interface();
     }
 #  endif /* convex */
 
 #  ifdef ardent
     /* The stack size parameter is pure guesswork */
-    parstack(parallel_interface, 1024*1024, ncpu);
+    parstack(_bu_parallel_interface, 1024*1024, ncpu);
 #  endif /* ardent */
 
 #  ifdef SGI_4D
     stdin_pos = ftell(stdin);
     stdin_save = *(stdin);		/* struct copy */
-    parallel_nthreads_started = 1;
-    parallel_nthreads_finished = 1;
+    _bu_nthreads_started = 1;
+    _bu_nthreads_finished = 1;
 
     /* Note:  it may be beneficial to call prctl(PR_SETEXITSIG); */
     /* prctl(PR_TERMCHILD) could help when parent dies.  But SIGHUP??? hmmm */
@@ -783,7 +797,7 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
 	 */
 #    if defined(IRIX) && IRIX <= 4
 	/* Stack size per proc comes from RLIMIT_STACK (typ 64MBytes). */
-	curr = sproc(parallel_interface, PR_SALL, 0);
+	new = sproc(_bu_parallel_interface, PR_SALL, 0);
 #    else
 	/* State maximum stack size.  Be generous, as this mainly
 	 * costs address space.  RAM is allocated only to those pages
@@ -793,7 +807,7 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
 	 * the hopes of creating a small 32k "buffer zone" to catch
 	 * stack overflows.
 	 */
-	curr = sprocsp((void (*)(void *, size_t))parallel_interface,
+	new = sprocsp((void (*)(void *, size_t))_bu_parallel_interface,
 		      PR_SALL, 0, NULL,
 #      if defined(IRIX64)
 		      64*1024*1024 - 32*1024
@@ -802,15 +816,15 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
 #      endif
 	    );
 #    endif
-	if (curr < 0) {
+	if (new < 0) {
 	    perror("sproc");
 	    bu_log("ERROR bu_parallel(): sproc(x%x, x%x)=%d failed on processor %d\n",
-		   parallel_interface, PR_SALL,
-		   curr, x);
+		   _bu_parallel_interface, PR_SALL,
+		   new, x);
 	    bu_log("sbrk(0)=%p\n", sbrk(0));
 	    bu_bomb("bu_parallel() failure");
 	} else {
-	    worker_pid_tbl[x] = curr;
+	    worker_pid_tbl[x] = new;
 	}
 
     }
@@ -823,15 +837,15 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
 	/*
 	 * Make sure all children are done.
 	 */
-	while (children=parallel_worker_tbl_not_empty(worker_pid_tbl)) {
+	while (children=_bu_worker_tbl_not_empty(worker_pid_tbl)) {
 	    pstat = 0;
 	    if ((pid = wait(&pstat)) < 0) {
 		perror("bu_parallel() wait()");
-		parallel_kill_workers(worker_pid_tbl);
+		_bu_kill_workers(worker_pid_tbl);
 		bu_bomb("parallelism error");
 	    } else if (pid == 0) {
 		bu_log("bu_parallel() wait() == 0 with %d children remaining\n", children);
-		parallel_kill_workers(worker_pid_tbl);
+		_bu_kill_workers(worker_pid_tbl);
 		bu_bomb("Missing worker");
 	    } else {
 		if ((pstat & 0xFF) != 0) {
@@ -856,7 +870,7 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
 			bu_log("child has continued\n");
 
 #    endif
-		    parallel_kill_workers(worker_pid_tbl);
+		    _bu_kill_workers(worker_pid_tbl);
 		    bu_bomb("A worker blew out");
 		}
 		/* remove pid from worker_pid_tbl */
@@ -885,8 +899,8 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
 	bu_log("\nWarning:  stdin file pointer has been corrupted by SGI multi-processor bug!\n");
 	if (UNLIKELY(bu_debug & BU_DEBUG_PARALLEL)) {
 	    bu_log("Original position was x%x, now position is x%x!\n", stdin_pos, ftell(stdin));
-	    parallel_pr_FILE("saved stdin", &stdin_save);
-	    parallel_pr_FILE("current stdin", stdin);
+	    bu_pr_FILE("saved stdin", &stdin_save);
+	    bu_pr_FILE("current stdin", stdin);
 	}
 	fseek(stdin, stdin_pos, SEEK_SET);
 	if (UNLIKELY(ftell(stdin) != stdin_pos)) {
@@ -900,7 +914,7 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
 #  if defined(n16)
     /* The shared memory size requirement is sheer guesswork */
     /* The stack size is also guesswork */
-    if (task_init(8*1024*1024, ncpu, parallel_interface, 128*1024, 0) < 0)
+    if (task_init(8*1024*1024, ncpu, _bu_parallel_interface, 128*1024, 0) < 0)
 	perror("bu_parallel()/task_init()");
 #  endif
 
@@ -928,11 +942,11 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
     /* Create the threads */
     for (x = 0; x < ncpu; x++) {
 
-	if (thr_create(0, 0, (void *(*)(void *))parallel_interface, 0, 0, &thread)) {
+	if (thr_create(0, 0, (void *(*)(void *))_bu_parallel_interface, 0, 0, &thread)) {
 	    fprintf(stderr, "ERROR: bu_parallel: thr_create(0x0, 0x0, 0x%x, 0x0, 0, 0x%x) failed on processor %d\n",
-		    parallel_interface, &thread, x);
+		    _bu_parallel_interface, &thread, x);
 	    bu_log("ERROR: bu_parallel: thr_create(0x0, 0x0, 0x%x, 0x0, 0, 0x%x) failed on processor %d\n",
-		   parallel_interface, &thread, x);
+		   _bu_parallel_interface, &thread, x);
 	    /* Not much to do, lump it */
 	} else {
 	    if (UNLIKELY(bu_debug & BU_DEBUG_PARALLEL))
@@ -1004,11 +1018,11 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
 	pthread_attr_setstacksize(&attrs, 10*1024*1024);
 
 	if (pthread_create(&thread, &attrs,
-			   (void *(*)(void *))parallel_interface, NULL)) {
+			   (void *(*)(void *))_bu_parallel_interface, NULL)) {
 	    fprintf(stderr, "ERROR: bu_parallel: thr_create(0x0, 0x0, 0x%lx, 0x0, 0, 0x%lx) failed on processor %d\n",
-		    (unsigned long int)parallel_interface, (unsigned long int)&thread, x);
+		    (unsigned long int)_bu_parallel_interface, (unsigned long int)&thread, x);
 	    bu_log("ERROR: bu_parallel: thr_create(0x0, 0x0, 0x%lx, 0x0, 0, %p) failed on processor %d\n",
-		   (unsigned long int)parallel_interface, (void *)&thread, x);
+		   (unsigned long int)_bu_parallel_interface, (void *)&thread, x);
 	    /* Not much to do, lump it */
 	} else {
 	    if (UNLIKELY(bu_debug & BU_DEBUG_PARALLEL)) {
@@ -1069,13 +1083,13 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
      * systems, if threads core dump, the rest of the gang keeps
      * going, so this can actually happen (sigh).
      */
-    if (UNLIKELY(parallel_nthreads_finished != parallel_nthreads_started)) {
+    if (UNLIKELY(_bu_nthreads_finished != _bu_nthreads_started)) {
 	bu_log("*** ERROR bu_parallel(%d): %d workers did not finish!\n\n",
-	       ncpu, ncpu - parallel_nthreads_finished);
+	       ncpu, ncpu - _bu_nthreads_finished);
     }
-    if (UNLIKELY(parallel_nthreads_started != ncpu)) {
+    if (UNLIKELY(_bu_nthreads_started != ncpu)) {
 	bu_log("bu_parallel() NOTICE:  only %d workers started, expected %d\n",
-	       parallel_nthreads_started, ncpu);
+	       _bu_nthreads_started, ncpu);
     }
 
     if (UNLIKELY(bu_debug & BU_DEBUG_PARALLEL))

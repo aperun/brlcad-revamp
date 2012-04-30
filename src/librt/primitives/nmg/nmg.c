@@ -1,7 +1,7 @@
 /*                           N M G . C
  * BRL-CAD
  *
- * Copyright (c) 2005-2012 United States Government as represented by
+ * Copyright (c) 2005-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -108,7 +108,7 @@ rt_nmg_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *UNUSED(r
     VSUB2SCALE(work, stp->st_max, stp->st_min, 0.5);
     stp->st_aradius = stp->st_bradius = MAGNITUDE(work);
 
-    BU_GET(nmg_s, struct nmg_specific);
+    BU_GETSTRUCT(nmg_s, nmg_specific);
     stp->st_specific = (genptr_t)nmg_s;
     nmg_s->nmg_model = m;
     ip->idb_ptr = (genptr_t)NULL;
@@ -299,7 +299,6 @@ rt_nmg_free(struct soltab *stp)
 
     nmg_km(nmg->nmg_model);
     bu_free((char *)nmg, "nmg_specific");
-    stp->st_specific = NULL; /* sanity */
 }
 
 
@@ -856,10 +855,10 @@ rt_nmg_export4_fastf(const fastf_t *fp, int count, int pt_type, double scale)
     if (pt_type == 0 || ZERO(scale - 1.0)) {
 	htond(cp + (4+4), (unsigned char *)fp, count);
     } else {
-	fastf_t *newdata;
+	fastf_t *new;
 
 	/* Need to scale data by 'scale' ! */
-	newdata = (fastf_t *)bu_malloc(count*sizeof(fastf_t), "rt_nmg_export4_fastf");
+	new = (fastf_t *)bu_malloc(count*sizeof(fastf_t), "rt_nmg_export4_fastf");
 	if (RT_NURB_IS_PT_RATIONAL(pt_type)) {
 	    /* Don't scale the homogeneous (rational) coord */
 	    int i;
@@ -867,15 +866,15 @@ rt_nmg_export4_fastf(const fastf_t *fp, int count, int pt_type, double scale)
 
 	    nelem = RT_NURB_EXTRACT_COORDS(pt_type);
 	    for (i = 0; i < count; i += nelem) {
-		VSCALEN(&newdata[i], &fp[i], scale, nelem-1);
-		newdata[i+nelem-1] = fp[i+nelem-1];
+		VSCALEN(&new[i], &fp[i], scale, nelem-1);
+		new[i+nelem-1] = fp[i+nelem-1];
 	    }
 	} else {
 	    /* Scale everything as one long array */
-	    VSCALEN(newdata, fp, scale, count);
+	    VSCALEN(new, fp, scale, count);
 	}
-	htond(cp + (4+4), (unsigned char *)newdata, count);
-	bu_free((char *)newdata, "rt_nmg_export4_fastf");
+	htond(cp + (4+4), (unsigned char *)new, count);
+	bu_free((char *)new, "rt_nmg_export4_fastf");
     }
     cp += (4+4) + count * 8;
     rt_nmg_fastf_p = cp;
@@ -915,7 +914,7 @@ rt_nmg_import4_fastf(const unsigned char *base, struct nmg_exp_counts *ecnt, lon
 	len *= RT_NURB_EXTRACT_COORDS(pt_type);
 
     count = ntohl(*(uint32_t*)(cp + 4));
-    if (count != len || count < 0) {
+    if (count != len) {
 	bu_log("rt_nmg_import4_fastf() subscript=%d, expected len=%d, got=%d\n",
 	       subscript, len, count);
 	bu_bomb("rt_nmg_import4_fastf()\n");
@@ -2944,12 +2943,10 @@ rt_nmg_adjust(struct bu_vls *logstr, struct rt_db_internal *intern, int argc, co
     }
 
     /* assign face geometry */
-    if (s) {
-	for (BU_LIST_FOR (fu, faceuse, &s->fu_hd)) {
-	    if (fu->orientation != OT_SAME)
-		continue;
-	    nmg_calc_face_g(fu);
-	}
+    for (BU_LIST_FOR (fu, faceuse, &s->fu_hd)) {
+	if (fu->orientation != OT_SAME)
+	    continue;
+	nmg_calc_face_g(fu);
     }
 
     tol.magic = BN_TOL_MAGIC;

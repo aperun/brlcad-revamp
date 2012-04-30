@@ -1,7 +1,7 @@
 /*                          Q R A Y . C
  * BRL-CAD
  *
- * Copyright (c) 1998-2012 United States Government as represented by
+ * Copyright (c) 1998-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -94,8 +94,9 @@ static void
 qray_print_vars(struct dg_obj *dgop,
 		Tcl_Interp *interp)
 {
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
 
+    bu_vls_init(&vls);
     bu_vls_printf(&vls, "basename = %s\n", bu_vls_addr(&dgop->dgo_qray_basename));
     bu_vls_printf(&vls, "script = %s\n", bu_vls_addr(&dgop->dgo_qray_script));
     bu_vls_printf(&vls, "effects = %c\n", dgop->dgo_qray_effects);
@@ -130,21 +131,25 @@ qray_get_fmt_index(struct dg_obj *dgop,
 
 
 int
-dgo_qray_cmd(void *data,
+dgo_qray_cmd(struct dg_obj *dgop,
+	     Tcl_Interp *interp,
 	     int argc,
-	     const char **argv)
+	     char **argv)
 {
-    struct dg_obj *dgop = (struct dg_obj *)data;
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
 
     if (6 < argc) {
-	bu_log("ERROR: expecting fewer arguments\n");
+	bu_vls_init(&vls);
+	bu_vls_printf(&vls, "helplib_alias dgo_qray %s", argv[0]);
+	Tcl_Eval(interp, bu_vls_addr(&vls));
+	bu_vls_free(&vls);
+
 	return TCL_ERROR;
     }
 
     /* print help message */
     if (argc == 1) {
-	usage(dgop->interp);
+	usage(interp);
 	return TCL_OK;
     }
 
@@ -153,27 +158,27 @@ dgo_qray_cmd(void *data,
 
 	if (argc == 2) {
 	    /* get all format strings */
-	    qray_print_fmts(dgop, dgop->interp);
+	    qray_print_fmts(dgop, interp);
 	    return TCL_OK;
 	} else if (argc == 3) {
 	    /* get particular format string */
 	    if ((i = qray_get_fmt_index(dgop, *argv[2])) < 0) {
-		Tcl_AppendResult(dgop->interp,
+		Tcl_AppendResult(interp,
 				 "qray: unrecognized format type: '",
 				 argv[2], "'\n", NULL);
-		usage(dgop->interp);
+		usage(interp);
 		return TCL_ERROR;
 	    }
 
-	    Tcl_AppendResult(dgop->interp, bu_vls_addr(&dgop->dgo_qray_fmts[i].fmt), (char *)NULL);
+	    Tcl_AppendResult(interp, bu_vls_addr(&dgop->dgo_qray_fmts[i].fmt), (char *)NULL);
 	    return TCL_OK;
 	} else if (argc == 4) {
 	    /* set value */
 	    if ((i = qray_get_fmt_index(dgop, *argv[2])) < 0) {
-		Tcl_AppendResult(dgop->interp,
+		Tcl_AppendResult(interp,
 				 "qray: unrecognized format type: '",
 				 argv[2], "'\n", NULL);
-		usage(dgop->interp);
+		usage(interp);
 		return TCL_ERROR;
 	    }
 
@@ -182,7 +187,7 @@ dgo_qray_cmd(void *data,
 	    return TCL_OK;
 	}
 
-	Tcl_AppendResult(dgop->interp,
+	Tcl_AppendResult(interp,
 			 "The 'qray fmt' command accepts 0, 1, or 2 arguments\n",
 			 (char *)NULL);
 	return TCL_ERROR;
@@ -191,7 +196,7 @@ dgo_qray_cmd(void *data,
     if (BU_STR_EQUAL(argv[1], "basename")) {
 	if (argc == 2) {
 	    /* get value */
-	    Tcl_AppendResult(dgop->interp, bu_vls_addr(&dgop->dgo_qray_basename), (char *)NULL);
+	    Tcl_AppendResult(interp, bu_vls_addr(&dgop->dgo_qray_basename), (char *)NULL);
 
 	    return TCL_OK;
 	} else if (argc == 3) {
@@ -200,7 +205,7 @@ dgo_qray_cmd(void *data,
 	    return TCL_OK;
 	}
 
-	Tcl_AppendResult(dgop->interp,
+	Tcl_AppendResult(interp,
 			 "The 'qray basename' command accepts 0 or 1 argument\n",
 			 (char *)NULL);
 	return TCL_ERROR;
@@ -209,7 +214,7 @@ dgo_qray_cmd(void *data,
     if (BU_STR_EQUAL(argv[1], "script")) {
 	if (argc == 2) {
 	    /* get value */
-	    Tcl_AppendResult(dgop->interp, bu_vls_addr(&dgop->dgo_qray_script), (char *)NULL);
+	    Tcl_AppendResult(interp, bu_vls_addr(&dgop->dgo_qray_script), (char *)NULL);
 
 	    return TCL_OK;
 	} else if (argc == 3) {
@@ -218,7 +223,7 @@ dgo_qray_cmd(void *data,
 	    return TCL_OK;
 	}
 
-	Tcl_AppendResult(dgop->interp,
+	Tcl_AppendResult(interp,
 			 "The 'qray script' command accepts 0 or 1 argument\n",
 			 (char *)NULL);
 	return TCL_ERROR;
@@ -227,16 +232,18 @@ dgo_qray_cmd(void *data,
     if (BU_STR_EQUAL(argv[1], "effects")) {
 	if (argc == 2) {
 	    /* get value */
+	    bu_vls_init(&vls);
 	    bu_vls_printf(&vls, "%c", dgop->dgo_qray_effects);
-	    Tcl_AppendResult(dgop->interp, bu_vls_addr(&vls), (char *)NULL);
+	    Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 	    bu_vls_free(&vls);
 
 	    return TCL_OK;
 	} else if (argc == 3) {
 	    /* set value */
 	    if (*argv[2] != 't' && *argv[2] != 'g' && *argv[2] != 'b') {
+		bu_vls_init(&vls);
 		bu_vls_printf(&vls, "qray effects: bad value - %s", argv[2]);
-		Tcl_AppendResult(dgop->interp, bu_vls_addr(&vls), (char *)NULL);
+		Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 		bu_vls_free(&vls);
 
 		return TCL_ERROR;
@@ -247,7 +254,7 @@ dgo_qray_cmd(void *data,
 	    return TCL_OK;
 	}
 
-	Tcl_AppendResult(dgop->interp,
+	Tcl_AppendResult(interp,
 			 "The 'qray effects' command accepts 0 or 1 argument\n",
 			 (char *)NULL);
 	return TCL_ERROR;
@@ -257,9 +264,9 @@ dgo_qray_cmd(void *data,
 	if (argc == 2) {
 	    /* get value */
 	    if (dgop->dgo_qray_cmd_echo)
-		Tcl_AppendResult(dgop->interp, "1", (char *)NULL);
+		Tcl_AppendResult(interp, "1", (char *)NULL);
 	    else
-		Tcl_AppendResult(dgop->interp, "0", (char *)NULL);
+		Tcl_AppendResult(interp, "0", (char *)NULL);
 
 	    return TCL_OK;
 	} else if (argc == 3) {
@@ -267,8 +274,9 @@ dgo_qray_cmd(void *data,
 	    int ival;
 
 	    if (sscanf(argv[2], "%d", &ival) < 1) {
+		bu_vls_init(&vls);
 		bu_vls_printf(&vls, "qray echo: bad value - %s", argv[2]);
-		Tcl_AppendResult(dgop->interp, bu_vls_addr(&vls), (char *)NULL);
+		Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 		bu_vls_free(&vls);
 
 		return TCL_ERROR;
@@ -282,7 +290,7 @@ dgo_qray_cmd(void *data,
 	    return TCL_OK;
 	}
 
-	Tcl_AppendResult(dgop->interp,
+	Tcl_AppendResult(interp,
 			 "The 'qray echo' command accepts 0 or 1 argument\n",
 			 (char *)NULL);
 	return TCL_ERROR;
@@ -291,9 +299,10 @@ dgo_qray_cmd(void *data,
     if (BU_STR_EQUAL(argv[1], "oddcolor")) {
 	if (argc == 2) {
 	    /* get value */
+	    bu_vls_init(&vls);
 	    bu_vls_printf(&vls, "%d %d %d",
 			  dgop->dgo_qray_odd_color.r, dgop->dgo_qray_odd_color.g, dgop->dgo_qray_odd_color.b);
-	    Tcl_AppendResult(dgop->interp, bu_vls_addr(&vls), (char *)NULL);
+	    Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 	    bu_vls_free(&vls);
 
 	    return TCL_OK;
@@ -311,9 +320,10 @@ dgo_qray_cmd(void *data,
 		|| 255 < g
 		|| 255 < b)
 	    {
+		bu_vls_init(&vls);
 		bu_vls_printf(&vls, "qray oddcolor %s %s %s - bad value",
 			      argv[2], argv[3], argv[4]);
-		Tcl_AppendResult(dgop->interp, bu_vls_addr(&vls), (char *)NULL);
+		Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 		bu_vls_free(&vls);
 	    }
 
@@ -324,7 +334,7 @@ dgo_qray_cmd(void *data,
 	    return TCL_OK;
 	}
 
-	Tcl_AppendResult(dgop->interp,
+	Tcl_AppendResult(interp,
 			 "The 'qray oddcolor' command accepts 0 or 3 arguments\n",
 			 (char *)NULL);
 	return TCL_ERROR;
@@ -333,9 +343,10 @@ dgo_qray_cmd(void *data,
     if (BU_STR_EQUAL(argv[1], "evencolor")) {
 	if (argc == 2) {
 	    /* get value */
+	    bu_vls_init(&vls);
 	    bu_vls_printf(&vls, "%d %d %d",
 			  dgop->dgo_qray_even_color.r, dgop->dgo_qray_even_color.g, dgop->dgo_qray_even_color.b);
-	    Tcl_AppendResult(dgop->interp, bu_vls_addr(&vls), (char *)NULL);
+	    Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 	    bu_vls_free(&vls);
 
 	    return TCL_OK;
@@ -349,9 +360,10 @@ dgo_qray_cmd(void *data,
 		|| r < 0 || g < 0 || b < 0
 		|| 255 < r || 255 < g || 255 < b)
 	    {
+		bu_vls_init(&vls);
 		bu_vls_printf(&vls, "qray evencolor %s %s %s - bad value",
 			      argv[2], argv[3], argv[4]);
-		Tcl_AppendResult(dgop->interp, bu_vls_addr(&vls), (char *)NULL);
+		Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 		bu_vls_free(&vls);
 	    }
 
@@ -362,7 +374,7 @@ dgo_qray_cmd(void *data,
 	    return TCL_OK;
 	}
 
-	Tcl_AppendResult(dgop->interp,
+	Tcl_AppendResult(interp,
 			 "The 'qray evencolor' command accepts 0 or 3 arguments\n",
 			 (char *)NULL);
 	return TCL_ERROR;
@@ -371,9 +383,10 @@ dgo_qray_cmd(void *data,
     if (BU_STR_EQUAL(argv[1], "voidcolor")) {
 	if (argc == 2) {
 	    /* get value */
+	    bu_vls_init(&vls);
 	    bu_vls_printf(&vls, "%d %d %d",
 			  dgop->dgo_qray_void_color.r, dgop->dgo_qray_void_color.g, dgop->dgo_qray_void_color.b);
-	    Tcl_AppendResult(dgop->interp, bu_vls_addr(&vls), (char *)NULL);
+	    Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 	    bu_vls_free(&vls);
 
 	    return TCL_OK;
@@ -387,9 +400,10 @@ dgo_qray_cmd(void *data,
 		|| r < 0 || g < 0 || b < 0
 		|| 255 < r || 255 < g || 255 < b)
 	    {
+		bu_vls_init(&vls);
 		bu_vls_printf(&vls, "qray voidcolor %s %s %s - bad value",
 			      argv[2], argv[3], argv[4]);
-		Tcl_AppendResult(dgop->interp, bu_vls_addr(&vls), (char *)NULL);
+		Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 		bu_vls_free(&vls);
 	    }
 
@@ -400,7 +414,7 @@ dgo_qray_cmd(void *data,
 	    return TCL_OK;
 	}
 
-	Tcl_AppendResult(dgop->interp,
+	Tcl_AppendResult(interp,
 			 "The 'qray voidcolor' command accepts 0 or 3 arguments\n",
 			 (char *)NULL);
 	return TCL_ERROR;
@@ -409,9 +423,10 @@ dgo_qray_cmd(void *data,
     if (BU_STR_EQUAL(argv[1], "overlapcolor")) {
 	if (argc == 2) {
 	    /* get value */
+	    bu_vls_init(&vls);
 	    bu_vls_printf(&vls, "%d %d %d",
 			  dgop->dgo_qray_overlap_color.r, dgop->dgo_qray_overlap_color.g, dgop->dgo_qray_overlap_color.b);
-	    Tcl_AppendResult(dgop->interp, bu_vls_addr(&vls), (char *)NULL);
+	    Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 	    bu_vls_free(&vls);
 
 	    return TCL_OK;
@@ -425,9 +440,10 @@ dgo_qray_cmd(void *data,
 		|| r < 0 || g < 0 || b < 0
 		|| 255 < r || 255 < g || 255 < b)
 	    {
+		bu_vls_init(&vls);
 		bu_vls_printf(&vls, "qray overlapcolor %s %s %s - bad value",
 			      argv[2], argv[3], argv[4]);
-		Tcl_AppendResult(dgop->interp, bu_vls_addr(&vls), (char *)NULL);
+		Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 		bu_vls_free(&vls);
 	    }
 
@@ -438,25 +454,25 @@ dgo_qray_cmd(void *data,
 	    return TCL_OK;
 	}
 
-	Tcl_AppendResult(dgop->interp,
+	Tcl_AppendResult(interp,
 			 "The 'qray overlapcolor' command accepts 0 or 3 arguments\n",
 			 (char *)NULL);
 	return TCL_ERROR;
     }
 
     if (BU_STR_EQUAL(argv[1], "vars")) {
-	qray_print_vars(dgop, dgop->interp);
+	qray_print_vars(dgop, interp);
 	return TCL_OK;
     }
 
     if (BU_STR_EQUAL(argv[1], "help")) {
-	usage(dgop->interp);
+	usage(interp);
 	return TCL_OK;
     }
 
-    Tcl_AppendResult(dgop->interp, "qray: unrecognized command: '",
+    Tcl_AppendResult(interp, "qray: unrecognized command: '",
 		     argv[1], "'\n", NULL);
-    usage(dgop->interp);
+    usage(interp);
     return TCL_ERROR;
 }
 

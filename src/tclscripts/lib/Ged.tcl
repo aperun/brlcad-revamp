@@ -1,7 +1,7 @@
 #                          G E D . T C L
 # BRL-CAD
 #
-# Copyright (c) 1998-2012 United States Government as represented by
+# Copyright (c) 1998-2011 United States Government as represented by
 # the U.S. Army Research Laboratory.
 #
 # This library is free software; you can redistribute it and/or
@@ -156,10 +156,7 @@ package provide cadwidgets::Ged 1.0
 	method data_axes {args}
 	method data_labels {args}
 	method data_lines {args}
-	method data_polygons {args}
 	method data_move {args}
-	method data_move_object_mode {_pane _x _y}
-	method data_move_point_mode {_pane _x _y}
 	method data_pick {args}
 	method dbconcat {args}
 	method dbfind {args}
@@ -168,7 +165,6 @@ package provide cadwidgets::Ged 1.0
 	method decompose {args}
 	method delay {args}
 	method dir2ae {args}
-	method dlist_on {args}
 	method draw {args}
 	method dump {args}
 	method dup {args}
@@ -198,7 +194,6 @@ package provide cadwidgets::Ged 1.0
 	method get_autoview {args}
 	method get_comb {args}
 	method get_eyemodel {args}
-	method get_prev_mouse {args}
 	method get_type {args}
 	method glob {args}
 	method gqa {args}
@@ -256,10 +251,6 @@ package provide cadwidgets::Ged 1.0
 	method mouse_orotate {args}
 	method mouse_oscale {args}
 	method mouse_otranslate {args}
-	method mouse_poly_circ {args}
-	method mouse_poly_cont {args}
-	method mouse_poly_ell {args}
-	method mouse_poly_rect {args}
 	method mouse_prepend_pipept {args}
 	method mouse_rect {args}
 	method mouse_rot {args}
@@ -391,7 +382,6 @@ package provide cadwidgets::Ged 1.0
 	method pane_v2m_point {_pane args}
 	method pane_view {_pane args}
 	method pane_view2model {_pane args}
-	method pane_view2screen {args}
 	method pane_view_callback {_pane args}
 	method pane_viewdir {_pane args}
 	method pane_vmake {_pane args}
@@ -477,7 +467,6 @@ package provide cadwidgets::Ged 1.0
 	method sdata_axes {args}
 	method sdata_labels {args}
 	method sdata_lines {args}
-	method sdata_polygons {args}
 	method search {args}
 	method select {args}
 	method set_coord {args}
@@ -516,7 +505,6 @@ package provide cadwidgets::Ged 1.0
 	method version {args}
 	method view {args}
 	method view2model {args}
-	method view2screen {args}
 	method view_axes {args}
 	method view_callback {args}
 	method view_callback_all {args}
@@ -546,12 +534,6 @@ package provide cadwidgets::Ged 1.0
 	method begin_data_arrow {_pane _x _y}
 	method begin_data_line {_pane _x _y}
 	method begin_data_move {_pane _x _y}
-	method begin_data_move_object {_pane _x _y}
-	method begin_data_move_point {_pane _x _y}
-	method begin_data_poly_circ {}
-	method begin_data_poly_cont {}
-	method begin_data_poly_ell {}
-	method begin_data_poly_rect {}
 	method begin_view_measure {_pane _part1_button _part1_button _x _y}
 	method begin_view_measure_part2 {_pane _button _x _y}
 	method default_views {}
@@ -559,14 +541,9 @@ package provide cadwidgets::Ged 1.0
 	method end_data_arrow {_pane}
 	method end_data_line {_pane}
 	method end_data_move {_pane}
-	method end_data_poly_move {_pane}
-	method end_data_poly_circ {_pane {_button 1}}
-	method end_data_poly_cont {_pane {_button 1}}
-	method end_data_poly_ell {_pane {_button 1}}
-	method end_data_poly_rect {_pane {_button 1}}
 	method end_view_measure {_pane _part1_button _part2_button}
 	method end_view_measure_part2 {_pane _button}
-	method end_view_rect {_pane {_button 1} {_pflag 0}}
+	method end_view_rect {_pane {_button 1}}
 	method end_view_rotate {_pane}
 	method end_view_scale {_pane}
 	method end_view_translate {_pane}
@@ -583,20 +560,14 @@ package provide cadwidgets::Ged 1.0
 	method init_data_label {{_button 1}}
 	method init_data_line {{_button 1}}
 	method init_data_move {{_button 1}}
-	method init_data_move_object {{_button 1}}
-	method init_data_move_point {{_button 1}}
 	method init_data_pick {{_button 1}}
-	method init_data_poly_circ {{_button 1}}
-	method init_data_poly_cont {{_button 1}}
-	method init_data_poly_ell {{_button 1}}
-	method init_data_poly_rect {{_button 1} {_sflag 0}}
 	method init_find_pipept {_obj {_button 1} {_callback {}}}
 	method init_prepend_pipept {_obj {_button 1} {_callback {}}}
 	method init_view_bindings {{_type default}}
 	method init_view_center {{_button 1}}
 	method init_view_measure {{_button 1} {_part2_button 2}}
 	method init_view_measure_part2 {_button}
-	method init_view_rect {{_button 1} {_pflag 0}}
+	method init_view_rect {{_button 1}}
 	method init_view_rotate {{_button 1}}
 	method init_view_scale {{_button 1}}
 	method init_view_translate {{_button 1}}
@@ -645,13 +616,9 @@ package provide cadwidgets::Ged 1.0
 	method clear_data_label_callback_list {}
 	method delete_data_label_callback {_callback}
 
-	method add_begin_data_polygon_callback {_callback}
-	method clear_begin_data_polygon_callback_list {}
-	method delete_begin_data_polygon_callback {_callback}
-
-	method add_end_data_polygon_callback {_callback}
-	method clear_end_data_polygon_callback_list {}
-	method delete_end_data_polygon_callback {_callback}
+	method add_data_move_callback {_callback}
+	method clear_data_move_callback_list {}
+	method delete_data_move_callback {_callback}
 
 	method add_view_measure_callback {_callback}
 	method clear_view_measure_callback_list {}
@@ -699,6 +666,7 @@ package provide cadwidgets::Ged 1.0
 	variable mBeginDataLineCallbacks ""
 	variable mBeginDataMoveCallbacks ""
 	variable mDataLabelCallbacks ""
+	variable mDataMoveCallbacks ""
 	variable mDataPointCallback ""
 	variable mEndDataArrowCallbacks ""
 	variable mEndDataLineCallbacks ""
@@ -707,13 +675,6 @@ package provide cadwidgets::Ged 1.0
 	variable mMouseRayCallbacks ""
 	variable mViewMeasureCallbacks ""
 	variable mViewRectCallbacks ""
-
-	variable mBeginDataPolygonCallbacks ""
-	variable mEndDataPolygonCallbacks ""
-	variable mPolyCircCallbacks ""
-	variable mPolyContCallbacks ""
-	variable mPolyEllCallbacks ""
-	variable mPolyRectCallbacks ""
 
 	variable mRay "ray"
 	variable mRayCurrWho ""
@@ -1223,42 +1184,9 @@ package provide cadwidgets::Ged 1.0
     }
 }
 
-::itcl::body cadwidgets::Ged::data_polygons {args} {
-    set len [llength $args]
-    if {$len < 2} {
-	return [eval $mGed data_polygons $itk_component($itk_option(-pane)) $args]
-    }
-
-    set scmd [lindex $args 0]
-
-    if {$scmd == "poly_color" ||
-	$scmd == "poly_line_width" ||
-	$scmd == "poly_line_style" ||
-	$scmd == "export" ||
-	$scmd == "import"} {
-	return [eval $mGed data_polygons $itk_component($itk_option(-pane)) $args]
-    }
-
-    foreach dm {ur ul ll lr} {
-	eval $mGed data_polygons $itk_component($dm) $args
-    }
-}
-
-
 ::itcl::body cadwidgets::Ged::data_move {args} {
     eval $mGed data_move $itk_component($itk_option(-pane)) $args
 }
-
-
-::itcl::body cadwidgets::Ged::data_move_object_mode {_pane _x _y} {
-    eval $mGed data_move_object_mode $_pane $_x $_y
-}
-
-
-::itcl::body cadwidgets::Ged::data_move_point_mode {_pane _x _y} {
-    eval $mGed data_move_point_mode $_pane $_x $_y
-}
-
 
 ::itcl::body cadwidgets::Ged::data_pick {args} {
     eval $mGed data_pick $itk_component($itk_option(-pane)) $args
@@ -1290,10 +1218,6 @@ package provide cadwidgets::Ged 1.0
 
 ::itcl::body cadwidgets::Ged::dir2ae {args} {
     eval $mGed dir2ae $args
-}
-
-::itcl::body cadwidgets::Ged::dlist_on {args} {
-    eval $mGed dlist_on $args
 }
 
 ::itcl::body cadwidgets::Ged::draw {args} {
@@ -1424,10 +1348,6 @@ package provide cadwidgets::Ged 1.0
 
 ::itcl::body cadwidgets::Ged::lastMouseRayPos {} {
     return $mLastMouseRayPos
-}
-
-::itcl::body cadwidgets::Ged::get_prev_mouse {args} {
-    eval $mGed get_prev_mouse $itk_component($itk_option(-pane)) $args
 }
 
 ::itcl::body cadwidgets::Ged::get_type {args} {
@@ -1666,22 +1586,6 @@ package provide cadwidgets::Ged 1.0
 
 ::itcl::body cadwidgets::Ged::mouse_otranslate {args} {
     eval $mGed mouse_otranslate $itk_component($itk_option(-pane)) $args
-}
-
-::itcl::body cadwidgets::Ged::mouse_poly_circ {args} {
-    eval $mGed mouse_poly_circ $itk_component($itk_option(-pane)) $args
-}
-
-::itcl::body cadwidgets::Ged::mouse_poly_cont {args} {
-    eval $mGed mouse_poly_cont $itk_component($itk_option(-pane)) $args
-}
-
-::itcl::body cadwidgets::Ged::mouse_poly_ell {args} {
-    eval $mGed mouse_poly_ell $itk_component($itk_option(-pane)) $args
-}
-
-::itcl::body cadwidgets::Ged::mouse_poly_rect {args} {
-    eval $mGed mouse_poly_rect $itk_component($itk_option(-pane)) $args
 }
 
 ::itcl::body cadwidgets::Ged::mouse_prepend_pipept {args} {
@@ -2229,10 +2133,6 @@ package provide cadwidgets::Ged 1.0
     eval $mGed view2model $itk_component($_pane) $args
 }
 
-::itcl::body cadwidgets::Ged::pane_view2screen {_pane args} {
-    eval $mGed view2screen $itk_component($_pane) $args
-}
-
 ::itcl::body cadwidgets::Ged::pane_view_callback {_pane args} {
     eval $mGed view_callback $itk_component($_pane) $args
 }
@@ -2424,7 +2324,7 @@ package provide cadwidgets::Ged 1.0
     incr mRefreshOn -1
 
     if {$mRefreshOn == 0} {
-	$mGed refresh_on 0
+	eval $mGed refresh_on 0
     }
 }
 
@@ -2432,7 +2332,7 @@ package provide cadwidgets::Ged 1.0
     incr mRefreshOn 1
 
     if {$mRefreshOn == 1} {
-	$mGed refresh_on 1
+	eval $mGed refresh_on 1
     }
 }
 
@@ -2624,17 +2524,6 @@ package provide cadwidgets::Ged 1.0
     }
 }
 
-::itcl::body cadwidgets::Ged::sdata_polygons {args} {
-    set len [llength $args]
-    if {$len < 2} {
-	return [eval $mGed sdata_polygons $itk_component($itk_option(-pane)) $args]
-    }
-
-    foreach dm {ur ul ll lr} {
-	eval $mGed sdata_polygons $itk_component($dm) $args
-    }
-}
-
 ::itcl::body cadwidgets::Ged::search {args} {
     eval $mGed search $args
 }
@@ -2792,10 +2681,6 @@ package provide cadwidgets::Ged 1.0
 
 ::itcl::body cadwidgets::Ged::view2model {args} {
     eval $mGed view2model $itk_component($itk_option(-pane)) $args
-}
-
-::itcl::body cadwidgets::Ged::view2screen {args} {
-    eval $mGed view2screen $itk_component($itk_option(-pane)) $args
 }
 
 ::itcl::body cadwidgets::Ged::view_axes {args} {
@@ -2980,47 +2865,6 @@ package provide cadwidgets::Ged 1.0
     bind $itk_component($_pane) <Motion> "[::itcl::code $this handle_data_move $_pane $mLastDataType $mLastDataIndex %x %y]; break"
 }
 
-
-::itcl::body cadwidgets::Ged::begin_data_move_object {_pane _x _y} {
-    data_move_object_mode $itk_component($_pane) $_x $_y
-    begin_data_move $_pane $_x $_y
-}
-
-
-::itcl::body cadwidgets::Ged::begin_data_move_point {_pane _x _y} {
-    data_move_point_mode $itk_component($_pane) $_x $_y
-    begin_data_move $_pane $_x $_y
-}
-
-
-::itcl::body cadwidgets::Ged::begin_data_poly_circ {} {
-    foreach callback $mBeginDataPolygonCallbacks {
-	catch {$callback}
-    }
-}
-
-
-::itcl::body cadwidgets::Ged::begin_data_poly_cont {} {
-    foreach callback $mBeginDataPolygonCallbacks {
-	catch {$callback}
-    }
-}
-
-
-::itcl::body cadwidgets::Ged::begin_data_poly_ell {} {
-    foreach callback $mBeginDataPolygonCallbacks {
-	catch {$callback}
-    }
-}
-
-
-::itcl::body cadwidgets::Ged::begin_data_poly_rect {} {
-    foreach callback $mBeginDataPolygonCallbacks {
-	catch {$callback}
-    }
-}
-
-
 ::itcl::body cadwidgets::Ged::begin_view_measure {_pane _part1_button _part2_button _x _y} {
     measure_line_erase
 
@@ -3133,14 +2977,8 @@ package provide cadwidgets::Ged 1.0
 	return
     }
 
-    if {$mLastDataType == "data_polygons" || $mLastDataType == "sdata_polygons"} {
-	end_data_poly_move $_pane
-	return
-    }
-
     set mLastMouseRayTarget ""
     refresh_off
-    set save_draw [$mGed $mLastDataType $itk_component($_pane) draw]
     $mGed $mLastDataType $itk_component($_pane) draw 0
 
     # This call returns a point that is either a hit point
@@ -3149,7 +2987,7 @@ package provide cadwidgets::Ged 1.0
     # returned.
     set point [eval pane_mouse_3dpoint $_pane $mLastMousePos 0]
 
-    $mGed $mLastDataType $itk_component($_pane) draw $save_draw
+    $mGed $mLastDataType $itk_component($_pane) draw 1
     set mLastMousePos ""
 
     # If a point has not been selected via the pane_mouse_3dpoint call
@@ -3158,8 +2996,8 @@ package provide cadwidgets::Ged 1.0
     # currently being moved.
     if {$point == "" && $itk_option(-gridSnap)} {
 	# First, get the data point being moved.
-	if {$mLastDataType == "data_labels" || $mLastDataType == "sdata_labels"} {
-	    set labels [$mGed $mLastDataType $itk_component($_pane) labels]
+	if {$mLastDataType == "data_labels"} {
+	    set labels [$mGed data_labels $itk_component($_pane) labels]
 	    set label [lindex $labels $mLastDataIndex]
 	    set point [lindex $label 1]
 	} else {
@@ -3198,137 +3036,6 @@ package provide cadwidgets::Ged 1.0
     refresh_on
     refresh_all
 }
-
-
-
-::itcl::body cadwidgets::Ged::end_data_poly_move {_pane} {
-    if {$itk_option(-gridSnap)} {
-	# First, get the data point being moved.
-	set point [eval $mGed data_polygons $itk_component($_pane) get_point $mLastDataIndex]
-
-	# Convert point to view coordinates and call snap_view. Then convert
-	# back to model coordinates. Note - vZ is saved so that the movement
-	# stays in a plane parallel to the view plane.
-	set view [pane_m2v_point $_pane $point]
-	set vZ [lindex $view 2]
-	set view [$mGed snap_view $itk_component($_pane) [lindex $view 0] [lindex $view 1]]
-	lappend view $vZ
-	set point [pane_v2m_point $_pane $view]
-
-	# Replace the mLastDataIndex point with this point
-	eval $mGed data_polygons $itk_component($_pane) replace_point $mLastDataIndex [list $point]
-    }
-
-    foreach callback $mEndDataPolygonCallbacks {
-	catch {$callback $mLastDataIndex}
-    }
-}
-
-
-::itcl::body cadwidgets::Ged::end_data_poly_circ {_pane {_button 1}} {
-    $mGed idle_mode $itk_component($_pane)
-
-    if {$itk_option(-gridSnap)} {
-	set mpos [$mGed get_prev_mouse $itk_component($_pane)]
-	set view [eval $mGed screen2view $itk_component($_pane) $mpos]
-	set view [$mGed snap_view $itk_component($_pane) [lindex $view 0] [lindex $view 1]]
-	set mpos [$mGed view2screen $itk_component($_pane) $view]
-
-	# This will regenerate the circle based on the snapped mouse position
-	eval $mGed mouse_poly_circ $itk_component($_pane) $mpos
-    }
-
-    set plist [$mGed data_polygons $itk_component($_pane) polygons]
-    set ti [$mGed data_polygons $itk_component($_pane) target_poly]
-    incr ti
-    if {[llength $plist] > $ti} {
-	$mGed data_polygons $itk_component($_pane) clip
-    }
-
-    foreach callback $mEndDataPolygonCallbacks {
-	catch {$callback $mLastDataIndex}
-    }
-}
-
-
-::itcl::body cadwidgets::Ged::end_data_poly_cont {_pane {_button 1}} {
-    $mGed idle_mode $itk_component($_pane)
-
-    set mpos [$mGed get_prev_mouse $itk_component($_pane)]
-
-    if {$itk_option(-gridSnap)} {
-	set view [eval $mGed screen2view $itk_component($_pane) $mpos]
-	set view [$mGed snap_view $itk_component($_pane) [lindex $view 0] [lindex $view 1]]
-	set mpos [$mGed view2screen $itk_component($_pane) $view]
-    }
-
-    eval $mGed poly_cont_build $itk_component($_pane) $mpos
-    $mGed poly_cont_build_end $itk_component($_pane)
-
-    set plist [$mGed data_polygons $itk_component($_pane) polygons]
-    set ti [$mGed data_polygons $itk_component($_pane) target_poly]
-    incr ti
-    if {[llength $plist] > $ti} {
-	$mGed data_polygons $itk_component($_pane) clip
-    }
-
-    foreach callback $mEndDataPolygonCallbacks {
-	catch {$callback $mLastDataIndex}
-    }
-}
-
-
-::itcl::body cadwidgets::Ged::end_data_poly_ell {_pane {_button 1}} {
-    $mGed idle_mode $itk_component($_pane)
-
-    if {$itk_option(-gridSnap)} {
-	set mpos [$mGed get_prev_mouse $itk_component($_pane)]
-	set view [eval $mGed screen2view $itk_component($_pane) $mpos]
-	set view [$mGed snap_view $itk_component($_pane) [lindex $view 0] [lindex $view 1]]
-	set mpos [$mGed view2screen $itk_component($_pane) $view]
-
-	# This will regenerate the circle based on the snapped mouse position
-	eval $mGed mouse_poly_ell $itk_component($_pane) $mpos
-    }
-
-    set plist [$mGed data_polygons $itk_component($_pane) polygons]
-    set ti [$mGed data_polygons $itk_component($_pane) target_poly]
-    incr ti
-    if {[llength $plist] > $ti} {
-	$mGed data_polygons $itk_component($_pane) clip
-    }
-
-    foreach callback $mEndDataPolygonCallbacks {
-	catch {$callback $mLastDataIndex}
-    }
-}
-
-
-::itcl::body cadwidgets::Ged::end_data_poly_rect {_pane {_button 1}} {
-    $mGed idle_mode $itk_component($_pane)
-
-    if {$itk_option(-gridSnap)} {
-	set mpos [$mGed get_prev_mouse $itk_component($_pane)]
-	set view [eval $mGed screen2view $itk_component($_pane) $mpos]
-	set view [$mGed snap_view $itk_component($_pane) [lindex $view 0] [lindex $view 1]]
-	set mpos [$mGed view2screen $itk_component($_pane) $view]
-
-	# This will regenerate the rectangle based on the snapped mouse position
-	eval $mGed mouse_poly_rect $itk_component($_pane) $mpos
-    }
-
-    set plist [$mGed data_polygons $itk_component($_pane) polygons]
-    set ti [$mGed data_polygons $itk_component($_pane) target_poly]
-    incr ti
-    if {[llength $plist] > $ti} {
-	$mGed data_polygons $itk_component($_pane) clip
-    }
-
-    foreach callback $mEndDataPolygonCallbacks {
-	catch {$callback $mLastDataIndex}
-    }
-}
-
 
 ::itcl::body cadwidgets::Ged::end_view_measure {_pane _part1_button _part2_button} {
     $mGed idle_mode $itk_component($_pane)
@@ -3420,7 +3127,7 @@ package provide cadwidgets::Ged 1.0
     init_button_no_op_prot $_button
 }
 
-::itcl::body cadwidgets::Ged::end_view_rect {_pane {_button 1} {_pflag 0}} {
+::itcl::body cadwidgets::Ged::end_view_rect {_pane {_button 1}} {
     $mGed idle_mode $itk_component($_pane)
 
 #    # Add specific bindings to eliminate bleed through from rectangle mode
@@ -3430,18 +3137,10 @@ package provide cadwidgets::Ged 1.0
 #    }
 
     if {[llength $mViewRectCallbacks] == 0} {
-	if {$_pflag} {
-	    tk_messageBox -message [$mGed rselect -p $itk_component($_pane)]
-	} else {
-	    tk_messageBox -message [$mGed rselect $itk_component($_pane)]
-	}
+	tk_messageBox -message [$mGed rselect $itk_component($_pane)]
     } else {
 	foreach callback $mViewRectCallbacks {
-	    if {$_pflag} {
-		catch {$callback [$mGed rselect $itk_component($_pane) -p]}
-	    } else {
-		catch {$callback [$mGed rselect $itk_component($_pane)]}
-	    }
+	    catch {$callback [$mGed rselect $itk_component($_pane)]}
 	}
     }
 }
@@ -3489,8 +3188,6 @@ package provide cadwidgets::Ged 1.0
 
 	    $mGed $_dtype $itk_component($dm) labels $labels
 	}
-    } elseif {$_dtype == "data_polygons" || $_dtype == "sdata_polygons"} {
-	# Nothing yet, need to set the polygons for each display manager
     } else {
 	set points [$mGed $_dtype $itk_component($_pane) points]
 
@@ -3605,23 +3302,10 @@ package provide cadwidgets::Ged 1.0
 }
 
 ::itcl::body cadwidgets::Ged::init_data_move {{_button 1}} {
-    init_data_move_object $_button
-}
-
-::itcl::body cadwidgets::Ged::init_data_move_object {{_button 1}} {
     measure_line_erase
 
     foreach dm {ur ul ll lr} {
-	bind $itk_component($dm) <$_button> "[::itcl::code $this begin_data_move_object $dm %x %y]; focus %W; break"
-	bind $itk_component($dm) <ButtonRelease-$_button> "[::itcl::code $this end_data_move $dm]; break"
-    }
-}
-
-::itcl::body cadwidgets::Ged::init_data_move_point {{_button 1}} {
-    measure_line_erase
-
-    foreach dm {ur ul ll lr} {
-	bind $itk_component($dm) <$_button> "[::itcl::code $this begin_data_move_point $dm %x %y]; focus %W; break"
+	bind $itk_component($dm) <$_button> "[::itcl::code $this begin_data_move $dm %x %y]; focus %W; break"
 	bind $itk_component($dm) <ButtonRelease-$_button> "[::itcl::code $this end_data_move $dm]; break"
     }
 }
@@ -3635,49 +3319,6 @@ package provide cadwidgets::Ged 1.0
     }
 }
 
-
-::itcl::body cadwidgets::Ged::init_data_poly_circ {{_button 1}} {
-    measure_line_erase
-
-    foreach dm {ur ul ll lr} {
-	bind $itk_component($dm) <$_button> "[::itcl::code $this begin_data_poly_circ]; $mGed poly_circ_mode $itk_component($dm) %x %y; focus %W; break"
-	bind $itk_component($dm) <ButtonRelease-$_button> "[::itcl::code $this end_data_poly_circ $dm]; break"
-    }
-}
-
-
-::itcl::body cadwidgets::Ged::init_data_poly_cont {{_button 1}} {
-    measure_line_erase
-
-    foreach dm {ur ul ll lr} {
-	bind $itk_component($dm) <$_button> "[::itcl::code $this begin_data_poly_cont]; $mGed poly_cont_build $itk_component($dm) %x %y; focus %W; break"
-	bind $itk_component($dm) <Shift-$_button> "[::itcl::code $this end_data_poly_cont $dm]; break"
-	bind $itk_component($dm) <ButtonRelease> ""
-	bind $itk_component($dm) <ButtonRelease-$_button> ""
-    }
-}
-
-
-::itcl::body cadwidgets::Ged::init_data_poly_ell {{_button 1}} {
-    measure_line_erase
-
-    foreach dm {ur ul ll lr} {
-	bind $itk_component($dm) <$_button> "[::itcl::code $this begin_data_poly_ell]; $mGed poly_ell_mode $itk_component($dm) %x %y; focus %W; break"
-	bind $itk_component($dm) <ButtonRelease-$_button> "[::itcl::code $this end_data_poly_ell $dm]; break"
-    }
-}
-
-
-::itcl::body cadwidgets::Ged::init_data_poly_rect {{_button 1} {_sflag 0}} {
-    measure_line_erase
-
-    foreach dm {ur ul ll lr} {
-	bind $itk_component($dm) <$_button> "[::itcl::code $this begin_data_poly_rect]; $mGed poly_rect_mode $itk_component($dm) %x %y $_sflag; focus %W; break"
-	bind $itk_component($dm) <ButtonRelease-$_button> "[::itcl::code $this end_data_poly_rect $dm]; break"
-    }
-}
-
-
 ::itcl::body cadwidgets::Ged::init_find_pipept {_obj {_button 1} {_callback {}}} {
     measure_line_erase
 
@@ -3689,7 +3330,6 @@ package provide cadwidgets::Ged 1.0
     }
 }
 
-
 ::itcl::body cadwidgets::Ged::init_prepend_pipept {_obj {_button 1} {_callback {}}} {
     measure_line_erase
 
@@ -3700,7 +3340,6 @@ package provide cadwidgets::Ged 1.0
 	bind $itk_component($dm) <ButtonRelease-$_button> ""
     }
 }
-
 
 ::itcl::body cadwidgets::Ged::init_view_bindings {{_type default}} {
     global tcl_platform
@@ -3758,12 +3397,12 @@ package provide cadwidgets::Ged 1.0
     }
 }
 
-::itcl::body cadwidgets::Ged::init_view_rect {{_button 1} {_pflag 0}} {
+::itcl::body cadwidgets::Ged::init_view_rect {{_button 1}} {
     measure_line_erase
 
     foreach dm {ur ul ll lr} {
 	bind $itk_component($dm) <$_button> "$mGed rect_mode $itk_component($dm) %x %y; focus %W; break"
-	bind $itk_component($dm) <ButtonRelease-$_button> "[::itcl::code $this end_view_rect $dm $_button $_pflag]; break"
+	bind $itk_component($dm) <ButtonRelease-$_button> "[::itcl::code $this end_view_rect $dm]; break"
     }
 }
 
@@ -3856,12 +3495,6 @@ package provide cadwidgets::Ged 1.0
 	    set labels [$mGed data_labels $itk_component($_pane) labels]
 	    set label [lindex $labels $dindex]
 	    set point [lindex $label 1]
-	} elseif {$dtype == "data_polygons"} {
-	    set polygons [$mGed data_polygons $itk_component($_pane) polygons]
-	    set i [lindex $dindex 0]
-	    set j [lindex $dindex 1]
-	    set k [lindex $dindex 2]
-	    set point [lindex [lindex [lindex $polygons $i] $j] $k]
 	} else {
 	    set points [$mGed $dtype $itk_component($_pane) points]
 	    set point [lindex $points $dindex]
@@ -4268,43 +3901,23 @@ package provide cadwidgets::Ged 1.0
     }
 }
 
-::itcl::body cadwidgets::Ged::add_begin_data_polygon_callback {_callback} {
-    set i [lsearch $mBeginDataPolygonCallbacks $_callback]
+::itcl::body cadwidgets::Ged::add_data_move_callback {_callback} {
+    set i [lsearch $mDataMoveCallbacks $_callback]
 
     # Add if not already in list
     if {$i == -1} {
-	lappend mBeginDataPolygonCallbacks $_callback
+	lappend mDataMoveCallbacks $_callback
     }
 }
 
-::itcl::body cadwidgets::Ged::clear_begin_data_polygon_callback_list {} {
-    set mBeginDataPolygonCallbacks {}
+::itcl::body cadwidgets::Ged::clear_data_move_callback_list {} {
+    set mDataMoveCallbacks {}
 }
 
-::itcl::body cadwidgets::Ged::delete_begin_data_polygon_callback {_callback} {
-    set i [lsearch $mBeginDataPolygonCallbacks $_callback]
+::itcl::body cadwidgets::Ged::delete_data_move_callback {_callback} {
+    set i [lsearch $mDataMoveCallbacks $_callback]
     if {$i != -1} {
-	set mBeginDataPolygonCallbacks [lreplace $mBeginDataPolygonCallbacks $i $i]
-    }
-}
-
-::itcl::body cadwidgets::Ged::add_end_data_polygon_callback {_callback} {
-    set i [lsearch $mEndDataPolygonCallbacks $_callback]
-
-    # Add if not already in list
-    if {$i == -1} {
-	lappend mEndDataPolygonCallbacks $_callback
-    }
-}
-
-::itcl::body cadwidgets::Ged::clear_end_data_polygon_callback_list {} {
-    set mEndDataPolygonCallbacks {}
-}
-
-::itcl::body cadwidgets::Ged::delete_end_data_polygon_callback {_callback} {
-    set i [lsearch $mEndDataPolygonCallbacks $_callback]
-    if {$i != -1} {
-	set mEndDataPolygonCallbacks [lreplace $mEndDataPolygonCallbacks $i $i]
+	set mDataMoveCallbacks [lreplace $mDataMoveCallbacks $i $i]
     }
 }
 
@@ -4825,14 +4438,12 @@ package provide cadwidgets::Ged 1.0
     $help add data_axes		{{} {}}
     $help add data_labels	{{} {}}
     $help add data_lines	{{} {}}
-    $help add data_polygons 	{{} {}}
+    $help add data_move 	{{} {}}
+    $help add data_pick 	{{} {}}
     $help add sdata_arrows	{{} {}}
     $help add sdata_axes	{{} {}}
     $help add sdata_labels	{{} {}}
     $help add sdata_lines	{{} {}}
-    $help add sdata_polygons 	{{} {}}
-    $help add data_move 	{{} {}}
-    $help add data_pick 	{{} {}}
 }
 
 # Local Variables:

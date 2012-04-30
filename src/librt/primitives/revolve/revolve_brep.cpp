@@ -1,7 +1,7 @@
 /*                    R E V O L V E _ B R E P . C P P
  * BRL-CAD
  *
- * Copyright (c) 2008-2012 United States Government as represented by
+ * Copyright (c) 2008-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -117,20 +117,23 @@ void FindLoops(ON_Brep **b, const ON_Line* revaxis) {
     }
 
     for (int i = 0; i < loopcount ; i++) {
-	ON_PolyCurve* poly_curve = new ON_PolyCurve();
+	ON_PolyCurve* poly_curve = NULL;
 	for (int j = 0; j < allsegments.Count(); j++) {
 	    if (curvearray[j] == i) {
-		 poly_curve->Append(allsegments[j]);
+		if (!poly_curve) {
+		    poly_curve = new ON_PolyCurve();
+		    poly_curve->Append(allsegments[j]);
+		} else {
+		    poly_curve->Append(allsegments[j]);
+		}
 	    }
 	}
-
 	ON_NurbsCurve *revcurve = ON_NurbsCurve::New();
 	poly_curve->GetNurbForm(*revcurve);
 	ON_RevSurface* revsurf = ON_RevSurface::New();
 	revsurf->m_curve = revcurve;
 	revsurf->m_axis = *revaxis;
 	ON_BrepFace *face = (*b)->NewFace(*revsurf);
-
 	if (i == largest_loop_index) {
 	    (*b)->FlipFace(*face);
 	}

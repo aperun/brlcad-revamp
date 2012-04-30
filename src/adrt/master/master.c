@@ -1,7 +1,7 @@
 /*                        M A S T E R . C
  * BRL-CAD / ADRT
  *
- * Copyright (c) 2007-2012 United States Government as represented by
+ * Copyright (c) 2007-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -681,13 +681,14 @@ int main(int argc, char **argv) {
 #ifdef HAVE_GETOPT_LONG
 	    getopt_long(argc, argv, shortopts, longopts, NULL)
 #else
-	    bu_getopt(argc, argv, shortopts)
+	    getopt(argc, argv, shortopts)
 #endif
 	       )!= -1)
     {
 	switch (c) {
             case 'c':
-		bu_strlcpy(comp_host, bu_optarg, 64);
+		strncpy(comp_host, optarg, 64-1);
+		comp_host[64-1] = '\0'; /* sanity */
 		break;
 
 	    case 'd':
@@ -699,19 +700,21 @@ int main(int argc, char **argv) {
 		return EXIT_SUCCESS;
 
             case 'o':
-		obs_port = atoi(bu_optarg);
+		obs_port = atoi(optarg);
 		break;
 
             case 'p':
-		port = atoi(bu_optarg);
+		port = atoi(optarg);
 		break;
 
             case 'l':
-		bu_strlcpy(list, bu_optarg, 64);
+		strncpy(list, optarg, 64-1);
+		list[64-1] = '\0'; /* sanity */
 		break;
 
             case 'e':
-		bu_strlcpy(exec, bu_optarg, 64);
+		strncpy(exec, optarg, 64-1);
+		exec[64-1] = '\0'; /* sanity */
 		break;
 
             case 'b':
@@ -735,8 +738,8 @@ int main(int argc, char **argv) {
 		return EXIT_FAILURE;
 	}
     }
-    argc -= bu_optind;
-    argv += bu_optind;
+    argc -= optind;
+    argv += optind;
 
     master_init (port, obs_port, list, exec, comp_host);
 

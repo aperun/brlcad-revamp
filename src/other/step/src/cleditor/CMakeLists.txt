@@ -10,10 +10,8 @@ set(LIBSTEPEDITOR_SRCS
     mgrnodearray.cc
     mgrnodelist.cc
     needFunc.cc
-    SdaiHeaderSchema.cc
-    SdaiHeaderSchemaAll.cc
-    SdaiHeaderSchemaInit.cc
-    SdaiSchemaInit.cc
+    s_HEADER_SCHEMA.cc
+    s_HEADER_SCHEMA.init.cc
 )
 
 SET(LIBSTEPEDITOR_PRIVATE_HDRS
@@ -27,9 +25,7 @@ SET(LIBSTEPEDITOR_PRIVATE_HDRS
     mgrnodearray.h
     mgrnodelist.h
     needFunc.h
-    SdaiHeaderSchema.h
-    SdaiHeaderSchemaClasses.h
-    SdaiSchemaInit.h
+    s_HEADER_SCHEMA.h
     seeinfodefault.h
 )
 
@@ -38,6 +34,10 @@ include_directories(
     ${SCL_SOURCE_DIR}/src/cldai
     ${SCL_SOURCE_DIR}/src/clstepcore
     ${SCL_SOURCE_DIR}/src/clutils
+)
+
+add_definitions(
+    -DHAVE_CONFIG_H
 )
 
 SCL_ADDLIB(stepeditor "${LIBSTEPEDITOR_SRCS}" stepcore)

@@ -1,7 +1,7 @@
 /*                    T I E _ K D T R E E . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2012 United States Government as represented by
+ * Copyright (c) 2008-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -503,7 +503,7 @@ find_split_optimal(struct tie_s *tie, struct tie_kdtree_s *node, TIE_3 *cmin, TI
 		slice[d][k] += fabs(coef[d][k]-0.5) * SCALE_COEF * smax[d];
 
 	/* Choose the slice with the graphs minima as the splitting plane. */
-	*split = 0;
+	split = 0;
 	smin = tie->tri_num;
 	split_coef = 0.5;
 	for (d = 0; d < 3; d++) {

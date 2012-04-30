@@ -2,12 +2,13 @@
 %include {
 #include <assert.h>
 #include "token_type.h"
-#include "parse_data.h"
 
 int yyerrstatus = 0;
 #define yyerrok (yyerrstatus = 0)
 
 YYSTYPE yylval;
+
+    static char rcsid[] = "$Id: expparse.y,v 1.23 1997/11/14 17:09:04 libes Exp $";
 
     /*
      * YACC grammar for Express parser.
@@ -97,7 +98,6 @@ YYSTYPE yylval;
 #include "express/schema.h"
 #include "express/entity.h"
 #include "express/resolve.h"
-#include "expscan.h"
 
     extern int print_objects_while_running;
 
@@ -110,6 +110,11 @@ YYSTYPE yylval;
     /* there's a gross hack sitting around, we might as well */
     /* milk it for all it's worth!  -snc */
 
+    /*SUPPRESS 61*/
+    /* Type current_type;*/	/* pass type placeholder down */
+    /* this allows us to attach a dictionary to it only when */
+    /* we decide we absolutely need one */
+
     Express yyexpresult;	/* hook to everything built by parser */
 
     Symbol *interface_schema;	/* schema of interest in use/ref clauses */
@@ -119,12 +124,20 @@ YYSTYPE yylval;
     /* differentiated from other schemas parsed earlier */
     Linked_List PARSEnew_schemas;
 
-    int	yylineno;
+    extern int	yylineno;
 
+    static int	PARSEchunk_start;
 
-    static void	yyerror(const char*, char *string);
+    static void	yyerror PROTO((char *));
+    static void	yyerror2 PROTO((char CONST *));
 
-    bool yyeof = false;
+    Boolean		yyeof = False;
+
+#ifdef FLEX
+    extern char	*yytext;
+#else /* LEX */
+    extern char	yytext[];
+#endif /*FLEX*/
 
 #define MAX_SCOPE_DEPTH	20	/* max number of scopes that can be nested */
 
@@ -181,8 +194,6 @@ void parserInitState()
     yyexpresult->symbol.line = 1;
 }
 } /* include */
-
-%extra_argument { parse_data_t parseData }
 
 %type case_action			{ Case_Item }
 %type case_otherwise			{ Case_Item }
@@ -784,7 +795,7 @@ derived_attribute(A) ::= attribute_decl(B) TOK_COLON attribute_type(C)
 {
     A = VARcreate(B, C);
     A->initializer = D;
-    A->flags.attribute = true;
+    A->flags.attribute = True;
 }
 
 derived_attribute_rep(A) ::= derived_attribute(B).
@@ -928,7 +939,7 @@ explicit_attribute(A) ::= attribute_decl_list(B) TOK_COLON optional(C)
     LISTdo_links (B, attr)
 	v = VARcreate((Expression)attr->data, D);
 	v->flags.optional = C.optional;
-	v->flags.attribute = true;
+	v->flags.attribute = True;
 	attr->data = (Generic)v;
     LISTod;
 
@@ -1120,7 +1131,7 @@ formal_parameter(A) ::= var(B) id_list(C) TOK_COLON parameter_type(D).
     e = EXPcreate_from_symbol(Type_Attribute, tmp);
     v = VARcreate(e, D);
     v->flags.optional = B.var;
-    v->flags.parameter = true;
+    v->flags.parameter = True;
     param->data = (Generic)v;
 
     /* link it in to the current scope's dict */
@@ -1315,8 +1326,7 @@ generic_type(A) ::= TOK_GENERIC TOK_COLON TOK_IDENTIFIER(B).
 
     SCOPEadd_super(A);
 
-    g->tag = TYPEcreate_user_defined_tag(A, CURRENT_SCOPE, B.symbol);
-    if (g->tag) {
+    if (g->tag = TYPEcreate_user_defined_tag(A, CURRENT_SCOPE, B.symbol)) {
         SCOPEadd_super(g->tag);
     }
 }
@@ -1538,7 +1548,7 @@ inverse_attr(A) ::= TOK_IDENTIFIER(B) TOK_COLON set_or_bag_of_entity(C)
         A = VARcreate(e, t);
     }
 
-    A->flags.attribute = true;
+    A->flags.attribute = True;
     A->inverse_symbol = D.symbol;
 }
 
@@ -1942,8 +1952,8 @@ rule_formal_parameter(A) ::= TOK_IDENTIFIER(B).
     SCOPEadd_super(t);
     e = EXPcreate_from_symbol(t, B.symbol);
     A = VARcreate(e, t);
-    A->flags.attribute = true;
-    A->flags.parameter = true;
+    A->flags.attribute = True;
+    A->flags.parameter = True;
 
     /* link it in to the current scope's dict */
     DICTdefine(CURRENT_SCOPE->symbol_table, B.symbol->name, (Generic)A,
@@ -2016,7 +2026,7 @@ schema_header ::= TOK_SCHEMA TOK_IDENTIFIER(A) semicolon.
     }
 
     if (EXPRESSignore_duplicate_schemas && schema) {
-	SCANskip_to_end_schema(parseData.scanner);
+	SCANskip_to_end_schema();
 	PUSH_SCOPE_DUMMY();
     } else {
 	schema = SCHEMAcreate();
@@ -2117,7 +2127,7 @@ statement_rep(A) ::= statement(B) statement_rep(C).
 subsuper_decl(A) ::= /* NULL body */.
 {
     A.subtypes = EXPRESSION_NULL;
-    A.abstract = false;
+    A.abstract = False;
     A.supertypes = LIST_NULL;
 }
 subsuper_decl(A) ::= supertype_decl(B).
@@ -2129,7 +2139,7 @@ subsuper_decl(A) ::= supertype_decl(B).
 subsuper_decl(A) ::= subtype_decl(B).
 {
     A.supertypes = B;
-    A.abstract = false;
+    A.abstract = False;
     A.subtypes = EXPRESSION_NULL;
 }
 subsuper_decl(A) ::= supertype_decl(B) subtype_decl(C).
@@ -2148,19 +2158,19 @@ subtype_decl(A) ::= TOK_SUBTYPE TOK_OF TOK_LEFT_PAREN defined_type_list(B)
 supertype_decl(A) ::= TOK_ABSTRACT TOK_SUPERTYPE.
 {
     A.subtypes = (Expression)0;
-    A.abstract = true;
+    A.abstract = True;
 }
 supertype_decl(A) ::= TOK_SUPERTYPE TOK_OF TOK_LEFT_PAREN
 		      supertype_expression(B) TOK_RIGHT_PAREN.
 {
     A.subtypes = B;
-    A.abstract = false;
+    A.abstract = False;
 }
 supertype_decl(A) ::= TOK_ABSTRACT TOK_SUPERTYPE TOK_OF TOK_LEFT_PAREN
 		      supertype_expression(B) TOK_RIGHT_PAREN.
 {
     A.subtypes = B;
-    A.abstract = true;
+    A.abstract = True;
 }
 
 supertype_expression(A) ::= supertype_factor(B).
@@ -2443,7 +2453,6 @@ while_control(A) ::= TOK_WHILE expression(B).
 
 %syntax_error {
     yyerrstatus++;
-    fprintf(stderr, "Express parser experienced syntax error at line %d.\n", yylineno);
 }
 
 %stack_overflow {
@@ -2452,12 +2461,13 @@ while_control(A) ::= TOK_WHILE expression(B).
 
 %include {
 static void
-yyerror(const char *yytext, char *string)
+yyerror(string)
+char *string;
 {
     char buf[200];
     Symbol sym;
 
-    strcpy(buf, string);
+    strcpy (buf, string);
 
     if (yyeof) {
 	strcat(buf, " at end of input");
@@ -2473,5 +2483,44 @@ yyerror(const char *yytext, char *string)
     sym.filename = current_filename;
     ERRORreport_with_symbol(ERROR_syntax, &sym, buf,
 	CURRENT_SCOPE_TYPE_PRINTABLE, CURRENT_SCOPE_NAME);
+}
+
+static void
+yyerror2(t)
+char CONST *t;	/* token or 0 to indicate no more tokens */
+{
+    char buf[200];
+    Symbol sym;
+    static int first = 1;	/* true if first suggested replacement */
+    static char tokens[4000] = "";/* error message, saying */
+    /* "expecting <token types>" */
+
+    if (t) {	/* subsequent token? */
+	if (first) {
+	    first = 0;
+	} else {
+	    strcat (tokens, " or ");
+	}
+	strcat(tokens, t);
+    } else {
+	strcpy(buf, "syntax error");
+	if (yyeof) {
+	    strcat(buf, " at end of input");
+	} else if (yytext[0] == 0) {
+	    strcat(buf, " at null character");
+	} else if (yytext[0] < 040 || yytext[0] >= 0177) {
+	    sprintf(buf + strlen(buf), " near character 0%o", yytext[0]);
+	} else {
+	    sprintf(buf + strlen(buf), " near `%s'", yytext);
+	}
+
+	if (0 == strlen(tokens)) {
+	    yyerror("syntax error");
+	}
+	sym.line = yylineno - (yytext[0] == '\n');
+	sym.filename = current_filename;
+	ERRORreport_with_symbol(ERROR_syntax_expecting, &sym, buf, tokens,
+	    CURRENT_SCOPE_TYPE_PRINTABLE, CURRENT_SCOPE_NAME);
+    }
 }
 }

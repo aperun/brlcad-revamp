@@ -1,7 +1,7 @@
 /*                       B N T E S T E R . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -28,8 +28,6 @@
 #include "bu.h"
 #include "vmath.h"
 #include "bn.h"
-
-#define USAGE "Usage: bntester [-l test_case_line_number] [-f function_number] -i input_file [-o output_file]\n"
 
 
 int
@@ -137,16 +135,18 @@ parse_case(char *buf_p, int *i, long *l, double *d, unsigned long *u, char *fmt_
 int
 main(int argc, char **argv)
 {
+    static char *usage="Usage: bntester [-l test_case_line_number] [-f function_number] -i input_file [-o output_file]\n";
+
     /* static to prevent longjmp clobber warning */
     static FILE *stream = NULL;
-    static unsigned long line_num = 0;
+    static unsigned long line_num = 0; 
     static unsigned long failed_cnt = 0;
     static unsigned long bomb_cnt = 0;
     static unsigned long success_cnt = 0;
     static int ret = 0;
 
     char buf[BUFSIZ];
-    FILE *fp_in = NULL;
+    FILE *fp_in = NULL; 
     char *endp = NULL;
     int string_length;
     int argv_idx;
@@ -159,8 +159,8 @@ main(int argc, char **argv)
     /* command line parameters */
     static unsigned long test_case_line_num = 0; /* static due to longjmp */
     static unsigned long function_num = 0; /* static due to longjmp */
-    struct bu_vls input_file_name = BU_VLS_INIT_ZERO;
-    struct bu_vls output_file_name = BU_VLS_INIT_ZERO;
+    char input_file_name[BUFSIZ] = {0};
+    char output_file_name[BUFSIZ] = {0};
 
     /* function parameter arrays */
     int i[50] = {0};
@@ -188,7 +188,7 @@ main(int argc, char **argv)
 
     if (argc < 2) {
         bu_log("Too few parameters, %d specified, at least 1 required\n", argc - 1);
-        bu_exit(EXIT_FAILURE, USAGE);
+        bu_exit(EXIT_FAILURE, usage);
     }
 
     while ((c = bu_getopt(argc, argv, "l:f:i:o:")) != -1) {
@@ -198,11 +198,11 @@ main(int argc, char **argv)
                 test_case_line_num = strtoul(bu_optarg, &endp, 10);
                 if (errno) {
                     bu_log("Invalid test case line number '%s' '%s'\n", bu_optarg, strerror(errno));
-                    bu_exit(EXIT_FAILURE, USAGE);
+                    bu_exit(EXIT_FAILURE, usage);
                 }
                 if ((*endp != '\0') || (bu_optarg == endp) || (strchr(bu_optarg, '-') != '\0')) {
                     bu_log("Invalid test case line number '%s'\n", bu_optarg);
-                    bu_exit(EXIT_FAILURE, USAGE);
+                    bu_exit(EXIT_FAILURE, usage);
                 }
                 process_single_test_case = 1;
                 break;
@@ -211,11 +211,11 @@ main(int argc, char **argv)
                 function_num = strtoul(bu_optarg, &endp, 10);
                 if (errno) {
                     bu_log("Invalid function number '%s' '%s'\n", bu_optarg, strerror(errno));
-                    bu_exit(EXIT_FAILURE, USAGE);
+                    bu_exit(EXIT_FAILURE, usage);
                 }
                 if ((*endp != '\0') || (bu_optarg == endp) || (strchr(bu_optarg, '-') != '\0')) {
                     bu_log("Invalid function number '%s'\n", bu_optarg);
-                    bu_exit(EXIT_FAILURE, USAGE);
+                    bu_exit(EXIT_FAILURE, usage);
                 }
                 process_single_function = 1;
                 break;
@@ -224,9 +224,9 @@ main(int argc, char **argv)
                 if (string_length >= BUFSIZ) {
                     bu_log("Input file name too long, length was %d but must be less than %d\n",
 			   string_length, BUFSIZ);
-                    bu_exit(EXIT_FAILURE, USAGE);
+                    bu_exit(EXIT_FAILURE, usage);
                 }
-                bu_vls_strcpy(&input_file_name, bu_optarg);
+                (void)strcpy(input_file_name, bu_optarg);
                 input_file_name_defined = 1;
                 break;
             case 'o': /* output file name */
@@ -234,14 +234,14 @@ main(int argc, char **argv)
                 if (string_length >= BUFSIZ) {
                     bu_log("Output file name too long, length was %d but must be less than %d\n",
 			   string_length, BUFSIZ);
-                    bu_exit(EXIT_FAILURE, USAGE);
+                    bu_exit(EXIT_FAILURE, usage);
                 }
-                bu_vls_strcpy(&output_file_name, bu_optarg);
+                (void)strcpy(output_file_name, bu_optarg);
                 output_file_name_defined = 1;
                 break;
             default:
                 bu_log("Invalid option '%c'.\n", c);
-                bu_exit(EXIT_FAILURE, USAGE);
+                bu_exit(EXIT_FAILURE, usage);
                 break;
         }
     }
@@ -257,27 +257,21 @@ main(int argc, char **argv)
     }
 
     if (early_exit) {
-	bu_vls_free(&input_file_name);
-	bu_vls_free(&output_file_name);
-        bu_exit(EXIT_FAILURE, USAGE);
+        bu_exit(EXIT_FAILURE, usage);
     }
 
-    if ((fp_in = fopen(bu_vls_addr(&input_file_name), "r")) == NULL) {
-        bu_log("Cannot open input file (%V)\n", &input_file_name);
-	bu_vls_free(&input_file_name);
-	bu_vls_free(&output_file_name);
+    if ((fp_in = fopen(input_file_name, "r")) == NULL) {
+        bu_log("Cannot open input file (%s)\n", input_file_name);
         return EXIT_FAILURE;
     }
 
 
     if (output_file_name_defined) {
-        if ((stream = fopen(bu_vls_addr(&output_file_name), "w")) == NULL) {
-            bu_log("Cannot create output file (%V)\n", &output_file_name);
+        if ((stream = fopen(output_file_name, "w")) == NULL) {
+            bu_log("Cannot create output file (%s)\n", output_file_name);
             if (fclose(fp_in) != 0) {
                 bu_log("Unable to close input file.\n");
             }
-	    bu_vls_free(&input_file_name);
-	    bu_vls_free(&output_file_name);
             return EXIT_FAILURE;
         }
     } else {
@@ -316,27 +310,22 @@ main(int argc, char **argv)
                     bu_log("Unable to close output file.\n");
                 }
             }
-	    bu_vls_free(&input_file_name);
-	    bu_vls_free(&output_file_name);
             return EXIT_FAILURE;
         }
         line_num++;
-	if (bu_fgets(buf, BUFSIZ, fp_in) == NULL) {
+	if (fgets(buf, BUFSIZ, fp_in) == NULL) {
 	    if (feof(fp_in)) {
 		found_eof = 1;
-		continue;
-	    }
-	    if (ferror(fp_in)) {
+	    } else if (ferror(fp_in)) {
 		perror("ERROR: Problem reading file, system error message");
 		if (fclose(fp_in) != 0) {
 		    (void)fprintf(stream, "Unable to close input file.\n");
 		}
+		return EXIT_FAILURE;
 	    } else {
 		perror("Oddness reading input file");
+		return EXIT_FAILURE;
 	    }
-	    bu_vls_free(&input_file_name);
-	    bu_vls_free(&output_file_name);
-	    return EXIT_FAILURE;
 	} else {
             /* Skip input data file lines which start with a '#' character
              * or a new line character.
@@ -380,7 +369,7 @@ main(int argc, char **argv)
                      */
                     switch (u[0]) {
                         case 1: /* function 'bn_distsq_line3_pt3' */
-                            bu_strlcpy(dt_fmt, "dddddddddd", sizeof(dt_fmt)); /* defines parameter data types */
+                            (void)strcpy(dt_fmt, "dddddddddd"); /* defines parameter data types */
                             if (parse_case(buf_p, i, l, d, u, dt_fmt, line_num, stream)) {
                                 /* Parse failed, skipping test case */
                                 ret = 1;
@@ -407,7 +396,7 @@ main(int argc, char **argv)
                             }
                             break;
                         case 2: /* function 'bn_2line3_colinear' */
-                            bu_strlcpy(dt_fmt, "ddddddddddddduddddi", sizeof(dt_fmt));
+                            (void)strcpy(dt_fmt, "ddddddddddddduddddi");
                             if (parse_case(buf_p, i, l, d, u, dt_fmt, line_num, stream)) {
                                 /* Parse failed, skipping test case */
                                 ret = 1;
@@ -439,7 +428,7 @@ main(int argc, char **argv)
                             }
                             break;
                         case 3: /* function 'bn_isect_line3_line3' */
-                            bu_strlcpy(dt_fmt, "dddddddddddddduddddi", sizeof(dt_fmt));
+                            (void)strcpy(dt_fmt, "dddddddddddddduddddi");
                             if (parse_case(buf_p, i, l, d, u, dt_fmt, line_num, stream)) {
                                 /* Parse failed, skipping test case */
                                 ret = 1;
@@ -505,7 +494,7 @@ main(int argc, char **argv)
                             }
                             break;
                         case 4: /* function 'bn_isect_lseg3_lseg3' */
-                            bu_strlcpy(dt_fmt, "dddddddddddddduddddi", sizeof(dt_fmt));
+                            (void)strcpy(dt_fmt, "dddddddddddddduddddi");
                             if (parse_case(buf_p, i, l, d, u, dt_fmt, line_num, stream)) {
                                 /* Parse failed, skipping test case */
                                 ret = 1;
@@ -562,20 +551,18 @@ main(int argc, char **argv)
                             break;
                         default:
                             (void)fprintf(stream, "ERROR: Unknown function number %lu test case on line %lu, skipping test case.\n", u[0], line_num);
-			    bu_vls_free(&input_file_name);
-			    bu_vls_free(&output_file_name);
                             return EXIT_FAILURE;
                             break;
                     } /* End of function number switch */
                 }
-            } /* End of if statement skipping lines starting with '#' or new line */
+            } /* End of if statement skipping lines starting with '#' or new line */    
         }
     } /* End of while loop reading lines from data file */
 
     (void)fprintf(stream, "Summary: %lu total test cases success.\n", success_cnt);
     (void)fprintf(stream, "Summary: %lu total test cases failed.\n", failed_cnt);
     (void)fprintf(stream, "Summary: %lu total test cases bomb.\n", bomb_cnt);
-
+ 
     if (output_file_name_defined) {
         bu_log("Summary: %lu total test cases success.\n", success_cnt);
         bu_log("Summary: %lu total test cases failed.\n", failed_cnt);
@@ -598,10 +585,7 @@ main(int argc, char **argv)
         }
     }
 
-    bu_vls_free(&input_file_name);
-    bu_vls_free(&output_file_name);
-
-    return ret;
+    exit(ret);
 }
 
 

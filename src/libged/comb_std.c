@@ -1,7 +1,7 @@
 /*                  C O M B _ S T D . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2012 United States Government as represented by
+ * Copyright (c) 2008-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -245,7 +245,7 @@ do_inter(struct bu_list *hp)
 	    continue;
 
 	/* this is an eligible intersection operation */
-	BU_GET(tp, union tree);
+	BU_GETUNION(tp, tree);
 	RT_TREE_INIT(tp);
 	tp->tr_b.tb_op = OP_INTERSECT;
 	tp->tr_b.tb_regionp = (struct region *)NULL;
@@ -280,7 +280,7 @@ do_union_subtr(struct bu_list *hp)
 	    continue;
 
 	/* this is an eligible operation */
-	BU_GET(tp, union tree);
+	BU_GETUNION(tp, tree);
 	RT_TREE_INIT(tp);
 	if (tok->type == TOK_UNION)
 	    tp->tr_b.tb_op = OP_UNION;
@@ -346,12 +346,15 @@ eval_bool(struct bu_list *hp)
 	done = do_paren(hp);
     }
 
-    tok = BU_LIST_NEXT(tokens, hp);
-    final_tree = tok->tp;
-    BU_LIST_DEQUEUE(&tok->l);
-    bu_free((char *)tok, "tok");
+    if (done == 1) {
+	tok = BU_LIST_NEXT(tokens, hp);
+	final_tree = tok->tp;
+	BU_LIST_DEQUEUE(&tok->l);
+	bu_free((char *)tok, "tok");
+	return final_tree;
+    }
 
-    return final_tree;
+    return (union tree *)NULL;
 }
 
 
@@ -359,15 +362,15 @@ HIDDEN int
 check_syntax(struct ged *gedp, struct bu_list *hp, char *comb_name, struct directory *dp)
 {
     struct tokens *tok;
-    int paren_count  = 0;
-    int paren_error  = 0;
-    int missing_exp  = 0;
-    int missing_op   = 0;
-    int op_count     = 0;
-    int arg_count    = 0;
-    int circular_ref = 0;
-    int errors       = 0;
-    short last_tok   = TOK_NULL;
+    int paren_count=0;
+    int paren_error=0;
+    int missing_exp=0;
+    int missing_op=0;
+    int op_count=0;
+    int arg_count=0;
+    int circular_ref=0;
+    int errors=0;
+    short last_tok=TOK_NULL;
 
     for (BU_LIST_FOR(tok, tokens, hp)) {
 	switch (tok->type) {
@@ -443,6 +446,7 @@ ged_comb_std(struct ged *gedp, int argc, const char *argv[])
     struct rt_db_internal intern;
     struct rt_comb_internal *comb = NULL;
     struct tokens tok_hd;
+    struct tokens *tok;
     short last_tok;
     int i;
     union tree *final_tree;
@@ -541,7 +545,7 @@ ged_comb_std(struct ged *gedp, int argc, const char *argv[])
     tok_hd.type = TOK_NULL;
 
     last_tok = TOK_LPAREN;
-    for (i = 0; i < argc; i++) {
+    for (i=0; i<argc; i++) {
 	char *ptr;
 
 	ptr = (char *)argv[i];
@@ -567,6 +571,8 @@ ged_comb_std(struct ged *gedp, int argc, const char *argv[])
 		/* next token MUST be an operator */
 		if (add_operator(gedp, &tok_hd.l, *ptr, &last_tok) == GED_ERROR) {
 		    free_tokens(&tok_hd.l);
+		    if (dp != RT_DIR_NULL)
+			rt_db_free_internal(&intern);
 		    return GED_ERROR;
 		}
 		ptr++;
@@ -577,6 +583,8 @@ ged_comb_std(struct ged *gedp, int argc, const char *argv[])
 		name_len = add_operand(gedp, &tok_hd.l, ptr);
 		if (name_len < 1) {
 		    free_tokens(&tok_hd.l);
+		    if (dp != RT_DIR_NULL)
+			rt_db_free_internal(&intern);
 		    return GED_ERROR;
 		}
 		last_tok = TOK_TREE;
@@ -585,6 +593,8 @@ ged_comb_std(struct ged *gedp, int argc, const char *argv[])
 		/* must be an operator */
 		if (add_operator(gedp, &tok_hd.l, *ptr, &last_tok) == GED_ERROR) {
 		    free_tokens(&tok_hd.l);
+		    if (dp != RT_DIR_NULL)
+			rt_db_free_internal(&intern);
 		    return GED_ERROR;
 		}
 		ptr++;
@@ -597,6 +607,8 @@ ged_comb_std(struct ged *gedp, int argc, const char *argv[])
 		name_len = add_operand(gedp, &tok_hd.l, ptr);
 		if (name_len < 1) {
 		    free_tokens(&tok_hd.l);
+		    if (dp != RT_DIR_NULL)
+			rt_db_free_internal(&intern);
 		    return GED_ERROR;
 		}
 		last_tok = TOK_TREE;
@@ -610,13 +622,46 @@ ged_comb_std(struct ged *gedp, int argc, const char *argv[])
 	return GED_ERROR;
     }
 
+    /* replace any occurences of comb_name with existing tree */
+    if (dp != RT_DIR_NULL) {
+	for (BU_LIST_FOR(tok, tokens, &tok_hd.l)) {
+	    struct rt_db_internal intern1;
+	    struct rt_comb_internal *comb1;
+
+	    switch (tok->type) {
+		case TOK_LPAREN:
+		case TOK_RPAREN:
+		case TOK_UNION:
+		case TOK_INTER:
+		case TOK_SUBTR:
+		    break;
+		case TOK_TREE:
+		    if (tok->tp && BU_STR_EQUAL(tok->tp->tr_l.tl_name, comb_name)) {
+			db_free_tree(tok->tp, &rt_uniresource);
+			GED_DB_GET_INTERNAL(gedp, &intern1, dp, (fastf_t *)NULL, &rt_uniresource, GED_ERROR);
+			comb1 = (struct rt_comb_internal *)intern1.idb_ptr;
+			RT_CK_COMB(comb1);
+
+			tok->tp = comb1->tree;
+			comb1->tree = (union tree *)NULL;
+			rt_db_free_internal(&intern1);
+		    }
+		    break;
+		default:
+		    bu_vls_printf(gedp->ged_result_str, "ERROR: Unrecognized token type\n");
+		    free_tokens(&tok_hd.l);
+		    return GED_ERROR;
+	    }
+	}
+    }
+
     final_tree = eval_bool(&tok_hd.l);
 
-    {
+    if (dp == RT_DIR_NULL) {
 	int flags;
 
 	flags = RT_DIR_COMB;
-	BU_GET(comb, struct rt_comb_internal);
+	BU_GETSTRUCT(comb, rt_comb_internal);
 	RT_COMB_INTERNAL_INIT(comb);
 
 	comb->tree = final_tree;
@@ -647,6 +692,15 @@ ged_comb_std(struct ged *gedp, int argc, const char *argv[])
 	intern.idb_ptr = (genptr_t)comb;
 
 	GED_DB_DIRADD(gedp, dp, comb_name, RT_DIR_PHONY_ADDR, 0, flags, (genptr_t)&intern.idb_type, GED_ERROR);
+	GED_DB_PUT_INTERNAL(gedp, dp, &intern, &rt_uniresource, GED_ERROR);
+    } else {
+	db_delete(gedp->ged_wdbp->dbip, dp);
+
+	dp->d_len = 0;
+	dp->d_un.file_offset = (off_t)-1;
+	db_free_tree(comb->tree, &rt_uniresource);
+	comb->tree = final_tree;
+
 	GED_DB_PUT_INTERNAL(gedp, dp, &intern, &rt_uniresource, GED_ERROR);
     }
 

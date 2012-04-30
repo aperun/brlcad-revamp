@@ -56,8 +56,7 @@ EXTRA_DIST = \
 	$(man_MANS) \
 	bntester.dat \
 	ulp.c \
-	CMakeLists.txt \
-	README
+	CMakeLists.txt
 
 DEPENDS = src/libbu
 

@@ -2,7 +2,7 @@
 /*                        S H _ O S L . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -162,7 +162,7 @@ osl_parse_shader(char *shadername, ShaderInfo &sh_info)
     while((item = strtok(NULL, "#")) != NULL){
 
 	/* Setting layer name, in case we're doing a shader group */
-	if (BU_STR_EQUAL(item, "layername")) {
+	if(strcmp(item, "layername") == 0){
 
 	    /* Get the name of the layer being set */
 	    item = strtok(NULL, "#");
@@ -182,7 +182,7 @@ osl_parse_shader(char *shadername, ShaderInfo &sh_info)
 		fprintf(stderr, "[Error] Missing parameter type\n");
 		return -1;
 	    }
-	    else if (BU_STR_EQUAL(item, "int")) {
+	    else if(strcmp(item, "int") == 0){
 		item = strtok(NULL, "#");
 		if(item == NULL){
 		    fprintf(stderr, "[Error] Missing float value\n");
@@ -191,7 +191,7 @@ osl_parse_shader(char *shadername, ShaderInfo &sh_info)
 		int value = atoi(item);
 		sh_info.iparam.push_back(std::make_pair(param_name, value));
 	    }
-	    else if (BU_STR_EQUAL(item, "float")) {
+	    else if(strcmp(item, "float") == 0){
 		item = strtok(NULL, "#");
 		if(item == NULL){
 		    fprintf(stderr, "[Error] Missing float value\n");
@@ -200,7 +200,7 @@ osl_parse_shader(char *shadername, ShaderInfo &sh_info)
 		float value = atof(item);
 		sh_info.fparam.push_back(std::make_pair(param_name, value));
 	    }
-	    else if (BU_STR_EQUAL(item, "color")) {
+	    else if(strcmp(item, "color") == 0){
 		Color3 color_value;
 		for(int i=0; i<3; i++){
 		    item = strtok(NULL, "#");
@@ -212,13 +212,13 @@ osl_parse_shader(char *shadername, ShaderInfo &sh_info)
 		}
 		sh_info.cparam.push_back(std::make_pair(param_name, color_value));
 	    }
-	    else if (BU_STR_EQUAL(item, "normal") || BU_STR_EQUAL(item, "point") || BU_STR_EQUAL(item, "vector")) {
+	    else if(strcmp(item, "normal") == 0 || strcmp(item, "point") == 0 || strcmp(item, "vector") == 0){
 
-		TypeDesc type;
+		TypeDesc type;	
 		std::string type_name(item);
-		if (BU_STR_EQUAL(item, "normal")) type = TypeDesc::TypeNormal;
-		else if (BU_STR_EQUAL(item, "point")) type = TypeDesc::TypePoint;
-		else if (BU_STR_EQUAL(item, "vector")) type = TypeDesc::TypeVector;
+		if(strcmp(item, "normal") == 0) type = TypeDesc::TypeNormal;
+		else if(strcmp(item, "point") == 0) type = TypeDesc::TypePoint;
+		else if(strcmp(item, "vector") == 0) type = TypeDesc::TypeVector;
 
 		Vec3 vec_value;
 		for(int i=0; i<3; i++){
@@ -232,7 +232,7 @@ osl_parse_shader(char *shadername, ShaderInfo &sh_info)
 		ShaderInfo::TypeVec type_vec(type, vec_value);
 		sh_info.vparam.push_back(std::make_pair(param_name, type_vec));
 	    }
-	    else if (BU_STR_EQUAL(item, "matrix")){
+	    else if(strcmp(item, "matrix") == 0){
 		fprintf(stderr, "matrix\n");
 		Matrix44 mat_value;
 		for(int i=0; i<4; i++)
@@ -248,7 +248,7 @@ osl_parse_shader(char *shadername, ShaderInfo &sh_info)
 		fprintf(stderr, "\n");
 		sh_info.mparam.push_back(std::make_pair(param_name, mat_value));
 	    }
-	    else if (BU_STR_EQUAL(item, "string")) {
+	    else if(strcmp(item, "string") == 0){
 		item = strtok(NULL, "#");
 		if(item == NULL){
 		    fprintf(stderr, "[Error] Missing string\n");
@@ -278,7 +278,7 @@ osl_parse_shader(char *shadername, ShaderInfo &sh_info)
 int
 osl_parse(const struct bu_vls *in_vls, ShaderGroupInfo &group_info)
 {
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
     register char *cp;
     char *name;
     char *value;
@@ -287,6 +287,7 @@ osl_parse(const struct bu_vls *in_vls, ShaderGroupInfo &group_info)
     BU_CK_VLS(in_vls);
 
     /* Duplicate the input string.  This algorithm is destructive. */
+    bu_vls_init(&vls);
     bu_vls_vlscat(&vls, in_vls);
     cp = bu_vls_addr(&vls);
 
@@ -340,12 +341,12 @@ osl_parse(const struct bu_vls *in_vls, ShaderGroupInfo &group_info)
 	if (*cp != '\0')
 	    *cp++ = '\0';
 
-	if (BU_STR_EQUAL(name, "shadername")) {
+	if(strcmp(name, "shadername") == 0){
 	    ShaderInfo sh_info;
 	    osl_parse_shader(value, sh_info);
 	    group_info.shader_layers.push_back(sh_info);
 	}
-	else if (BU_STR_EQUAL(name, "join")) {
+	else if (strcmp(name, "join") == 0){
 	    ShaderEdge sh_edge;
 	    osl_parse_edge(value, sh_edge);
 	    group_info.shader_edges.push_back(sh_edge);
@@ -384,7 +385,7 @@ HIDDEN int osl_setup(register struct region *rp, struct bu_vls *matparm,
 	bu_log("osl_setup(%s)\n", rp->reg_name);
 
     /* Get memory for the shader parameters and shader-specific data */
-    BU_GET(osl_sp, struct osl_specific);
+    BU_GETSTRUCT(osl_sp, osl_specific);
     *dpp = (char *)osl_sp;
 
     /* -----------------------------------

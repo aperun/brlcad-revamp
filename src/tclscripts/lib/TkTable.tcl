@@ -1,7 +1,7 @@
 #                     T K T A B L E . T C L
 # BRL-CAD
 #
-# Copyright (c) 1998-2012 United States Government as represented by
+# Copyright (c) 1998-2011 United States Government as represented by
 # the U.S. Army Research Laboratory.
 #
 # This library is free software; you can redistribute it and/or
@@ -440,10 +440,6 @@
 	    } else {
 		setTableVal $index "*"
 		$itk_component(table) tag cell select_col $index
-	    }
-
-	    if {$itk_option(-dataCallback) != ""} {
-		catch {$itk_option(-dataCallback)}
 	    }
 	} else {
 	    set mDoBreak 0

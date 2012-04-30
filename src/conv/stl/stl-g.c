@@ -1,7 +1,7 @@
 /*                         S T L - G . C
  * BRL-CAD
  *
- * Copyright (c) 2002-2012 United States Government as represented by
+ * Copyright (c) 2002-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -47,6 +47,7 @@ static struct vert_root *tree_root;
 static struct wmember all_head;
 static char *input_file;	/* name of the input file */
 static char *brlcad_file;	/* name of output file */
+static struct bu_vls ret_name;	/* unique name built by Build_unique_name() */
 static char *forced_name=NULL;	/* name specified on command line */
 static int solid_count=0;	/* count of solids converted */
 static struct bn_tol tol;	/* Tolerance structure */
@@ -134,13 +135,14 @@ static void
 Convert_part_ascii(char line[MAX_LINE_SIZE])
 {
     char line1[MAX_LINE_SIZE];
-    struct bu_vls solid_name = BU_VLS_INIT_ZERO;
-    struct bu_vls region_name = BU_VLS_INIT_ZERO;
+    struct bu_vls solid_name;
+    struct bu_vls region_name;
 
     int start;
     int i;
     int face_count=0;
     int degenerate_count=0;
+    int small_count=0;
     float colr[3]={0.5, 0.5, 0.5};
     unsigned char color[3]={ 128, 128, 128 };
     struct wmember head;
@@ -163,7 +165,7 @@ Convert_part_ascii(char line[MAX_LINE_SIZE])
     start = (-1);
     /* skip leading blanks */
     while (isspace(line[++start]) && line[start] != '\0');
-    if (bu_strncmp(&line[start], "solid", 5) && bu_strncmp(&line[start], "SOLID", 5)) {
+    if (strncmp(&line[start], "solid", 5) && strncmp(&line[start], "SOLID", 5)) {
 	bu_log("Convert_part_ascii: Called for non-part\n%s\n", line);
 	return;
     }
@@ -172,6 +174,7 @@ Convert_part_ascii(char line[MAX_LINE_SIZE])
     start += 4;
     while (isspace(line[++start]) && line[start] != '\0');
 
+    bu_vls_init(&region_name);
     if (forced_name) {
 	bu_vls_strcpy(&region_name, forced_name);
     } else if (line[start] != '\0') {
@@ -216,6 +219,7 @@ Convert_part_ascii(char line[MAX_LINE_SIZE])
     bu_log("Converting Part: %s\n", bu_vls_addr(&region_name));
 
     solid_count++;
+    bu_vls_init(&solid_name);
     bu_vls_strcpy(&solid_name, "s.");
     bu_vls_vlscat(&solid_name, &region_name);
     mk_unique_brlcad_name(&solid_name);
@@ -228,26 +232,26 @@ Convert_part_ascii(char line[MAX_LINE_SIZE])
     while (bu_fgets(line1, MAX_LINE_SIZE, fd_in) != NULL) {
 	start = (-1);
 	while (isspace(line1[++start]));
-	if (!bu_strncmp(&line1[start], "endsolid", 8) || !bu_strncmp(&line1[start], "ENDSOLID", 8)) {
+	if (!strncmp(&line1[start], "endsolid", 8) || !strncmp(&line1[start], "ENDSOLID", 8)) {
 	    break;
-	} else if (!bu_strncmp(&line1[start], "color", 5) || !bu_strncmp(&line1[start], "COLOR", 5)) {
+	} else if (!strncmp(&line1[start], "color", 5) || !strncmp(&line1[start], "COLOR", 5)) {
 	    sscanf(&line1[start+5], "%f%f%f", &colr[0], &colr[1], &colr[2]);
 	    for (i=0; i<3; i++)
 		color[i] = (int)(colr[i] * 255.0);
-	} else if (!bu_strncmp(&line1[start], "normal", 6) || !bu_strncmp(&line1[start], "NORMAL", 6)) {
+	} else if (!strncmp(&line1[start], "normal", 6) || !strncmp(&line1[start], "NORMAL", 6)) {
 	    float x, y, z;
 
 	    start += 6;
 	    sscanf(&line1[start], "%f%f%f", &x, &y, &z);
 	    VSET(normal, x, y, z);
-	} else if (!bu_strncmp(&line1[start], "facet", 5) || !bu_strncmp(&line1[start], "FACET", 5)) {
+	} else if (!strncmp(&line1[start], "facet", 5) || !strncmp(&line1[start], "FACET", 5)) {
 	    VSET(normal, 0.0, 0.0, 0.0);
 
 	    start += 4;
 	    while (line1[++start] && isspace(line1[start]));
 
 	    if (line1[start]) {
-		if (!bu_strncmp(&line1[start], "normal", 6) || !bu_strncmp(&line1[start], "NORMAL", 6)) {
+		if (!strncmp(&line1[start], "normal", 6) || !strncmp(&line1[start], "NORMAL", 6)) {
 		    float x, y, z;
 
 		    start += 6;
@@ -255,10 +259,10 @@ Convert_part_ascii(char line[MAX_LINE_SIZE])
 		    VSET(normal, x, y, z);
 		}
 	    }
-	} else if (!bu_strncmp(&line1[start], "outer loop", 10) || !bu_strncmp(&line1[start], "OUTER LOOP", 10)) {
+	} else if (!strncmp(&line1[start], "outer loop", 10) || !strncmp(&line1[start], "OUTER LOOP", 10)) {
 	    int endloop=0;
 	    int vert_no=0;
-	    int tmp_face[3] = {0, 0, 0};
+	    int tmp_face[3];
 
 	    while (!endloop) {
 		if (bu_fgets(line1, MAX_LINE_SIZE, fd_in) == NULL)
@@ -267,9 +271,9 @@ Convert_part_ascii(char line[MAX_LINE_SIZE])
 		start = (-1);
 		while (isspace(line1[++start]));
 
-		if (!bu_strncmp(&line1[start], "endloop", 7) || !bu_strncmp(&line1[start], "ENDLOOP", 7))
+		if (!strncmp(&line1[start], "endloop", 7) || !strncmp(&line1[start], "ENDLOOP", 7))
 		    endloop = 1;
-		else if (!bu_strncmp(&line1[start], "vertex", 6) || !bu_strncmp(&line1[start], "VERTEX", 6)) {
+		else if (!strncmp(&line1[start], "vertex", 6) || !strncmp(&line1[start], "VERTEX", 6)) {
 		    double x, y, z;
 
 		    sscanf(&line1[start+6], "%lf%lf%lf", &x, &y, &z);
@@ -327,6 +331,8 @@ Convert_part_ascii(char line[MAX_LINE_SIZE])
 	bu_log("\t%s has no solid parts, ignoring\n", bu_vls_addr(&region_name));
 	if (degenerate_count)
 	    bu_log("\t%d faces were degenerate\n", degenerate_count);
+	if (small_count)
+	    bu_log("\t%d faces were too small\n", small_count);
 	bu_vls_free(&region_name);
 	bu_vls_free(&solid_name);
 
@@ -334,6 +340,8 @@ Convert_part_ascii(char line[MAX_LINE_SIZE])
     } else {
 	if (degenerate_count)
 	    bu_log("\t%d faces were degenerate\n", degenerate_count);
+	if (small_count)
+	    bu_log("\t%d faces were too small\n", small_count);
     }
 
     mk_bot(fd_out, bu_vls_addr(&solid_name), RT_BOT_SOLID, RT_BOT_UNORIENTED, 0, tree_root->curr_vert, bot_fcurr,
@@ -393,13 +401,16 @@ Convert_part_binary()
     vect_t normal;
     int tmp_face[3];
     struct wmember head;
-    struct bu_vls solid_name = BU_VLS_INIT_ZERO;
-    struct bu_vls region_name = BU_VLS_INIT_ZERO;
+    struct bu_vls solid_name;
+    struct bu_vls region_name;
     int face_count=0;
     int degenerate_count=0;
+    int small_count=0;
     size_t ret;
 
     solid_count++;
+    bu_vls_init(&solid_name);
+    bu_vls_init(&region_name);
     if (forced_name) {
 	bu_vls_strcpy(&solid_name, "s.");
 	bu_vls_strcat(&solid_name, forced_name);
@@ -481,10 +492,14 @@ Convert_part_binary()
 	bu_log("\tpart has no solid parts, ignoring\n");
 	if (degenerate_count)
 	    bu_log("\t%d faces were degenerate\n", degenerate_count);
+	if (small_count)
+	    bu_log("\t%d faces were too small\n", small_count);
 	return;
     } else {
 	if (degenerate_count)
 	    bu_log("\t%d faces were degenerate\n", degenerate_count);
+	if (small_count)
+	    bu_log("\t%d faces were too small\n", small_count);
     }
 
     mk_bot(fd_out, bu_vls_addr(&solid_name), RT_BOT_SOLID, RT_BOT_UNORIENTED, 0,
@@ -547,7 +562,7 @@ Convert_input()
 	    while (line[start] != '\0' && isspace(line[start])) {
 		start++;
 	    }
-	    if (!bu_strncmp(&line[start], "solid", 5) || !bu_strncmp(&line[start], "SOLID", 5))
+	    if (!strncmp(&line[start], "solid", 5) || !strncmp(&line[start], "SOLID", 5))
 		Convert_part_ascii(line);
 	    else
 		bu_log("Unrecognized line:\n%s\n", line);
@@ -573,6 +588,8 @@ main(int argc, char *argv[])
     tol.dist_sq = tol.dist * tol.dist;
     tol.perp = 1e-6;
     tol.para = 1 - tol.perp;
+
+    bu_vls_init(&ret_name);
 
     forced_name = NULL;
 

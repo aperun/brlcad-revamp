@@ -1,7 +1,7 @@
 /*                       C O M M A N D . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -56,10 +56,12 @@ extern int need_prep;
 
 
 void
-bot_minpieces(char *buffer, com_table *UNUSED(ctp), struct rt_i *UNUSED(rtip))
+bot_minpieces(char *buffer, com_table *ctp, struct rt_i *UNUSED(rtip))
 {
     long new_lvalue;
     int i=0;
+
+    ctp = ctp; /* quell warning */
 
     while (isspace(*(buffer+i)))
 	++i;
@@ -83,10 +85,12 @@ bot_minpieces(char *buffer, com_table *UNUSED(ctp), struct rt_i *UNUSED(rtip))
 }
 
 void
-bot_mintie(char *buffer, com_table *UNUSED(ctp), struct rt_i *UNUSED(rtip))
+bot_mintie(char *buffer, com_table *ctp, struct rt_i *UNUSED(rtip))
 {
     long new_lvalue;
     int i=0;
+
+    ctp = ctp; /* quell warning */
 
     while (isspace(*(buffer+i)))
 	++i;
@@ -167,7 +171,6 @@ sh_esc(char *buffer)
     int ret;
     static char *shell = "";
     static char *last_cmd = "";
-    char *rshell = NULL;
 
     while (isspace(*buffer)) {
 	++buffer;
@@ -190,15 +193,9 @@ sh_esc(char *buffer)
 	    shell = "cmd.exe";
 #endif
 	}
-
-	/* sanitize path to shell */
-	rshell = bu_realpath(shell, NULL);
-
-	ret = system(rshell);
+	ret = system(shell);
 	if (ret == -1)
 	    perror("system");
-
-	bu_free(rshell, "free realpath");
     }
 }
 
@@ -214,7 +211,7 @@ grid_coor(char *buffer, com_table *ctp, struct rt_i *UNUSED(rtip))
 	++i;
     if (*(buffer+i) == '\0') {
 	/* display current grid coordinates */
-	fprintf(stdout, "(h, v, d) = (%4.2f, %4.2f, %4.2f)\n",
+	bu_log("(h, v, d) = (%4.2f, %4.2f, %4.2f)\n",
 	       grid(HORZ) * base2local,
 	       grid(VERT) * base2local,
 	       grid(DIST) * base2local);
@@ -272,7 +269,7 @@ target_coor(char *buffer, com_table *ctp, struct rt_i *UNUSED(rtip))
 	++i;
     if (*(buffer+i) == '\0') {
 	/* display current target coors */
-	fprintf(stdout, "(x, y, z) = (%4.2f, %4.2f, %4.2f)\n",
+	bu_log("(x, y, z) = (%4.2f, %4.2f, %4.2f)\n",
 	       target(X) * base2local,
 	       target(Y) * base2local,
 	       target(Z) * base2local);
@@ -323,7 +320,7 @@ dir_vect(char *buffer, com_table *ctp, struct rt_i *UNUSED(rtip))
 	++i;
     if (*(buffer+i) == '\0') {
 	/* display current direct coors */
-	fprintf(stdout, "(x, y, z) = (%4.2f, %4.2f, %4.2f)\n",
+	bu_log("(x, y, z) = (%4.2f, %4.2f, %4.2f)\n",
 	       direct(X), direct(Y), direct(Z));
 	return;
     }
@@ -379,18 +376,19 @@ show_menu()
 }
 
 void
-shoot(char *UNUSED(buffer), com_table *UNUSED(ctp), struct rt_i *rtip)
+shoot(char *buffer, com_table *ctp, struct rt_i *rtip)
 {
     int i;
     double bov = 0.0;	/* back out value */
 
     extern void init_ovlp();
 
-    if (!rtip)
-      return;
+    /* quellage */
+    buffer = buffer;
+    ctp = ctp;
 
     if (need_prep) {
-	rt_clean(rtip);
+	if (rtip) rt_clean(rtip);
 	do_rt_gettrees(rtip, NULL, 0, &need_prep);
     }
 
@@ -530,7 +528,7 @@ nirt_units(char *buffer, com_table *ctp, struct rt_i *rtip)
 	++i;
     if (*(buffer+i) == '\0') {
 	/* display current destination */
-	fprintf(stdout, "units = '%s'\n", local_u_name);
+	bu_log("units = '%s'\n", local_u_name);
 	return;
     }
 
@@ -600,12 +598,12 @@ cm_attr(char *buffer, com_table *ctp, struct rt_i *UNUSED(rtip))
 	return;
     }
 
-    if (! bu_strncmp(buffer, "-p", 2)) {
+    if (! strncmp(buffer, "-p", 2)) {
 	attrib_print();
 	return;
     }
 
-    if (! bu_strncmp(buffer, "-f", 2)) {
+    if (! strncmp(buffer, "-f", 2)) {
 	attrib_flush();
 	return;
     }
@@ -663,8 +661,10 @@ cm_libdebug(char *buffer, com_table *ctp, struct rt_i *UNUSED(rtip))
 }
 
 void
-backout(char *buffer, com_table *UNUSED(ctp), struct rt_i *UNUSED(rtip))
+backout(char *buffer, com_table *ctp, struct rt_i *UNUSED(rtip))
 {
+    /* quellage */
+    ctp = ctp;
 
     while (isspace(*buffer))
 	++buffer;

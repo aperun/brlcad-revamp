@@ -1,7 +1,7 @@
 /*                       D B _ A N I M . C
  * BRL-CAD
  *
- * Copyright (c) 1987-2012 United States Government as represented by
+ * Copyright (c) 1987-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -167,8 +167,9 @@ db_do_anim(register struct animate *anp, mat_t stack, mat_t arc, struct mater_in
 		if (materp->ma_shader) bu_free((genptr_t)materp->ma_shader, "ma_shader");
 		materp->ma_shader = bu_vls_strdup(&anp->an_u.anu_p.anp_shader);
 	    } else if (anp->an_u.anu_p.anp_op == RT_ANP_APPEND) {
-		struct bu_vls str = BU_VLS_INIT_ZERO;
+		struct bu_vls str;
 
+		bu_vls_init(&str);
 		bu_vls_strcpy(&str, materp->ma_shader);
 		bu_vls_putc(&str, ' ');
 		bu_vls_vlscat(&str, &anp->an_u.anu_p.anp_shader);
@@ -298,7 +299,7 @@ db_parse_1anim(struct db_i *dbip, int argc, const char *argv[])
 	return (struct animate *)NULL;
     }
 
-    BU_GET(anp, struct animate);
+    BU_GETSTRUCT(anp, animate);
     anp->magic = ANIMATE_MAGIC;
 
     db_init_db_tree_state(&ts, dbip, &rt_uniresource);

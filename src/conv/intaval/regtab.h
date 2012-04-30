@@ -1,7 +1,7 @@
 /*                      R E G T A B . H
  * BRL-CAD
  *
- * Copyright (c) 2008-2012 United States Government as represented by
+ * Copyright (c) 2008-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -38,6 +38,9 @@
 #include "wdb.h"
 
 
+class Region;
+
+
 int readMaterials
 (
     FILE *fp
@@ -66,17 +69,13 @@ void createRegions
 
 class Region {
 public:
-    Region() : compnr(0), material(0), desc(""), addCreated(false), excludeCreated(false) {
-	WMEMBER_INIT(&head);
-	WMEMBER_INIT(&addHead);
-	WMEMBER_INIT(&excludeHead);
+    Region() : addCreated(false), excludeCreated(false) {
+	BU_LIST_INIT(&head.l)
     };
 
     Region(int   nr,
-	   char* description) : compnr(nr), material(0), desc(description), addCreated(false), excludeCreated(false) {
-	WMEMBER_INIT(&head);
-	WMEMBER_INIT(&addHead);
-	WMEMBER_INIT(&excludeHead);
+	   char* description) : compnr(nr), desc(description), addCreated(false), excludeCreated(false) {
+	BU_LIST_INIT(&head.l);
     }
 
     ~Region() {

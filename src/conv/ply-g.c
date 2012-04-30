@@ -1,7 +1,7 @@
 /*                         P L Y - G . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -232,7 +232,6 @@ get_double( int type )
     float val_float;
     double val_double;
     double val = 0.0;
-    double ret = 0.0;
 
     if ( ply_file_type == PLY_ASCII ) {
 	switch ( type ) {
@@ -346,9 +345,7 @@ get_double( int type )
 	}
     }
 
-    /* casts for coverity overflow clarity */
-    ret = (double)val * (double)scale_factor;
-    return ret;
+    return val*scale_factor;
 }
 
 int
@@ -383,7 +380,7 @@ get_int( int type )
 		if ( fscanf( ply_fp, "%lf", &val_double ) != 1 ) {
 		    bu_exit(1, "ERROR parsing data\n" );
 		}
-		val = (int)floor(val_double);
+		val = val_double;
 		break;
 	}
     } else {
@@ -485,10 +482,10 @@ new_element(char *str)
 	return (struct element *)NULL;
     }
 
-    if ( !bu_strncmp( c, "vertex", 6 ) ) {
+    if ( !strncmp( c, "vertex", 6 ) ) {
 	/* this is a vertex element */
 	ptr->type = ELEMENT_VERTEX;
-    } else if ( !bu_strncmp( c, "face", 4 ) ) {
+    } else if ( !strncmp( c, "face", 4 ) ) {
 	/* this ia a face element */
 	ptr->type = ELEMENT_FACE;
     } else {
@@ -626,7 +623,7 @@ read_ply_header()
 	bu_log( "Unexpected EOF in input file!\n" );
 	return 1;
     }
-    if ( bu_strncmp( line, "ply", 3 ) ) {
+    if ( strncmp( line, "ply", 3 ) ) {
 	bu_log( "Input file does not appear to be a PLY file!\n" );
 	return 1;
     }
@@ -644,26 +641,26 @@ read_ply_header()
 	    bu_log( "Processing line:%s\n", line );
 	}
 
-	if ( !bu_strncmp( line, "end_header", 10 ) ) {
+	if ( !strncmp( line, "end_header", 10 ) ) {
 	    if ( verbose ) {
 		bu_log( "Found end of header\n" );
 	    }
 	    break;
 	}
 
-	if ( !bu_strncmp( line, "comment", 7 ) ) {
+	if ( !strncmp( line, "comment", 7 ) ) {
 	    /* comment */
 	    bu_log( "%s\n", line );
 	    continue;
 	}
 
-	if ( !bu_strncmp( line, "format", 6 ) ) {
+	if ( !strncmp( line, "format", 6 ) ) {
 	    /* format specification */
-	    if ( !bu_strncmp( &line[7], "ascii", 5 ) ) {
+	    if ( !strncmp( &line[7], "ascii", 5 ) ) {
 		ply_file_type = PLY_ASCII;
-	    } else if ( !bu_strncmp( &line[7], "binary_big_endian", 17 ) ) {
+	    } else if ( !strncmp( &line[7], "binary_big_endian", 17 ) ) {
 		ply_file_type = PLY_BIN_BIG_ENDIAN;
-	    } else if ( !bu_strncmp( &line[7], "binary_little_endian", 20 ) ) {
+	    } else if ( !strncmp( &line[7], "binary_little_endian", 20 ) ) {
 		ply_file_type = PLY_BIN_LITTLE_ENDIAN;
 	    } else {
 		bu_log( "Unrecognized PLY format:%s\n", line );
@@ -683,13 +680,13 @@ read_ply_header()
 			break;
 		}
 	    }
-	} else if ( !bu_strncmp( line, "element", 7 ) ) {
+	} else if ( !strncmp( line, "element", 7 ) ) {
 	    /* found an element description */
 	    if ( verbose ) {
 		bu_log( "Found an element\n" );
 	    }
 	    elem_ptr = new_element( &line[8] );
-	} else if ( !bu_strncmp( line, "property", 8 ) ) {
+	} else if ( !strncmp( line, "property", 8 ) ) {
 	    if ( !elem_ptr ) {
 		bu_log( "Encountered \"property\" before \"element\"\n" );
 		return 1;
@@ -743,10 +740,6 @@ read_ply_data( struct rt_bot_internal *bot )
 
 			    if ( vcount < 3 || vcount > 4) {
 				bu_log( "ignoring face with %d vertices\n", vcount );
-				if (vcount < 0)
-				    vcount = 0;
-				if (vcount > 100)
-				    vcount = 100;
 				for ( idx=0; idx < vcount; idx++ ) {
 				    skip( p->list_type );
 				}
@@ -789,8 +782,6 @@ main( int argc, char *argv[] )
     struct rt_bot_internal *bot;
     struct element *elem_ptr;
     int c;
-
-    bu_setprogname(argv[0]);
 
     /* get command line arguments */
     while ((c = bu_getopt(argc, argv, "dvs:")) != -1)

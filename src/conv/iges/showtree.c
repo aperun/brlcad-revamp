@@ -1,7 +1,7 @@
 /*                      S H O W T R E E . C
  * BRL-CAD
  *
- * Copyright (c) 1990-2012 United States Government as represented by
+ * Copyright (c) 1990-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -106,14 +106,10 @@ Showtree(struct node *root)
 	    return;
 	}
 
-	if (ptr->parent) {
-	  if (ptr != ptr->parent->right)
+	if (ptr != ptr->parent->right)
 	    ptr = ptr->parent->right;
-	  else
+	else
 	    ptr = NULL;
-	} else {
-	  ptr = NULL;
-	}
     }
 }
 
@@ -133,7 +129,7 @@ Initastack()
 	perror("Initastack");
 	bu_exit(1, NULL);
     }
-    for (i = 0; i < stklen; i++)
+    for (i=0; i<stklen; i++)
 	stk[i] = NULL;
 }
 
@@ -154,7 +150,7 @@ Apush(char *ptr)
 	    perror("Apush");
 	    bu_exit(1, NULL);
 	}
-	for (i = jtop; i < stklen; i++)
+	for (i=jtop; i<stklen; i++)
 	    stk[i] = NULL;
     }
     stk[jtop] = ptr;
@@ -170,7 +166,7 @@ Apop()
     char *ptr;
 
     if (jtop == (-1))
-	ptr = NULL;
+	ptr=NULL;
     else {
 	ptr = stk[jtop];
 	jtop--;
@@ -237,7 +233,7 @@ Spop()
     struct node *ptr;
 
     if (sjtop == (-1))
-	ptr = NULL;
+	ptr=NULL;
     else {
 	ptr = sstk_p[sjtop];
 	sjtop--;

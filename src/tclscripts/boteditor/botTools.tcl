@@ -49,7 +49,7 @@ package require Itk
 
 	method makePane
 	method makeDensityPane
-	method makeCleanupPane
+	method makeEconomyPane
 	method makePerformancePane
     }
 
@@ -75,14 +75,14 @@ package require Itk
 	ttk::notebook $itk_component(tframe).notebook
     } {}
 
-    # add cleanup tab
-    $itk_component(nb) add [makeCleanupPane] \
-	-text {Clean-Up} \
-	-sticky w
-
     # add density tab
     $itk_component(nb) add [makeDensityPane] \
 	-text {Density} \
+	-sticky w
+
+    # add economy tab
+    $itk_component(nb) add [makeEconomyPane] \
+	-text {Economy} \
 	-sticky w
 
     # add performance tab
@@ -171,7 +171,7 @@ package require Itk
     set ::${itk_interior}EdgeCheck 1
     itk_component add edgeCheck {
 	ttk::checkbutton $pane.edgeCheckbox \
-	    -text {Min Edge Length} \
+	    -text {Min Edge Lenth} \
 	    -variable ${itk_interior}EdgeCheck \
 	    -command "$this updateDecimateState"
     } {}
@@ -219,7 +219,7 @@ package require Itk
     return $pane
 }
 
-::itcl::body BotTools::makeCleanupPane {} {
+::itcl::body BotTools::makeEconomyPane {} {
 
     # get new container pane
     set pane [makePane]
@@ -248,7 +248,7 @@ package require Itk
     } {}
     itk_component add simplify {
 	ttk::button $pane.auto_simplify \
-	    -text {Remove Selected} \
+	    -text Simplify \
 	    -command "$this simplify"
     } {}
 

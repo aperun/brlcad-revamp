@@ -1,7 +1,7 @@
 /*                        F B S E R V . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -70,15 +70,20 @@
 #ifdef HAVE_SYS_SOCKET_H
 #  include <sys/socket.h>
 #endif
+#ifdef HAVE_NETINET_IN_H
+#  include <netinet/in.h>		/* For htonl(), etc */
+#endif
+#ifdef HAVE_WINSOCK_H
+#  include <process.h>
+#  include <winsock.h>
+#endif
 #ifdef HAVE_SYS_WAIT_H
 #  include <sys/wait.h>
 #endif
 #ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>		/* For struct timeval */
 #endif
-#include "bselect.h"
 #include "bio.h"
-#include "bin.h"
 
 #include "fb.h"
 #include "pkg.h"
@@ -193,7 +198,7 @@ int
 is_socket(int fd)
 {
     struct sockaddr saddr;
-    socklen_t namelen = 0;
+    socklen_t namelen;
 
     if ( getsockname(fd, &saddr, &namelen) == 0 ) {
 	return	1;

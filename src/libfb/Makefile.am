@@ -80,6 +80,8 @@ noinst_HEADERS = \
 	nilcursor.h \
 	oglcursor.h
 
+dist_man_MANS = libfb.3
+
 EXTRA_DIST = \
 	if_TEMPLATE.c \
 	CMakeLists.txt

@@ -1,7 +1,7 @@
 /*                        R T S H O T . C
  * BRL-CAD
  *
- * Copyright (c) 1987-2012 United States Government as represented by
+ * Copyright (c) 1987-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -106,7 +106,6 @@ main(int argc, char **argv)
     int attr_count=0, i;
     char **attrs = (char **)NULL;
     const char *argv0 = argv[0];
-    int atoival;
 
     if (argc < 3) {
 	usage(argv0);
@@ -117,190 +116,170 @@ main(int argc, char **argv)
 
     argc--;
     argv++;
-    while (argv[0][0] == '-') {
+    while (argv[0][0] == '-') switch (argv[0][1]) {
+	case 'R':
+	    bundle_radius = atof(argv[1]);
+	    argc -= 2;
+	    argv += 2;
+	    break;
+	case 'n':
+	    num_rings = atoi(argv[1]);
+	    argc -= 2;
+	    argv += 2;
+	    break;
+	case 'g':
+	    grid_size = atof(argv[1]);
+	    argc -= 2;
+	    argv += 2;
+	    break;
+	case 'c':
+	    rays_per_ring = atoi(argv[1]);
+	    argc -= 2;
+	    argv += 2;
+	    break;
+	case 'v':
+	    /* count the number of attribute names provided */
+	    ptr = argv[1];
+	    while (*ptr) {
+		while (*ptr && isspace(*ptr))
+		    ptr++;
+		if (*ptr)
+		    attr_count++;
+		while (*ptr && !isspace(*ptr))
+		    ptr++;
+	    }
 
-	/* sanity */
-	if (!argv[1])
-	    return 1;
-
-	switch (argv[0][1]) {
-	    case 'R':
-		bundle_radius = atof(argv[1]);
-		argc -= 2;
-		argv += 2;
-		break;
-	    case 'n':
-		atoival = atoi(argv[1]);
-		if (atoival > 0 && atoival < INT_MAX-1)
-		    num_rings = atoival;
-		else
-		    return 1;
-
-		argc -= 2;
-		argv += 2;
-		break;
-	    case 'g':
-		grid_size = atof(argv[1]);
-		argc -= 2;
-		argv += 2;
-		break;
-	    case 'c':
-		atoival = atoi(argv[1]);
-		if (atoival > 0 && atoival < INT_MAX-1)
-		    rays_per_ring = atoival;
-		else
-		    return 1;
-
-		argc -= 2;
-		argv += 2;
-		break;
-	    case 'v':
-		/* count the number of attribute names provided */
-		ptr = argv[1];
-		if (!ptr)
-		    return 1;
-
-		while (*ptr) {
-		    while (*ptr && *ptr > 0 && *ptr < CHAR_MAX && isspace(*ptr))
-			ptr++;
-		    if (*ptr)
-			attr_count++;
-		    while (*ptr && *ptr > 0 && *ptr < CHAR_MAX && !isspace(*ptr))
-			ptr++;
-		}
-
-		if (attr_count == 0) {
-		    bu_log("missing list of attribute names!\n");
-		    usage(argv0);
-		    return 1;
-		}
-
-		/* allocate enough for a null terminated list */
-		attrs = (char **)bu_calloc(attr_count + 1, sizeof(char *), "attrs");
-
-		/* use strtok to actually grab the names */
-		i = 0;
-		ptr = strtok(argv[1], "\t ");
-		while (ptr && i < attr_count) {
-		    attrs[i] = bu_strdup(ptr);
-		    ptr = strtok((char *)NULL, "\t ");
-		    i++;
-		}
-		argc -= 2;
-		argv += 2;
-		break;
-	    case 't':
-		rt_bot_tri_per_piece = atoi(argv[1]);
-		argc -= 2;
-		argv += 2;
-		break;
-	    case 'b':
-		rt_bot_minpieces = atoi(argv[1]);
-		argc -= 2;
-		argv += 2;
-		break;
-	    case 'o':
-		sscanf(argv[1], "%d", &set_onehit);
-		argc -= 2;
-		argv += 2;
-		break;
-	    case 'r':
-		{
-		    float ray_len;
-
-		    sscanf(argv[1], "%f", &ray_len);
-		    set_ray_length = ray_len;
-		}
-		argc -= 2;
-		argv += 2;
-		break;
-	    case 'U':
-		sscanf(argv[1], "%d", &set_air);
-		argc -= 2;
-		argv += 2;
-		break;
-	    case 'u':
-		sscanf(argv[1], "%x", (unsigned int *)&bu_debug);
-		fprintf(stderr, "librt bu_debug=x%x\n", bu_debug);
-		argc -= 2;
-		argv += 2;
-		break;
-	    case 'x':
-		sscanf(argv[1], "%x", (unsigned int *)&rt_g.debug);
-		fprintf(stderr, "librt rt_g.debug=x%x\n", rt_g.debug);
-		argc -= 2;
-		argv += 2;
-		break;
-	    case 'X':
-		sscanf(argv[1], "%x", (unsigned int *)&rdebug);
-		fprintf(stderr, "rdebug=x%x\n", rdebug);
-		argc -= 2;
-		argv += 2;
-		break;
-	    case 'N':
-		sscanf(argv[1], "%x", (unsigned int *)&rt_g.NMG_debug);
-		fprintf(stderr, "librt rt_g.NMG_debug=x%x\n", rt_g.NMG_debug);
-		argc -= 2;
-		argv += 2;
-		break;
-	    case 'd':
-		if (argc < 4) goto err;
-		ap.a_ray.r_dir[X] = atof(argv[1]);
-		ap.a_ray.r_dir[Y] = atof(argv[2]);
-		ap.a_ray.r_dir[Z] = atof(argv[3]);
-		set_dir = 1;
-		argc -= 4;
-		argv += 4;
-		continue;
-
-	    case 'p':
-		if (argc < 4) goto err;
-		ap.a_ray.r_pt[X] = atof(argv[1]);
-		ap.a_ray.r_pt[Y] = atof(argv[2]);
-		ap.a_ray.r_pt[Z] = atof(argv[3]);
-		set_pt = 1;
-		argc -= 4;
-		argv += 4;
-		continue;
-
-	    case 'a':
-		if (argc < 4) goto err;
-		at_vect[X] = atof(argv[1]);
-		at_vect[Y] = atof(argv[2]);
-		at_vect[Z] = atof(argv[3]);
-		set_at = 1;
-		argc -= 4;
-		argv += 4;
-		continue;
-
-	    case 'O':
-		{
-		    if (BU_STR_EQUAL(argv[1], "resolve") || BU_STR_EQUAL(argv[1], "0"))
-			overlap_claimant_handling = 0;
-		    else if (BU_STR_EQUAL(argv[1], "rebuild_fastgen") || BU_STR_EQUAL(argv[1], "1"))
-			overlap_claimant_handling = 1;
-		    else if (BU_STR_EQUAL(argv[1], "rebuild_all") || BU_STR_EQUAL(argv[1], "2"))
-			overlap_claimant_handling = 2;
-		    else if (BU_STR_EQUAL(argv[1], "retain") || BU_STR_EQUAL(argv[1], "3"))
-			overlap_claimant_handling = 3;
-		    else {
-			bu_log("Illegal argument (%s) to '-O' option.  Must be:\n", argv[1]);
-			bu_log("\t'resolve' or '0'\n");
-			bu_log("\t'rebuild_fastgen' or '1'\n");
-			bu_log("\t'rebuild_all' or '2'\n");
-			bu_log("\t'retain' or '3'\n");
-			bu_exit(1, NULL);
-		    }
-		    argc -= 2;
-		    argv += 2;
-		}
-		continue;
-
-	    default:
-	    err:
+	    if (attr_count == 0) {
+		bu_log("missing list of attribute names!\n");
 		usage(argv0);
 		return 1;
-	}
+	    }
+
+	    /* allocate enough for a null terminated list */
+	    attrs = (char **)bu_calloc(attr_count + 1, sizeof(char *), "attrs");
+
+	    /* use strtok to actually grab the names */
+	    i = 0;
+	    ptr = strtok(argv[1], "\t ");
+	    while (ptr && i < attr_count) {
+		attrs[i] = bu_strdup(ptr);
+		ptr = strtok((char *)NULL, "\t ");
+		i++;
+	    }
+	    argc -= 2;
+	    argv += 2;
+	    break;
+	case 't':
+	    rt_bot_tri_per_piece = atoi(argv[1]);
+	    argc -= 2;
+	    argv += 2;
+	    break;
+	case 'b':
+	    rt_bot_minpieces = atoi(argv[1]);
+	    argc -= 2;
+	    argv += 2;
+	    break;
+	case 'o':
+	    sscanf(argv[1], "%d", &set_onehit);
+	    argc -= 2;
+	    argv += 2;
+	    break;
+	case 'r':
+	    {
+		float ray_len;
+
+		sscanf(argv[1], "%f", &ray_len);
+		set_ray_length = ray_len;
+	    }
+	    argc -= 2;
+	    argv += 2;
+	    break;
+	case 'U':
+	    sscanf(argv[1], "%d", &set_air);
+	    argc -= 2;
+	    argv += 2;
+	    break;
+	case 'u':
+	    sscanf(argv[1], "%x", (unsigned int *)&bu_debug);
+	    fprintf(stderr, "librt bu_debug=x%x\n", bu_debug);
+	    argc -= 2;
+	    argv += 2;
+	    break;
+	case 'x':
+	    sscanf(argv[1], "%x", (unsigned int *)&rt_g.debug);
+	    fprintf(stderr, "librt rt_g.debug=x%x\n", rt_g.debug);
+	    argc -= 2;
+	    argv += 2;
+	    break;
+	case 'X':
+	    sscanf(argv[1], "%x", (unsigned int *)&rdebug);
+	    fprintf(stderr, "rdebug=x%x\n", rdebug);
+	    argc -= 2;
+	    argv += 2;
+	    break;
+	case 'N':
+	    sscanf(argv[1], "%x", (unsigned int *)&rt_g.NMG_debug);
+	    fprintf(stderr, "librt rt_g.NMG_debug=x%x\n", rt_g.NMG_debug);
+	    argc -= 2;
+	    argv += 2;
+	    break;
+	case 'd':
+	    if (argc < 4) goto err;
+	    ap.a_ray.r_dir[X] = atof(argv[1]);
+	    ap.a_ray.r_dir[Y] = atof(argv[2]);
+	    ap.a_ray.r_dir[Z] = atof(argv[3]);
+	    set_dir = 1;
+	    argc -= 4;
+	    argv += 4;
+	    continue;
+
+	case 'p':
+	    if (argc < 4) goto err;
+	    ap.a_ray.r_pt[X] = atof(argv[1]);
+	    ap.a_ray.r_pt[Y] = atof(argv[2]);
+	    ap.a_ray.r_pt[Z] = atof(argv[3]);
+	    set_pt = 1;
+	    argc -= 4;
+	    argv += 4;
+	    continue;
+
+	case 'a':
+	    if (argc < 4) goto err;
+	    at_vect[X] = atof(argv[1]);
+	    at_vect[Y] = atof(argv[2]);
+	    at_vect[Z] = atof(argv[3]);
+	    set_at = 1;
+	    argc -= 4;
+	    argv += 4;
+	    continue;
+
+	case 'O':
+	    {
+		if (BU_STR_EQUAL(argv[1], "resolve") || BU_STR_EQUAL(argv[1], "0"))
+		    overlap_claimant_handling = 0;
+		else if (BU_STR_EQUAL(argv[1], "rebuild_fastgen") || BU_STR_EQUAL(argv[1], "1"))
+		    overlap_claimant_handling = 1;
+		else if (BU_STR_EQUAL(argv[1], "rebuild_all") || BU_STR_EQUAL(argv[1], "2"))
+		    overlap_claimant_handling = 2;
+		else if (BU_STR_EQUAL(argv[1], "retain") || BU_STR_EQUAL(argv[1], "3"))
+		    overlap_claimant_handling = 3;
+		else {
+		    bu_log("Illegal argument (%s) to '-O' option.  Must be:\n", argv[1]);
+		    bu_log("\t'resolve' or '0'\n");
+		    bu_log("\t'rebuild_fastgen' or '1'\n");
+		    bu_log("\t'rebuild_all' or '2'\n");
+		    bu_log("\t'retain' or '3'\n");
+		    bu_exit(1, NULL);
+		}
+		argc -= 2;
+		argv += 2;
+	    }
+	    continue;
+
+	default:
+    err:
+	    usage(argv0);
+	    return 1;
     }
     if (argc < 2) {
 	usage(argv0);
@@ -309,15 +288,12 @@ main(int argc, char **argv)
 
     if (set_dir + set_pt + set_at != 2) goto err;
 
-    /* explicit input sanitization */
-    if (num_rings <= 0 || rays_per_ring <= 0 || bundle_radius <= 0.0) {
-	fprintf(stderr, "Must have all of \"-R\", \"-n\", and \"-c\" set\n");
-	goto err;
+    if (num_rings != 0 || rays_per_ring != 0) {
+	if (num_rings <= 0 || rays_per_ring <= 0 || bundle_radius <= 0.0) {
+	    fprintf(stderr, "Must have all of \"-R\", \"-n\", and \"-c\" set\n");
+	    goto err;
+	}
     }
-    if (num_rings > INT_MAX)
-	num_rings = INT_MAX;
-    if (rays_per_ring > INT_MAX)
-	rays_per_ring = INT_MAX;
 
     /* Load database */
     title_file = argv[0];
@@ -451,13 +427,10 @@ int hit(register struct application *ap, struct partition *PartHeadp, struct seg
 {
     register struct partition *pp;
     register struct soltab *stp;
+    struct curvature cur;
     fastf_t out;
     point_t inpt, outpt;
-    vect_t inormal, onormal; 
-    struct curvature cur;
-    cur.crv_c1 = 0.0;
-    cur.crv_c2 = 0.0;
-    VSETALL(cur.crv_pdir, 0.0);
+    vect_t inormal, onormal;
 
     if ((pp=PartHeadp->pt_forw) == PartHeadp)
 	return 0;		/* Nothing hit?? */
@@ -569,10 +542,10 @@ int hit(register struct application *ap, struct partition *PartHeadp, struct seg
 		    bu_log("\t\t%s:\n", ap->attrs[i]);
 		    bu_log("\t\t\tstring rep = %s\n",
 			   bu_avs_get(&(regp->attr_values), ap->attrs[i]));
-		    /*  bu_log("\t\t\tlong rep = %d\n",
-			BU_MRO_GETLONG(regp->attr_values[i]));
-			bu_log("\t\t\tdouble rep = %f\n",
-			BU_MRO_GETDOUBLE(regp->attr_values[i]));*/
+		  /*  bu_log("\t\t\tlong rep = %d\n",
+			   BU_MRO_GETLONG(regp->attr_values[i]));
+		    bu_log("\t\t\tdouble rep = %f\n",
+			   BU_MRO_GETDOUBLE(regp->attr_values[i]));*/
 		    i++;
 		}
 	    }
@@ -601,7 +574,7 @@ int bundle_hit(register struct application_bundle *bundle, struct partition_bund
 {
     register struct partition *pp;
     register struct soltab *stp;
-    struct curvature cur = RT_CURVATURE_INIT_ZERO;
+    struct curvature cur;
     point_t inpt, outpt;
     vect_t inormal, onormal;
     int raycnt=1;
@@ -722,18 +695,18 @@ int bundle_hit(register struct application_bundle *bundle, struct partition_bund
 		int i;
 
 		if (pl->ap->attrs) {
-		    bu_log("\tattribute values:\n");
-		    i = 0;
-		    while (pl->ap->attrs[i] && regp->attr_values.count) {
-			bu_log("\t\t%s:\n", pl->ap->attrs[i]);
-			bu_log("\t\t\tstring rep = %s\n",
-			       bu_avs_get(&(regp->attr_values), pl->ap->attrs[i]));
-			/*  bu_log("\t\t\tlong rep = %d\n",
-			    BU_MRO_GETLONG(regp->attr_values[i]));
-			    bu_log("\t\t\tdouble rep = %f\n",
-			    BU_MRO_GETDOUBLE(regp->attr_values[i]));*/
-			i++;
-		    }
+			bu_log("\tattribute values:\n");
+			i = 0;
+			while (pl->ap->attrs[i] && regp->attr_values.count) {
+				bu_log("\t\t%s:\n", pl->ap->attrs[i]);
+				bu_log("\t\t\tstring rep = %s\n",
+						bu_avs_get(&(regp->attr_values), pl->ap->attrs[i]));
+				/*  bu_log("\t\t\tlong rep = %d\n",
+				    BU_MRO_GETLONG(regp->attr_values[i]));
+				    bu_log("\t\t\tdouble rep = %f\n",
+				    BU_MRO_GETDOUBLE(regp->attr_values[i]));*/
+				i++;
+			}
 		}
 	    }
 	}

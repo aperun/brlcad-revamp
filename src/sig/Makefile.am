@@ -30,6 +30,7 @@ bin_PROGRAMS = \
 	imod \
 	istats \
 	smod \
+	syn \
 	u-a \
 	u-bw \
 	u-d \
@@ -142,6 +143,9 @@ ustats_LDADD = ${BU}
 dpeak_SOURCES = dpeak.c
 dpeak_LDADD = ${BU}
 
+syn_SOURCES = syn.c
+syn_LDADD = ${BU} ${LIBM}
+
 damdf_SOURCES = damdf.c
 damdf_LDADD = ${BU}
 
@@ -188,6 +192,7 @@ FAST_OBJECTS = \
 	$(imod_OBJECTS) \
 	$(istats_OBJECTS) \
 	$(smod_OBJECTS) \
+	$(syn_OBJECTS) \
 	$(u_a_OBJECTS) \
 	$(u_bw_OBJECTS) \
 	$(u_d_OBJECTS) \

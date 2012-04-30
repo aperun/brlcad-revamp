@@ -1,7 +1,7 @@
 /*                       D O E V E N T . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -198,11 +198,7 @@ doEvent(ClientData clientData, XEvent *eventPtr)
 }
 #else
 int
-#if !defined(IF_X) && !defined(IF_WGL) && !defined(IF_OGL) && !defined(IF_TK)
-doEvent(ClientData UNUSED(clientData), void *UNUSED(eventPtr)) {
-#else
 doEvent(ClientData clientData, void *eventPtr) {
-#endif
     return TCL_OK;
 }
 #endif /* HAVE_X11_XLIB_H */
@@ -232,7 +228,7 @@ common_dbtext(char *str)
 HIDDEN void
 motion_event_handler(XMotionEvent *xmotion)
 {
-    struct bu_vls cmd = BU_VLS_INIT_ZERO;
+    struct bu_vls cmd;
     int save_edflag = -1;
     int mx, my;
     int dx, dy;
@@ -242,6 +238,8 @@ motion_event_handler(XMotionEvent *xmotion)
 
     if (dbip == DBI_NULL)
 	return;
+
+    bu_vls_init(&cmd);
 
     mx = xmotion->x;
     my = xmotion->y;
@@ -746,7 +744,7 @@ HIDDEN void
 dials_event_handler(XDeviceMotionEvent *dmep)
 {
     static int knob_values[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-    struct bu_vls cmd = BU_VLS_INIT_ZERO;
+    struct bu_vls cmd;
     int save_edflag = -1;
     int setting;
     fastf_t f;
@@ -758,6 +756,8 @@ dials_event_handler(XDeviceMotionEvent *dmep)
 	common_dbtext((adc_state->adc_draw ? kn1_knobs:kn2_knobs)[dmep->first_axis]);
 	return;
     }
+
+    bu_vls_init(&cmd);
 
     switch (DIAL0 + dmep->first_axis) {
 	case DIAL0:
@@ -1413,7 +1413,7 @@ HIDDEN void
 buttons_event_handler(XDeviceButtonEvent *dbep, int press)
 {
     if (press) {
-	struct bu_vls cmd = BU_VLS_INIT_ZERO;
+	struct bu_vls cmd;
 
 	if (dbep->button == 1) {
 	    button0 = 1;
@@ -1426,8 +1426,10 @@ buttons_event_handler(XDeviceButtonEvent *dbep, int press)
 	} else if (dbep->button == 4) {
 	    set_knob_offset();
 
+	    bu_vls_init(&cmd);
 	    bu_vls_strcat(&cmd, "knob zero\n");
 	} else {
+	    bu_vls_init(&cmd);
 	    bu_vls_printf(&cmd, "press %s\n",
 			  label_button(bmap[dbep->button - 1]));
 	}

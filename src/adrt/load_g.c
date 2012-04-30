@@ -1,7 +1,7 @@
 /*                        L O A D _ G . C
  * BRL-CAD / ADRT
  *
- * Copyright (c) 2009-2012 United States Government as represented by
+ * Copyright (c) 2009-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -157,10 +157,7 @@ nmg_to_adrt_regstart(struct db_tree_state *ts, const struct db_full_path *path, 
     RT_CK_TREE(rci->tree);
     if( rci->tree->tr_op != OP_DB_LEAF )
 	return 0;
-    if((dir = db_lookup(dbip, rci->tree->tr_l.tl_name, 1)) == NULL) {
-	printf("Lookup failed: %s\n", rci->tree->tr_l.tl_name);
-	return 0;
-    }
+    dir = db_lookup(dbip, rci->tree->tr_l.tl_name, 1);
     if(dir->d_minor_type != ID_BOT && dir->d_minor_type != ID_NMG)
 	return 0;
     if(rt_db_get_internal(&intern, dir, dbip, (fastf_t *)NULL, &rt_uniresource) < 0) {
@@ -171,7 +168,7 @@ nmg_to_adrt_regstart(struct db_tree_state *ts, const struct db_full_path *path, 
     if(dir->d_minor_type == ID_NMG)
 	return 0;
 
-    BU_GET(mesh, struct adrt_mesh_s);
+    BU_GETSTRUCT(mesh, adrt_mesh_s);
 
     BU_LIST_PUSH(&((*gcvwriter.meshes)->l), &(mesh->l));
 
@@ -183,7 +180,7 @@ nmg_to_adrt_regstart(struct db_tree_state *ts, const struct db_full_path *path, 
     rt_comb_get_color(rgb, rci);
     VSCALE(mesh->attributes->color.v, rgb, 1.0/256.0);
 
-    bu_strlcpy(mesh->name, db_path_to_string(path), sizeof(mesh->name));
+    strncpy(mesh->name, db_path_to_string(path), 255);
 
     if(intern.idb_minor_type == ID_NMG) {
 	nmg_to_adrt_internal(mesh, (struct nmgregion *)intern.idb_ptr);
@@ -225,7 +222,7 @@ nmg_to_adrt_gcvwrite(struct nmgregion *r, const struct db_full_path *pathp, int 
     /* triangulate model */
     nmg_triangulate_model(m, &tol);
 
-    BU_GET(mesh, struct adrt_mesh_s);
+    BU_GETSTRUCT(mesh, adrt_mesh_s);
 
     BU_LIST_PUSH(&((*gcvwriter.meshes)->l), &(mesh->l));
 
@@ -235,7 +232,7 @@ nmg_to_adrt_gcvwrite(struct nmgregion *r, const struct db_full_path *pathp, int 
     mesh->matid = material_id;
 
     VMOVE(mesh->attributes->color.v, color);
-    bu_strlcpy(mesh->name, db_path_to_string(pathp), sizeof(mesh->name));
+    strncpy(mesh->name, db_path_to_string(pathp), 255);
 
     nmg_to_adrt_internal(mesh, r);
 }
@@ -296,7 +293,7 @@ load_g (struct tie_s *tie, const char *db, int argc, const char **argv, struct a
 
     tie_init(cur_tie, 4096, TIE_KDTREE_FAST);
 
-    BU_GET(*meshes, struct adrt_mesh_s);
+    BU_GETSTRUCT(*meshes, adrt_mesh_s);
     BU_LIST_INIT(&((*meshes)->l));
 
     gcvwriter.meshes = meshes;

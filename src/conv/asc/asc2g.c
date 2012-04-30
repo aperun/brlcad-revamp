@@ -1,7 +1,7 @@
 /*                         A S C 2 G . C
  * BRL-CAD
  *
- * Copyright (c) 1985-2012 United States Government as represented by
+ * Copyright (c) 1985-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -171,12 +171,13 @@ strsolbld(void)
     char	*type = NULL;
     char	*name = NULL;
     char	*args = NULL;
-    struct bu_vls	str = BU_VLS_INIT_ZERO;
+    struct bu_vls	str;
     char *buf2 = (char *)bu_malloc(sizeof(char) * BUFSIZE, "strsolbld temporary buffer");
     char *bufp = buf2;
 
     memcpy(buf2, buf, sizeof(char) * BUFSIZE);
 
+    bu_vls_init(&str);
 
 #if defined (HAVE_STRSEP)
     (void)strsep(&buf2, " ");		/* skip stringsolid_id */
@@ -193,7 +194,7 @@ strsolbld(void)
     if (BU_STR_EQUAL(type, "dsp")) {
 	struct rt_dsp_internal *dsp;
 
-	BU_GET(dsp, struct rt_dsp_internal);
+	BU_GETSTRUCT(dsp, rt_dsp_internal);
 	bu_vls_init(&dsp->dsp_name);
 	bu_vls_strcpy(&str, args);
 	if (bu_struct_parse(&str, rt_functab[ID_DSP].ft_parsetab, (char *)dsp) < 0) {
@@ -214,7 +215,7 @@ strsolbld(void)
     } else if (BU_STR_EQUAL(type, "ebm")) {
 	struct rt_ebm_internal *ebm;
 
-	BU_GET(ebm, struct rt_ebm_internal);
+	BU_GETSTRUCT(ebm, rt_ebm_internal);
 
 	MAT_IDN(ebm->mat);
 
@@ -237,7 +238,7 @@ strsolbld(void)
     } else if (BU_STR_EQUAL(type, "vol")) {
 	struct rt_vol_internal *vol;
 
-	BU_GET(vol, struct rt_vol_internal);
+	BU_GETSTRUCT(vol, rt_vol_internal);
 	MAT_IDN(vol->mat);
 
 	bu_vls_strcpy(&str, args);
@@ -302,6 +303,8 @@ sktbld(void)
     VMOVE(V, fV);
     VMOVE(u, fu);
     VMOVE(v, fv);
+
+    verts = (point2d_t *)bu_calloc(vert_count, sizeof(point2d_t), "verts");
 
     if (bu_fgets(buf, BUFSIZE, ifp) == (char *)0)
 	bu_exit(-1, "Unexpected EOF while reading sketch (%s) data\n", name);
@@ -451,7 +454,7 @@ nmgbld(void)
     int	j;
 
     /* First, process the header line */
-    strtok(buf, " ");
+    cp = strtok(buf, " ");
     /* This is nmg_id, unused here. */
     cp = strtok(NULL, " ");
     version = atoi(cp);
@@ -676,7 +679,6 @@ solbld(void)
 	    rad2 = val[10];
 
 	    mk_hyp(ofp, NAME, center, height, a, rad1, rad2);
-	    break;
 
 	case ETO:
 	    VSET(center, val[0], val[1], val[2]);
@@ -866,7 +868,8 @@ combbld(void)
 		temp_pflag ? matparm : (char *)0,
 		override ? (unsigned char *)rgb : (unsigned char *)0,
 		regionid, aircode, material, los, inherit, 0, 1) < 0) {
-	bu_exit(1, "asc2g: mk_lrcomb fail\n");
+	fprintf(stderr, "asc2g: mk_lrcomb fail\n");
+	abort();
     }
 
     if (buf[0] == '\0')  return 0;
@@ -1080,7 +1083,7 @@ polyhbld(void)
     BU_ASSERT_LONG(nlines, >, 0);
 
     /* Allocate storage for the faces */
-    BU_GET(pg, struct rt_pg_internal);
+    BU_GETSTRUCT(pg, rt_pg_internal);
     pg->magic = RT_PG_INTERNAL_MAGIC;
     pg->npoly = nlines;
     pg->poly = (struct rt_pg_face_internal *)bu_calloc(pg->npoly,
@@ -1344,7 +1347,7 @@ pipebld(void)
 
     BU_LIST_INIT(&head);
     bu_fgets(buf, BUFSIZE, ifp);
-    while (bu_strncmp (buf, "END_PIPE", 8)) {
+    while (strncmp (buf, "END_PIPE", 8)) {
 	double id, od, x, y, z, bendradius;
 
 	sp = (struct wdb_pipept *)bu_malloc(sizeof(struct wdb_pipept), "pipe");
@@ -1517,9 +1520,11 @@ int
 gettclblock(struct bu_vls *line, FILE *fp)
 {
     int ret = 0;
-    struct bu_vls tmp = BU_VLS_INIT_ZERO;
+    struct bu_vls tmp;
     int bcnt = 0;
     int escapedcr = 0;
+
+    bu_vls_init(&tmp);
 
     if ((ret=bu_vls_gets(line, fp)) >= 0) {
 	linecnt++;
@@ -1553,9 +1558,9 @@ gettclblock(struct bu_vls *line, FILE *fp)
 int
 main(int argc, char *argv[])
 {
-    struct bu_vls       str_title = BU_VLS_INIT_ZERO;
-    struct bu_vls       str_put = BU_VLS_INIT_ZERO;
-    struct bu_vls	line = BU_VLS_INIT_ZERO;
+    struct bu_vls       str_title;
+    struct bu_vls       str_put;
+    struct bu_vls	line;
     int                 isComment=1;
 
     bu_debug = BU_DEBUG_COREDUMP;
@@ -1576,8 +1581,11 @@ main(int argc, char *argv[])
 
     rt_init_resource(&rt_uniresource, 0, NULL);
 
+    bu_vls_init(&line);
     bu_vls_extend( &line, SIZE);
+    bu_vls_init(&str_title);
     bu_vls_strcpy( &str_title, "title");
+    bu_vls_init(&str_put);
     bu_vls_strcpy( &str_put, "put ");
 
     while (isComment) {
@@ -1786,6 +1794,7 @@ main(int argc, char *argv[])
 		bu_log("%s\n", buf);
 		continue;
 	}
+	memset(buf, 0, sizeof(char) * BUFSIZE);
     }
 
     /* Now, at the end of the database, dump out the entire

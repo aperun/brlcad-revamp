@@ -1,7 +1,7 @@
 /*                        R E D . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2012 United States Government as represented by
+ * Copyright (c) 2008-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -80,7 +80,7 @@ _ged_print_matrix(FILE *fp, matp_t matrix)
     if (!matrix)
 	return;
 
-    for (k = 0; k < 16; k++) {
+    for (k=0; k<16; k++) {
 	sprintf(buf, "%g", matrix[k]);
 	tmp = atof(buf);
 	if (ZERO(tmp - matrix[k]))
@@ -98,12 +98,13 @@ _ged_find_matrix(struct ged *gedp, const char *currptr, int strlength, matp_t *m
     int ret = 1;
     regex_t matrix_entry, full_matrix, nonwhitespace_regex;
     regmatch_t *float_locations;
-    struct bu_vls current_substring = BU_VLS_INIT_ZERO;
-    struct bu_vls matrix_substring = BU_VLS_INIT_ZERO;
+    struct bu_vls current_substring, matrix_substring;
     int floatcnt, tail_start;
     const char *floatptr;
     const char *float_string = "[+-]?[0-9]*[.]?[0-9]+([eE][+-]?[0-9]+)?";
 
+    bu_vls_init(&current_substring);
+    bu_vls_init(&matrix_substring);
     bu_vls_sprintf(&current_substring, "(%s[[:space:]]+)", float_string);
     regcomp(&matrix_entry, bu_vls_addr(&current_substring), REG_EXTENDED);
     bu_vls_sprintf(&current_substring,
@@ -195,7 +196,7 @@ _ged_find_matrix(struct ged *gedp, const char *currptr, int strlength, matp_t *m
 
 
 HIDDEN int
-build_comb(struct ged *gedp, struct directory *dp, struct bu_vls *target_name)
+build_comb(struct ged *gedp, struct directory *dp, struct bu_vls **final_name)
 {
     struct rt_comb_internal *comb;
     size_t node_count=0;
@@ -207,16 +208,13 @@ build_comb(struct ged *gedp, struct directory *dp, struct bu_vls *target_name)
     const char *currptr;
     regex_t nonwhitespace_regex, attr_regex, combtree_regex, combtree_op_regex;
     regmatch_t *result_locations;
-    struct bu_vls current_substring = BU_VLS_INIT_ZERO;
-    struct bu_vls attr_vls = BU_VLS_INIT_ZERO;
-    struct bu_vls val_vls = BU_VLS_INIT_ZERO;
-    struct bu_vls curr_op_vls = BU_VLS_INIT_ZERO;
-    struct bu_vls next_op_vls = BU_VLS_INIT_ZERO;
+    struct bu_vls current_substring, attr_vls, val_vls, curr_op_vls, next_op_vls;
     struct bu_mapped_file *redtmpfile;
     int attrstart, attrend, attrcumulative, name_end;
     int ret, gedret, combtagstart, combtagend;
     struct bu_attribute_value_set avs;
     matp_t matrix = {0};
+    struct bu_vls *target_name = bu_malloc(sizeof(struct bu_vls), "target vls");
 
     bu_vls_init(target_name);
 
@@ -233,6 +231,7 @@ build_comb(struct ged *gedp, struct directory *dp, struct bu_vls *target_name)
 	RT_CK_COMB(comb);
 	RT_CK_DIR(dp);
     }
+    bu_vls_init(&current_substring);
 
     /* Map the temp file for reading */
     redtmpfile = bu_open_mapped_file(_ged_tmpfil, (char *)NULL);
@@ -292,6 +291,8 @@ build_comb(struct ged *gedp, struct directory *dp, struct bu_vls *target_name)
     }
 
     /* Parsing the file is handled in two stages - attributes and combination tree.  Start with attributes */
+    bu_vls_init(&attr_vls);
+    bu_vls_init(&val_vls);
     bu_avs_init_empty(&avs);
     while (attrcumulative < combtagstart - 1) {
 	/* If attributes are present, the first line must match the attr regex - mult-line attribute names are not supported. */
@@ -340,6 +341,7 @@ build_comb(struct ged *gedp, struct directory *dp, struct bu_vls *target_name)
 	    if (get_attr_val_pair(bu_vls_addr(&current_substring), &attr_vls, &val_vls)) {
 		if (BU_STR_EQUAL(bu_vls_addr(&attr_vls), "name")) {
 		    bu_vls_sprintf(target_name, "%s", bu_vls_addr(&val_vls));
+		    (*final_name) = target_name;
 		}
 		if (!BU_STR_EQUAL(bu_vls_addr(&val_vls), "") && !BU_STR_EQUAL(bu_vls_addr(&attr_vls), "name"))
 		    (void)bu_avs_add(&avs, bu_vls_addr(&attr_vls), bu_vls_addr(&val_vls));
@@ -365,6 +367,8 @@ build_comb(struct ged *gedp, struct directory *dp, struct bu_vls *target_name)
     }
     currptr = (const char *)(redtmpfile->buf) + combtagend;
     name_end = 0;
+    bu_vls_init(&curr_op_vls);
+    bu_vls_init(&next_op_vls);
 
     ret = regexec(&combtree_op_regex, currptr, combtree_op_regex.re_nsub , result_locations, 0);
     if (ret == 0) {
@@ -462,15 +466,13 @@ build_comb(struct ged *gedp, struct directory *dp, struct bu_vls *target_name)
 		case '-':
 		    rt_tree_array[tree_index].tl_op = OP_SUBTRACT;
 		    break;
+		default:
+		    bu_vls_printf(gedp->ged_result_str, "build_comb: unrecognized relation (assume UNION)\n");
 		case 'u':
 		    rt_tree_array[tree_index].tl_op = OP_UNION;
 		    break;
-		default:
-		    bu_vls_printf(gedp->ged_result_str,
-			"build_comb: unrecognized relation (assume UNION)\n");
-		    rt_tree_array[tree_index].tl_op = OP_UNION;
 	    }
-	    BU_GET(tp, union tree);
+	    BU_GETUNION(tp, tree);
 	    RT_TREE_INIT(tp);
 	    rt_tree_array[tree_index].tl_tree = tp;
 	    tp->tr_l.tl_op = OP_DB_LEAF;
@@ -517,7 +519,7 @@ build_comb(struct ged *gedp, struct directory *dp, struct bu_vls *target_name)
   printf("\n");
   int i, m;
   fastf_t tmp;
-  for (i = 0; i < tree_index; i++) {
+  for (i=0; i<tree_index; i++) {
   char op;
 
   switch (rt_tree_array[i].tl_op) {
@@ -565,8 +567,7 @@ build_comb(struct ged *gedp, struct directory *dp, struct bu_vls *target_name)
 	return -1;
     }
 
-    if(db5_replace_attributes(dp, &avs, gedp->ged_wdbp->dbip))
-	bu_vls_printf(gedp->ged_result_str, "build_comb %s: Failed to update attributes\n", dp->d_namep);
+    db5_replace_attributes(dp, &avs, gedp->ged_wdbp->dbip);
 
     bu_avs_free(&avs);
     return node_count;
@@ -586,16 +587,16 @@ write_comb(struct ged *gedp, struct rt_comb_internal *comb, const char *name)
     int hasattr;
     size_t node_count;
     size_t actual_count;
-    struct bu_vls spacer = BU_VLS_INIT_ZERO;
+    struct bu_vls spacer;
     const char *attr;
 
     bu_avs_init_empty(&avs);
 
+
+    bu_vls_init(&spacer);
+    bu_vls_trunc(&spacer, 0);
+
     dp = db_lookup(gedp->ged_wdbp->dbip, name, LOOKUP_QUIET);
-    if (dp == RT_DIR_NULL) {
-      bu_vls_free(&spacer);
-      return GED_ERROR;
-    }
 
     if (comb)
 	RT_CK_COMB(comb);
@@ -604,12 +605,11 @@ write_comb(struct ged *gedp, struct rt_comb_internal *comb, const char *name)
     if ((fp=fopen(_ged_tmpfil, "w")) == NULL) {
 	perror("fopen");
 	bu_vls_printf(gedp->ged_result_str, "ERROR: Cannot open temporary file [%s] for writing\n", _ged_tmpfil);
-	bu_vls_free(&spacer);
 	return GED_ERROR;
     }
 
     maxlength = 0;
-    for (i = 0; (attr = db5_standard_attribute(i)) != NULL; i++) {
+    for (i=0; (attr = db5_standard_attribute(i)) != NULL; i++) {
 	if (strlen(attr) > maxlength)
 	    maxlength = strlen(attr);
     }
@@ -620,7 +620,7 @@ write_comb(struct ged *gedp, struct rt_comb_internal *comb, const char *name)
 	    bu_vls_printf(&spacer, " ");
 	}
 	fprintf(fp, "name%s= %s\n", bu_vls_addr(&spacer), name);
-	for (i = 0; (attr = db5_standard_attribute(i)) != NULL; i++) {
+	for (i=0; (attr = db5_standard_attribute(i)) != NULL; i++) {
 	    bu_vls_trunc(&spacer, 0);
 	    for (j = 0; j < maxlength - strlen(attr); j++) {
 		bu_vls_printf(&spacer, " ");
@@ -629,7 +629,6 @@ write_comb(struct ged *gedp, struct rt_comb_internal *comb, const char *name)
 	}
 	fprintf(fp, "%s", combseparator);
 	fclose(fp);
-	bu_vls_free(&spacer);
 	return GED_OK;
     }
 
@@ -637,8 +636,6 @@ write_comb(struct ged *gedp, struct rt_comb_internal *comb, const char *name)
 	db_non_union_push(comb->tree, &rt_uniresource);
 	if (db_ck_v4gift_tree(comb->tree) < 0) {
 	    bu_vls_printf(gedp->ged_result_str, "ERROR: Cannot prepare tree for editing\n");
-	    bu_vls_free(&spacer);
-	    fclose(fp);
 	    return GED_ERROR;
 	}
     }
@@ -658,7 +655,7 @@ write_comb(struct ged *gedp, struct rt_comb_internal *comb, const char *name)
 
     if (!hasattr) {
 	avpp = avs.avp;
-	for (i = 0; i < avs.count; i++, avpp++) {
+	for (i=0; i < avs.count; i++, avpp++) {
 	    if (strlen(avpp->name) > maxlength)
 		maxlength = strlen(avpp->name);
 	}
@@ -667,7 +664,7 @@ write_comb(struct ged *gedp, struct rt_comb_internal *comb, const char *name)
 	    bu_vls_printf(&spacer, " ");
 	}
 	fprintf(fp, "name%s= %s\n", bu_vls_addr(&spacer), name);
-	for (i = 0; (attr = db5_standard_attribute(i)) != NULL; i++) {
+	for (i=0; (attr = db5_standard_attribute(i)) != NULL; i++) {
 	    bu_vls_trunc(&spacer, 0);
 	    for (j = 0; j < maxlength - strlen(attr) + 1; j++) {
 		bu_vls_printf(&spacer, " ");
@@ -679,7 +676,7 @@ write_comb(struct ged *gedp, struct rt_comb_internal *comb, const char *name)
 	    }
 	}
 	avpp = avs.avp;
-	for (i = 0; i < avs.count; i++, avpp++) {
+	for (i=0; i < avs.count; i++, avpp++) {
 	    if (!db5_is_standard_attribute(avpp->name)) {
 		bu_vls_trunc(&spacer, 0);
 		for (j = 0; j < maxlength - strlen(avpp->name) + 1; j++) {
@@ -693,7 +690,7 @@ write_comb(struct ged *gedp, struct rt_comb_internal *comb, const char *name)
 
     fprintf(fp, "%s", combseparator);
 
-    for (i = 0; i<actual_count; i++) {
+    for (i=0; i<actual_count; i++) {
 	char op;
 
 	switch (rt_tree_array[i].tl_op) {
@@ -741,9 +738,9 @@ ged_red(struct ged *gedp, int argc, const char *argv[])
     static const char *usage = "comb";
     const char *editstring = NULL;
     const char *av[3];
-    struct bu_vls comb_name = BU_VLS_INIT_ZERO;
-    struct bu_vls temp_name = BU_VLS_INIT_ZERO;
-    struct bu_vls final_name = BU_VLS_INIT_ZERO;
+    struct bu_vls comb_name;
+    struct bu_vls temp_name;
+    struct bu_vls *final_name = NULL;
     int force_flag = 0;
 
     GED_CHECK_DATABASE_OPEN(gedp, GED_ERROR);
@@ -781,6 +778,9 @@ ged_red(struct ged *gedp, int argc, const char *argv[])
     }
 
     dp = db_lookup(gedp->ged_wdbp->dbip, argv[1], LOOKUP_QUIET);
+
+    bu_vls_init(&comb_name);
+    bu_vls_init(&temp_name);
 
     /* Now, sanity check to make sure a comb is listed instead of a
      * primitive, and either write out existing contents for an
@@ -833,7 +833,6 @@ ged_red(struct ged *gedp, int argc, const char *argv[])
     /* Write the combination components to the file */
     if (write_comb(gedp, comb, argv[1])) {
 	bu_vls_printf(gedp->ged_result_str, "%s: unable to edit %s\n", argv[0], argv[1]);
-	(void)fclose(fp);
 	goto cleanup;
     }
 
@@ -882,7 +881,7 @@ ged_red(struct ged *gedp, int argc, const char *argv[])
 
 	    GED_DB_DIRADD(gedp, tmp_dp, bu_vls_addr(&temp_name), -1, 0, RT_DIR_COMB, (genptr_t)&intern.idb_type, 0);
 
-	    BU_GET(comb, struct rt_comb_internal);
+	    BU_GETSTRUCT(comb, rt_comb_internal);
 	    RT_COMB_INTERNAL_INIT(comb);
 
 	    intern.idb_ptr = (genptr_t)comb;
@@ -908,27 +907,31 @@ ged_red(struct ged *gedp, int argc, const char *argv[])
 	/* if we got a final_name from build_comb and it isn't
 	 * identical to comb_name, check to ensure an object with the
 	 * new name doesn't already exist - red will not overwrite a
-	 * pre-existing comb (unless the -f force flag is set).
+	 * pre-existing comb (unless the -f force flag is set).  If we
+	 * don't have a name, assume we're working on comb_name
 	 */
-	if (bu_vls_strlen(&final_name) > 0) {
-	    if (!BU_STR_EQUAL(bu_vls_addr(&comb_name), bu_vls_addr(&final_name))) {
-		if (db_lookup(gedp->ged_wdbp->dbip, bu_vls_addr(&final_name), LOOKUP_QUIET) != RT_DIR_NULL) {
+	if (final_name) {
+	    if (!BU_STR_EQUAL(bu_vls_addr(&comb_name), bu_vls_addr(final_name))) {
+		if (db_lookup(gedp->ged_wdbp->dbip, bu_vls_addr(final_name), LOOKUP_QUIET) != RT_DIR_NULL) {
 		    if (force_flag) {
 			av[0] = "kill";
-			av[1] = bu_vls_addr(&final_name);
+			av[1] = bu_vls_addr(final_name);
 			av[2] = NULL;
 			(void)ged_kill(gedp, 2, (const char **)av);
 		    } else {
 			/* not forced, can't overwrite destination, can't proceed */
-			bu_vls_printf(gedp->ged_result_str, "%s: Error - %s already exists\n", *argv, bu_vls_addr(&final_name));
+			bu_vls_printf(gedp->ged_result_str, "%s: Error - %s already exists\n", *argv, bu_vls_addr(final_name));
 			goto cleanup;
 		    }
 		}
 	    }
+	} else {
+	    final_name = bu_malloc(sizeof(struct bu_vls), "target vls");
+	    bu_vls_init(final_name);
+	    bu_vls_sprintf(final_name, "%s", bu_vls_addr(&comb_name));
 	}
-
 	/* if we ended up with an empty final name, print an error message and head for cleanup */
-	if (strlen(bu_vls_addr(&final_name)) == 0) {
+	if (strlen(bu_vls_addr(final_name)) == 0) {
 	    bu_vls_printf(gedp->ged_result_str, "%s: Error - no target name supplied\n", *argv);
 	    goto cleanup;
 	}
@@ -938,7 +941,7 @@ ged_red(struct ged *gedp, int argc, const char *argv[])
 	 * otherwise just move temp_name to final_name.
 	 */
 	if (!BU_STR_EQUAL(bu_vls_addr(&comb_name), bu_vls_addr(&temp_name))) {
-	    if (BU_STR_EQUAL(bu_vls_addr(&comb_name), bu_vls_addr(&final_name))) {
+	    if (BU_STR_EQUAL(bu_vls_addr(&comb_name), bu_vls_addr(final_name))) {
 		av[0] = "kill";
 		av[1] = bu_vls_addr(&comb_name);
 		av[2] = NULL;
@@ -947,7 +950,7 @@ ged_red(struct ged *gedp, int argc, const char *argv[])
 	}
 	av[0] = "mv";
 	av[1] = bu_vls_addr(&temp_name);
-	av[2] = bu_vls_addr(&final_name);
+	av[2] = bu_vls_addr(final_name);
 	(void)ged_move(gedp, 3, (const char **)av);
 
     }
@@ -955,9 +958,13 @@ ged_red(struct ged *gedp, int argc, const char *argv[])
     ret = GED_OK;
 
 cleanup:
-    bu_file_delete(_ged_tmpfil);
+    if (bu_file_exists(_ged_tmpfil))
+	unlink(_ged_tmpfil);
 
-    bu_vls_free(&final_name);
+    if (final_name) {
+	bu_vls_free(final_name);
+	bu_free(final_name, "final_name");
+    }
     bu_vls_free(&comb_name);
     bu_vls_free(&temp_name);
 

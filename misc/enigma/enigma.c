@@ -35,10 +35,8 @@ char	t1[ROTORSZ];
 char	t2[ROTORSZ];
 char	t3[ROTORSZ];
 char	deck[ROTORSZ];
-
-/* return from crypt() is either 13 or 20 bytes + nul terminator */
-char	ibuf[20+1];
-char	buf[20+1];
+char	ibuf[13];
+char	buf[13];
 
 void	shuffle(char *);
 
@@ -109,8 +107,7 @@ setup(pw)
 	salt[1] = saltfix(ibuf[1]);
 	salt[2] = '\0';
 	r = crypt( ibuf, salt );
-	strncpy( buf, r, sizeof(buf)-1 );
-	buf[sizeof(buf)-1] = '\0';
+	strncpy( buf, r, sizeof(buf) );
 
 	/* First 2 bytes are echo of the salt.  Replace with original salt. */
 	buf[0] = ibuf[0];
@@ -188,25 +185,13 @@ main(int argc, char *argv[])
 	nr2 = 0;
 
 	while((i=getchar()) != -1) {
-	    int t1idx, t2idx, t3idx;
-
 		if (secureflg) {
 			nr1 = deck[n1]&MASK;
 			nr2 = deck[nr1]&MASK;
 		} else {
 			nr1 = n1;
 		}
-		t1idx = (i+nr1)&MASK;
-		if (t1idx >= ROTORSZ)
-		    t1idx = ROTORSZ-1;
-		t3idx = (t1[t1idx]+nr2)&MASK;
-		if (t3idx >= ROTORSZ)
-		    t3idx = ROTORSZ-1;
-		t2idx = (t3[t3idx]-nr2)&MASK;
-		if (t2idx >= ROTORSZ)
-		    t2idx = ROTORSZ-1;
-
-		i = t2[t2idx]-nr1;
+		i = t2[(t3[(t1[(i+nr1)&MASK]+nr2)&MASK]-nr2)&MASK]-nr1;
 		putchar(i);
 		n1++;
 		if(n1==ROTORSZ) {

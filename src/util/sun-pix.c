@@ -1,7 +1,7 @@
 /*                       S U N - P I X . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2012 United States Government as represented by
+ * Copyright (c) 1986-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -30,7 +30,6 @@
 #include "bio.h"
 
 #include "bu.h"
-#include "vmath.h"
 
 
 /*
@@ -64,15 +63,6 @@ char inbuf[sizeof(struct rasterfile)];
 #define RMT_NONE 0	/* ras_maplength is expected to be 0 */
 #define RMT_EQUAL_RGB 1	/* red[ras_maplength/3], green[], blue[] */
 
-#define GETUC_CHECKED(uc, fp, err_msg) \
-{ \
-    int _c = getc(fp); \
-    if (_c == EOF) { \
-	bu_exit(1, err_msg); \
-    } \
-    uc = (unsigned char)_c; \
-}
-
 /*
  * NOTES:
  * Each line of the image is rounded out to a multiple of 16 bits.
@@ -96,9 +86,7 @@ struct colors {
     unsigned char CL_green;
     unsigned char CL_blue;
 };
-
 struct colors Cmap[256];
-static size_t CMAP_MAX_INDEX = sizeof(Cmap) - 1;
 
 static char *file_name;
 static FILE *fp;
@@ -109,11 +97,11 @@ Usage: sun-pix [-b -h -i -P -v -C] [sun.bitmap]\n";
 
 #define NET_LONG_LEN 4 /* # bytes to network long */
 
-static uint32_t
+unsigned long
 getlong(char *msgp)
 {
     unsigned char *p = (unsigned char *) msgp;
-    uint32_t u;
+    unsigned long u;
 
     u = *p++; u <<= 8;
     u |= *p++; u <<= 8;
@@ -122,7 +110,7 @@ getlong(char *msgp)
 }
 
 
-static int
+int
 get_args(int argc, char **argv)
 {
     int c;
@@ -197,7 +185,7 @@ get_args(int argc, char **argv)
 
 #define ESCAPE 128
 
-static size_t
+size_t
 decoderead(unsigned char *buf, int size, int length, FILE *readfp)
 
     /* should be one! */
@@ -257,7 +245,7 @@ main(int argc, char **argv)
     int on = 255;
     int width;			/* line width in bits */
     int scanbytes;		/* bytes/line (padded to 16 bits) */
-    unsigned char c, cmap_idx, buf[4096];
+    unsigned char buf[4096];
 
     fp = stdin;
     if (!get_args(argc, argv) || (isatty(fileno(stdout)) && (hflag == 0))) {
@@ -287,49 +275,15 @@ main(int argc, char **argv)
 	header.ras_maplength = getlong(&inbuf[NET_LONG_LEN*7]);
 
 	if (header.ras_magic != RAS_MAGIC) {
-	    bu_log("sun-pix: bad magic number, was x%x, s/b x%x\n",
-		   header.ras_magic, RAS_MAGIC);
-	    return 1;
+	    bu_exit(1,
+		    "sun-pix: bad magic number, was x%x, s/b x%x\n",
+		    header.ras_magic, RAS_MAGIC);
 	}
 
 	/* Width is rounded up to next multiple of 16 bits */
-	if (header.ras_width*15 > (LONG_MAX-1) / header.ras_depth) {
-	    bu_log("Image width too big\n");
-	    return -1;
-	}
 	nbits = header.ras_width * header.ras_depth;
 	nbits = (nbits + 15) & ~15;
 	header.ras_width = nbits / header.ras_depth;
-
-	/* sanitize header, basic bounds checks */
-	if (header.ras_width < 0)
-	    header.ras_width = 0;
-	if (header.ras_width > INT_MAX-1)
-	    header.ras_width = INT_MAX-1;
-	if (header.ras_height < 0)
-	    header.ras_height = 0;
-	if (header.ras_height > INT_MAX-1)
-	    header.ras_height = INT_MAX-1;
-	if (header.ras_depth < 0)
-	    header.ras_depth = 0;
-	if (header.ras_depth > 256)
-	    header.ras_depth = 256;
-	if (header.ras_length < 0)
-	    header.ras_length = 0;
-	if (header.ras_length > INT_MAX-1)
-	    header.ras_length = INT_MAX-1;
-	if (header.ras_type < 0)
-	    header.ras_type = 0;
-	if (header.ras_type > RT_EXPERIMENTAL-1)
-	    header.ras_type = 0;
-	if (header.ras_maptype < 0)
-	    header.ras_maptype = 0;
-	if (header.ras_maptype > 10)
-	    header.ras_maptype = 10;
-	if (header.ras_maplength < 0)
-	    header.ras_maplength = 0;
-	if (header.ras_maplength > INT_MAX-1)
-	    header.ras_maplength = INT_MAX-1;
 
 	if (verbose) {
 	    fprintf(stderr,
@@ -344,7 +298,7 @@ main(int argc, char **argv)
 	}
 	if (hflag) {
 	    printf("-w%d -n%d\n", header.ras_width, header.ras_height);
-	    return 0;
+	    bu_exit (0, NULL);
 	}
     } else {
 	/* "pure" bitmap */
@@ -358,9 +312,8 @@ main(int argc, char **argv)
 	case RT_STANDARD:
 	    break;
 	default:
-	    bu_log("sun-pix:  Unable to process type %d images\n",
-		   header.ras_type);
-	    return 1;
+	    bu_exit(1, "sun-pix:  Unable to process type %d images\n",
+		    header.ras_type);
     }
 
     width = header.ras_width;
@@ -399,33 +352,29 @@ main(int argc, char **argv)
 	case 8:
 	    /* 8-bit image */
 	    if (header.ras_maptype != RMT_EQUAL_RGB) {
-		bu_log("sun-pix:  unable to handle depth=8, maptype = %d.\n",
-		       header.ras_maptype);
-		return 1;
+		bu_exit(1, "sun-pix:  unable to handle depth=8, maptype = %d.\n",
+			header.ras_maptype);
 	    }
 	    scanbytes = width;
 	    for (x = 0; x < header.ras_maplength/3; x++) {
-		GETUC_CHECKED(c, fp, "sun-pix: expected red color value, but end-of-file reached.\n");
 		if (inverted) {
-		    Cmap[x].CL_red = 255-c;
+		    Cmap[x].CL_red = 255-(unsigned char)getc(fp);
 		} else {
-		    Cmap[x].CL_red = c;
+		    Cmap[x].CL_red = getc(fp);
 		}
 	    }
 	    for (x = 0; x < header.ras_maplength/3; x++) {
-		GETUC_CHECKED(c, fp, "sun-pix: expected green color value, but end-of-file reached.\n");
 		if (inverted) {
-		    Cmap[x].CL_green = 255-c;
+		    Cmap[x].CL_green = 255-(unsigned char)getc(fp);
 		} else {
-		    Cmap[x].CL_green = c;
+		    Cmap[x].CL_green = getc(fp);
 		}
 	    }
 	    for (x = 0; x < header.ras_maplength/3; x++) {
-		GETUC_CHECKED(c, fp, "sun-pix: expected blue color value, but end-of-file reached.\n");
 		if (inverted) {
-		    Cmap[x].CL_blue = 255-c;
+		    Cmap[x].CL_blue = 255-(unsigned char) getc(fp);
 		} else {
-		    Cmap[x].CL_blue = c;
+		    Cmap[x].CL_blue = getc(fp);
 		}
 	    }
 	    if (colorout) {
@@ -438,29 +387,22 @@ main(int argc, char **argv)
 	    }
 
 	    while ((header.ras_type == RT_BYTE_ENCODED) ?
-		   decoderead(buf, sizeof(*buf), scanbytes, fp) :
+		   decoderead(buf, sizeof(*buf), scanbytes, fp):
 		   fread(buf, sizeof(*buf), scanbytes, fp)) {
 		for (x=0; x < width; x++) {
-		    cmap_idx = buf[x];
-		    if (cmap_idx >= CMAP_MAX_INDEX) {
-			bu_log("Warning: Read invalid index %u.\n",
-			       (unsigned int)buf[x]);
-			return 1;
-		    }
 		    if (pixout) {
-			putchar(Cmap[cmap_idx].CL_red);
-			putchar(Cmap[cmap_idx].CL_green);
-			putchar(Cmap[cmap_idx].CL_blue);
+			putchar(Cmap[buf[x]].CL_red);
+			putchar(Cmap[buf[x]].CL_green);
+			putchar(Cmap[buf[x]].CL_blue);
 		    } else {
-			putchar(cmap_idx);
+			putchar(buf[x]);
 		    }
 		}
 	    }
 	    break;
 	default:
-	    bu_log("sun-pix:  unable to handle depth=%d\n",
-		   header.ras_depth);
-	    return 1;
+	    bu_exit(1, "sun-pix:  unable to handle depth=%d\n",
+		    header.ras_depth);
     }
 
     return 0;

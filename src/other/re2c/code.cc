@@ -10,7 +10,7 @@
 #include "substr.h"
 #include "globals.h"
 #include "dfa.h"
-#include "re2c_parser.h"
+#include "parser.h"
 #include "code.h"
 
 namespace re2c

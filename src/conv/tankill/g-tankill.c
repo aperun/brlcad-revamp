@@ -1,7 +1,7 @@
 /*                     G - T A N K I L L . C
  * BRL-CAD
  *
- * Copyright (c) 1993-2012 United States Government as represented by
+ * Copyright (c) 1993-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -392,7 +392,6 @@ main(int argc, char **argv)
     int	c;
     double		percent;
 
-    bu_setprogname(argv[0]);
     bu_setlinebuf( stderr );
 
     the_model = nmg_mm();
@@ -743,7 +742,7 @@ union tree *do_region_end(struct db_tree_state *tsp, const struct db_full_path *
      */
     db_free_tree(curtree, &rt_uniresource);		/* Does an nmg_kr() */
 
-    BU_GET(curtree, union tree);
+    BU_GETUNION(curtree, tree);
     RT_TREE_INIT(curtree);
     curtree->tr_op = OP_NOP;
     return curtree;

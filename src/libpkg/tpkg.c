@@ -1,7 +1,7 @@
 /*                          T P K G . C
  * BRL-CAD
  *
- * Copyright (c) 2006-2012 United States Government as represented by
+ * Copyright (c) 2006-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -359,9 +359,7 @@ main(int argc, char *argv[]) {
 	}
 
 	/* ignore broken pipes */
-#ifdef SIGPIPE
 	(void)signal(SIGPIPE, SIG_IGN);
-#endif
 
 	/* fire up the server */
 	bu_log("Listening on port %d\n", port);
@@ -383,7 +381,7 @@ main(int argc, char *argv[]) {
     file = *argv++;
 
     /* make sure the file exists */
-    if (!bu_file_exists(file, NULL)) {
+    if (!bu_file_exists(file)) {
 	bu_log("File does not exist: %s\n", file);
 	bu_bomb("Need a file to transfer\n");
     }

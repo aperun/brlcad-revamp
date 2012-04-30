@@ -1,7 +1,7 @@
 /*                          F E N C E . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -1011,8 +1011,7 @@ int generateMesh(struct rt_wdb *fp, char *meshname, fastf_t *startposition, fast
 
 	for (count=0, step=0.0; step <= width; step += (double) MAGNITUDE(incrementvector), count++) {
 
-	    matrixextractor=mk_addmember(wireName, &meshmembers.l, NULL, WMOP_UNION);
-	    if (matrixextractor != NULL) {
+	    if ((matrixextractor=mk_addmember(wireName, &meshmembers.l, NULL, WMOP_UNION))!=NULL) {
 		if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...building mesh combination: wire [%d] of [%d]\n", count+1, count2);
 	    } else {
 		if (debug) fprintf(DEFAULT_DEBUG_OUTPUT, "generateMesh:mk_addmember wireName[%s], count2[%d] FAILED\n", wireName, count);
@@ -1022,13 +1021,11 @@ int generateMesh(struct rt_wdb *fp, char *meshname, fastf_t *startposition, fast
 	    matrixextractor->wm_mat[7]  = dy;
 	    matrixextractor->wm_mat[11] = dz;
 
-	    matrixextractor=mk_addmember(wireName, &meshregionmembers.l, NULL, WMOP_UNION);
-	    if (matrixextractor != NULL) {
+	    if ((matrixextractor=mk_addmember(wireName, &meshregionmembers.l, NULL, WMOP_UNION))!=NULL) {
 		if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...building mesh region: wire [%d] of [%d]\n", count+1, count2);
 	    } else {
 		if (debug) fprintf(DEFAULT_DEBUG_OUTPUT, "generateMesh:mk_addmember wireName[%s], count2[%d] FAILED (region)\n", wireName, count);
 		errors++;
-		return errors;
 	    }
 	    matrixextractor->wm_mat[3]  = dx;
 	    matrixextractor->wm_mat[7]  = dy;
@@ -1107,8 +1104,11 @@ int generateWire(struct rt_wdb *fp, char *wirename, fastf_t *position, fastf_t *
     struct wmember wireregionmembers;
     struct wmember *matrixextractor;
 
-    matrixextractor = (struct wmember *) bu_calloc(1, sizeof(struct wmember), "wmember");
 
+    if ((matrixextractor = (struct wmember *) malloc(sizeof(struct wmember)))==NULL) {
+	if (debug) fprintf(DEFAULT_DEBUG_OUTPUT, "generateWire:(struct wmember *)matrixextractor malloc FAILED\n");
+	errors++;
+    }
     BU_LIST_INIT(&basicmeshmembers.l);
     BU_LIST_INIT(&wiremembers.l);
     BU_LIST_INIT(&basicmeshregionmembers.l);
@@ -1167,20 +1167,17 @@ int generateWire(struct rt_wdb *fp, char *wirename, fastf_t *position, fastf_t *
 
     for (count=0, dx=0, dy=0, dz=0, step=0.0; step <= height; step += (double) MAGNITUDE(incrementvector), count++) {
 
-	matrixextractor=mk_addmember(segmentName, &wiremembers.l, NULL, WMOP_UNION);
-	if (matrixextractor != NULL) {
+	if ((matrixextractor=mk_addmember(segmentName, &wiremembers.l, NULL, WMOP_UNION))!=NULL) {
 	    if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...building base wire combination: piece [%d] of [%d]\n", count+1, count2);
 	} else {
 	    if (debug) fprintf(DEFAULT_DEBUG_OUTPUT, "generateWire:mk_addmember wirename[%s], count2[%d] FAILED\n", wirename, count);
 	    errors++;
-	    return errors;
 	}
 	matrixextractor->wm_mat[3]  = dx;
 	matrixextractor->wm_mat[7]  = dy;
 	matrixextractor->wm_mat[11] = dz;
 
-	matrixextractor=mk_addmember(segmentName, &wireregionmembers.l, NULL, WMOP_UNION);
-	if (matrixextractor != NULL) {
+	if ((matrixextractor=mk_addmember(segmentName, &wireregionmembers.l, NULL, WMOP_UNION))!=NULL) {
 	    if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...building base wire region: piece [%d] of [%d]\n", count+1, count2);
 	} else {
 	    if (debug) fprintf(DEFAULT_DEBUG_OUTPUT, "generateWire:mk_addmember wirename[%s], count2[%d] FAILED (region)\n", wirename, count);
@@ -1213,7 +1210,6 @@ int generateWire(struct rt_wdb *fp, char *wirename, fastf_t *position, fastf_t *
 	errors++;
     }
 
-    bu_free(matrixextractor, "matrixextractor");
 
     return errors;
 }
@@ -1805,6 +1801,7 @@ int createWire(struct rt_wdb *fp, char *segmentname, fastf_t *heightvector, fast
 	if (verbose) fprintf(DEFAULT_VERBOSE_OUTPUT, "...Wire segment [%d] generation FAILED\n", count);
 	errors++;
     }
+
 
     return errors;
 }

@@ -1,10 +1,12 @@
+/* $Id: scanner.re 858 2008-04-03 20:53:44Z helly $ */
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
 #include <sstream>
 #include "scanner.h"
-#include "re2c_parser.h"
-#include "parser_tokens.h"
+#include "parser.h"
+#include "parser.hh"
+/*#include "y.tab.h"*/
 #include "globals.h"
 #include "dfa.h"
 
@@ -246,7 +248,9 @@ scan:
 					goto code;
 				}
 
-":" / "=>"	{ RETURN(COLON); } 
+	":" / "=>"	{
+					RETURN(*tok);
+				}
 
 	":="		{
 					cur = cursor;
@@ -319,21 +323,10 @@ scan:
 				}
 	"<!"		{
 					RETURN(SETUP);
-			}
-[<>,()|=;/\\] {
-    switch (*tok) {
-	case '<': RETURN(LESS_THAN);
-	case '>': RETURN(GREATER_THAN);
-	case ',': RETURN(COMMA);
-	case '(': RETURN(LEFT_PAREN);
-	case ')': RETURN(RIGHT_PAREN);
-	case '|': RETURN(VERTICAL_BAR);
-	case '=': RETURN(EQUALS);
-	case ';': RETURN(SEMICOLON);
-	case '/': RETURN(SLASH);
-	case '\\': RETURN(BACKSLASH);
-    }
-}
+				}
+	[<>,()|=;/\\]	{
+					RETURN(*tok);
+				}
 
 	"*"			{
 					yylval.op = *tok;
@@ -577,7 +570,7 @@ config:
 	"=" space*	{
 					iscfg = 2;
 					cur = cursor;
-					RETURN(EQUALS);
+					RETURN('=');
 				}
 	any			{
 					fatal("missing '='");

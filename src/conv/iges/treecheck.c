@@ -1,7 +1,7 @@
 /*                     T R E E C H E C K . C
  * BRL-CAD
  *
- * Copyright (c) 1990-2012 United States Government as represented by
+ * Copyright (c) 1990-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@
 #define	Intersect	2
 #define	Subtract	3
 
-int
+void
 Treecheck(struct node *root)
 {
     struct node *ptr, *Pop();
@@ -49,7 +49,6 @@ Treecheck(struct node *root)
 	    ptr = NULL;
 
     }
-    return 0;
 }
 
 

@@ -1,7 +1,7 @@
 /*                      D B 5 _ S C A N . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -106,11 +106,7 @@ db5_scan(
 	    (*handler)(dbip, &raw, addr, client_data);
 	    nrec++;
 	    if (raw.buf) {
-#if 1
-                bu_pool_put((void *)raw.buf, (size_t)raw.object_length);
-#else
 		bu_free(raw.buf, "raw v5 object");
-#endif 
 		raw.buf = NULL;
 	    }
 	}
@@ -140,10 +136,11 @@ db_diradd5(
 {
     struct directory **headp;
     register struct directory *dp;
-    struct bu_vls local = BU_VLS_INIT_ZERO;
+    struct bu_vls local;
 
     RT_CK_DBI(dbip);
 
+    bu_vls_init(&local);
     bu_vls_strcpy(&local, name);
     if (db_dircheck(dbip, &local, 0, &headp) < 0) {
 	bu_vls_free(&local);
@@ -208,7 +205,7 @@ db5_diradd(struct db_i *dbip,
 {
     struct directory **headp;
     register struct directory *dp;
-    struct bu_vls local = BU_VLS_INIT_ZERO;
+    struct bu_vls local;
 
     RT_CK_DBI(dbip);
 
@@ -216,6 +213,7 @@ db5_diradd(struct db_i *dbip,
 	bu_log("WARNING: db5_diradd() received non-NULL client_data\n");
     }
 
+    bu_vls_init(&local);
     bu_vls_strcpy(&local, (const char *)rip->name.ext_buf);
     if (db_dircheck(dbip, &local, 0, &headp) < 0) {
 	bu_vls_free(&local);

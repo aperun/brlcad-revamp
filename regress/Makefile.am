@@ -1,8 +1,8 @@
-.PHONY : regression regress test mged red moss lights solids shaders spdi iges weight gqa fastgen bots repository comgeom gdot gnff
+.PHONY : regression regress test mged red moss lights solids shaders spdi iges weight gqa fastgen bots flawfinder repository
 
 SUBDIRS = mged
 
-regression: clean mged moss lights solids shaders spdi iges weight gqa fastgen bots repository comgeom gdot gnff
+regression: clean mged moss lights solids shaders spdi iges weight gqa fastgen bots flawfinder repository
 	@${ECHO} ---
 	@${ECHO} Regression testing completed.
 
@@ -58,36 +58,20 @@ bots: $(top_srcdir)/regress/bots.sh
 	-${SH} $(top_srcdir)/regress/bots.sh $(top_srcdir)
 	@${ECHO} +++ $@ test complete.
 
-#flawfinder: $(top_srcdir)/regress/flawfinder.sh
-#	-${SH} $(top_srcdir)/regress/flawfinder.sh $(top_srcdir)
-#	@${ECHO} +++ $@ test complete.
+flawfinder: $(top_srcdir)/regress/flawfinder.sh
+	-${SH} $(top_srcdir)/regress/flawfinder.sh $(top_srcdir)
+	@${ECHO} +++ $@ test complete.
 
 repository: $(top_srcdir)/regress/repository.sh
 	-${SH} $(top_srcdir)/regress/repository.sh $(top_srcdir)
 	@${ECHO} +++ $@ test complete.
 
-comgeom: $(top_srcdir)/regress/comgeom.sh
-	-${SH} $(top_srcdir)/regress/comgeom.sh $(top_srcdir)
-	@${ECHO} +++ $@ test complete.
-
-gdot: $(top_srcdir)/regress/g-dot.sh
-	-${SH} $(top_srcdir)/regress/g-dot.sh $(top_srcdir)
-	@${ECHO} +++ $@ test complete.
-
-gnff: $(top_srcdir)/regress/g-nff.sh
-	-${SH} $(top_srcdir)/regress/g-nff.sh $(top_srcdir)
-	@${ECHO} +++ $@ test complete.
-
 # these are here because they go in the distribution but are not installed
 EXTRA_DIST = \
 	bots.sh \
-	comgeom.sh \
-	dsp.sh \
 	fastgen.sh \
 	fastgen_dos.fast4 \
 	flawfinder.sh \
-	g-dot.sh \
-	g-nff.sh \
 	gqa.sh \
 	iges.sh \
 	library.sh \
@@ -111,7 +95,6 @@ EXTRA_DIST = \
 	spdi.sh \
 	spdipix.asc \
 	testlib.c \
-	vls.sh \
 	weight.sh \
 	CMakeLists.txt
 
@@ -131,7 +114,6 @@ CLEANFILES = \
 	bots.rn.diff.pix \
 	bots.rs.diff.pix \
 	bots.sync.pix \
-	comgeom-g.log \
 	density_table.txt \
 	dsp.dat \
 	eagleCAD-512x438.pix \
@@ -141,8 +123,6 @@ CLEANFILES = \
 	fastgen_dos.g \
 	fastgen_unix.g \
 	gaps.pl \
-	g-dot.log \
-	g-nff.log \
 	gqa.g \
 	gqa.mged \
 	gqa_mged.log \
@@ -157,9 +137,6 @@ CLEANFILES = \
 	lights.pix \
 	lights_diff.pix \
 	lights_ref.pix \
-	m35.asc \
-	m35.cg \
-	m35.g \
 	mged.g \
 	mged.log \
 	moss-diff.log \
@@ -172,8 +149,6 @@ CLEANFILES = \
 	moss_ref.pix \
 	overlaps.pl \
 	red.log \
-	region_ids \
-	regions \
 	repository.log \
 	shaders.dat \
 	shaders.g \
@@ -188,7 +163,6 @@ CLEANFILES = \
 	shaders.txt \
 	shaders_ref.pix \
 	solids-diff.log \
-	solids \
 	solids.g \
 	solids.mged \
 	solids.pix.diff \
@@ -203,14 +177,13 @@ CLEANFILES = \
 	spdi_diff.pix \
 	spdi_mged.log \
 	spdi_ref.pix \
-	t.g \
-	vdeck.log \
 	volume.pl \
 	weight.g \
 	weight.mged \
 	weight.out \
 	weight.ref \
-	wgt.out
+	wgt.out \
+	CMakeLists.txt
 
 MOSTLYCLEANFILES = \
 	fastgen.log \

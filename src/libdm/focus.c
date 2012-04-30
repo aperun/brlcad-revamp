@@ -2,7 +2,7 @@
 /*                         F O C U S . C
  * BRL-CAD
  *
- * Copyright (c) 2007-2012 United States Government as represented by
+ * Copyright (c) 2007-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -42,7 +42,6 @@
 
 #include "dm.h"
 
-#ifdef DM_X
 static void
 dm_x11_applicationfocus() {
 #ifdef HAVE_CARBON_CARBON_H
@@ -66,7 +65,6 @@ dm_x11_applicationfocus() {
     } while (status == noErr);
 #endif
 }
-#endif
 
 
 /**

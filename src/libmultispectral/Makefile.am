@@ -12,6 +12,7 @@ libmultispectral_la_LIBADD = \
 	${MULTISPECTRAL_LIBS}
 
 libmultispectral_la_SOURCES = \
+	init.c \
 	sh_temp.c
 
 DEPENDS = src/librt src/liboptical

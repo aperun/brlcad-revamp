@@ -1,7 +1,7 @@
 /*                         M U L T I P O L Y . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -50,23 +50,23 @@
 struct bn_multipoly *
 bn_multipoly_new(int dgrs, int dgrt)
 {
-    struct bn_multipoly *newmp = bu_malloc(sizeof(struct bn_multipoly), FAILSTR);
+    struct bn_multipoly *new = bu_malloc(sizeof(struct bn_multipoly), FAILSTR);
     int    i, s, t;
 
-    newmp->cf = bu_malloc(dgrs * sizeof(double *), FAILSTR);
+    new->cf = bu_malloc(dgrs * sizeof(double *), FAILSTR);
 
     for (i = 0; i < dgrs; i++) {
-	newmp->cf[i] = bu_malloc(dgrt * sizeof(double), FAILSTR);
+	new->cf[i] = bu_malloc(dgrt * sizeof(double), FAILSTR);
     }
 
-    newmp->dgrs = dgrs;
-    newmp->dgrt = dgrt;
+    new->dgrs = dgrs;
+    new->dgrt = dgrt;
     for (s = 0; s < dgrs; s++) {
 	for (t = 0; t < dgrt; t++) {
-	    newmp->cf[s][t] = 0;
+	    new->cf[s][t] = 0;
 	}
     }
-    return newmp;
+    return new;
 }
 
 /**

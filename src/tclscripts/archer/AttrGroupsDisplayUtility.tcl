@@ -1,7 +1,7 @@
 #                A T T R G R O U P S U T I L I T Y . T C L
 # BRL-CAD
 #
-# Copyright (c) 2002-2012 United States Government as represented by
+# Copyright (c) 2002-2011 United States Government as represented by
 # the U.S. Army Research Laboratory.
 #
 # This library is free software; you can redistribute it and/or
@@ -773,10 +773,7 @@
 # Group Name,Attr Name,Value1,Value2,...,ValueN
 #
 ::itcl::body AttrGroupsDisplayUtility::readAttrGroups {_file} {
-    if {[catch {open $_file r} fh]} {
-	return
-    }
-
+    set fh [open $_file r]
     set data [read $fh]
     close $fh
     set lines [split $data "\n"]
@@ -818,10 +815,7 @@
 # ATTR2,ATTRVAL2,rid1,rid2, ... ridN
 #
 ::itcl::body AttrGroupsDisplayUtility::readAttrMap {_file} {
-    if {[catch {open $_file r} fh]} {
-	return
-    }
-
+    set fh [open $_file r]
     set data [read $fh]
     close $fh
     set lines [lsort -unique -dictionary [split $data "\n"]]

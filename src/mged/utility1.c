@@ -1,7 +1,7 @@
 /*                      U T I L I T Y 1 . C
  * BRL-CAD
  *
- * Copyright (c) 1990-2012 United States Government as represented by
+ * Copyright (c) 1990-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -86,10 +86,11 @@ int
 editit(const char *command, const char *tempfile) {
     int argc = 5;
     const char *av[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
-    struct bu_vls editstring = BU_VLS_INIT_ZERO;
+    struct bu_vls editstring;
 
     CHECK_DBI_NULL;
 
+    bu_vls_init(&editstring);
     get_editor_string(&editstring);
 
     av[0] = command;
@@ -117,10 +118,11 @@ f_edcolor(ClientData UNUSED(clientData), Tcl_Interp *UNUSED(interpreter), int ar
 {
     const char **av;
     int i;
-    struct bu_vls editstring = BU_VLS_INIT_ZERO;
+    struct bu_vls editstring;
 
     CHECK_DBI_NULL;
 
+    bu_vls_init(&editstring);
     get_editor_string(&editstring);
 
     av = (const char **)bu_malloc(sizeof(char *)*(argc + 3), "f_edcolor: av");
@@ -132,10 +134,10 @@ f_edcolor(ClientData UNUSED(clientData), Tcl_Interp *UNUSED(interpreter), int ar
 	av[i] = argv[i-2];
     }
     av[argc] = NULL;
-
+  
     ged_edcolor(gedp, argc, (const char **)av);
-
-    bu_vls_free(&editstring);
+    
+    bu_vls_free(&editstring); 
     bu_free((genptr_t)av, "f_edcolor: av");
     return TCL_OK;
 }
@@ -148,7 +150,7 @@ int
 f_edcodes(ClientData UNUSED(clientData), Tcl_Interp *interpreter, int argc, const char *argv[])
 {
     const char **av;
-    struct bu_vls editstring = BU_VLS_INIT_ZERO;
+    struct bu_vls editstring;
     int i;
 
     CHECK_DBI_NULL;
@@ -158,6 +160,7 @@ f_edcodes(ClientData UNUSED(clientData), Tcl_Interp *interpreter, int argc, cons
 	return TCL_ERROR;
     }
 
+    bu_vls_init(&editstring);
     get_editor_string(&editstring);
 
     av = (const char **)bu_malloc(sizeof(char *)*(argc + 3), "f_edcodes: av");
@@ -169,10 +172,10 @@ f_edcodes(ClientData UNUSED(clientData), Tcl_Interp *interpreter, int argc, cons
 	av[i] = argv[i-2];
     }
     av[argc] = NULL;
-
-    ged_edcodes(gedp, argc, (const char **)av);
-
-    bu_vls_free(&editstring);
+  
+    ged_edcodes(gedp, argc + 1, (const char **)av);
+   
+    bu_vls_free(&editstring); 
     bu_free((genptr_t)av, "f_edcodes: av");
     return TCL_OK;
 }
@@ -188,7 +191,7 @@ int
 f_edmater(ClientData UNUSED(clientData), Tcl_Interp *interpreter, int argc, const char *argv[])
 {
     const char **av;
-    struct bu_vls editstring = BU_VLS_INIT_ZERO;
+    struct bu_vls editstring;
     int i;
 
     CHECK_DBI_NULL;
@@ -198,6 +201,7 @@ f_edmater(ClientData UNUSED(clientData), Tcl_Interp *interpreter, int argc, cons
 	return TCL_ERROR;
     }
 
+    bu_vls_init(&editstring);
     get_editor_string(&editstring);
 
     av = (const char **)bu_malloc(sizeof(char *)*(argc + 3), "f_edmater: av");
@@ -211,8 +215,8 @@ f_edmater(ClientData UNUSED(clientData), Tcl_Interp *interpreter, int argc, cons
     av[argc] = NULL;
 
     ged_edmater(gedp, argc + 1, (const char **)av);
-
-    bu_vls_free(&editstring);
+   
+    bu_vls_free(&editstring); 
     bu_free((genptr_t)av, "f_edmater: av");
     return TCL_OK;
 }
@@ -228,7 +232,7 @@ int
 f_red(ClientData UNUSED(clientData), Tcl_Interp *interpreter, int argc, const char *argv[])
 {
     const char **av;
-    struct bu_vls editstring = BU_VLS_INIT_ZERO;
+    struct bu_vls editstring;
     int i;
 
     CHECK_DBI_NULL;
@@ -238,6 +242,7 @@ f_red(ClientData UNUSED(clientData), Tcl_Interp *interpreter, int argc, const ch
 	return TCL_ERROR;
     }
 
+    bu_vls_init(&editstring);
     get_editor_string(&editstring);
 
     av = (const char **)bu_malloc(sizeof(char *)*(argc + 3), "f_red: av");
@@ -251,15 +256,15 @@ f_red(ClientData UNUSED(clientData), Tcl_Interp *interpreter, int argc, const ch
     av[argc] = NULL;
 
     ged_red(gedp, argc + 1, (const char **)av);
-
-    bu_vls_free(&editstring);
+   
+    bu_vls_free(&editstring); 
     bu_free((genptr_t)av, "f_red: av");
     return TCL_OK;
 }
 
 
 /* cyclic, for db_tree_funcleaf in printcodes() */
-HIDDEN void Do_printnode(struct db_i *dbip2, struct rt_comb_internal *comb, union tree *comb_leaf, genptr_t user_ptr1, genptr_t user_ptr2, genptr_t user_ptr3, genptr_t UNUSED(user_ptr4));
+HIDDEN void Do_printnode(struct db_i *dbip2, struct rt_comb_internal *comb, union tree *comb_leaf, genptr_t user_ptr1, genptr_t user_ptr2, genptr_t user_ptr3);
 
 
 HIDDEN int
@@ -308,7 +313,7 @@ printcodes(FILE *fp, struct directory *dp, int pathpos)
     if (comb->tree) {
 	path[pathpos] = dp;
 	db_tree_funcleaf(dbip, comb, comb->tree, Do_printnode,
-			 (genptr_t)fp, (genptr_t)&pathpos, (genptr_t)NULL, (genptr_t)NULL);
+			 (genptr_t)fp, (genptr_t)&pathpos, (genptr_t)NULL);
     }
 
     intern.idb_meth->ft_ifree(&intern);
@@ -317,7 +322,7 @@ printcodes(FILE *fp, struct directory *dp, int pathpos)
 
 
 HIDDEN void
-Do_printnode(struct db_i *dbip2, struct rt_comb_internal *UNUSED(comb), union tree *comb_leaf, genptr_t user_ptr1, genptr_t user_ptr2, genptr_t UNUSED(user_ptr3), genptr_t UNUSED(user_ptr4))
+Do_printnode(struct db_i *dbip2, struct rt_comb_internal *UNUSED(comb), union tree *comb_leaf, genptr_t user_ptr1, genptr_t user_ptr2, genptr_t UNUSED(user_ptr3))
 {
     FILE *fp;
     int *pathpos;

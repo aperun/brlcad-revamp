@@ -1,7 +1,7 @@
 /*                    D O U B L E - A S C . C
  * BRL-CAD
  *
- * Copyright (c) 1996-2012 United States Government as represented by
+ * Copyright (c) 1996-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -64,7 +64,6 @@ int
 get_args(int argc, char **argv)
 {
     int ch;
-    char *ifname;
 
     while ((ch = bu_getopt(argc, argv, OPT_STRING)) != -1) {
 	switch (ch) {
@@ -125,12 +124,8 @@ get_args(int argc, char **argv)
 	    break;
 	case 1:
 	    file_name = argv[bu_optind++];
-	    ifname = bu_realpath(file_name, NULL);
-	    if ((infd = open(ifname, O_RDONLY)) == -1) {
-		bu_free(ifname,"ifname alloc from bu_realpath");
+	    if ((infd = open(file_name, O_RDONLY)) == -1)
 		bu_exit (1, "Cannot open file '%s'\n", file_name);
-	    }
-	    bu_free(ifname,"ifname alloc from bu_realpath");
 	    fileinput = 1;
 	    break;
 	default:

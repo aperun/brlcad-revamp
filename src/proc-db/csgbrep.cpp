@@ -1,7 +1,7 @@
 /*                     C S G B R E P . C P P
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -25,6 +25,7 @@
 #include "wdb.h"
 
 
+#define OBJ_BREP
 /* without OBJ_BREP, this entire procedural example is disabled */
 #ifdef OBJ_BREP
 
@@ -46,13 +47,12 @@ void
 write_out(struct rt_wdb* fp, struct rt_db_internal *ip, const char *name, struct bn_tol *tol)
 {
     ON_Brep* brep = NULL;
-    std::string bname;
+
+    std::string bname = name;
+    bname += ".brep";
 
     if (!fp || !ip || !name)
 	return;
-
-    bname = name;
-    bname += ".brep";
 
     /* write the object in implicit form */
     struct bu_external ext;

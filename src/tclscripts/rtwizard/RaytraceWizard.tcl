@@ -1,7 +1,7 @@
 #               R A Y T R A C E W I Z A R D . T C L
 # BRL-CAD
 #
-# Copyright (c) 2004-2012 United States Government as represented by
+# Copyright (c) 2004-2011 United States Government as represented by
 # the U.S. Army Research Laboratory.
 #
 # This library is free software; you can redistribute it and/or
@@ -78,6 +78,7 @@ namespace eval RaytraceWizard {
     package require PictureTypeE
     package require PictureTypeF
 
+    set dbFile ""
 #    set helpFont {-family helvetica -size 12 \
 		      -slant italic}
 
@@ -176,13 +177,13 @@ namespace eval RaytraceWizard {
 	# file to be specified.
 	#
 	if { [llength $args] > 0 } {
-	    set ::RtWizard::wizard_state(dbFile) [ lindex $args 0 ]
-	    if { ! [file exists $::RtWizard::wizard_state(dbFile)] } {
-		set ::RtWizard::wizard_state(dbFile) ""
+	    set ::RtWizard::dbFile [ lindex $args 0 ]
+	    if { ! [file exists $::RtWizard::dbFile] } {
+		set ::RtWizard::dbFile ""
 	    }
 	}
 
-	if { [string length $::RtWizard::wizard_state(dbFile)] == 0 } {
+	if { [string length $::RtWizard::dbFile] == 0 } {
 	    #
 	    # select the database page
 	    #
@@ -197,7 +198,7 @@ namespace eval RaytraceWizard {
 	    # Start up the gui, and run until the dbFile has
 	    # been specified.
 	    #
-	    vwait ::RtWizard::wizard_state(dbFile)
+	    vwait ::RtWizard::dbFile
 
 	    #
 	    # Restore the Feedback
@@ -214,19 +215,19 @@ namespace eval RaytraceWizard {
 	# pages.
 	#
 	set ::mgedObj [ArcherCore .\#auto 1 1 1 1]
-	$::mgedObj opendb $::RtWizard::wizard_state(dbFile)
+	$::mgedObj opendb $::RtWizard::dbFile
 	$fb inform "MGED object instantiated." 40
 
-	$w add RtWizard::FullColorPage fullColor $::RtWizard::wizard_state(dbFile)
+	$w add RtWizard::FullColorPage fullColor $::RtWizard::dbFile
 	$fb inform "Support for full color images loaded." 5
 
-	$w add RtWizard::HighlightedPage highlighted $::RtWizard::wizard_state(dbFile)
+	$w add RtWizard::HighlightedPage highlighted $::RtWizard::dbFile
 	$fb inform "Support for highlighted images loaded." 5
 
-	$w add RtWizard::GhostPage ghost $::RtWizard::wizard_state(dbFile)
+	$w add RtWizard::GhostPage ghost $::RtWizard::dbFile
 	$fb inform "Support for ghost images loaded." 5
 
-	$w add RtWizard::LinePage lines $::RtWizard::wizard_state(dbFile)
+	$w add RtWizard::LinePage lines $::RtWizard::dbFile
 	$w select "exp"
 	$fb inform "rtwizard ready!" 5
 

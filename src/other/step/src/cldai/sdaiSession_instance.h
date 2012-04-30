@@ -4,28 +4,29 @@
 
 //#include <sdai.h>
 
-class SDAI_Session_instance  : public SDAI_sdaiObject  {
+class SCLP23_NAME(Session_instance) : public SCLP23_NAME(sdaiObject) 
+{
 
-    public:
-        int x;
+  public:
+    int x;
 
-        SDAI_Session_instance ();
-        virtual ~SDAI_Session_instance ();
-//    SDAI_Session_instance)(const SCLP23_NAME(Session_instance& si) {}
+    SCLP23_NAME(Session_instance)();
+    virtual ~SCLP23_NAME(Session_instance)();
+//    SCLP23_NAME(Session_instance)(const SCLP23_NAME(Session_instance)& si) {}
 
-//    static SDAI_Session_instance_ptr
-//  _duplicate(SDAI_Session_instance_ptr) sip;
-//    static SDAI_Session_instance_ptr
-//  _narrow(SDAI_Object_ptr) o;
-//    static SDAI_Session_instance_ptr) _nil(;
+//    static SCLP23_NAME(Session_instance_ptr) 
+//	_duplicate(SCLP23_NAME(Session_instance_ptr) sip);
+//    static SCLP23_NAME(Session_instance_ptr) 
+//	_narrow(SCLP23_NAME(Object_ptr) o);
+//    static SCLP23_NAME(Session_instance_ptr) _nil();
 
 };
 
-typedef SDAI_Session_instance  * SDAI_Session_instance_ptr ;
-typedef SDAI_Session_instance_ptr  SDAI_Session_instance_var ;
+typedef SCLP23_NAME(Session_instance)* SCLP23_NAME(Session_instance_ptr);
+typedef SCLP23_NAME(Session_instance_ptr) SCLP23_NAME(Session_instance_var);
 
 // the old names
-//typedef SDAI_Session_instance) SCLP23_NAME(SessionInstance;
-//typedef SDAI_Session_instance_ptr) SCLP23_NAME(SessionInstanceH;
+//typedef SCLP23_NAME(Session_instance) SCLP23_NAME(SessionInstance);
+//typedef SCLP23_NAME(Session_instance_ptr) SCLP23_NAME(SessionInstanceH);
 
 #endif

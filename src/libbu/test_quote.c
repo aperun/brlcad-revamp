@@ -1,7 +1,7 @@
 /*                    T E S T _ Q U O T E . C
  * BRL-CAD
  *
- * Copyright (c) 2011-2012 United States Government as represented by
+ * Copyright (c) 2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -20,133 +20,63 @@
 
 #include "common.h"
 
+#include <stdlib.h>
+#include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "bu.h"
 
 
-/* Test for bu_vls_encode/bu_vls_decode for reversibility:
- *
- *   1. encode the input string
- *   2. decode the encoded string
- *   3. decoded string should be the same as input
- *
- */
-int
+/* Test for reversibility */
+void
 test_quote(const char *str)
 {
-    int status = 0;
-    int len_s = str ? strlen(str) : 0;
-    int len_d = 0; /* for length of decoded */
-    int f_wid = 28; /* desired total field width */
-    struct bu_vls encoded = BU_VLS_INIT_ZERO;
-    struct bu_vls decoded = BU_VLS_INIT_ZERO;
+    struct bu_vls quoted = BU_VLS_INIT_ZERO;
+    const char *dequoted = NULL;
 
-    bu_vls_encode(&encoded, str);
-    bu_vls_decode(&decoded, bu_vls_addr(&encoded)); /* should be same as input string */
-
-    len_d = bu_vls_strlen(&decoded);
-    if (f_wid < len_s)
-        f_wid = len_s + 1;
-    if (f_wid < len_d)
-        f_wid = len_d + 1;
-
-    if (BU_STR_EQUAL(str, bu_vls_addr(&decoded))
-        /* && !BU_STR_EQUAL(str, bu_vls_addr(&encoded)) */
-        ) {
-        /* a hack for str showing '(null)' in printf if zero length */
-        if (len_s == 0)
-            len_s = 6;
-	printf("{%*s}%*s -> {%*s}%*s [PASS]\n",
-               len_s, str, f_wid - len_s, " ",
-               len_d, bu_vls_addr(&decoded), f_wid - len_d, " "
-               );
+    if (BU_STR_EQUAL(str, dequoted) && !BU_STR_EQUAL(str, bu_vls_addr(&quoted))) {
+	printf("%24s -> %28s [PASS]\n", str, bu_vls_addr(&quoted));
     } else {
-        /* a hack for str showing '(null)' in printf if zero length */
-        if (len_s == 0)
-            len_s = 6;
-	printf("{%*s}%*s -> {%*s}%*s [FAIL]  (should be: {%s})\n",
-               len_s, str, f_wid - len_s, " ",
-               len_d, bu_vls_addr(&decoded), f_wid - len_d, " ",
-               str
-               );
-        status = 1;
+	printf("%24s -> %28s [FAIL]  (should be: %s)\n", str, bu_vls_addr(&quoted), str);
     }
 
-    bu_vls_free(&encoded);
-    bu_vls_free(&decoded);
-
-    return status;
+    bu_vls_free(&quoted);
 }
 
 
 int
 main(int ac, char *av[])
 {
-    int fails    = 0; /* track unexpected failures */
-    int expfails = 0; /* track expected failures */
-
     printf("Testing quote\n");
 
     if (ac > 1)
 	printf("Usage: %s\n", av[0]);
 
-    fails += test_quote(NULL);
-    fails += test_quote("");
-    fails += test_quote(" ");
-    fails += test_quote("hello");
-    fails += test_quote("\"");
-    fails += test_quote("\'");
-    fails += test_quote("\\");
-    fails += test_quote("\\\"");
-    fails += test_quote("\\\\");
-    fails += test_quote("\"hello\"");
-    fails += test_quote("\'hello\'");
-    fails += test_quote("\\hello");
-    fails += test_quote("\\hello\"");
-    fails += test_quote("hello\\\\");
-    fails += test_quote("\"hello\'\"");
-    fails += test_quote("\"hello\'");
-    fails += test_quote("\'hello\'");
-    fails += test_quote("\'hello\"");
-    fails += test_quote("\"\"hello\"");
-    fails += test_quote("\'\'hello\'\'");
-    fails += test_quote("\'\"hello\"\'");
-    fails += test_quote("\"\"hello\"\"");
-    fails += test_quote("\"\"\"hello\"\"\"");
-
-    /* ======================================================== */
-    /* EXPECTED FAILURES ONLY BELOW HERE                           */
-    /* ======================================================== */
-    /* EXPECTED FAILURES:
-     *
-     * Notes:
-     *
-     *   1. For these tests have the return value increment 'expfails'.
-     *   2. Test with both 'make vsl-regress' and 'make regress' because
-     *        some other tests use this function in unpredictable ways.
-     *   3. After a test is fixed, change the return value to increment
-     *        'fails', move it to the EXPECTED PASS group above, and add
-     *        some info about it as necessary to help those who may be
-     *        forced to revisit this.
-     *
-     */
-
-    printf("\nExpected failures (don't use in production code):\n");
-
-    printf("  NONE AT THIS TIME\n");
-
-    /* report results */
-    fprintf(stderr, "%d", expfails);
+    test_quote(NULL);
+    test_quote("");
+    test_quote(" ");
+    test_quote("hello");
+    test_quote("\"");
+    test_quote("\'");
+    test_quote("\\");
+    test_quote("\\\"");
+    test_quote("\\\\");
+    test_quote("\"hello\"");
+    test_quote("\'hello\'");
+    test_quote("\\hello");
+    test_quote("\\hello\"");
+    test_quote("hello\\\\");
+    test_quote("\"hello\'\"");
+    test_quote("\"hello\'");
+    test_quote("\'hello\'");
+    test_quote("\'hello\"");
+    test_quote("\"\"hello\"");
+    test_quote("\'\'hello\'\'");
+    test_quote("\'\"hello\"\'");
+    test_quote("\"\"hello\"\"");
+    test_quote("\"\"\"hello\"\"\"");
 
     printf("%s: testing complete\n", av[0]);
-
-    if (fails != 0) {
-      /* as long as fails is < 127 the STATUS will be the number of unexpected failures */
-      return fails;
-    }
-
     return 0;
 }
 

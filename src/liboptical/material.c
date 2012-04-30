@@ -1,7 +1,7 @@
 /*                      M A T E R I A L . C
  * BRL-CAD
  *
- * Copyright (c) 1985-2012 United States Government as represented by
+ * Copyright (c) 1985-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -112,10 +112,8 @@ try_load(const char *path, const char *material, const char *shader_name)
     for (mfp = shader_mfuncs; mfp && mfp->mf_name != (char *)NULL; mfp++) {
 	RT_CK_MF(mfp);
 
-	if (BU_STR_EQUAL(mfp->mf_name, shader_name)) {
-	    bu_dlclose(handle);
+	if (BU_STR_EQUAL(mfp->mf_name, shader_name))
 	    return shader_mfuncs; /* found it! */
-	}
     }
 
     if (R_DEBUG&RDEBUG_MATERIAL) bu_log("shader '%s' not found in library\n", shader_name);
@@ -211,8 +209,8 @@ mlib_setup(struct mfuncs **headp,
 
     const struct mfuncs *mfp;
     int ret = -1;
-    struct bu_vls params = BU_VLS_INIT_ZERO;
-    struct bu_vls name = BU_VLS_INIT_ZERO;
+    struct bu_vls params;
+    struct bu_vls name;
     const char *material;
     size_t mlen;
 
@@ -223,6 +221,9 @@ mlib_setup(struct mfuncs **headp,
 	bu_log("mlib_setup:  region %s already setup\n", rp->reg_name);
 	return -1;
     }
+
+    bu_vls_init(&name);
+    bu_vls_init(&params);
 
     material = rp->reg_mater.ma_shader;
     if (material == NULL || material[0] == '\0') {

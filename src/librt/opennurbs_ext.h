@@ -1,7 +1,7 @@
 /*                 O P E N N U R B S _ E X T . H
  * BRL-CAD
  *
- * Copyright (c) 2008-2012 United States Government as represented by
+ * Copyright (c) 2008-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -219,12 +219,12 @@ BANode<BA>::BANode() { }
 
 template<class BA>
 inline
-_BU_ATTR_ALWAYS_INLINE
+__BU_ATTR_ALWAYS_INLINE
 BANode<BA>::BANode(const ON_Curve* curve, int adj_face_index, const BA& node,
 		   const ON_BrepFace* face, const ON_Interval& t,
 		   bool innerTrim, bool checkTrim, bool trimmed)
     : m_node(node), m_face(face), m_trim(curve), m_t(t), m_adj_face_index(adj_face_index),
-      m_checkTrim(checkTrim), m_trimmed(trimmed), m_innerTrim(innerTrim), m_slope(0.0), m_vdot(0.0)
+      m_checkTrim(checkTrim), m_trimmed(trimmed), m_innerTrim(innerTrim)
 {
     m_start = curve->PointAt(m_t[0]);
     m_end = curve->PointAt(m_t[1]);
@@ -263,21 +263,9 @@ BANode<BA>::BANode(const ON_Curve* curve, int adj_face_index, const BA& node,
 
 template<class BA>
 inline
-_BU_ATTR_ALWAYS_INLINE
+__BU_ATTR_ALWAYS_INLINE
 BANode<BA>::BANode(const BA& node) : m_node(node)
 {
-    m_adj_face_index = -99;
-    m_checkTrim = true;
-    m_trimmed = false;
-    m_Horizontal = false;
-    m_Vertical = false;
-    m_XIncreasing = false;
-    m_innerTrim = false;
-    m_bb_diag = 0.0;
-    m_slope = 0.0;
-    m_vdot = 0.0;
-    m_face = NULL;
-    m_trim = NULL;
     for (int i = 0; i < 3; i++) {
 	double d = m_node.m_max[i] - m_node.m_min[i];
 	if (NEAR_ZERO(d, ON_ZERO_TOLERANCE)) {
@@ -357,7 +345,7 @@ BANode<BA>::isLeaf()
 
 template<class BA>
 inline void
-_BU_ATTR_ALWAYS_INLINE
+__BU_ATTR_ALWAYS_INLINE
 BANode<BA>::GetBBox(double* min, double* max) const
 {
     VSETALL(min, MAX_FASTF);
@@ -836,7 +824,7 @@ public:
     ON_2dPoint getClosestPointEstimate(const ON_3dPoint& pt);
     ON_2dPoint getClosestPointEstimate(const ON_3dPoint& pt, ON_Interval& u, ON_Interval& v);
     int getLeavesBoundingPoint(const ON_3dPoint& pt, std::list<BVNode<BV> *>& out);
-    int isTrimmed(const ON_2dPoint& uv, BRNode** closest, fastf_t &closesttrim);
+    int isTrimmed(const ON_2dPoint& uv, BRNode* closest, fastf_t &closesttrim);
     bool doTrimming() const;
 
     void getTrimsAbove(const ON_2dPoint& uv, std::list<BRNode*>& out_leaves);
@@ -860,10 +848,6 @@ inline
 BVNode<BV>::BVNode()
 {
     m_face = NULL;
-    m_ctree = NULL;
-    m_checkTrim = true;
-    m_trimmed = false;
-
 }
 
 
@@ -872,9 +856,6 @@ inline
 BVNode<BV>::BVNode(const BV& node) : m_node(node)
 {
     m_face = NULL;
-    m_ctree = NULL;
-    m_checkTrim = true;
-    m_trimmed = false;
     for (int i = 0; i < 3; i++) {
 	double d = m_node.m_max[i] - m_node.m_min[i];
 	if (ON_NearZero(d, ON_ZERO_TOLERANCE)) {
@@ -890,8 +871,6 @@ inline
 BVNode<BV>::BVNode(CurveTree* ct): m_ctree(ct)
 {
     m_face = NULL;
-    m_checkTrim = true;
-    m_trimmed = false;
 }
 
 
@@ -900,8 +879,6 @@ inline
 BVNode<BV>::BVNode(CurveTree* ct, const BV& node) : m_ctree(ct), m_node(node)
 {
     m_face = NULL;
-    m_checkTrim = true;
-    m_trimmed = false;
     for (int i = 0; i < 3; i++) {
 	double d = m_node.m_max[i] - m_node.m_min[i];
 	if (ON_NearZero(d, ON_ZERO_TOLERANCE)) {
@@ -914,7 +891,7 @@ BVNode<BV>::BVNode(CurveTree* ct, const BV& node) : m_ctree(ct), m_node(node)
 
 template<class BV>
 inline
-_BU_ATTR_ALWAYS_INLINE
+__BU_ATTR_ALWAYS_INLINE
 BVNode<BV>::BVNode(CurveTree* ct, const BV& node, const ON_BrepFace* face,
 		   const ON_Interval& u, const ON_Interval& v, bool checkTrim, bool trimmed)
     : m_ctree(ct), m_node(node), m_face(face), m_u(u), m_v(v), m_checkTrim(checkTrim), 
@@ -1186,16 +1163,14 @@ BVNode<BV>::getLeavesBoundingPoint(const ON_3dPoint& pt, std::list<BVNode<BV> *>
 
 template<class BV>
 int
-BVNode<BV>::isTrimmed(const ON_2dPoint& uv, BRNode** closest, fastf_t &closesttrim)
+BVNode<BV>::isTrimmed(const ON_2dPoint& uv, BRNode* closest, fastf_t &closesttrim)
 {
     BRNode* br;
     std::list<BRNode*> trims;
 
     closesttrim = -1.0;
     if (m_checkTrim) {
-
 	getTrimsAbove(uv, trims);
-
 	if (trims.empty()) {
 	    return 1;
 	} else {//find closest BB
@@ -1236,16 +1211,14 @@ BVNode<BV>::isTrimmed(const ON_2dPoint& uv, BRNode** closest, fastf_t &closesttr
 		fastf_t v;
 		int trimstatus = br->isTrimmed(uv, v);
 		if (v >= 0.0) {
-		    if (closest && *closest == NULL) {
+		    if (closest == NULL) {
 			currHeight = v;
 			currTrimStatus = trimstatus;
-			if (closest)
-			    *closest = br;
+			closest = br;
 		    } else if (v < currHeight) {
 			currHeight = v;
 			currTrimStatus = trimstatus;
-			if (closest)
-			    *closest = br;
+			closest = br;
 		    }
 		} else {
 		    double dist = fabs(v);
@@ -1260,29 +1233,25 @@ BVNode<BV>::isTrimmed(const ON_2dPoint& uv, BRNode** closest, fastf_t &closesttr
 		    }
 		}
 	    }
-	    if (closest && *closest == NULL) {
+	    if (closest == NULL) {
 		if (verticalTrim) {
 		    closesttrim = vdist;
-		    if (closest)
-			*closest = vclosest;
+		    closest = vclosest;
 		}
 		if ((underTrim) && (!verticalTrim || (udist < closesttrim))) {
 		    closesttrim = udist;
-		    if (closest)
-			*closest = uclosest;
+		    closest = uclosest;
 		}
 		return 1;
 	    } else {
 		closesttrim = currHeight;
 		if ((verticalTrim) && (vdist < closesttrim)) {
 		    closesttrim = vdist;
-		    if (closest)
-			*closest = vclosest;
+		    closest = vclosest;
 		}
 		if ((underTrim) && (udist < closesttrim)) {
 		    closesttrim = udist;
-		    if (closest)
-			*closest = uclosest;
+		    closest = uclosest;
 		}
 		return currTrimStatus;
 	    }

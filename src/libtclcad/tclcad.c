@@ -1,7 +1,7 @@
 /*                        T C L C A D . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2012 United States Government as represented by
+ * Copyright (c) 2004-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -44,43 +44,10 @@
 
 /* Private headers */
 #include "brlcad_version.h"
-#include "tclcad_private.h"
-
-
-/* defined in cmdhist_obj.c */
-extern int Cho_Init(Tcl_Interp *interp);
-
-int tclcad_initialized = 0;
-
-
-static int
-wrapper_func(ClientData data, Tcl_Interp *interp, int argc, const char *argv[])
-{
-    struct bu_cmdtab *ctp = (struct bu_cmdtab *)data;
-
-    return ctp->ct_func(interp, argc, argv);
-}
-
-
-void
-tclcad_register_cmds(Tcl_Interp *interp, struct bu_cmdtab *cmds)
-{
-    struct bu_cmdtab *ctp = NULL;
-
-    for (ctp = cmds; ctp->ct_name != (char *)NULL; ctp++) {
-	(void)Tcl_CreateCommand(interp, ctp->ct_name, wrapper_func, (ClientData)ctp, (Tcl_CmdDeleteProc *)NULL);
-    }
-}
-
 
 int
 Tclcad_Init(Tcl_Interp *interp)
 {
-    if (tclcad_initialized)
-	return TCL_OK;
-
-    tclcad_initialized = 1;
-
     if (Tcl_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
@@ -149,9 +116,6 @@ Tclcad_Init(Tcl_Interp *interp)
 	bu_log("Go_Init ERROR:\n%s\n", Tcl_GetStringResult(interp));
 	return TCL_ERROR;
     }
-
-    /* initialize command history objects */
-    Cho_Init(interp);
 
     Tcl_PkgProvide(interp,  "Tclcad", (ClientData)brlcad_version());
 

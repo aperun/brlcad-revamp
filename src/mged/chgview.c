@@ -1,7 +1,7 @@
 /*                       C H G V I E W . C
  * BRL-CAD
  *
- * Copyright (c) 1985-2012 United States Government as represented by
+ * Copyright (c) 1985-2011 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -111,6 +111,19 @@ struct dm_list *edit_rate_or_dm_list;
 struct dm_list *edit_rate_vr_dm_list;
 struct dm_list *edit_rate_mt_dm_list;
 struct dm_list *edit_rate_vt_dm_list;
+
+struct bu_vls edit_rate_model_tran_vls[3];
+struct bu_vls edit_rate_view_tran_vls[3];
+struct bu_vls edit_rate_model_rotate_vls[3];
+struct bu_vls edit_rate_object_rotate_vls[3];
+struct bu_vls edit_rate_view_rotate_vls[3];
+struct bu_vls edit_rate_scale_vls;
+struct bu_vls edit_absolute_model_tran_vls[3];
+struct bu_vls edit_absolute_view_tran_vls[3];
+struct bu_vls edit_absolute_model_rotate_vls[3];
+struct bu_vls edit_absolute_object_rotate_vls[3];
+struct bu_vls edit_absolute_view_rotate_vls[3];
+struct bu_vls edit_absolute_scale_vls;
 
 double mged_abs_tol;
 double mged_rel_tol = 0.01;		/* 1%, by default */
@@ -259,7 +272,7 @@ edit_com(int argc,
 
     size_t i;
     int last_opt=0;
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
 
     CHECK_DBI_NULL;
 
@@ -277,6 +290,7 @@ edit_com(int argc,
     }
 
     /* check args for "-A" (attributes) and "-o" and "-R" */
+    bu_vls_init(&vls);
     bu_vls_strcpy(&vls, argv[0]);
     for (i=1; i<(size_t)argc; i++) {
 	char *ptr_A=NULL;
@@ -478,15 +492,13 @@ emuves_com(int argc, const char *argv[])
 
     CHECK_DBI_NULL;
 
-    bu_log("DEPRECATION WARNING:  This command is scheduled for removal.  Please contact the developers if you use this command.\n");
-
     if (argc < 2) {
-	struct bu_vls vls = BU_VLS_INIT_ZERO;
+	struct bu_vls vls;
 
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "help %s", argv[0]);
 	Tcl_Eval(INTERP, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
-
 	return TCL_ERROR;
     }
 
@@ -543,13 +555,13 @@ cmd_autoview(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const 
     struct cmd_list *save_cmd_list;
 
     if (argc > 2) {
-	struct bu_vls vls = BU_VLS_INIT_ZERO;
+	struct bu_vls vls;
 
 	bu_log("Unexpected parameter [%s]\n", argv[2]);
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "help autoview");
 	Tcl_Eval(interp, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
-
 	return TCL_ERROR;
     }
 
@@ -599,13 +611,14 @@ cmd_autoview(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const 
 void
 solid_list_callback(void)
 {
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
     Tcl_Obj *save_obj;
 
     /* save result */
     save_obj = Tcl_GetObjResult(INTERP);
     Tcl_IncrRefCount(save_obj);
 
+    bu_vls_init(&vls);
     bu_vls_strcpy(&vls, "solid_list_callback");
     (void)Tcl_Eval(INTERP, bu_vls_addr(&vls));
     bu_vls_free(&vls);
@@ -628,12 +641,12 @@ f_regdebug(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const ch
     static char debug_str[10];
 
     if (argc < 1 || 2 < argc) {
-	struct bu_vls vls = BU_VLS_INIT_ZERO;
+	struct bu_vls vls;
 
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "help regdebug");
 	Tcl_Eval(interp, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
-
 	return TCL_ERROR;
     }
 
@@ -721,11 +734,12 @@ cmd_zap(ClientData UNUSED(clientData), Tcl_Interp *UNUSED(interp), int UNUSED(ar
 int
 f_status(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char *argv[])
 {
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
 
     CHECK_DBI_NULL;
 
     if (argc < 1 || 2 < argc) {
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "help status");
 	Tcl_Eval(interp, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
@@ -733,6 +747,7 @@ f_status(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char
     }
 
     if (argc == 1) {
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "STATE=%s, ", state_str[STATE]);
 	bu_vls_printf(&vls, "Viewscale=%f (%f mm)\n",
 		      view_state->vs_gvp->gv_scale*base2local, view_state->vs_gvp->gv_scale);
@@ -759,6 +774,7 @@ f_status(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char
     }
 
     if (BU_STR_EQUAL(argv[1], "Viewscale")) {
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "%f", view_state->vs_gvp->gv_scale*base2local);
 	Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 	bu_vls_free(&vls);
@@ -766,6 +782,7 @@ f_status(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char
     }
 
     if (BU_STR_EQUAL(argv[1], "base2local")) {
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "%f", base2local);
 	Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 	bu_vls_free(&vls);
@@ -773,6 +790,7 @@ f_status(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char
     }
 
     if (BU_STR_EQUAL(argv[1], "local2base")) {
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "%f", local2base);
 	Tcl_AppendResult(interp, bu_vls_addr(&vls), (char *)NULL);
 	bu_vls_free(&vls);
@@ -809,6 +827,7 @@ f_status(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char
 	return TCL_OK;
     }
 
+    bu_vls_init(&vls);
     bu_vls_printf(&vls, "help status");
     Tcl_Eval(interp, bu_vls_addr(&vls));
     bu_vls_free(&vls);
@@ -824,12 +843,12 @@ int
 f_refresh(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char *UNUSED(argv[]))
 {
     if (argc < 1 || 1 < argc) {
-	struct bu_vls vls = BU_VLS_INIT_ZERO;
+	struct bu_vls vls;
 
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "help refresh");
 	Tcl_Eval(interp, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
-
 	return TCL_ERROR;
     }
 
@@ -863,25 +882,28 @@ f_ill(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char *a
 
     char **nargv;
     char **orig_nargv;
-    struct bu_vls vlsargv = BU_VLS_INIT_ZERO;
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
+    struct bu_vls vlsargv;
 
     CHECK_DBI_NULL;
 
     if (argc < 2 || 5 < argc) {
+	struct bu_vls vls;
+
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "help ill");
 	Tcl_Eval(interp, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
 	return TCL_ERROR;
     }
 
+    bu_vls_init(&vlsargv);
     bu_vls_from_argv(&vlsargv, argc, argv);
     nargv = bu_calloc(argc+1, sizeof(char *), "calloc f_ill nargv");
     orig_nargv = nargv;
     c = bu_argv_from_string(nargv, argc, bu_vls_addr(&vlsargv));
     if (c != argc) {
 	Tcl_AppendResult(interp, "ERROR: unable to processes command arguments for f_ill()\n", (char*)NULL);
-
+	
 	bu_free(orig_nargv, "free f_ill nargv");
 	bu_vls_free(&vlsargv);
 
@@ -909,6 +931,9 @@ f_ill(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char *a
 	    default:
 	    case 'h':
 		{
+		    struct bu_vls vls;
+
+		    bu_vls_init(&vls);
 		    bu_vls_printf(&vls, "help ill");
 		    Tcl_Eval(interp, bu_vls_addr(&vls));
 		    bu_vls_free(&vls);
@@ -927,6 +952,9 @@ f_ill(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char *a
     nargv += (bu_optind - 1);
 
     if (argc != 2) {
+	struct bu_vls vls;
+
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "help ill");
 	Tcl_Eval(interp, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
@@ -943,11 +971,6 @@ f_ill(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char *a
     }
 
     path_piece = path_parse(nargv[1]);
-    if(path_piece == NULL) {
-	Tcl_AppendResult(interp, "Path parse failed: '", nargv[1], "'\n", (char *)NULL);
-	goto bail_out;
-    }
-
     for (nm_pieces = 0; path_piece[nm_pieces] != 0; ++nm_pieces)
 	;
 
@@ -1008,18 +1031,14 @@ f_ill(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char *a
     }
 
     /* preserve same old behavior */
-    if (ri == 0) {
-	if (nmatch > 1) {
-	    Tcl_AppendResult(interp, nargv[1], " multiply referenced\n", (char *)NULL);
-	    goto bail_out;
-	}
-    } else {
-	if (ri >= nmatch) {
-	    Tcl_AppendResult(interp,
-			     "the reference index must be less than the number of references\n",
-			     (char *)NULL);
-	    goto bail_out;
-	}
+    if (nmatch > 1 && ri == 0) {
+	Tcl_AppendResult(interp, nargv[1], " multiply referenced\n", (char *)NULL);
+	goto bail_out;
+    } else if (ri != 0 && ri != nmatch) {
+	Tcl_AppendResult(interp,
+			 "the reference index must be less than the number of references\n",
+			 (char *)NULL);
+	goto bail_out;
     }
 
     /* Make the specified solid the illuminated solid */
@@ -1051,6 +1070,10 @@ f_ill(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char *a
 
  bail_out:
     if (STATE != ST_VIEW) {
+	struct bu_vls vls;
+
+	bu_vls_init(&vls);
+
 	bu_vls_printf(&vls, "%s", Tcl_GetStringResult(interp));
 	button(BE_REJECT);
 	Tcl_ResetResult(interp);
@@ -1085,12 +1108,12 @@ f_sed(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[])
     CHECK_READ_ONLY;
 
     if (argc < 2 || 5 < argc) {
-	struct bu_vls vls = BU_VLS_INIT_ZERO;
+	struct bu_vls vls;
 
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "help sed");
 	Tcl_Eval(interp, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
-
 	return TCL_ERROR;
     }
 
@@ -1245,7 +1268,9 @@ knob_update_rate_vars(void)
 int
 mged_print_knobvals(Tcl_Interp *interp)
 {
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
+
+    bu_vls_init(&vls);
 
     if (mged_variables->mv_rateknobs) {
 	if (es_edclass == EDIT_CLASS_ROTATE && mged_variables->mv_transform == 'e') {
@@ -1335,12 +1360,12 @@ f_knob(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[])
     CHECK_DBI_NULL;
 
     if (argc < 1) {
-	struct bu_vls vls = BU_VLS_INIT_ZERO;
+	struct bu_vls vls;
 
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "help knob");
 	Tcl_Eval(interp, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
-
 	return TCL_ERROR;
     }
 
@@ -2582,12 +2607,12 @@ int
 cmd_zoom(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char *argv[])
 {
     if (argc != 2) {
-	struct bu_vls vls = BU_VLS_INIT_ZERO;
+	struct bu_vls vls;
 
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "help zoom");
 	Tcl_Eval(interp, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
-
 	return TCL_ERROR;
     }
 
@@ -2746,15 +2771,14 @@ f_svbase(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char
     struct dm_list *dmlp;
 
     if (argc < 1 || 1 < argc) {
-	struct bu_vls vls = BU_VLS_INIT_ZERO;
+	struct bu_vls vls;
 
 	if (argv && argc > 1)
 	    bu_log("Unexpected parameter [%s]\n", argv[1]);
-
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "helpdevel svb");
 	Tcl_Eval(interp, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
-
 	return TCL_ERROR;
     }
 
@@ -2782,15 +2806,14 @@ int
 f_vrot_center(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const char *argv[])
 {
     if (argc < 5 || 5 < argc) {
-	struct bu_vls vls = BU_VLS_INIT_ZERO;
+	struct bu_vls vls;
 
 	if (argv && argc > 5)
 	    bu_log("Unexpected parameter [%s]\n", argv[5]);
-
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "help vrot_center");
 	Tcl_Eval(interp, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
-
 	return TCL_ERROR;
     }
 
@@ -2938,7 +2961,7 @@ view_ring_init(struct _view_state *vsp1, struct _view_state *vsp2)
 	struct view_ring *vrp1_last_view = NULL;
 
 	for (BU_LIST_FOR(vrp2, view_ring, &vsp2->vs_headView.l)) {
-	    BU_GET(vrp1, struct view_ring);
+	    BU_GETSTRUCT(vrp1, view_ring);
 	    /* append to last list element */
 	    BU_LIST_APPEND(vsp1->vs_headView.l.back, &vrp1->l);
 
@@ -2957,7 +2980,7 @@ view_ring_init(struct _view_state *vsp1, struct _view_state *vsp2)
 	vsp1->vs_current_view = vrp1_current_view;
 	vsp1->vs_last_view = vrp1_last_view;
     } else {
-	BU_GET(vrp1, struct view_ring);
+	BU_GETSTRUCT(vrp1, view_ring);
 	BU_LIST_APPEND(&vsp1->vs_headView.l, &vrp1->l);
 
 	vrp1->vr_id = 1;
@@ -2998,9 +3021,10 @@ f_view_ring(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const c
     int n;
     struct view_ring *vrp;
     struct view_ring *lv;
-    struct bu_vls vls = BU_VLS_INIT_ZERO;
+    struct bu_vls vls;
 
     if (argc < 2 || 3 < argc) {
+	bu_vls_init(&vls);
 	bu_vls_printf(&vls, "helpdevel view_ring");
 	Tcl_Eval(interp, bu_vls_addr(&vls));
 	bu_vls_free(&vls);
@@ -3009,6 +3033,7 @@ f_view_ring(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const c
 
     if (BU_STR_EQUAL(argv[1], "add")) {
 	if (argc != 2) {
+	    bu_vls_init(&vls);
 	    bu_vls_printf(&vls, "help view_ring");
 	    Tcl_Eval(interp, bu_vls_addr(&vls));
 	    bu_vls_free(&vls);
@@ -3025,7 +3050,7 @@ f_view_ring(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const c
 	view_state->vs_current_view->vr_scale = view_state->vs_gvp->gv_scale;
 
 	/* allocate memory and append to list */
-	BU_GET(vrp, struct view_ring);
+	BU_GETSTRUCT(vrp, view_ring);
 	lv = BU_LIST_LAST(view_ring, &view_state->vs_headView.l);
 	BU_LIST_APPEND(&lv->l, &vrp->l);
 
@@ -3041,6 +3066,7 @@ f_view_ring(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const c
 
     if (BU_STR_EQUAL(argv[1], "next")) {
 	if (argc != 2) {
+	    bu_vls_init(&vls);
 	    bu_vls_printf(&vls, "help view_ring");
 	    Tcl_Eval(interp, bu_vls_addr(&vls));
 	    bu_vls_free(&vls);
@@ -3079,6 +3105,7 @@ f_view_ring(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const c
 
     if (BU_STR_EQUAL(argv[1], "prev")) {
 	if (argc != 2) {
+	    bu_vls_init(&vls);
 	    bu_vls_printf(&vls, "help view_ring");
 	    Tcl_Eval(interp, bu_vls_addr(&vls));
 	    bu_vls_free(&vls);
@@ -3119,6 +3146,7 @@ f_view_ring(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const c
 	struct view_ring *save_last_view;
 
 	if (argc != 2) {
+	    bu_vls_init(&vls);
 	    bu_vls_printf(&vls, "help view_ring");
 	    Tcl_Eval(interp, bu_vls_addr(&vls));
 	    bu_vls_free(&vls);
@@ -3149,6 +3177,7 @@ f_view_ring(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const c
 
     if (BU_STR_EQUAL(argv[1], "delete")) {
 	if (argc != 3) {
+	    bu_vls_init(&vls);
 	    bu_vls_printf(&vls, "help view_ring");
 	    Tcl_Eval(interp, bu_vls_addr(&vls));
 	    bu_vls_free(&vls);
@@ -3198,6 +3227,7 @@ f_view_ring(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const c
 
     if (BU_STR_EQUAL(argv[1], "goto")) {
 	if (argc != 3) {
+	    bu_vls_init(&vls);
 	    bu_vls_printf(&vls, "help view_ring");
 	    Tcl_Eval(interp, bu_vls_addr(&vls));
 	    bu_vls_free(&vls);
@@ -3245,6 +3275,7 @@ f_view_ring(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const c
     if (BU_STR_EQUAL(argv[1], "get")) {
 	/* return current view */
 	if (argc == 2) {
+	    bu_vls_init(&vls);
 	    bu_vls_printf(&vls, "%d", view_state->vs_current_view->vr_id);
 	    Tcl_AppendElement(interp, bu_vls_addr(&vls));
 	    bu_vls_free(&vls);
@@ -3252,12 +3283,14 @@ f_view_ring(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const c
 	}
 
 	if (!BU_STR_EQUAL("-a", argv[2])) {
+	    bu_vls_init(&vls);
 	    bu_vls_printf(&vls, "help view_ring");
 	    Tcl_Eval(interp, bu_vls_addr(&vls));
 	    bu_vls_free(&vls);
 	    return TCL_ERROR;
 	}
 
+	bu_vls_init(&vls);
 	for (BU_LIST_FOR(vrp, view_ring, &view_state->vs_headView.l)) {
 	    bu_vls_printf(&vls, "%d", vrp->vr_id);
 	    Tcl_AppendElement(interp, bu_vls_addr(&vls));
@@ -3674,7 +3707,7 @@ mged_etran(char coords,
 int
 mged_otran(const vect_t tvec)
 {
-    vect_t work = VINIT_ZERO;
+    vect_t work = {0.0, 0.0, 0.0};
 
     if (STATE == ST_S_EDIT || STATE == ST_O_EDIT) {
 	/* apply acc_rot_sol to tvec */

@@ -1,0 +1,30 @@
+set(docbook_man1_EN
+  asc2dsp.xml
+  bwscale.xml
+  coil.xml
+  db.xml
+  gqa.xml
+  mged.xml
+  nirt.xml
+  obj-g.xml
+  rt.xml
+  rtarea.xml
+  rtcheck.xml
+  rtedge.xml
+  rtwizard.xml
+  tire.xml
+  )
+
+DOCBOOK_TO_HTML(man1 docbook_man1_EN html/man1/en "")
+DOCBOOK_TO_MAN(man1 docbook_man1_EN 1 1 man/man1 "")
+
+if(BRLCAD_EXTRADOCS_PDF_MAN)
+  DOCBOOK_TO_PDF(man1 docbook_man1_EN pdf/man1/en "")
+endif(BRLCAD_EXTRADOCS_PDF_MAN)
+
+# Local Variables:
+# tab-width: 8
+# mode: cmake
+# indent-tabs-mode: t
+# End:
+# ex: shiftwidth=2 tabstop=8

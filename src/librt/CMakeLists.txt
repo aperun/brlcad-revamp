@@ -13,7 +13,6 @@ set(RT_LOCAL_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${REGEX_INCLUDE_DIR}
   ${TNT_INCLUDE_DIR}
-  #${BRLCAD_SOURCE_DIR}/src/other/Eigen
   )
 
 BRLCAD_LIB_INCLUDE_DIRS(rt RT_INCLUDE_DIRS RT_LOCAL_INCLUDE_DIRS)
@@ -61,7 +60,6 @@ set(LIBRT_SOURCES
   memalloc.c
   mkbundle.c
   opennurbs_ext.cpp
-  #opennurbs_fit.cpp
   oslo_calc.c
   oslo_map.c
   pr.c
@@ -73,7 +71,6 @@ set(LIBRT_SOURCES
   primitives/arbn/arbn_brep.cpp
   primitives/arbn/arbn_mirror.c
   primitives/ars/ars.c
-  primitives/ars/ars_brep.cpp
   primitives/ars/ars_mirror.c
   primitives/bot/bot.c
   primitives/bot/bot_brep.cpp
@@ -132,7 +129,6 @@ set(LIBRT_SOURCES
   primitives/grip/grip.c
   primitives/grip/grip_mirror.c
   primitives/half/half.c
-  primitives/half/half_brep.cpp
   primitives/half/half_mirror.c
   primitives/hf/hf.c
   primitives/hyp/hyp.c
@@ -190,13 +186,11 @@ set(LIBRT_SOURCES
   primitives/obj_vshot.c
   primitives/obj_xform.c
   primitives/part/part.c
-  primitives/part/part_brep.cpp
   primitives/part/part_mirror.c
   primitives/pipe/pipe.c
   primitives/pipe/pipe_brep.cpp
   primitives/pipe/pipe_mirror.c
   primitives/pnts/pnts.c
-  primitives/pnts/pnts_brep.cpp
   primitives/poly/poly.c
   primitives/poly/poly_brep.cpp
   primitives/poly/poly_mirror.c
@@ -248,10 +242,6 @@ set(librt_ignored_files
   librt_private.h
   namegen.c
   opennurbs_ext.h
-  opennurbs_fit.h
-  opennurbs_fit.cpp
-  test_nurbsfit.cpp
-  test_botpatches.c
   prcomb.c
   primitives/bot/btg.h
   primitives/bot/g_bot_include.c
@@ -289,8 +279,6 @@ set(librt_DEFINES "")
 # Set librt compile definitions
 get_property(librt_DEFINES GLOBAL PROPERTY librt_DEFINES)
 list(APPEND librt_DEFINES "OBJ_BREP=1")
-#list(APPEND librt_DEFINES "EIGEN_NO_DEBUG")
-#list(APPEND librt_DEFINES "EIGEN_USE_NEW_STDVECTOR")
 if(CPP_DLL_DEFINES)
   list(APPEND librt_DEFINES "ON_DLL_IMPORTS")
 endif(CPP_DLL_DEFINES)
@@ -313,9 +301,6 @@ endif(CPP_DLL_DEFINES)
 
 install(FILES librt.3 DESTINATION ${MAN_DIR}/man3)
 CMAKEFILES(Makefile.am)
-
-#BRLCAD_ADDEXEC(test_nurbsfit test_nurbsfit.cpp "librt;libwdb;libbu" NOSTRICT NO_INSTALL)
-#BRLCAD_ADDEXEC(test_botpatches test_botpatches.c "librt;libwdb;libbu" NO_INSTALL)
 
 # Local Variables:
 # tab-width: 8

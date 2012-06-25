@@ -2,7 +2,7 @@
 .\"                     C A N O N I Z E . 1
 .\" BRL-CAD
 .\"
-.\" Copyright (c) 1992-2012 United States Government as represented by
+.\" Copyright (c) 2005-2012 United States Government as represented by
 .\" the U.S. Army Research Laboratory.
 .\"
 .\" Redistribution and use in source (Docbook format) and 'compiled'
@@ -24,7 +24,7 @@
 .\" products derived from this documentation without specific prior
 .\" written permission.
 .\"
-.\" THIS DOCUMENTATION IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY
+.\" THIS DOCUMENTATION IS PROVIDED BY THE AUTHOR AS IS'' AND ANY
 .\" EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 .\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
 .\" PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -49,10 +49,11 @@ canonize \- queue a pix file to a printer using MDQS
 .RB [ \-w\ filewidth]
 .RB [ \-n\ fileheight]
 .br
-.RB [ \-g\ {cg | rgb | scan}]
+.br
+.RB [ \-g\ {cg|rgb|scan}]
 .br
 .RB [ \-t\ {u|l|m}]
-.RB [ \-C\ numcopies]
+.RB [ \-C\ {1-99}]
 .RB [ \-q\ queue]
 .br
 .RB [ \-R\ dpi ]
@@ -118,7 +119,7 @@ selects the tray from which paper should be taken to
 produce the print.  The options are "u" for the upper tray, "l" for
 the lower tray, and "m" for manual feed.
 .TP
-\-C numcopies
+\-C #copies
 Specifies the number of prints of the image desired.
 This number must be in the range 1-99.
 .TP
@@ -206,11 +207,6 @@ will abort.
 This avoids wasting paper printing an image using incorrect dimensions.
 .SH AUTHOR
 Lee A. Butler
-
-.SH COPYRIGHT
-This software is Copyright (c) 1992-2012 by the United States
-Government as represented by U.S. Army Research Laboratory.
-
 .SH "BUG REPORTS"
 Reports of bugs or problems should be submitted via electronic
 mail to <devs@brlcad.org>.

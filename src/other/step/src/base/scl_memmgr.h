@@ -15,7 +15,7 @@
 #endif
 
 #ifdef  __cplusplus
-#include <stddef.h>
+#include <cstddef>
 extern "C" {
 #endif /* __cplusplus */
 

@@ -2,7 +2,7 @@
 .\"                    A N I M _ S O R T . 1
 .\" BRL-CAD
 .\"
-.\" Copyright (c) 1994-2012 United States Government as represented by
+.\" Copyright (c) 1993-2012 United States Government as represented by
 .\" the U.S. Army Research Laboratory.
 .\"
 .\" Redistribution and use in source (Docbook format) and 'compiled'
@@ -24,7 +24,7 @@
 .\" products derived from this documentation without specific prior
 .\" written permission.
 .\"
-.\" THIS DOCUMENTATION IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY
+.\" THIS DOCUMENTATION IS PROVIDED BY THE AUTHOR AS IS'' AND ANY
 .\" EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 .\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
 .\" PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -69,15 +69,13 @@ movement of the virtual camera and the lighting,
 rotates
 the blades of a windmill, and
 .B quixote.script
-controls the movement of a
+controlls the movement of a
 knight. These scripts should first be concatenated together:
-
+.sp
 .nf
-.RS
-cat view.script mill.script quixote.script > mixed.script
-.RE
+    cat view.script mill.script quixote.script > mixed.script
 .fi
-
+.sp
 Calling
 .I anim_sort
 with
@@ -93,16 +91,14 @@ viable
 .I rt
 animation script, containing a series of frames of the
 following form:
-
+.sp
 .nf
-.RS
-start framenumber;
-any number of semi-colon terminated commands for rt;
-end;
-any number of post-raytracing commands
-.RE
+    start framenumber;
+    any number of semi-colon terminated commands for rt;
+    end;
+    any number of post-raytracing commands
 .fi
-
+.sp
 .I anim_sort
 reads the framenumber of the first start command, and uses
 this to as the first frame number of the output file. The commands of
@@ -181,7 +177,7 @@ rt(1), tabsub(1), anim_script(1)
 .SH AUTHOR
 Carl J. Nuzman
 .SH COPYRIGHT
-This software is Copyright (c) 1994-2012 by the United States
+This software is Copyright (c) 1993-2012 by the United States
 Government as represented by U.S. Army Research Laboratory.
 .SH "BUG REPORTS"
 Reports of bugs or problems should be submitted via electronic

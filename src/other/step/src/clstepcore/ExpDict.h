@@ -17,7 +17,6 @@
 
 #include <vector>
 #include <string>
-#include <assert.h>
 
 typedef  SDAI_Application_instance * ( * Creator )();
 
@@ -26,13 +25,6 @@ enum AttrType_Enum {
     AttrType_Inverse,
     AttrType_Deriving,
     AttrType_Redefining
-};
-
-enum AggrBoundTypeEnum {
-    bound_unset = 0,
-    bound_constant,
-    bound_runtime,
-    bound_funcall
 };
 
 #include <SingleLinkList.h>
@@ -669,7 +661,6 @@ class SCL_CORE_EXPORT Schema : public Dictionary_instance {
         const char  * _name;
         EntityDescriptorList _entList; // list of entities in the schema
         TypeDescriptorList _typeList; // list of types in the schema
-        TypeDescriptorList _unnamed_typeList; // list of unnamed types in the schema (for cleanup)
         Interface_spec _interface; // list of USE and REF interfaces  (SDAI)
 
         // non-SDAI lists
@@ -736,10 +727,6 @@ class SCL_CORE_EXPORT Schema : public Dictionary_instance {
 
         TypeDescLinkNode * AddType( TypeDescriptor * td ) {
             return _typeList.AddNode( td );
-        }
-
-        TypeDescLinkNode * AddUnnamedType( TypeDescriptor * td ) {
-            return _unnamed_typeList.AddNode( td );
         }
 
         // the whole schema
@@ -1307,7 +1294,9 @@ class SCL_CORE_EXPORT TypeDescriptor {
         TypeDescriptor( const char * nm, PrimitiveType ft,
                         Schema * origSchema, const char * d );
         TypeDescriptor( );
-        virtual ~TypeDescriptor();
+        virtual ~TypeDescriptor() {
+            /* if ( altNames ) delete altNames; */
+        }
 
         virtual const char * GenerateExpress( std::string & buf ) const;
 
@@ -1655,31 +1644,27 @@ SCL_CORE_EXPORT RealAggregate * create_RealAggregate();
 
 SCL_CORE_EXPORT IntAggregate * create_IntAggregate();
 
-typedef SDAI_Integer (*boundCallbackFn)(SDAI_Application_instance *);
+///////////////////////////////////////////////////////////////////////////////
+// AggrTypeDescriptor
+// I think we decided on a simplistic representation of aggr. types for now?
+// i.e. just have one AggrTypeDesc for Array of [list of] [set of] someType
+// the inherited variable _referentType will point to the TypeDesc for someType
+// So I don't believe this class was necessary.  If we were to retain
+// info for each of the [aggr of]'s in the example above then there would be
+// one of these for each [aggr of] above and they would be strung
+// together by the _aggrDomainType variables.  If you can make this
+// work then go for it.
+///////////////////////////////////////////////////////////////////////////////
 
-/**
- * \class AggrTypeDescriptor
- * I think we decided on a simplistic representation of aggr. types for now?
- * i.e. just have one AggrTypeDesc for Array of [list of] [set of] someType
- * the inherited variable _referentType will point to the TypeDesc for someType
- * So I don't believe this class was necessary.  If we were to retain
- * info for each of the [aggr of]'s in the example above then there would be
- * one of these for each [aggr of] above and they would be strung
- * together by the _aggrDomainType variables.  If you can make this
- * work then go for it.
- */
 class SCL_CORE_EXPORT AggrTypeDescriptor  :    public TypeDescriptor  {
 
     protected:
 
-        SDAI_Integer  _bound1, _bound2;
+        SDAI_Integer   _bound1;
+        SDAI_Integer   _bound2;
         SDAI_LOGICAL  _uniqueElements;
         TypeDescriptor * _aggrDomainType;
         AggregateCreator CreateNewAggr;
-
-        AggrBoundTypeEnum _bound1_type, _bound2_type;
-        boundCallbackFn _bound1_callback, _bound2_callback;
-        std::string _bound1_str, _bound2_str;
 
     public:
 
@@ -1700,68 +1685,18 @@ class SCL_CORE_EXPORT AggrTypeDescriptor  :    public TypeDescriptor  {
         virtual ~AggrTypeDescriptor();
 
 
-        /// find bound type
-        AggrBoundTypeEnum Bound1Type() const { return _bound1_type; };
-        /// get a constant bound
-        SDAI_Integer Bound1( ) const {
-            assert( _bound1_type == bound_constant );
+        SDAI_Integer & Bound1()          {
             return _bound1;
         }
-        /// get a runtime bound using an object's 'this' pointer
-        SDAI_Integer Bound1Runtime( SDAI_Application_instance* this_ptr) const {
-            assert( this_ptr && ( _bound1_type == bound_runtime ) );
-            return _bound1_callback(this_ptr) ;
-        }
-        /// get a bound's EXPRESS function call string
-        std::string Bound1Funcall() const {
-            return _bound1_str;
-        }
-        /// set bound to a constant
-        void SetBound1( SDAI_Integer  b1 )   {
+        void Bound1( SDAI_Integer   b1 )   {
             _bound1 = b1;
-            _bound1_type = bound_constant;
-        }
-        ///set bound's callback fn. only for bounds dependent on an attribute
-        void SetBound1FromMemberAccessor( boundCallbackFn callback ) {
-            _bound1_callback = callback;
-            _bound1_type = bound_runtime;
-        }
-        ///set bound from express function call. currently, this only stores the function call as a string.
-        void SetBound1FromExpressFuncall( std::string s ) {
-            _bound1_str = s;
-            _bound1_type = bound_funcall;
         }
 
-        /// find bound type
-        AggrBoundTypeEnum Bound2Type() const { return _bound2_type; };
-        /// get a constant bound
-        SDAI_Integer Bound2( ) const {
-            assert( _bound2_type == bound_constant );
+        SDAI_Integer & Bound2()      {
             return _bound2;
         }
-        /// get a runtime bound using an object's 'this' pointer
-        SDAI_Integer Bound2Runtime( SDAI_Application_instance* this_ptr) const {
-            assert( this_ptr && ( _bound2_type == bound_runtime ) );
-            return _bound2_callback(this_ptr) ;
-        }
-        /// get a bound's EXPRESS function call string
-        std::string Bound2Funcall() const {
-            return _bound2_str;
-        }
-        /// set bound to a constant
-        void SetBound2( SDAI_Integer  b2 )   {
+        void Bound2( SDAI_Integer   b2 )   {
             _bound2 = b2;
-            _bound2_type = bound_constant;
-        }
-        ///set bound's callback fn
-        void SetBound2FromMemberAccessor( boundCallbackFn callback ){
-            _bound2_callback = callback;
-            _bound2_type = bound_runtime;
-        }
-        ///set bound from express function call. currently, this only stores the function call as a string.
-        void SetBound2FromExpressFuncall( std::string s ) {
-            _bound2_str = s;
-            _bound2_type = bound_funcall;
         }
 
         SDAI_LOGICAL  & UniqueElements()   {

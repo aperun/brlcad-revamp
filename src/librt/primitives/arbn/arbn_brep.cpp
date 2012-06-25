@@ -17,10 +17,9 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @file arbn_brep.cpp
+/** @file arb8_brep.cpp
  *
- * Convert an Arbitrary Regular Polyhedron with an arbitrary number
- * of faces to b-rep form
+ * Convert a Generalized Ellipsoid to b-rep form
  *
  */
 

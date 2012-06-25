@@ -35,9 +35,6 @@ set(docbook_mann_EN
   bot_decimate.xml
   bot_face_fuse.xml
   bot_face_sort.xml
-  bot_flip.xml
-  bot_split.xml
-  bot_sync.xml
   bot_vertex_fuse.xml
   build_region.xml
   c.xml
@@ -177,7 +174,6 @@ set(docbook_mann_EN
   regdebug.xml
   regdef.xml
   regions.xml
-  reid.xml
   release.xml
   rfarb.xml
   rm.xml
@@ -189,7 +185,6 @@ set(docbook_mann_EN
   rpp-cap.xml
   rrt.xml
   rt.xml
-  rtarea.xml
   rtcheck.xml
   savekey.xml
   saveview.xml

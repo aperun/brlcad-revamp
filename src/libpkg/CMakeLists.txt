@@ -13,7 +13,6 @@ set(LIBPKG_SOURCES
   )
 
 BRLCAD_ADDDATA(tpkg.c sample_applications)
-BRLCAD_ADDEXEC(tpkg tpkg.c "libbu;libpkg" NO_INSTALL)
 
 BRLCAD_ADDLIB(libpkg "${LIBPKG_SOURCES}" libbu)
 SET_TARGET_PROPERTIES(libpkg PROPERTIES VERSION 20.0.1 SOVERSION 20)

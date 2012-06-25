@@ -29,37 +29,13 @@
 #include "raytrace.h"		/* librt interface definitions */
 
 /**
- * This structure is for lists that store region names for each voxel
- */
-struct voxelRegion {
-    const char *regionName;
-    fastf_t regionDistance;
-    struct voxelRegion *nextRegion;
-};
-
-/**
  * This structure stores the information about voxels provided by a single raytrace.
  */
+
 struct rayInfo {
     fastf_t sizeVoxel[3];
     fastf_t *fillDistances;
-    struct voxelRegion *regionList;
 };
-
-
-/**
- * Function to assign a new region to a voxel.
- */
-void setRegionName(struct bu_vls **vp, const char **nameSource, const char **nameDestination) {
-    size_t newlen;
-
-    *vp = bu_vls_vlsinit();
-    newlen = strlen(*nameSource);
-    bu_vls_setlen(*vp,newlen);
-    (*vp)->vls_str = (char *)(*nameSource);
-
-    *nameDestination = bu_vls_strgrab(*vp);
-}
 
 
 /**
@@ -77,17 +53,14 @@ void setRegionName(struct bu_vls **vp, const char **nameSource, const char **nam
 static int
 hit(struct application *ap, struct partition *PartHeadp, struct seg*UNUSED(segs))
 {
-    int voxelNumIn, voxelNumOut, j = 0, regionSaved;
+    int voxelNumIn, voxelNumOut, j = 0;
     fastf_t hitDistIn, hitDistOut, sizeVoxel[3], *fillDistances;
+
     struct partition *pp;
     struct rayInfo *voxelHits;
     struct hit *hitOutp, *hitInp;
-    struct voxelRegion *tmp, *newRegion;
-
-    struct bu_vls *vp;
 
     voxelHits = (struct rayInfo*) ap->a_uptr;
-
 
     /**
      * length of voxels in the 3 directions is stored in sizeVoxel[],
@@ -101,8 +74,6 @@ hit(struct application *ap, struct partition *PartHeadp, struct seg*UNUSED(segs)
 
     while (pp != PartHeadp) {
 
-	regionSaved = 0;
-
 	/**
 	 * hitInp, hitOutp are hit structures to save distances where
 	 * ray entered and exited the present partition.  hitDistIn,
@@ -110,7 +81,6 @@ hit(struct application *ap, struct partition *PartHeadp, struct seg*UNUSED(segs)
 	 * ray.  voxelNumIn, voxelNumOut are the voxel numbers where
 	 * ray entered and exited the present partition.
 	 */
-
 	hitInp = pp->pt_inhit;
 	hitOutp = pp->pt_outhit;
 
@@ -134,87 +104,15 @@ hit(struct application *ap, struct partition *PartHeadp, struct seg*UNUSED(segs)
 
 	    fillDistances[voxelNumIn] +=  hitDistOut - hitDistIn;
 
-	    if(voxelHits->regionList[voxelNumIn].regionName == NULL) {
-
-		setRegionName(&vp, &(pp->pt_regionp->reg_name), &(voxelHits->regionList[voxelNumIn].regionName));
-		voxelHits->regionList[voxelNumIn].regionDistance += hitDistOut - hitDistIn;
-
-	    } else {
-
-		tmp = voxelHits->regionList + voxelNumIn;
-
-		while(tmp->nextRegion != NULL) {
-
-		    if(!bu_strcmp(pp->pt_regionp->reg_name, tmp->regionName)){
-
-			regionSaved = 1;
-			tmp->regionDistance += hitDistOut - hitDistIn;
-
-		    }
-		    tmp = tmp->nextRegion;
-		}
-
-		if(!bu_strcmp(tmp->regionName,pp->pt_regionp->reg_name)){
-		    regionSaved = 1;
-		    tmp->regionDistance += hitDistOut - hitDistIn;
-		}
-		if(regionSaved!=1) {
-		    newRegion = bu_calloc(1, sizeof(struct voxelRegion), "newRegion");
-
-		    tmp->nextRegion = newRegion;
-
-		    setRegionName(&vp, &(pp->pt_regionp->reg_name), &(newRegion->regionName));
-
-		    newRegion->nextRegion = NULL;
-		    newRegion->regionDistance += hitDistOut - hitDistIn;
-		}
-	    }
-
-
 	} else {
 
 	    fillDistances[voxelNumIn] += (voxelNumIn + 1) * sizeVoxel[0] - hitDistIn;
-	    if(voxelHits->regionList[voxelNumIn].regionName == NULL) {
-
-		setRegionName(&vp, &(pp->pt_regionp->reg_name), &(voxelHits->regionList[voxelNumIn].regionName));
-		voxelHits->regionList[voxelNumIn].regionDistance += (voxelNumIn + 1) * sizeVoxel[0] - hitDistIn;
-
-	    }  else {
-		tmp = voxelHits->regionList + voxelNumIn;
-		while(tmp->nextRegion != NULL) {
-
-		    if(!bu_strcmp(pp->pt_regionp->reg_name,tmp->regionName)) {
-			regionSaved = 1;
-			tmp->regionDistance += (voxelNumIn + 1) * sizeVoxel[0] - hitDistIn;
-		    }
-		    tmp = tmp->nextRegion;
-		}
-		if(!bu_strcmp(tmp->regionName, pp->pt_regionp->reg_name)) {
-		    regionSaved = 1;
-		    tmp->regionDistance += (voxelNumIn + 1) * sizeVoxel[0] - hitDistIn;
-		}
-		if(regionSaved!=1){
-		    newRegion = bu_calloc(1, sizeof(struct voxelRegion), "newRegion");
-		    tmp->nextRegion = newRegion;
-
-		    setRegionName(&vp, &(pp->pt_regionp->reg_name), &(newRegion->regionName));
-
-		    newRegion->nextRegion = NULL;
-		    newRegion->regionDistance += (voxelNumIn + 1) * sizeVoxel[0] - hitDistIn;
-		}
-	    }
 
 	    for (j = voxelNumIn + 1; j<voxelNumOut; j++) {
-
 		fillDistances[j] += sizeVoxel[0];
-		setRegionName(&vp, &(pp->pt_regionp->reg_name), &(voxelHits->regionList[j].regionName));
-		voxelHits->regionList[j].regionDistance += sizeVoxel[0];
 	    }
 
 	    fillDistances[voxelNumOut] += hitDistOut - (voxelNumOut * sizeVoxel[0]);
-	    setRegionName(&vp, &(pp->pt_regionp->reg_name), &(voxelHits->regionList[voxelNumOut].regionName));
-	    voxelHits->regionList[voxelNumOut].regionDistance += hitDistOut - (voxelNumOut * sizeVoxel[0]);
-
 	}
 
 	pp = pp->pt_forw;
@@ -244,10 +142,8 @@ main(int argc, char **argv)
     static struct rt_i *rtip;
     struct rayInfo voxelHits;
 
-    struct voxelRegion *tmp, *old;
-
     char title[1024] = {0};
-    int i, j, k, numVoxel[3], yMin, zMin, levelOfDetail = 4, rayNum;
+    int i, j, k, numVoxel[3], yMin, zMin, raysPerVoxel = 4, rayNum;
     fastf_t sizeVoxel[3], threshold = 0.5, *voxelArray, rayTraceDistance;
 
     FILE *fp;
@@ -294,19 +190,9 @@ main(int argc, char **argv)
     sizeVoxel[1] = 1.0;
     sizeVoxel[2] = 1.0;
 
-    numVoxel[0] = (int)(((rtip->mdl_max)[0] - (rtip->mdl_min)[0])/sizeVoxel[0]) + 1;
-    numVoxel[1] = (int)(((rtip->mdl_max)[1] - (rtip->mdl_min)[1])/sizeVoxel[1]) + 1;
-    numVoxel[2] = (int)(((rtip->mdl_max)[2] - (rtip->mdl_min)[2])/sizeVoxel[2]) + 1;
-
-    if(EQUAL(numVoxel[0] - 1, (((rtip->mdl_max)[0] - (rtip->mdl_min)[0])/sizeVoxel[0]))) {
-	numVoxel[0] -=1;
-    }
-    if(EQUAL(numVoxel[1] - 1, (((rtip->mdl_max)[1] - (rtip->mdl_min)[1])/sizeVoxel[1]))) {
-	numVoxel[1] -=1;
-    }
-    if(EQUAL(numVoxel[2] - 1, (((rtip->mdl_max)[2] - (rtip->mdl_min)[2])/sizeVoxel[2]))) {
-	numVoxel[2] -=1;
-    }
+    numVoxel[0] = (int)(((rtip->mdl_max)[0] - (rtip->mdl_min)[0])/sizeVoxel[0]);
+    numVoxel[1] = (int)(((rtip->mdl_max)[1] - (rtip->mdl_min)[1])/sizeVoxel[1]);
+    numVoxel[2] = (int)(((rtip->mdl_max)[2] - (rtip->mdl_min)[2])/sizeVoxel[2]);
 
     voxelHits.sizeVoxel[0] = sizeVoxel[0];
     voxelHits.sizeVoxel[1] = sizeVoxel[1];
@@ -314,20 +200,17 @@ main(int argc, char **argv)
 
     /* voxelArray stores the distance in path of ray inside a voxel which is filled*/
     voxelArray = bu_calloc(numVoxel[0], sizeof(fastf_t), "voxelArray");
-    voxelHits.regionList = bu_calloc(numVoxel[0], sizeof(struct voxelRegion), "regionList");
 
     for(k = 0; k < numVoxel[0]; k++) {
 	voxelArray[k] = 0.0;
-	voxelHits.regionList[k].regionName = NULL;
-	voxelHits.regionList[k].nextRegion = NULL;
     }
 
     /* minimum value of bounding box in Y and Z directions */
     yMin = (int)((rtip->mdl_min)[1]);
     zMin = (int)((rtip->mdl_min)[2]);
 
-    /* 1.0 / (levelOfDetail + 1) has to be used multiple times in the following loops */
-    rayTraceDistance = 1.0 / (levelOfDetail + 1);
+    /* 1.0 / (raysPerVoxel + 1) has to be used multiple times in the following loops */
+    rayTraceDistance = 1.0 / (raysPerVoxel + 1);
 
     fp = fopen("voxels.txt", "w");
 
@@ -337,7 +220,6 @@ main(int argc, char **argv)
     /* start shooting */
     for (i = 0; i < numVoxel[2]; i++) {
 	for (j = 0; j < numVoxel[1]; j++) {
-
 	    RT_APPLICATION_INIT(&ap);
 	    ap.a_rt_i = rtip;
 	    ap.a_onehit = 0;
@@ -349,8 +231,8 @@ main(int argc, char **argv)
 
 	    voxelHits.fillDistances = voxelArray;
 
-	    for (rayNum = 1; rayNum <= levelOfDetail; rayNum++) {
-		for (k = 1; k <= levelOfDetail; k++) {
+	    for (rayNum = 1; rayNum <= raysPerVoxel; rayNum++) {
+		for (k = 1; k <= raysPerVoxel; k++) {
 
 		    /* ray is hit through evenly spaced points of the unit sized voxels */
 		    VSET(ap.a_ray.r_pt, (rtip->mdl_min)[0] - 1.0, yMin + (j + k * rayTraceDistance) * sizeVoxel[1], zMin + (i + rayNum * rayTraceDistance) * sizeVoxel[2]);
@@ -358,61 +240,23 @@ main(int argc, char **argv)
 		}
 	    }
 
-	    /*print results into "voxels.txt"*/
 	    for (k = 0; k < numVoxel[0]; k++) {
-		fprintf(fp,"\n");
-		if (voxelArray[k]/ (levelOfDetail * levelOfDetail) >= threshold) {
-
-		    tmp = voxelHits.regionList + k;
-		    fprintf(fp, "1\t(%d,%d,%d)\t%s\t%f\n", k, j, i, tmp->regionName, tmp->regionDistance / (levelOfDetail * levelOfDetail));
-		    old = tmp->nextRegion;
-
-		    while(old != NULL) {
-			tmp = old;
-			fprintf(fp, " \t(%d,%d,%d)\t%s\t%f\n", k, j, i, tmp->regionName, tmp->regionDistance / (levelOfDetail * levelOfDetail));
-			old = tmp->nextRegion;
-			/* free space allocated for new regions */
-			bu_free(tmp, "");
-		     }
-
+		if (voxelArray[k] >= threshold) {
+		    fprintf(fp, "1 ");
 		} else {
-
-		    if(voxelHits.regionList[k].regionName==NULL){
-
-			fprintf(fp, "0\t(%d,%d,%d)\tair\n", k, j, i);
-		    } else {
-
-			tmp = voxelHits.regionList + k;
-			fprintf(fp, "0\t(%d,%d,%d)\t%s\t%f\n", k, j, i, tmp->regionName, tmp->regionDistance / (levelOfDetail * levelOfDetail));
-			old = tmp->nextRegion;
-
-			while(old != NULL) {
-			    tmp = old;
-			    fprintf(fp, " \t(%d,%d,%d)\t%s\t%f\n", k, j, i, tmp->regionName, tmp->regionDistance / (levelOfDetail * levelOfDetail));
-			    old = tmp->nextRegion;
-			    /* free space allocated for new regions */
-			    bu_free(tmp, "");
-			 }
-
-		    }
-
+		    fprintf(fp, "0 ");
 		}
-
 		voxelArray[k] = 0.0;
-		voxelHits.regionList[k].regionName = NULL;
-		voxelHits.regionList[k].nextRegion = NULL;
-		voxelHits.regionList[k].regionDistance = 0.0;
 	    }
 	    fprintf(fp, "\n");
 	}
 	fprintf(fp, "\n");
     }
 
-    bu_free(voxelArray, "");
-    bu_free(voxelHits.regionList, "");
     fclose(fp);
     return 0;
 }
+
 
 /*
  * Local Variables:

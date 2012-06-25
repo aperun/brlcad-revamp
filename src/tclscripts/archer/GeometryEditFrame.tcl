@@ -217,7 +217,11 @@
 }
 
 ::itcl::body GeometryEditFrame::validateDouble {d} {
-    ::cadwidgets::Ged::isdouble $d
+    if {$d == "-" || [string is double $d]} {
+	return 1
+    }
+
+    return 0
 }
 
 ::itcl::body GeometryEditFrame::validateColorComp {c} {

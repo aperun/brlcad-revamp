@@ -1163,7 +1163,11 @@
 }
 
 ::itcl::body ShaderEdit::validateDouble {d} {
-    ::cadwidgets::Ged::isdouble $d
+    if {$d == "" || $d == "-" || [string is double $d]} {
+	return 1
+    }
+
+    return 0
 }
 
 # Local Variables:

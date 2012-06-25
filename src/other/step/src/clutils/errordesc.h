@@ -33,10 +33,12 @@ typedef enum Severity {
 } Severity;
 
 
-#define  DEBUG_OFF  0
-#define  DEBUG_USR  1
-#define  DEBUG_ALL  2
-typedef int DebugLevel;
+enum  DebugLevel  {
+    DEBUG_OFF   = 0,
+    DEBUG_USR   = 1,
+    DEBUG_ALL   = 2
+
+};
 
 /******************************************************************
  ** Class:  ErrorDescriptor

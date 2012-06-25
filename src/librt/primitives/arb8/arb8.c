@@ -155,6 +155,9 @@ const struct bu_structparse rt_arb_parse[] = {
 
 /* rt_arb_get_cgtype(), rt_arb_std_type(), and rt_arb_centroid()
  * stolen from mged/arbs.c */
+#define NO 0
+#define YES 1
+
 
 /**
  * R T _ A R B _ G E T _ C G T Y P E
@@ -178,70 +181,84 @@ rt_arb_get_cgtype(
     int *cgtype,
     struct rt_arb_internal *arb,
     const struct bn_tol *tol,
-    register int *uvec, /* array of indexes to unique points in arb->pt[] */
-    register int *svec) /* array of indexes to like points in arb->pt[] */
+    register int *uvec,	/* array of unique points */
+    register int *svec)	/* array of like points */
 {
     register int i, j;
-    int numuvec, unique;
-    int si = 2;         /* working index into svec */
-    int dup_list = 0;   /* index for the first two entries in svec */
-    int idx = 1;
+    int numuvec, unique, done;
+    int si;
 
     RT_ARB_CK_MAGIC(arb);
     BN_CK_TOL(tol);
 
+    done = NO;		/* done checking for like vectors */
+
     svec[0] = svec[1] = 0;
-    /* compare each point against every other point
-     * to find duplicates */
-    for (i = 0; i < 7; i++) {
-        unique = 1;
-        /* store possible duplicate point,
-         * will be overwritten if no duplicate is found */
-        svec[si] = i;
-        for (j = i + 1; j < 8; j++) {
-            /* check if points are "equal" */
-            if (VNEAR_EQUAL(arb->pt[i], arb->pt[j], tol->dist)) {
-                svec[++si] = j;
-                unique = 0;
-            }
-        }
-        if (!unique) {
-            /* record length */
-            svec[dup_list] = si - idx;
-            if (!dup_list) {
-                /* arb5 has only one set of duplicate points so end early */
-                if (si == 5 && svec[5] >= 6) {
-                    break;
-                }
-                /* remember the current index so we can compare
-                 * the new value of si to it later */
-                idx = si++;
-                dup_list = 1;
-            } else {
-                /* second set of duplicates, we're finished looking */
-                break;
-            }
-        }
+    si = 2;
+
+    for (i=0; i<7; i++) {
+	unique = YES;
+	if (done == NO) {
+	    svec[si] = i;
+	}
+	for (j=i+1; j<8; j++) {
+	    int tmp;
+	    vect_t vtmp;
+
+	    VSUB2(vtmp, arb->pt[i], arb->pt[j]);
+
+	    if (fabs(vtmp[0]) > tol->dist) tmp = 0;
+	    else if (fabs(vtmp[1]) > tol->dist) tmp = 0;
+	    else if (fabs(vtmp[2]) > tol->dist) tmp = 0;
+	    else tmp = 1;
+
+	    if (tmp) {
+		if (done == NO)
+		    svec[++si] = j;
+		unique = NO;
+	    }
+	}
+	if (unique == NO) {
+	    /* point i not unique */
+	    if (si > 2 && si < 6) {
+		svec[0] = si - 1;
+		if (si == 5 && svec[5] >= 6)
+		    done = YES;
+		si = 6;
+	    }
+	    if (si > 6) {
+		svec[1] = si - 5;
+		done = YES;
+	    }
+	}
     }
 
-    /* mark invalid entries */
-    for (i = svec[0] + svec[1] + 2; i < 11; i++) {
-        svec[i] = -1;
+    if (si > 2 && si < 6) {
+	svec[0] = si - 1;
+    }
+    if (si > 6) {
+	svec[1] = si - 5;
+    }
+    for (i=1; i<=svec[1]; i++) {
+	svec[svec[0]+1+i] = svec[5+i];
+    }
+    for (i=svec[0]+svec[1]+2; i<11; i++) {
+	svec[i] = -1;
     }
 
     /* find the unique points */
     numuvec = 0;
-    for (i = 0; i < 8; i++) {
-        unique = 1;
-        for (j = 2; j < svec[0] + svec[1] + 2; j++) {
-            if (i == svec[j]) {
-                unique = 0;
-                break;
-            }
-        }
-        if (unique) {
-            uvec[numuvec++] = i;
-        }
+    for (j=0; j<8; j++) {
+	unique = YES;
+	for (i=2; i<svec[0]+svec[1]+2; i++) {
+	    if (j == svec[i]) {
+		unique = NO;
+		break;
+	    }
+	}
+	if (unique == YES) {
+	    uvec[numuvec++] = j;
+	}
     }
 
     /* Figure out what kind of ARB this is */
@@ -334,7 +351,7 @@ rt_arb_centroid(point_t center_pt, const struct rt_arb_internal *arb, int npoint
     VSETALL(sum, 0);
 
     for (j = 0; j < npoints; j++) {
-	VADD2(sum, sum, arb->pt[j]);
+        VADD2(sum, sum, arb->pt[j]);
     }
     divisor = 1.0 / npoints;
     VSCALE(center_pt, sum, divisor);
@@ -2185,30 +2202,30 @@ rt_arb_volume(fastf_t *vol, const struct rt_db_internal *ip)
     tmp_tol.dist_sq = tmp_tol.dist * tmp_tol.dist;
 
     for (i = 0; i < 6; i++) {
-	/* a, b, c = base of the arb4 */
-	a = farb4[i][0];
-	b = farb4[i][1];
-	c = farb4[i][2];
-	/* d = "top" point of the arb4 */
-	d = farb4[i][3];
+        /* a, b, c = base of the arb4 */
+        a = farb4[i][0];
+        b = farb4[i][1];
+        c = farb4[i][2];
+        /* d = "top" point of the arb4 */
+        d = farb4[i][3];
 
-	/* create a plane from a,b,c */
-	if (bn_mk_plane_3pts(plane, aip->pt[a], aip->pt[b],
-		    aip->pt[c], &tmp_tol) < 0) {
-	    continue;
-	}
+        /* create a plane from a,b,c */
+        if (bn_mk_plane_3pts(plane, aip->pt[a], aip->pt[b],
+                    aip->pt[c], &tmp_tol) < 0) {
+            continue;
+        }
 
-	/* height of arb4 is distance from the plane created using the
-	 * points of the base, and the top point 'd' */
-	arb4_height = fabs(DIST_PT_PLANE(aip->pt[d], plane));
-	/* find side lengths of the base */
-	len[0] = DIST_PT_PT(aip->pt[a], aip->pt[b]);
-	len[1] = DIST_PT_PT(aip->pt[a], aip->pt[c]);
-	len[2] = DIST_PT_PT(aip->pt[b], aip->pt[c]);
+        /* height of arb4 is distance from the plane created using the
+         * points of the base, and the top point 'd' */
+        arb4_height = fabs(DIST_PT_PLANE(aip->pt[d], plane));
+        /* find side lengths of the base */
+        len[0] = DIST_PT_PT(aip->pt[a], aip->pt[b]);
+        len[1] = DIST_PT_PT(aip->pt[a], aip->pt[c]);
+        len[2] = DIST_PT_PT(aip->pt[b], aip->pt[c]);
 
-	tmp = 0.5 * (len[0] + len[1] + len[2]);
-	arb4_base = sqrt(tmp * (tmp - len[0]) * (tmp - len[1]) * (tmp - len[2]));
-	*vol += arb4_base * arb4_height / 3.0;
+        tmp = 0.5 * (len[0] + len[1] + len[2]);
+        arb4_base = sqrt(tmp * (tmp - len[0]) * (tmp - len[1]) * (tmp - len[2]));
+        *vol += arb4_base * arb4_height / 3.0;
     }
 }
 

@@ -116,8 +116,8 @@ typedef ptrdiff_t ssize_t;
  * optional uintptr_t type.
  */
 #if !defined(INT8_MAX) || !defined(INT16_MAX) || !defined(INT32_MAX) || !defined(INT64_MAX)
-#  if (defined _MSC_VER && (_MSC_VER <= 1500))
-     /* Older Versions of Visual C++ seem to need pstdint.h
+#  if (defined _MSC_VER && (_MSC_VER <= 1500))	
+     /* Older Versions of Visual C++ seem to need pstdint.h 
       * but still pass the tests below, so force it based on
       * version (ugh.) */
 #    include "pstdint.h"

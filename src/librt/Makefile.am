@@ -89,7 +89,6 @@ librt_nil_la_SOURCES = \
 	primitives/arbn/arbn_brep.cpp \
 	primitives/arbn/arbn_mirror.c \
 	primitives/ars/ars.c \
-	primitives/ars/ars_brep.cpp \
 	primitives/ars/ars_mirror.c \
 	primitives/bot/bot.c \
 	primitives/bot/bot_brep.cpp \
@@ -148,7 +147,6 @@ librt_nil_la_SOURCES = \
 	primitives/grip/grip.c \
 	primitives/grip/grip_mirror.c \
 	primitives/half/half.c \
-	primitives/half/half_brep.cpp \
 	primitives/half/half_mirror.c \
 	primitives/hf/hf.c \
 	primitives/hyp/hyp.c \
@@ -206,13 +204,11 @@ librt_nil_la_SOURCES = \
 	primitives/obj_vshot.c \
 	primitives/obj_xform.c \
 	primitives/part/part.c \
-	primitives/part/part_brep.cpp \
 	primitives/part/part_mirror.c \
 	primitives/pipe/pipe.c \
 	primitives/pipe/pipe_brep.cpp \
 	primitives/pipe/pipe_mirror.c \
 	primitives/pnts/pnts.c \
-	primitives/pnts/pnts_brep.cpp \
 	primitives/poly/poly.c \
 	primitives/poly/poly_brep.cpp \
 	primitives/poly/poly_mirror.c \

@@ -55,11 +55,11 @@ static const int prface[5][6] = {
 
 /* edge definition array */
 static const int nedge[5][24] = {
-    {0, 1, 1, 2, 2, 0, 0, 3, 3, 2, 1, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},   /* ARB4 */
-    {0, 1, 1, 2, 2, 3, 0, 3, 0, 4, 1, 4, 2, 4, 3, 4, -1, -1, -1, -1, -1, -1, -1, -1},       /* ARB5 */
-    {0, 1, 1, 2, 2, 3, 0, 3, 0, 4, 1, 4, 2, 5, 3, 5, 4, 5, -1, -1, -1, -1, -1, -1},         /* ARB6 */
-    {0, 1, 1, 2, 2, 3, 0, 3, 0, 4, 3, 4, 1, 5, 2, 6, 4, 5, 5, 6, 4, 6, -1, -1},             /* ARB7 */
-    {0, 1, 1, 2, 2, 3, 0, 3, 0, 4, 4, 5, 1, 5, 5, 6, 6, 7, 4, 7, 3, 7, 2, 6},               /* ARB8 */
+    {0, 1, 1, 2, 2, 0, 0, 3, 3, 2, 1, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},	/* ARB4 */
+    {0, 1, 1, 2, 2, 3, 0, 3, 0, 4, 1, 4, 2, 4, 3, 4, -1, -1, -1, -1, -1, -1, -1, -1},		/* ARB5 */
+    {0, 1, 1, 2, 2, 3, 0, 3, 0, 4, 1, 4, 2, 5, 3, 5, 4, 5, -1, -1, -1, -1, -1, -1},		/* ARB6 */
+    {0, 1, 1, 2, 2, 3, 0, 3, 0, 4, 3, 4, 1, 5, 2, 6, 4, 5, 5, 6, 4, 6, -1, -1},			/* ARB7 */
+    {0, 1, 1, 2, 2, 3, 0, 3, 0, 4, 4, 5, 1, 5, 5, 6, 6, 7, 4, 7, 3, 7, 2, 6},			/* ARB8 */
 };
 
 /* structures and subroutines for analyze pretty printing */
@@ -620,24 +620,24 @@ void print_faces_table(struct ged *gedp, table_t *table)
 static void
 findang(fastf_t *angles, fastf_t *unitv)
 {
-    int i;
     fastf_t f;
 
     /* convert direction cosines into axis angles */
-    for (i = X; i <= Z; i++) {
-        if (unitv[i] <= -1.0)
-            angles[i] = -90.0;
-        else if (unitv[i] >= 1.0)
-            angles[i] = 90.0;
-        else
-            angles[i] = acos(unitv[i]) * bn_radtodeg;
-    }
+    if (unitv[X] <= -1.0) angles[X] = -90.0;
+    else if (unitv[X] >= 1.0) angles[X] = 90.0;
+    else angles[X] = acos(unitv[X]) * bn_radtodeg;
+
+    if (unitv[Y] <= -1.0) angles[Y] = -90.0;
+    else if (unitv[Y] >= 1.0) angles[Y] = 90.0;
+    else angles[Y] = acos(unitv[Y]) * bn_radtodeg;
+
+    if (unitv[Z] <= -1.0) angles[Z] = -90.0;
+    else if (unitv[Z] >= 1.0) angles[Z] = 90.0;
+    else angles[Z] = acos(unitv[Z]) * bn_radtodeg;
 
     /* fallback angle */
-    if (unitv[Z] <= -1.0)
-        unitv[Z] = -1.0;
-    else if (unitv[Z] >= 1.0)
-        unitv[Z] = 1.0;
+    if (unitv[Z] <= -1.0) unitv[Z] = -1.0;
+    else if (unitv[Z] >= 1.0) unitv[Z] = 1.0;
     angles[4] = asin(unitv[Z]);
 
     /* rotation angle */
@@ -646,18 +646,18 @@ findang(fastf_t *angles, fastf_t *unitv)
      * substituted for the original +/- 1.0e-20.
      */
     if ((f = cos(angles[4])) > 1.0e-16 || f < -1.0e-16) {
-        f = unitv[X]/f;
-        if (f <= -1.0)
-            angles[3] = 180;
-        else if (f >= 1.0)
-            angles[3] = 0;
-        else
-            angles[3] = bn_radtodeg * acos(f);
-    } else
-        angles[3] = 0;
+	f = unitv[X]/f;
+	if (f <= -1.0)
+	    angles[3] = 180;
+	else if (f >= 1.0)
+	    angles[3] = 0;
+	else
+	    angles[3] = bn_radtodeg * acos(f);
+    }  else
+	   angles[3] = 0.0;
 
     if (unitv[Y] < 0)
-        angles[3] = 360.0 - angles[3];
+	angles[3] = 360.0 - angles[3];
 
     angles[4] *= bn_radtodeg;
 }
@@ -665,19 +665,24 @@ findang(fastf_t *angles, fastf_t *unitv)
 
 /* Analyzes an arb face
  */
-static fastf_t
+static double
 analyze_face(struct ged *gedp, int face, fastf_t *center_pt,
-        const struct rt_arb_internal *arb, int type,
-        const struct bn_tol *tol, row_t *row)
+	     const struct rt_arb_internal *arb, int type,
+	     const struct bn_tol *tol, row_t *row)
+
 
 /* reference center point */
 
+
 {
-    int a, b, c, d;     /* 4 points of face to look at */
-    fastf_t angles[5];  /* direction cosines, rot, fb */
-    fastf_t face_area;
+    int i, j, k;
+    int a, b, c, d;	/* 4 points of face to look at */
+    fastf_t angles[5];	/* direction cosines, rot, fb */
+    fastf_t temp;
+    fastf_t area[2], len[6];
+    vect_t v_temp;
     plane_t plane;
-    vect_t v_tmp[3];    /* array of vects to store intermediate calculations */
+    double face_area = 0;
 
     a = rt_arb_faces[type][face*4+0];
     b = rt_arb_faces[type][face*4+1];
@@ -685,18 +690,20 @@ analyze_face(struct ged *gedp, int face, fastf_t *center_pt,
     d = rt_arb_faces[type][face*4+3];
 
     if (a == -1) {
-        row->nfields = 0;
-        return 0;
+	row->nfields = 0;
+	return 0;
     }
 
     /* find plane eqn for this face */
     if (bn_mk_plane_3pts(plane, arb->pt[a], arb->pt[b],
-                arb->pt[c], tol) < 0) {
-        bu_vls_printf(gedp->ged_result_str, "| %d%d%d%d |         ***NOT A PLANE***                                          |\n",
-                a+1, b+1, c+1, d+1);
-        /* this row has 1 special fields */
-        row->nfields = NOT_A_PLANE;
-        return 0;
+			 arb->pt[c], tol) < 0) {
+#if 1
+	bu_vls_printf(gedp->ged_result_str, "| %d%d%d%d |         ***NOT A PLANE***                                          |\n",
+		      a+1, b+1, c+1, d+1);
+#endif
+	/* this row has 1 special fields */
+	row->nfields = NOT_A_PLANE;
+	return 0;
     }
 
     /* The plane equations returned by planeqn above do not
@@ -704,23 +711,40 @@ analyze_face(struct ged *gedp, int face, fastf_t *center_pt,
      * point for the arb and reverse direction for
      * any errant planes. This corrects the output rotation,
      * fallback angles so that they always give the outward
-     * pointing normal vector. */
-    if (DIST_PT_PLANE(center_pt, plane) > 0.0) {
-        HSCALE(plane, plane, -1.0);
+     * pointing normal vector.
+     */
+    if ((plane[W] - VDOT(center_pt, &plane[0])) < 0.0) {
+	for (i = 0; i < 4; i++)
+	    plane[i] *= -1.0;
     }
 
     /* plane[] contains normalized eqn of plane of this face
-     * find the dir cos, rot, fb angles */
+     * find the dir cos, rot, fb angles
+     */
     findang(angles, &plane[0]);
 
-    /* find the surface area of this face.
-     * for planar quadrilateral Q:V0,V1,V2,V3 with unit normal N,
-     * area = N/2 * [(V2 - V0) x (V3 - V1)] */
-    VSUB2(v_tmp[0], arb->pt[c], arb->pt[a]);
-    VSUB2(v_tmp[1], arb->pt[d], arb->pt[b]);
-    VCROSS(v_tmp[2], v_tmp[0], v_tmp[1]);
+    /* find the surface area of this face */
+    for (i = 0; i < 3; i++) {
+	j = rt_arb_faces[type][face*4+i];
+	k = rt_arb_faces[type][face*4+i+1];
+	VSUB2(v_temp, arb->pt[k], arb->pt[j]);
+	len[i] = MAGNITUDE(v_temp);
+    }
+    len[4] = len[2];
+    j = rt_arb_faces[type][face*4+0];
+    for (i = 2; i < 4; i++) {
+	k = rt_arb_faces[type][face*4+i];
+	VSUB2(v_temp, arb->pt[k], arb->pt[j]);
+	len[((i*2)-1)] = MAGNITUDE(v_temp);
+    }
+    len[2] = len[3];
 
-    face_area = fabs(VDOT(plane, v_tmp[2])) / 2.0;
+    for (i = 0; i < 2; i++) {
+	j = i * 3;
+	temp = .5 * (len[j] + len[j+1] + len[j+2]);
+	area[i] = sqrt(temp * (temp - len[j]) * (temp - len[j+1]) * (temp - len[j+2]));
+	face_area += area[i];
+    }
 
     /* don't printf, just sprintf! */
     /* these rows have 8 fields */
@@ -732,9 +756,9 @@ analyze_face(struct ged *gedp, int face, fastf_t *center_pt,
     row->fields[4].nchars = sprintf(row->fields[4].buf, "%10.8f", plane[Y]);
     row->fields[5].nchars = sprintf(row->fields[5].buf, "%10.8f", plane[Z]);
     row->fields[6].nchars = sprintf(row->fields[6].buf, "%10.8f",
-            plane[W]*gedp->ged_wdbp->dbip->dbi_base2local);
+				    plane[W]*gedp->ged_wdbp->dbip->dbi_base2local);
     row->fields[7].nchars = sprintf(row->fields[7].buf, "%10.8f",
-            face_area*gedp->ged_wdbp->dbip->dbi_base2local*gedp->ged_wdbp->dbip->dbi_base2local);
+				    (area[0]+area[1])*gedp->ged_wdbp->dbip->dbi_base2local*gedp->ged_wdbp->dbip->dbi_base2local );
 
     return face_area;
 }
@@ -743,33 +767,36 @@ analyze_face(struct ged *gedp, int face, fastf_t *center_pt,
 /* Analyzes arb edges - finds lengths */
 static void
 analyze_edge(struct ged *gedp, const int edge, const struct rt_arb_internal *arb,
-        const int type, row_t *row)
+	     const int type, row_t *row)
 {
+    static vect_t v_temp;
     int a = nedge[type][edge*2];
     int b = nedge[type][edge*2+1];
 
     if (b == -1) {
-        /* fill out the line */
-        if ((a = edge % 4) == 0) {
-            row->nfields = 0;
-            return;
-        }
-        if (a == 1) {
-            row->nfields = 0;
-            return;
-        }
-        if (a == 2) {
-            row->nfields = 0;
-            return;
-        }
-        row->nfields = 0;
-        return;
+	/* fill out the line */
+	if ((a = edge % 4) == 0) {
+	    row->nfields = 0;
+	    return;
+	}
+	if (a == 1) {
+	    row->nfields = 0;
+	    return;
+	}
+	if (a == 2) {
+	    row->nfields = 0;
+	    return;
+	}
+	row->nfields = 0;
+	return;
     }
+
+    VSUB2(v_temp, arb->pt[b], arb->pt[a]);
 
     row->nfields = 2;
     row->fields[0].nchars = sprintf(row->fields[0].buf, "%d%d", a + 1, b + 1);
     row->fields[1].nchars = sprintf(row->fields[1].buf, "%10.8f",
-            DIST_PT_PT(arb->pt[a], arb->pt[b])*gedp->ged_wdbp->dbip->dbi_base2local);
+				    MAGNITUDE(v_temp)*gedp->ged_wdbp->dbip->dbi_base2local);
 }
 
 
@@ -783,16 +810,16 @@ analyze_arb(struct ged *gedp, const struct rt_db_internal *ip)
     int i;
     point_t center_pt;
     fastf_t tot_vol, tot_area;
-    int cgtype;     /* COMGEOM arb type: # of vertices */
+    int cgtype;		/* COMGEOM arb type: # of vertices */
     int type;
 
     /* variables for pretty printing */
-    table_t table;  /* holds table data from child functions */
+    table_t table;      /* holds table data from child functions */
 
     /* find the specific arb type, in GIFT order. */
     if ((cgtype = rt_arb_std_type(ip, &gedp->ged_wdbp->wdb_tol)) == 0) {
-        bu_vls_printf(gedp->ged_result_str, "analyze_arb: bad ARB\n");
-        return;
+	bu_vls_printf(gedp->ged_result_str, "analyze_arb: bad ARB\n");
+	return;
     }
 
     tot_area = tot_vol = 0.0;
@@ -800,8 +827,8 @@ analyze_arb(struct ged *gedp, const struct rt_db_internal *ip)
     type = cgtype - 4;
 
     /* to get formatting correct, we need to collect the actual string
-     * lengths for each field BEFORE we start printing a table (fields
-     * are allowed to overflow the stated printf field width) */
+       lengths for each field BEFORE we start printing a table (fields
+       are allowed to overflow the stated printf field width) */
 
     /* TABLE 1 =========================================== */
     /* analyze each face, use center point of arb for reference */
@@ -810,9 +837,9 @@ analyze_arb(struct ged *gedp, const struct rt_db_internal *ip)
     /* collect table data */
     table.nrows = 0;
     for (i = 0; i < 6; i++) {
-        tot_area += analyze_face(gedp, i, center_pt, arb, type, &gedp->ged_wdbp->wdb_tol,
-                &(table.rows[i]));
-        table.nrows += 1;
+      tot_area += analyze_face(gedp, i, center_pt, arb, type, &gedp->ged_wdbp->wdb_tol,
+			       &(table.rows[i]));
+      table.nrows += 1;
     }
 
     /* and print it */
@@ -828,20 +855,21 @@ analyze_arb(struct ged *gedp, const struct rt_db_internal *ip)
     /* also collect table data */
     table.nrows = 0;
 
-    struct rt_arb_internal earb = *arb; /* struct copy */
+    {
+	struct rt_arb_internal earb = *arb;	/* struct copy */
 
-    if (cgtype == 4) {
-        VMOVE(earb.pt[3], earb.pt[4]);
-    } else if (cgtype == 6) {
-        VMOVE(earb.pt[5], earb.pt[6]);
-    }
+	if (cgtype == 4) {
+	    VMOVE(earb.pt[3], earb.pt[4]);
+	} else if (cgtype == 6) {
+	    VMOVE(earb.pt[5], earb.pt[6]);
+	}
 
-    for (i = 0; i < 12; i++) {
-        analyze_edge(gedp, i, &earb, type, &(table.rows[i]));
-        if (nedge[type][i*2] == -1) {
-            break;
-        }
-        table.nrows += 1;
+	for (i = 0; i < 12; i++) {
+	    analyze_edge(gedp, i, &earb, type, &(table.rows[i]));
+	    if (nedge[type][i*2] == -1)
+		break;
+	    table.nrows += 1;
+	}
     }
 
     print_edges_table(gedp, &table);
@@ -855,17 +883,18 @@ analyze_arb(struct ged *gedp, const struct rt_db_internal *ip)
     rt_functab[ID_ARB8].ft_volume(&tot_vol, ip);
 
     print_volume_table(gedp,
-            tot_vol
-            * gedp->ged_wdbp->dbip->dbi_base2local
-            * gedp->ged_wdbp->dbip->dbi_base2local
-            * gedp->ged_wdbp->dbip->dbi_base2local,
+		       tot_vol
+		       * gedp->ged_wdbp->dbip->dbi_base2local
+		       * gedp->ged_wdbp->dbip->dbi_base2local
+		       * gedp->ged_wdbp->dbip->dbi_base2local,
 
-            tot_area
-            * gedp->ged_wdbp->dbip->dbi_base2local
-            * gedp->ged_wdbp->dbip->dbi_base2local,
+		       tot_area
+		       * gedp->ged_wdbp->dbip->dbi_base2local
+		       * gedp->ged_wdbp->dbip->dbi_base2local,
 
-            tot_vol/GALLONS_TO_MM3
-            );
+		       tot_vol/GALLONS_TO_MM3
+		       );
+
 }
 
 
@@ -881,15 +910,26 @@ analyze_tor(struct ged *gedp, const struct rt_db_internal *ip)
     bu_vls_printf(gedp->ged_result_str, "\n");
 
     print_volume_table(gedp,
-            vol
-            * gedp->ged_wdbp->dbip->dbi_base2local
-            * gedp->ged_wdbp->dbip->dbi_base2local
-            * gedp->ged_wdbp->dbip->dbi_base2local,
-            area
-            * gedp->ged_wdbp->dbip->dbi_base2local
-            * gedp->ged_wdbp->dbip->dbi_base2local,
-            vol/GALLONS_TO_MM3
-            );
+		       vol
+		       * gedp->ged_wdbp->dbip->dbi_base2local
+		       * gedp->ged_wdbp->dbip->dbi_base2local
+		       * gedp->ged_wdbp->dbip->dbi_base2local,
+		       area
+		       * gedp->ged_wdbp->dbip->dbi_base2local
+		       * gedp->ged_wdbp->dbip->dbi_base2local,
+		       vol/GALLONS_TO_MM3
+		       );
+
+#if 0
+    /* OR Vol = %.8f (%.8f gal) Surface Area = %.8f\n", */
+
+    bu_vls_printf(gedp->ged_result_str, "TOR Vol = %.8f (%.8f gal) Surface Area = %.8f\n",
+		  vol*gedp->ged_wdbp->dbip->dbi_base2local*gedp->ged_wdbp->dbip->dbi_base2local*gedp->ged_wdbp->dbip->dbi_base2local,
+		  vol/GALLONS_TO_MM3,
+		  sur_area*gedp->ged_wdbp->dbip->dbi_base2local*gedp->ged_wdbp->dbip->dbi_base2local);
+#endif
+
+    return;
 }
 
 
@@ -1088,32 +1128,41 @@ analyze_part(struct ged *gedp, const struct rt_db_internal *ip)
 }
 
 
+#define arcsinh(x) (log((x) + sqrt((x)*(x) + 1.)))
+
 /* analyze rpc */
 static void
 analyze_rpc(struct ged *gedp, const struct rt_db_internal *ip)
 {
-    fastf_t vol, area;
+    fastf_t area_parab, area_body, b, h, r, vol_parab;
+    struct rt_rpc_internal *rpc = (struct rt_rpc_internal *)ip->idb_ptr;
+
+    RT_RPC_CK_MAGIC(rpc);
+
+    b = MAGNITUDE(rpc->rpc_B);
+    h = MAGNITUDE(rpc->rpc_H);
+    r = rpc->rpc_r;
+
+    /* area of one parabolic side */
+    area_parab = 4./3 * b*r;
 
     /* volume of rpc */
-    rt_functab[ID_RPC].ft_volume(&vol, ip);
-    /* surface area of rpc */
-    rt_functab[ID_RPC].ft_surf_area(&area, ip);
+    vol_parab = area_parab*h;
 
-    /* reminder to implement per-face analysis */
-    /*bu_vls_printf(gedp->ged_result_str, "Surface Areas:  front(BxR)=%.8f  top(RxH)=%.8f  body=%.8f\n",*/
-            /*area_parab*/
-            /** gedp->ged_wdbp->dbip->dbi_base2local*/
-            /** gedp->ged_wdbp->dbip->dbi_base2local,*/
-            /*area_rect*/
-            /** gedp->ged_wdbp->dbip->dbi_base2local*/
-            /** gedp->ged_wdbp->dbip->dbi_base2local,*/
-            /*area_body*/
-            /** gedp->ged_wdbp->dbip->dbi_base2local*/
-            /** gedp->ged_wdbp->dbip->dbi_base2local*/
-            /*);*/
+    /* surface area of parabolic body */
+    area_body = .5*sqrt(r*r + 4.*b*b) + .25*r*r/b*arcsinh(2.*b/r);
+    area_body *= 2.;
 
     bu_vls_printf(gedp->ged_result_str, "\n");
-    print_volume_table(gedp, vol, area, vol/GALLONS_TO_MM3);
+
+    bu_vls_printf(gedp->ged_result_str, "Surface Areas:  front(BxR)=%.8f  top(RxH)=%.8f  body=%.8f\n",
+		  area_parab*gedp->ged_wdbp->dbip->dbi_base2local*gedp->ged_wdbp->dbip->dbi_base2local,
+		  2*r*h*gedp->ged_wdbp->dbip->dbi_base2local*gedp->ged_wdbp->dbip->dbi_base2local,
+		  area_body*gedp->ged_wdbp->dbip->dbi_base2local*gedp->ged_wdbp->dbip->dbi_base2local);
+    bu_vls_printf(gedp->ged_result_str, "Total Surface Area=%.8f    Volume=%.8f (%.8f gal)\n",
+		  (2*area_parab+2*r*h+area_body)*gedp->ged_wdbp->dbip->dbi_base2local*gedp->ged_wdbp->dbip->dbi_base2local,
+		  vol_parab*gedp->ged_wdbp->dbip->dbi_base2local*gedp->ged_wdbp->dbip->dbi_base2local*gedp->ged_wdbp->dbip->dbi_base2local,
+		  vol_parab/GALLONS_TO_MM3);
 }
 
 

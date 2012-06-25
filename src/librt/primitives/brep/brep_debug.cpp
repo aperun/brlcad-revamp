@@ -1766,9 +1766,6 @@ brep_conversion(struct rt_db_internal* intern, ON_Brep** brep)
 	return -1;
     }
     intern->idb_meth->ft_brep(brep, intern, &tol);
-    if (*brep == NULL) {
-	return -2;
-    }
     return 0;
 }
 
@@ -1825,30 +1822,34 @@ int brep_conversion_tree(struct db_i *db, union tree *oldtree, union tree *newtr
 			bu_free(tmpname, "char");
 			break;
 		    }
-		    // It's a primitive. If it's a b-rep object, just duplicate it. Otherwise call the
-		    // function to convert it to b-rep.
+		    if (BU_STR_EQUAL(intern->idb_meth->ft_name, "ID_HALF") || 
+			BU_STR_EQUAL(intern->idb_meth->ft_name, "ID_PNTS")) {
+			if (BU_STR_EQUAL(intern->idb_meth->ft_name, "ID_HALF"))  {
+			    ret = wdb_export(wdbp, tmpname, intern->idb_ptr, ID_HALF, local2mm);
+			} else {
+			    ret = wdb_export(wdbp, tmpname, intern->idb_ptr, ID_PNTS, local2mm);
+			}
+			if (ret) {
+			    bu_log("ERROR: failure writing [%s] to disk\n", tmpname);
+			    bu_free(tmpname, "char");
+			    return ret;
+			}
+			bu_log("The conversion of [%s] (type: %s) is ignored. Implicit form remains as %s.\n", 
+			    oldname, intern->idb_meth->ft_label, tmpname);
+			bu_strlcpy(newtree->tr_l.tl_name, tmpname, strlen(tmpname)+1);
+			bu_free(tmpname, "char");
+			return ret;
+		    }
 		    ON_Brep** brep = (ON_Brep**)bu_malloc(sizeof(ON_Brep*), "ON_Brep*");
 		    if (BU_STR_EQUAL(intern->idb_meth->ft_name, "ID_BREP")) {
 			*brep = ((struct rt_brep_internal *)intern->idb_ptr)->brep->Duplicate();
 		    } else {
 			ret = brep_conversion(intern, brep);
-			if (ret == -1) {
+			if (ret) {
 			    bu_log("The brep conversion of %s is unsuccessful.\n", oldname);
 			    newtree = NULL;
 			    bu_free(tmpname, "char");
 			    return -1;
-			} else if (ret == -2) {
-			    ret = wdb_export(wdbp, tmpname, intern->idb_ptr, intern->idb_type, local2mm);
-			    if (ret) {
-				bu_log("ERROR: failure writing [%s] to disk\n", tmpname);
-				bu_free(tmpname, "char");
-				return ret;
-			    }
-			    bu_log("The conversion of [%s] (type: %s) is skipped. Implicit form remains.\n",
-				tmpname, intern->idb_meth->ft_label);
-			    bu_strlcpy(newtree->tr_l.tl_name, tmpname, strlen(tmpname)+1);
-			    bu_free(tmpname, "char");
-			    return ret;
 			}
 		    }
 		    if (brep != NULL) {

@@ -19,8 +19,7 @@
  */
 /** @file arb8_brep.cpp
  *
- * Convert an Arbitrary Regular Polyhedron with as many as 8 vertices
- * to b-rep form
+ * Convert a Generalized Ellipsoid to b-rep form
  *
  */
 

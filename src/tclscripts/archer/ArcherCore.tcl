@@ -433,9 +433,13 @@ namespace eval ArcherCore {
 	variable mFBBackgroundColor Black
 	variable mFBBackgroundColorPref ""
 	variable mRtWizardEdgeColor White
-	variable mRtWizardNonEdgeColor Grey
+	variable mRtWizardEdgeColorPref ""
+	variable mRtWizardNonEdgeColor Yellow
+	variable mRtWizardNonEdgeColorPref ""
 	variable mRtWizardOccMode 1
+	variable mRtWizardOccModePref ""
 	variable mRtWizardGhostIntensity 12
+	variable mRtWizardGhostIntensityPref ""
 
 	variable mDisplayFontSize 0
 	variable mDisplayFontSizePref ""
@@ -1206,6 +1210,8 @@ namespace eval ArcherCore {
 # ------------------------------------------------------------
 
 
+
+
 ::itcl::body ArcherCore::handleMoreArgs {args} {
     eval $itk_component(cmd) print_more_args_prompt $args
     return [$itk_component(cmd) get_more_args]
@@ -1574,6 +1580,7 @@ namespace eval ArcherCore {
 	$itk_component(treeAccordian) insert 0 "[lindex $TREE_MODE_NAMES $TREE_MODE_COLOR_OBJECTS] (Tree)"
     }
 
+    set childsite [$itk_component(treeAccordian) itemChildsite 0]
     itk_component add newtree {
 	::ttk::treeview $itk_component(treeAccordian).tree \
 	    -selectmode browse \
@@ -3055,7 +3062,11 @@ namespace eval ArcherCore {
 }
 
 ::itcl::body ArcherCore::validateDouble {d} {
-    ::cadwidgets::Ged::isdouble $d
+    if {$d == "-" || [string is double $d]} {
+	return 1
+    }
+
+    return 0
 }
 
 ::itcl::body ArcherCore::validateTickInterval {ti} {
@@ -3063,8 +3074,8 @@ namespace eval ArcherCore {
 	return 1
     }
 
-    if {[::cadwidgets::Ged::isdouble $ti]} {
-	if {$ti == "." || 0 <= $ti} {
+    if {[string is double $ti]} {
+	if {0 <= $ti} {
 	    return 1
 	}
 

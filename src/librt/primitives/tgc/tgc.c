@@ -2604,14 +2604,14 @@ rt_tgc_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
 /** R T _ T G C _ T N U R B
  *
  * "Tessellate an TGC into a trimmed-NURB-NMG data structure.
- * Computing NURB surfaces and trimming curves to interpolate
+ * Computing NRUB surfaces and trimming curves to interpolate
  * the parameters of the TGC
  *
  * The process is to create the nmg topology of the TGC fill it
  * in with a unit cylinder geometry (i.e. unitcircle at the top (0, 0, 1)
  * unit cylinder of radius 1, and unitcirlce at the bottom), and then
  * scale it with a perspective matrix derived from the parameters of the
- * tgc. The result is three trimmed nurb surfaces which interpolate the
+ * tgc. The result is three trimmed nub surfaces which interpolate the
  * parameters of the original TGC.
  *
  * Returns -
@@ -3078,21 +3078,24 @@ rt_tgc_params(struct pc_pc_set *UNUSED(ps), const struct rt_db_internal *ip)
 
 
 /* determines the class of tgc given vector magnitudes a, b, c, d */
-#define GET_TGC_TYPE(type, a, b, c, d) \
-{ \
-    if (EQUAL((a), (b)) && EQUAL((c), (d))) { \
-        if (EQUAL((a), (c))) { \
-            (type) = RCC; \
-        } else { \
-            (type) = TRC; \
-        } \
-    } else { \
-        if (EQUAL((a), (c)) && EQUAL((b), (d))) { \
-            (type) = REC; \
-        } else { \
-            (type) = TEC; \
-        } \
-    } \
+HIDDEN inline void
+get_tgc_type(int *type, fastf_t a, fastf_t b, fastf_t c, fastf_t d)
+{
+    if (EQUAL(a, b) && EQUAL(c, d)) {
+        /* circular base and top */
+        if (EQUAL(a, c)) {
+            *type = RCC;
+        } else {
+            *type = TRC;
+        }
+    } else {
+        /* elliptical base or top */
+        if (EQUAL(a, c) && EQUAL(b, d)) {
+            *type = REC;
+        } else {
+            *type = TEC;
+        }
+    }
 }
 
 
@@ -3113,23 +3116,23 @@ rt_tgc_volume(fastf_t *vol, const struct rt_db_internal *ip)
     mag_d = MAGNITUDE(tip->d);
     mag_h = MAGNITUDE(tip->h);
 
-    GET_TGC_TYPE(tgc_type, mag_a, mag_b, mag_c, mag_d);
+    get_tgc_type(&tgc_type, mag_a, mag_b, mag_c, mag_d);
 
     switch (tgc_type) {
-    case RCC:
-    case REC:
-        *vol = M_PI * mag_h * mag_a * mag_b;
-        break;
-    case TRC:
-        /* TRC could fall through, but this formula avoids a sqrt and
-        * so will probably be more accurate */
-        *vol = M_PI * mag_h * (mag_a * mag_a + mag_c * mag_c + mag_a * mag_c) / 3.0;
-        break;
-    case TEC:
-        *vol = M_PI * mag_h * (mag_a * mag_b + mag_c * mag_d + sqrt(mag_a * mag_b * mag_c * mag_d)) / 3.0;
-        break;
-    default:
-        bu_log("rt_tgc_volume(): cannot find volume\n");
+        case RCC:
+        case REC:
+            *vol = M_PI * mag_h * mag_a * mag_b;
+            break;
+        case TRC:
+            /* TRC could fall through, but this formula avoids a sqrt and
+             * so will probably be more accurate */
+            *vol = M_PI * mag_h * (mag_a * mag_a + mag_c * mag_c + mag_a * mag_c) / 3.0;
+            break;
+        case TEC:
+            *vol = M_PI * mag_h * (mag_a * mag_b + mag_c * mag_d + sqrt(mag_a * mag_b * mag_c * mag_d)) / 3.0;
+            break;
+        default:
+            bu_log("rt_tgc_volume(): cannot find volume");
     }
 }
 
@@ -3146,32 +3149,31 @@ rt_tgc_surf_area(fastf_t *area, const struct rt_db_internal *ip)
     struct rt_tgc_internal *tip = (struct rt_tgc_internal *)ip->idb_ptr;
     RT_TGC_CK_MAGIC(tip);
 
+    mag_a = MAGNITUDE(tip->a);
+    mag_b = MAGNITUDE(tip->b);
+    mag_c = MAGNITUDE(tip->c);
+    mag_d = MAGNITUDE(tip->d);
+    mag_h = MAGNITUDE(tip->h);
+
     magsq_a = MAGSQ(tip->a);
     magsq_c = MAGSQ(tip->c);
     magsq_h = MAGSQ(tip->h);
 
-    mag_a = sqrt(magsq_a);
-    mag_b = MAGNITUDE(tip->b);
-    mag_c = sqrt(magsq_c);
-    mag_d = MAGNITUDE(tip->d);
-    mag_h = sqrt(magsq_h);
-
-    GET_TGC_TYPE(tgc_type, mag_a, mag_b, mag_c, mag_d);
+    get_tgc_type(&tgc_type, mag_a, mag_b, mag_c, mag_d);
 
     switch (tgc_type) {
-    case RCC:
-        *area = 2.0 * M_PI * mag_a * (mag_a + mag_h);
-        break;
-    case TRC:
-        *area = M_PI * ((mag_a + mag_c) * sqrt((mag_a - mag_c) * (mag_a - mag_c) + magsq_h) + magsq_a + magsq_c);
-        break;
-    case REC:
-    case TEC:
-    default:
-        bu_log("rt_tgc_surf_area(): cannot find surface area\n");
+        case RCC:
+            *area = 2.0 * M_PI * mag_a * (mag_a + mag_h);
+            break;
+        case TRC:
+            *area = M_PI * ((mag_a + mag_c) * sqrt((mag_a - mag_c) * (mag_a - mag_c) + magsq_h) + magsq_a + magsq_c);
+            break;
+        case REC:
+        case TEC:
+        default:
+            bu_log("rt_tgc_surf_area(): cannot find surface area");
     }
 }
-
 
 /**
  * R T _ T G C _ C E N T R O I D
@@ -3180,37 +3182,43 @@ void
 rt_tgc_centroid(point_t *cent, const struct rt_db_internal *ip)
 {
     int tgc_type = 0;
-    fastf_t mag_a, mag_b, mag_c, mag_d;
-    fastf_t magsq_a, magsq_c;
+    fastf_t mag_a, mag_b, mag_c, mag_d, mag_h;
+    fastf_t magsq_a, magsq_c, magsq_h;
     fastf_t scalar;
+    vect_t u_h;
     struct rt_tgc_internal *tip = (struct rt_tgc_internal *)ip->idb_ptr;
     RT_TGC_CK_MAGIC(tip);
 
+    mag_a = MAGNITUDE(tip->a);
+    mag_b = MAGNITUDE(tip->b);
+    mag_c = MAGNITUDE(tip->c);
+    mag_d = MAGNITUDE(tip->d);
+    mag_h = MAGNITUDE(tip->h);
+
     magsq_a = MAGSQ(tip->a);
     magsq_c = MAGSQ(tip->c);
+    magsq_h = MAGSQ(tip->h);
 
-    mag_a = sqrt(magsq_a);
-    mag_b = MAGNITUDE(tip->b);
-    mag_c = sqrt(magsq_c);
-    mag_d = MAGNITUDE(tip->d);
+    VMOVE(u_h, tip->h);
+    VUNITIZE(u_h);
 
-    GET_TGC_TYPE(tgc_type, mag_a, mag_b, mag_c, mag_d);
+    get_tgc_type(&tgc_type, mag_a, mag_b, mag_c, mag_d);
 
     switch (tgc_type) {
-    case RCC:
-    case REC:
-        scalar = 0.5;
-        VJOIN1(*cent, tip->v, scalar, tip->h);
-        break;
-    case TRC:
-        scalar = 0.25 * (magsq_a + 2.0 * mag_a * mag_c + 3.0 * magsq_c) /
-            (magsq_a + mag_a * mag_c + magsq_c);
-        VJOIN1(*cent, tip->v, scalar, tip->h);
-        break;
-    case TEC:
-        /* need to confirm formula */
-    default:
-        bu_log("rt_tgc_centroid(): cannot find centroid\n");
+        case RCC:
+        case REC:
+            scalar = mag_h * 0.5;
+            VSCALE(*cent, u_h, scalar);
+            break;
+        case TRC:
+            scalar = mag_h * 0.25 * (magsq_h + 2.0 * mag_a * mag_c + 3.0 * magsq_c) /
+                (magsq_a + mag_a * mag_c + magsq_c);
+            VSCALE(*cent, u_h, scalar);
+            break;
+        case TEC:
+            /* need to confirm formula */
+        default:
+            bu_log("rt_tgc_centroid(): cannot find centroid");
     }
 }
 

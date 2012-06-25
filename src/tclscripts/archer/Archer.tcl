@@ -168,7 +168,7 @@ package provide Archer 1.0
 	method bot_sync_all {}
 	method bot_sync_all_wrapper {}
 	method fbclear {}
-	method raytracePlus {{_batch_list {}}}
+	method raytracePlus {}
 
 	# ArcherCore Override Section
 	method cmd                 {args}
@@ -937,98 +937,61 @@ package provide Archer 1.0
 }
 
 
-::itcl::body Archer::raytracePlus {{_batch_list {}}} {
-    global tcl_platform
-    global argv0
-
+::itcl::body Archer::raytracePlus {} {
     if {![info exists itk_component(ged)]} {
 	return
     }
 
-    set len [llength $_batch_list]
+    $itk_component(primaryToolbar) itemconfigure raytrace \
+	-image $mImage_rtAbort \
+	-command "$itk_component(rtcntrl) abort"
 
-    if {$len == 0} {
-	$itk_component(primaryToolbar) itemconfigure raytrace \
-	    -image $mImage_rtAbort \
-	    -command "$itk_component(rtcntrl) abort"
-
-	$itk_component(rtcntrl) configure -fb_enabled 1
-
-	set port [$itk_component(ged) listen 0]
-    } elseif {$len == 5} {
-	set fh [lindex $_batch_list 0]
-	set port [lindex $_batch_list 1]
-	set viewsize [lindex $_batch_list 2]
-	set orientation [lindex $_batch_list 3]
-	set eye_pt [lindex $_batch_list 4]
-
-	set dbname [file normalize $mTarget]
-	set execpath [file dirname [file normalize $argv0]]
-
-	if {$tcl_platform(platform) == "windows"} {
-	    set rtwizname [file join $execpath rtwizard.bat]
-	} else {
-	    set rtwizname [file join $execpath rtwizard]
-	}
-    } else {
-	error "_batch_list must have 5 items: _batch_list ---> $_batch_list"
-    }
+    $itk_component(rtcntrl) configure -fb_enabled 1
 
     set wlist [$itk_component(ged) win_size]
     set w [lindex $wlist 0]
     set n [lindex $wlist 1]
+    set port [$itk_component(ged) listen 0]
+
     set bcolor [cadwidgets::Ged::get_rgb_color $mFBBackgroundColor]
 
     if {$mTreeMode == $TREE_MODE_TREE} {
-	if {$len == 0} {
-	    eval $itk_component(ged) rtwizard -C [list $bcolor] -w $w -n $n -p $port -c $mColorObjects
-	} else {
-	    puts $fh "catch {exec $rtwizname --no-gui --input $dbname -C [list $bcolor] -w $w -n $n -p $port -c $mColorObjects --viewsize $viewsize --orientation [list $orientation] --eye_pt [list $eye_pt]}"
-	}
+	eval $itk_component(ged) rtwizard -C [list $bcolor] \
+	    -w $w -n $n -p $port -c $mColorObjects
     } else {
 	set ecolor [cadwidgets::Ged::get_rgb_color $mRtWizardEdgeColor]
 
-	if {$len == 0} {
-	    if {$mRtWizardNonEdgeColor != ""} {
-		set necolor [cadwidgets::Ged::get_rgb_color $mRtWizardNonEdgeColor]
+	if {$mRtWizardNonEdgeColor != ""} {
+	    set necolor [cadwidgets::Ged::get_rgb_color $mRtWizardNonEdgeColor]
 
-		if {$mSavedViewEyePt != ""} {
-		    set eye_pt [eval $itk_component(ged) v2m_point $mSavedViewEyePt]
-		    eval $itk_component(ged) rtwizard \
-			--eye_pt [list $eye_pt] \
-			-C [list $bcolor] --line-color [list $ecolor] \
-			--non-line-color [list $necolor] \
-			-w $w -n $n -p $port -c $mColorObjects -g $mGhostObjects -l $mEdgeObjects \
-				 -G $mRtWizardGhostIntensity -O $mRtWizardOccMode
-		} else {
-		    set ret [eval $itk_component(ged) rtwizard \
-			-C [list $bcolor] --line-color [list $ecolor] \
-			--non-line-color [list $necolor] \
-			-w $w -n $n -p $port -c $mColorObjects -g $mGhostObjects -l $mEdgeObjects \
-			-G $mRtWizardGhostIntensity -O $mRtWizardOccMode]
-		}
+	    if {$mSavedViewEyePt != ""} {
+		set eye_pt [eval $itk_component(ged) v2m_point $mSavedViewEyePt]
+		eval $itk_component(ged) rtwizard \
+		    --eye_pt [list $eye_pt] \
+		    -C [list $bcolor] --line-color [list $ecolor] \
+		    --non-line-color [list $necolor] \
+		    -w $w -n $n -p $port -c $mColorObjects -g $mGhostObjects -l $mEdgeObjects \
+		    -G $mRtWizardGhostIntensity -O $mRtWizardOccMode 
 	    } else {
-		if {$mSavedViewEyePt != ""} {
-		    set eye_pt [eval $itk_component(ged) v2m_point $mSavedViewEyePt]
-		    eval $itk_component(ged) rtwizard \
-			--eye_pt [list $eye_pt] \
-			-C [list $bcolor] --line-color [list $ecolor] \
-			-w $w -n $n -p $port -c $mColorObjects -g $mGhostObjects -l $mEdgeObjects \
-			-G $mRtWizardGhostIntensity -O $mRtWizardOccMode 
-		}  {
-		    eval $itk_component(ged) rtwizard \
-			-C [list $bcolor] --line-color [list $ecolor] \
-			-w $w -n $n -p $port -c $mColorObjects -g $mGhostObjects -l $mEdgeObjects \
-			-G $mRtWizardGhostIntensity -O $mRtWizardOccMode 
-		}
+		eval $itk_component(ged) rtwizard \
+		    -C [list $bcolor] --line-color [list $ecolor] \
+		    --non-line-color [list $necolor] \
+		    -w $w -n $n -p $port -c $mColorObjects -g $mGhostObjects -l $mEdgeObjects \
+		    -G $mRtWizardGhostIntensity -O $mRtWizardOccMode 
 	    }
 	} else {
-	    if {$mRtWizardNonEdgeColor != ""} {
-		set necolor [cadwidgets::Ged::get_rgb_color $mRtWizardNonEdgeColor]
-
-		puts $fh "catch {exec $rtwizname --no-gui --input $dbname -C [list $bcolor] --line-color [list $ecolor] --non-line-color [list $necolor] -w $w -n $n -p $port -c $mColorObjects -g $mGhostObjects -l $mEdgeObjects -G $mRtWizardGhostIntensity -O $mRtWizardOccMode --viewsize $viewsize --orientation [list $orientation] --eye_pt [list $eye_pt]}"
-	    } else {
-		puts $fh "catch {exec $rtwizname --no-gui --input $dbname -C [list $bcolor] --line-color [list $ecolor] -w $w -n $n -p $port -c $mColorObjects -g $mGhostObjects -l $mEdgeObjects -G $mRtWizardGhostIntensity -O $mRtWizardOccMode --viewsize $viewsize --orientation [list $orientation] --eye_pt [list $eye_pt]}"
+	    if {$mSavedViewEyePt != ""} {
+		set eye_pt [eval $itk_component(ged) v2m_point $mSavedViewEyePt]
+		eval $itk_component(ged) rtwizard \
+		    --eye_pt [list $eye_pt] \
+		    -C [list $bcolor] --line-color [list $ecolor] \
+		    -w $w -n $n -p $port -c $mColorObjects -g $mGhostObjects -l $mEdgeObjects \
+		    -G $mRtWizardGhostIntensity -O $mRtWizardOccMode 
+	    }  {
+		eval $itk_component(ged) rtwizard \
+		    -C [list $bcolor] --line-color [list $ecolor] \
+		    -w $w -n $n -p $port -c $mColorObjects -g $mGhostObjects -l $mEdgeObjects \
+		    -G $mRtWizardGhostIntensity -O $mRtWizardOccMode 
 	    }
 	}
     }
@@ -2590,6 +2553,13 @@ proc title_node_handler {node} {
 	"FB Background Color:" \
 	$mColorListNoTriple
 
+#    buildComboBox $itk_component(generalF) \
+	fboverlayColor \
+	fbocolor \
+	mRtWizardEdgeColorPref \
+	"FB Overlay Color:" \
+	$mColorListNoTriple
+
     buildComboBox $itk_component(generalF) \
 	fontsize \
 	fontsize \
@@ -2640,8 +2610,6 @@ proc title_node_handler {node} {
 	{}
     $itk_component(unitsCB) configure -state disabled
 
-    # Disable tree attributes indefinitely
-    if {0} {
     itk_component add treeAttrsL {
 	::ttk::label $itk_component(generalF).treeAttrsL \
 	    -anchor e \
@@ -2652,7 +2620,6 @@ proc title_node_handler {node} {
 	    -width 12 \
 	    -textvariable [::itcl::scope mTreeAttrColumnsPref]
     } {}
-    }
 
     itk_component add selGroupL {
 	::ttk::label $itk_component(generalF).selGroupL \
@@ -2743,12 +2710,9 @@ proc title_node_handler {node} {
     incr i
     grid $itk_component(viewingParamsColorL) -column 0 -row $i -sticky e
     grid $itk_component(viewingParamsColorF) -column 1 -row $i -sticky ew
-
-    # Disable tree attributes indefinitely
-#    incr i
-#    grid $itk_component(treeAttrsL) -column 0 -row $i -sticky e
-#    grid $itk_component(treeAttrsE) -column 1 -row $i -sticky ew
-
+    incr i
+    grid $itk_component(treeAttrsL) -column 0 -row $i -sticky e
+    grid $itk_component(treeAttrsE) -column 1 -row $i -sticky ew
     incr i
     grid $itk_component(selGroupL) -column 0 -row $i -sticky e
     grid $itk_component(selGroupE) -column 1 -row $i -sticky ew
@@ -6311,8 +6275,6 @@ putString "beginObjTranslate: GeometryEditFrame::mEditCommand - $GeometryEditFra
     grid $itk_component(occlusionF) -column 1 -row $i -sticky ew
 
     grid columnconfigure $itk_component(objRtImageView) 1 -weight 1
-
-    return $i
 }
 
 
@@ -7828,6 +7790,10 @@ putString "beginObjTranslate: GeometryEditFrame::mEditCommand - $GeometryEditFra
 	set mFBBackgroundColor $mFBBackgroundColorPref
     }
 
+    if {$mRtWizardEdgeColor != $mRtWizardEdgeColorPref} {
+	set mRtWizardEdgeColor $mRtWizardEdgeColorPref
+    }
+
     if {$mDisplayFontSize != $mDisplayFontSizePref} {
 	set mDisplayFontSize $mDisplayFontSizePref
     }
@@ -8368,6 +8334,7 @@ putString "beginObjTranslate: GeometryEditFrame::mEditCommand - $GeometryEditFra
     set mBindingModePref $mBindingMode
     set mEnableBigEPref $mEnableBigE
     set mFBBackgroundColorPref $mFBBackgroundColor
+    set mRtWizardEdgeColorPref $mRtWizardEdgeColor
     set mDisplayFontSizePref $mDisplayFontSize
     set mMeasuringStickColorPref $mMeasuringStickColor
     set mMeasuringStickModePref $mMeasuringStickMode
@@ -8464,9 +8431,6 @@ putString "beginObjTranslate: GeometryEditFrame::mEditCommand - $GeometryEditFra
 	}
     }
 
-    # This feature has been disabled.
-    set mTreeAttrColumns ""
-
     backgroundColor $mBackgroundColor
 
     if {!$mDelayCommandViewBuild} {
@@ -8531,9 +8495,6 @@ putString "beginObjTranslate: GeometryEditFrame::mEditCommand - $GeometryEditFra
     puts $_pfile "set mEnableBigE $mEnableBigE"
     puts $_pfile "set mFBBackgroundColor \"$mFBBackgroundColor\""
     puts $_pfile "set mRtWizardEdgeColor \"$mRtWizardEdgeColor\""
-    puts $_pfile "set mRtWizardNonEdgeColor \"$mRtWizardNonEdgeColor\""
-    puts $_pfile "set mRtWizardOccMode \"$mRtWizardOccMode\""
-    puts $_pfile "set mRtWizardGhostIntensity \"$mRtWizardGhostIntensity\""
     puts $_pfile "set mDisplayFontSize \"$mDisplayFontSize\""
     puts $_pfile "set mMeasuringStickColor \"$mMeasuringStickColor\""
     puts $_pfile "set mMeasuringStickMode $mMeasuringStickMode"

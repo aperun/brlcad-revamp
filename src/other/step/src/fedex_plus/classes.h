@@ -64,8 +64,6 @@ typedef  struct file_holder  {
                                 *    Nec. if ent1 of schemaA has attribute ent2 from schemaB.
                                 */
     FILE * names;               ///< MAP Nov 2011 - header with namespace for entity and attr descriptors
-    FILE * helpers;             /**< MAP Mar 2012 - header with inline helper functions. Currently only used for
-                                     helper functions to find runtime aggregate bounds */
 }  File_holder, FILES;
 
 /**  these fields are used so that ENTITY types are processed in order
@@ -110,9 +108,7 @@ void            TYPEprint_definition( Type, FILES *, Schema );
 void            TYPEprint_new( const Type, FILE *, Schema );
 void            TYPEprint_typedefs( Type, FILE * );
 void            TYPEprint_descriptions( const Type, FILES *, Schema );
-void            TYPEprint_init( const Type type, FILES * files, Schema schema );
-void            AGGRprint_init( FILES* files, const Type t,
-                                const char* var_name, const char* aggr_name );
+void            TYPEprint_init( const Type, FILE *, Schema );
 void            TYPEselect_init_print( const Type, FILE *, Schema );
 void            MODELPrint( Entity, FILES *, Schema, int );
 void            MODELprint_new( Entity, FILES *, Schema );

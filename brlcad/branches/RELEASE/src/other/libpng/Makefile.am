@@ -1,0 +1,147 @@
+# Makefile.am:
+#   Source file for Makefile.in (and hence Makefile)
+#
+ACLOCAL_AMFLAGS = -I ../../../m4
+
+PNGLIB_BASENAME= libpng15
+
+# libpng does not follow GNU file name conventions
+
+# "color-tests" requires automake 1.11.1 or later.  Enable it if you like,
+# to get red "FAIL" and green "PASS" notations during tests.
+# AUTOMAKE_OPTIONS = foreign color-tests
+AUTOMAKE_OPTIONS = foreign
+
+# man pages
+dist_man_MANS= libpng.3 libpngpf.3 png.5
+
+# rules to build libpng, only build the old library on request
+lib_LTLIBRARIES=libpng15.la
+# EXTRA_LTLIBRARIES= libpng.la
+libpng15_la_SOURCES = png.c pngerror.c\
+	pngget.c pngmem.c pngpread.c pngread.c pngrio.c pngrtran.c pngrutil.c\
+	pngset.c pngtrans.c pngwio.c pngwrite.c pngwtran.c pngwutil.c\
+	png.h pngconf.h pngdebug.h pnginfo.h pngpriv.h pngstruct.h pngusr.dfa
+
+nodist_libpng15_la_SOURCES = pnglibconf.h
+
+libpng15_la_LDFLAGS = -no-undefined -export-dynamic \
+	-version-number 15:12:0
+
+#distribute headers in /usr/include/libpng/*
+pkgincludedir= $(includedir)/$(PNGLIB_BASENAME)
+pkginclude_HEADERS= png.h pngconf.h
+nodist_pkginclude_HEADERS= pnglibconf.h
+
+#extra source distribution files.
+EXTRA_DIST= \
+	ANNOUNCE CHANGES INSTALL LICENSE README TODO \
+	pngtest.png pngbar.png pngnow.png pngbar.jpg autogen.sh \
+	${srcdir}/contrib ${srcdir}/projects ${srcdir}/scripts \
+	$(TESTS) \
+	CMakeLists.txt example.c libpng-manual.txt
+
+SCRIPT_CLEANFILES=scripts/*.out scripts/*.chk scripts/pnglibconf.dfn
+
+CLEANFILES= dfn.c dfn?.out pngout.png libpng15.pc \
+	libpng15-config libpng.vers libpng.sym \
+	check.new pnglibconf.* symbols.new pngtest-log.txt \
+	$(SCRIPT_CLEANFILES)
+
+MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.guess config.h.in \
+config.sub configure depcomp install-sh ltmain.sh missing
+
+# DFNCPP is normally just CPP - the C preprocessor - but on Solaris and maybe
+# other operating systems (NeXT?) the C preprocessor selected by configure
+# checks input tokens for validity - effectively it performs part of the ANSI-C
+# parsing - and therefore fails with the .df files.  configure.ac has special
+# checks for this and sets DFNCPP appropriately.
+DFNCPP = cpp
+
+SUFFIXES = .chk .dfn .out
+
+$(PNGLIB_BASENAME).pc: libpng.pc
+	cp libpng.pc $@
+
+$(PNGLIB_BASENAME)-config: libpng-config
+	cp libpng-config $@
+
+scripts/sym.out scripts/vers.out: png.h pngconf.h pnglibconf.h
+scripts/symbols.out: png.h pngconf.h $(srcdir)/scripts/pnglibconf.h.prebuilt
+
+libpng.sym: scripts/sym.out
+	rm -f $@
+	cp $? $@
+libpng.vers: scripts/vers.out
+	rm -f $@
+	cp $? $@
+pnglibconf.h: pnglibconf.out
+	rm -f $@
+	cp $? $@
+$(srcdir)/scripts/pnglibconf.h.prebuilt:
+	@echo "Attempting to build $@" >&2
+	@echo "This is a machine generated file, but if you want to make" >&2
+	@echo "a new one simply make 'scripts/pnglibconf.out' and copy that" >&2
+	@exit 1
+
+# The following is necessary to ensure that the local pnglibconf.h is used, not
+# an installed one (this can happen immediately after on a clean system if
+# 'make test' is the first thing the user does.)
+contrib/libtests/pngvalid.o pngtest.o: pnglibconf.h
+
+# We must use -DPNG_NO_USE_READ_MACROS here even when the library may actually
+# be built with PNG_USE_READ_MACROS; this prevents the read macros from
+# interfering with the symbol file format.
+SYMBOL_CFLAGS = -DPNGLIB_LIBNAME='PNG15_0'\
+		-DPNGLIB_VERSION='@PNGLIB_VERSION@'\
+		-DSYMBOL_PREFIX='$(SYMBOL_PREFIX)'\
+		-DPNG_NO_USE_READ_MACROS -DPNG_BUILDING_SYMBOL_TABLE
+
+.dfn.out:
+	rm -f $@ dfn.c dfn?.out
+	test -d scripts || mkdir scripts
+	echo '#include "$<"' >dfn.c
+	$(DFNCPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES)\
+	    $(CPPFLAGS) $(SYMBOL_CFLAGS) dfn.c > dfn1.out
+	$(SED) -n -e 's|^.*PNG_DEFN_MAGIC *-\(.*\)- *PNG_DEFN_END.*$$|\1|p'\
+	    dfn1.out >dfn2.out
+	$(SED) -e 's| *PNG_JOIN *||g' -e 's| *$$||' dfn2.out >dfn3.out
+	rm -f dfn.c dfn[12].out
+	mv dfn3.out $@
+
+# The .dfn file for pnglibconf.h is machine generated
+pnglibconf.dfn: scripts/pnglibconf.dfa scripts/options.awk pngconf.h pngusr.dfa $(DFA_XTRA)
+	rm -f $@ dfn?.out
+	$(AWK) -f ${srcdir}/scripts/options.awk out=dfn1.out version=search\
+	    ${srcdir}/pngconf.h ${srcdir}/scripts/pnglibconf.dfa\
+	    ${srcdir}/pngusr.dfa $(DFA_XTRA) 1>&2
+	$(AWK) -f ${srcdir}/scripts/options.awk out=dfn2.out dfn1.out 1>&2
+	rm dfn1.out
+	mv dfn2.out $@
+
+# Symbol checks (.def and .out files should match)
+scripts/symbols.chk: scripts/checksym.awk scripts/symbols.def scripts/symbols.out
+.out.chk:
+	rm -f $@ symbols.new
+	$(AWK) -f ${srcdir}/scripts/checksym.awk ${srcdir}/scripts/${*F}.def\
+	    $< >&2
+	mv symbols.new $@
+
+# used on demand to regenerate the standard header, CPPFLAGS should
+# be empty - no non-standard defines
+scripts/pnglibconf.dfn: scripts/pnglibconf.dfa scripts/options.awk pngconf.h
+	rm -f $@ dfn?.out
+	test -z "$(CPPFLAGS)"
+	echo "com @PNGLIB_VERSION@ STANDARD API DEFINITION" |\
+	$(AWK) -f ${srcdir}/scripts/options.awk out=dfn1.out logunsupported=1
+		version=search ${srcdir}/pngconf.h -\
+		${srcdir}/scripts/pnglibconf.dfa 1>&2
+	$(AWK) -f ${srcdir}/scripts/options.awk out=dfn2.out dfn1.out 1>&2
+	rm dfn1.out
+	mv dfn2.out $@
+
+$(libpng15_la_OBJECTS): png.h pngconf.h \
+	pnglibconf.h pngpriv.h pngdebug.h pnginfo.h pngstruct.h
+
+include $(top_srcdir)/misc/Makefile.defs
+

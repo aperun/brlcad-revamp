@@ -33,7 +33,6 @@ render_component_free(render_t *UNUSED(render))
     return;
 }
 
-
 static void *
 component_hit(struct tie_ray_s *ray, struct tie_id_s *UNUSED(id), struct tie_tri_s *tri, void *UNUSED(ptr))
 {
@@ -42,7 +41,6 @@ component_hit(struct tie_ray_s *ray, struct tie_id_s *UNUSED(id), struct tie_tri
     ray->depth++;
     return (mesh->flags & (ADRT_MESH_SELECT|ADRT_MESH_HIT)) ? mesh : NULL;
 }
-
 
 void
 render_component_work(render_t *UNUSED(render), struct tie_s *tie, struct tie_ray_s *ray, vect_t *pixel)
@@ -70,14 +68,12 @@ render_component_work(render_t *UNUSED(render), struct tie_s *tie, struct tie_ra
     }
 }
 
-
 int
 render_component_init(render_t *render, const char *UNUSED(usr)) {
     render->work = render_component_work;
     render->free = render_component_free;
     return 0;
 }
-
 
 /*
  * Local Variables:

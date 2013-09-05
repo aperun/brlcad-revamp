@@ -100,7 +100,6 @@ usage(const char *msg, const char *argv0)
 	bu_log("%s\n", msg);
     }
     bu_log("Usage: %s [-t] [-p#] host gfile [geometry ...]\n\t-p#\tport number to send to (default 2000)\n\thost\thostname or IP address of receiving server\n\tgfile\tBRL-CAD .g database file\n\tgeometry\tname(s) of geometry to send (OPTIONAL)\n", argv0 ? argv0 : "g_transfer");
-    bu_log("\nOR\n");
     bu_exit(1, "Usage: %s -r [-p#]\n\t-p#\tport number to listen on (default 2000)\n", argv0 ? argv0 : "g_transfer");
 }
 
@@ -495,11 +494,11 @@ main(int argc, char *argv[]) {
     struct db_i *dbip = NULL;
 
     if (argc < 2) {
-	usage(NULL, argv[0]);
+	usage("ERROR: Missing arguments", argv[0]);
     }
 
     /* process the command-line arguments after the application name */
-    while ((c = bu_getopt(argc, argv, "tTrRp:P:h?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "tTrRp:P:hH")) != -1) {
 	switch (c) {
 	    case 't':
 	    case 'T':
@@ -515,9 +514,13 @@ main(int argc, char *argv[]) {
 	    case 'P':
 		port = atoi(bu_optarg);
 		break;
-	    default:
+	    case 'h':
+	    case 'H':
 		/* help */
 		usage(NULL, argv0);
+		break;
+	    default:
+		usage("ERROR: Unknown argument", argv0);
 	}
     }
 

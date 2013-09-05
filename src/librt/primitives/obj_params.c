@@ -38,7 +38,7 @@ rt_obj_params(struct pc_pc_set *ps, const struct rt_db_internal *ip)
     if (id < 0)
 	return -2;
 
-    ft = &OBJ[id];
+    ft = &rt_functab[id];
     if (!ft)
 	return -3;
     if (!ft->ft_params)

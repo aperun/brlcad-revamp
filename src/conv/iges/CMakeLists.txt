@@ -125,6 +125,7 @@ set(iges_ignore_files
   woodie.igs
   )
 CMAKEFILES(${iges_ignore_files})
+CMAKEFILES(Makefile.am)
 
 # Local Variables:
 # tab-width: 8

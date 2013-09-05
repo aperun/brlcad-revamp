@@ -24,6 +24,8 @@ BRLCAD_ADDDATA(rtwizard_lib_TCLSCRIPTS tclscripts/rtwizard/lib)
 pkgIndex_BUILD(tclscripts/rtwizard/lib)
 tclIndex_BUILD(tclscripts/rtwizard/lib)
 
+CMAKEFILES(Makefile.am pkgIndex.tcl tclIndex)
+
 # Local Variables:
 # tab-width: 8
 # mode: cmake

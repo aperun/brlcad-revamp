@@ -28,9 +28,8 @@
 #ifndef LIB_OSL_RENDERER_H
 #define LIB_OSL_RENDERER_H
 
-#include "common.h"
-
 #include <stdio.h>
+
 #include <string>
 #include <vector>
 
@@ -125,6 +124,15 @@ class OSLRenderer {
     ShadingSystemImpl *ssi;
     SimpleRenderer rend;
     void *handle;
+
+    /* Information about each shader of the renderer */
+#if 0
+    struct OSLShader{
+	std::string name;
+	ShadingAttribStateRef state;
+    };
+    std::vector<OSLShader> shaders;
+#endif
 
     const ClosureColor
 	*ExecuteShaders(ShaderGlobals &globals, RenderInfo *info) const;

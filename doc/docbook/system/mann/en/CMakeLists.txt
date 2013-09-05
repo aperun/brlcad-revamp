@@ -44,7 +44,6 @@ set(docbook_mann_EN
   cat.xml
   center.xml
   color.xml
-  comb.xml
   comb_color.xml
   copyeval.xml
   copymat.xml
@@ -176,6 +175,7 @@ set(docbook_mann_EN
   rcodes.xml
   read_muves.xml
   red.xml
+  redraw_vlist.xml
   refresh.xml
   regdebug.xml
   regdef.xml

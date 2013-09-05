@@ -40,7 +40,7 @@ rt_obj_shot(struct soltab *stp, struct xray *rp, struct application *ap, struct 
     if (id < 0)
 	return -2;
 
-    ft = &OBJ[id];
+    ft = &rt_functab[id];
     if (!ft)
 	return -3;
     if (!ft->ft_shot)

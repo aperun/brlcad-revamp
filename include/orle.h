@@ -90,16 +90,24 @@ typedef struct	/* Old format RLE header minus magic number field.	*/
 
 typedef struct /* Old RLE format instruction.				*/
 {
-    /* !!! This doesn't match the file format, but will at least compile */
+#if __STDC__
+    /* !!! This won't match the file format, but will at least compile */
     /* ANSI insists that bit-field must be of type signed int, unsigned int or int */
-    unsigned int datum:12, opcode:4; /* previously was unsigned short */
+    unsigned int datum:12, opcode:4;
+#else
+    unsigned short datum:12, opcode:4;
+#endif
 } Old_Inst;
 
 typedef struct /* Old RLE format instruction.				*/
 {
-    /* !!! This doesn't match the file format, but will at least compile */
+#if __STDC__
+    /* !!! This won't match the file format, but will at least compile */
     /* ANSI insists that bit-field must be of type signed int, unsigned int or int */
-    int	opcode:8, datum:8; /* previously was short */
+    int	opcode:8, datum:8;
+#else
+    short	opcode:8, datum:8;
+#endif
 } Xtnd_Inst;
 
 typedef unsigned char RLEpixel[3];

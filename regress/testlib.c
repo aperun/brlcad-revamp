@@ -39,12 +39,14 @@
  * and call functions.
  *
  */
-
-#include "common.h"
+#if 0
+Example use:
+/* FIXME: regex needs to be rewritten to find function names */
+grep '^BU_EXPORT' bu.h | sed 's/^[^,]*[[:space:]*]\([a-zA-Z_][a-zA-Z0-9_]*\),.*/\1/g' | xargs ./a.out
+#endif
 
 #include <stdio.h>
 #include <dlfcn.h>
-
 
 int
 main(int ac, char *av[])

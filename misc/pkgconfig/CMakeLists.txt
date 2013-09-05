@@ -8,9 +8,7 @@ set(includedir "\${prefix}/include")
 set(datarootdir "\${prefix}/share")
 set(datadir "\${datarootdir}")
 set(LIBTCL "-ltcl${TCL_VERSION_MAJOR}.${TCL_VERSION_MINOR}")
-if(M_LIBRARY)
-  set(LIBM "-l${M_LIBRARY}")
-endif(M_LIBRARY)
+set(LIBM "${M_LINKOPT}")
 #The CMake system relies on the C++ compiler to find
 #this, so we set it manually for pkgconfig
 set(LIBSTDCXX "-lstdc++")
@@ -49,6 +47,7 @@ foreach(pkgfile ${pkgconfig_DATA})
 endforeach(pkgfile ${pkgconfig_DATA})
 
 CMAKEFILES(${pkgconfig_DATA})
+CMAKEFILES(Makefile.am)
 
 # Local Variables:
 # tab-width: 8

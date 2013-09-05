@@ -19,15 +19,27 @@
  */
 /** @file util/pixsaturate.c
  *
+ * A saturation value of 0 gives monochrome,
+ * 1.0 gives the original image,
+ * and values larger than 1.0 give a more saturated image.
+ *
+ * Author -
+ * Michael John Muuss
+ * (based on a subroutine by Paul Haeberli)
+ *
+ * Remarks from Haeberli's routine:
+ * saturate-
  * Change the saturation of a row of pixels.  If sat is
  * set to 0.0 the result will be monochromatic, if sat is made
  * 1.0, the color will not change, if sat is made greater than 1.0,
- * the color intensity is increased.
+ * the amount of color is increased.
  *
  * The input and output pixel values are in the range 0..255.
  *
- * This implementation, based on a subroutine by Paul Haeberli,
- * requires 6 multiplies, 5 adds, and 3 bound checks per pixel.
+ * This technique requires 6 multiplies, 5 adds and 3 bound
+ * checks per pixel.
+ *
+ * Paul Haeberli - 1988
  */
 
 #include "common.h"

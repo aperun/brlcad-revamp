@@ -65,9 +65,10 @@
 #include "pkg.h"
 
 
-#define USAGE1 "Usage: fbfade [ -s size ] [ -w width ] [ -n height ] [ -f in_fb_file ]\n\
-[ -H ] [ -S size ] [ -W width ] [ -N height ] [ [ -F ] out_fb_file ]"
-#define OPTSTR "f:F:Hn:N:s:S:w:W:h?"
+#define USAGE1 "fbfade [ -s size ] [ -w width ] [ -n height ] [ -f in_fb_file ]"
+#define USAGE2	\
+    "\t[ -h ] [ -S size ] [ -W width ] [ -N height ] [ [ -F ] out_fb_file ]"
+#define OPTSTR "f:F:hn:N:s:S:w:W:"
 
 
 typedef int bool_t;
@@ -148,7 +149,7 @@ main(int argc, char **argv)
 		    out_fb_file = bu_optarg;
 		    break;
 
-		case 'H':	/* -H */
+		case 'h':	/* -h */
 		    hires = 1;
 		    break;
 
@@ -189,16 +190,14 @@ main(int argc, char **argv)
 		    break;
 	    }
 
-	if (argc == 1 && isatty(fileno(stdin)) && isatty(fileno(stdout)))
-    	    errors = 1;
 	if (errors)
-	    Fatal(fbp, USAGE1);
+	    Fatal(fbp, "Usage: %s\n%s", USAGE1, USAGE2);
     }
 
     if (bu_optind < argc) {
 	/* out_fb_file */
 	if (bu_optind < argc - 1 || out_fb_file != NULL) {
-	    Message(USAGE1);
+	    Message("Usage: %s\n%s", USAGE1, USAGE2);
 	    Fatal(fbp, "Can't handle multiple output frame buffers!");
 	}
 

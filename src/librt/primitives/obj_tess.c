@@ -44,7 +44,7 @@ rt_obj_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
     if (id < 0)
 	return -2;
 
-    ft = &OBJ[id];
+    ft = &rt_functab[id];
     if (!ft)
 	return -3;
     if (!ft->ft_tessellate)

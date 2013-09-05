@@ -328,11 +328,7 @@ init_buffer(int len)
      */
     if (max > 4096) max = 4096;
 
-    if (max < iny)
-	buflines = max;
-    else
-	buflines = iny;
-
+    buflines = max;
     buf_start = (-buflines);
     buffer = bu_malloc(buflines * len, "buffer");
 }

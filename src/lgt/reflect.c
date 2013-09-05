@@ -366,7 +366,7 @@ render_Model(int frame)
 	SCROLL_DL_MOVE();
 	(void) fflush(stdout);
     }
-    if (! RTG.rtg_parallel) {
+    if (! rt_g.rtg_parallel) {
 	/*
 	 * SERIAL case -- one CPU does all the work.
 	 */
@@ -817,7 +817,7 @@ f_Model(struct application *ap, struct partition *pt_headp, struct seg *UNUSED(u
     if (bu_strncmp(TEX_KEYWORD, entry->name, TEX_KEYLEN) == 0) {
 	struct uvcoord uv;
 	/* Solid has a frame buffer image map. */
-	OBJ[stp->st_id].ft_uv(ap, stp, ihitp, &uv);
+	rt_functab[stp->st_id].ft_uv(ap, stp, ihitp, &uv);
 	loc_entry = *entry;
 	if (tex_Entry(&uv, &loc_entry))
 	    entry = &loc_entry;

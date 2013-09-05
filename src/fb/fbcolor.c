@@ -56,31 +56,19 @@ int pars_Argv(int argc, char **argv);
 int doKeyPad(void);
 
 static char usage[] = "\
-Usage: fbcolor [-F framebuffer]\n\
+Usage: fbcolor [-h] [-F framebuffer]\n\
 	[-s squarescrsize] [-w scr_width] [-n scr_height]\n\
 	[-S squarescrsize] [-W scr_width] [-N scr_height]\n";
-
-void
-printusage(void)
-{
-	(void)fputs(usage, stderr);
-}
 
 int
 main(int argc, char **argv)
 {
     int i;
 
-    if (argc == 1 && isatty(fileno(stdin)) && isatty(fileno(stdout))) {
-	printusage();
-	fprintf(stderr, "       Program continues running:\n");
-    }
-
     if (! pars_Argv(argc, argv)) {
-    	printusage();
-	bu_exit(1, NULL);
+	(void)fputs(usage, stderr);
+	return 1;
     }
-
     if ((fbp = fb_open(framebuffer, scr_width, scr_height)) == FBIO_NULL) {
 	fprintf(stderr, "fbcolor:  fb_open(%s) failure\n", framebuffer);
 	return 1;
@@ -282,10 +270,13 @@ int
 pars_Argv(int argc, char **argv)
 {
     int c;
-    while ((c = bu_getopt(argc, argv, "F:s:S:w:W:n:N:h?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "F:s:S:w:W:n:N:h")) != -1) {
 	switch (c) {
 	    case 'F':
 		framebuffer = bu_optarg;
+		break;
+	    case 'h' : /* High resolution frame buffer.	*/
+		scr_height = scr_width = 1024;
 		break;
 	    case 's':
 	    case 'S':
@@ -299,7 +290,7 @@ pars_Argv(int argc, char **argv)
 	    case 'N':
 		scr_height = atoi(bu_optarg);
 		break;
-	    default :
+	    case '?' :
 		return 0;
 	}
     }

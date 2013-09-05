@@ -35,6 +35,9 @@
 #include "db.h"
 
 
+/**
+ * M K _ V O L
+ */
 int
 mk_vol(struct rt_wdb *fp, const char *name, const char *file, size_t xdim, size_t ydim, size_t zdim, size_t lo, size_t hi, const fastf_t *cellsize, const matp_t mat)
     /* name of file containing bitmap */

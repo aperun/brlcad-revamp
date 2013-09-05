@@ -64,6 +64,26 @@
 
 #define YYERROR SET_SYNTAX_ERROR
 
+#if 0
+#define DEBUG_STRINGS \
+    std::cout << "\n\tworking_stringset: "; \
+\
+    std::set<std::string>::iterator string = \
+	obj::get_state(scanner).working_stringset.begin(); \
+\
+    std::set<std::string>::iterator lastString = \
+	obj::get_state(scanner).working_stringset.end(); \
+\
+    for (; string != lastString; string++) { \
+	std::cout << "\"" << *string << "\" "; \
+    } \
+\
+    std::cout << "\n\tworking_string: \"" << \
+	obj::get_state(scanner).working_string << "\"";
+#else
+#define DEBUG_STRINGS /* empty */
+#endif
+
 /**
  *  Use namespaces here to avoid multiple symbol name clashes
  */
@@ -881,6 +901,8 @@ face ::= FACE f_tnv_reference_list(A).
 
 group ::= GROUP id_list.
 {
+    DEBUG_STRINGS
+
     obj::set_working_groupset(obj::get_extra(scanner));
 }
 
@@ -996,11 +1018,15 @@ id_list ::= ID(A).
 {
     obj::get_state(scanner).working_stringset.insert(A.string);
 
+    DEBUG_STRINGS
+
     A.string[0] = '\0';
 }
 id_list ::= id_list ID(A).
 {
     obj::get_state(scanner).working_stringset.insert(A.string);
+
+    DEBUG_STRINGS
 
     A.string[0] = '\0';
 }

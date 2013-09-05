@@ -43,6 +43,7 @@ include(CheckIncludeFileCXX)
 include(CheckTypeSize)
 include(CheckLibraryExists)
 include(CheckStructHasMember)
+include(ResolveCompilerPaths)
 
 
 ###
@@ -172,7 +173,9 @@ macro(BRLCAD_CHECK_LIBRARY targetname lname func)
   if(NOT ${targetname}_LIBRARY)
     CHECK_LIBRARY_EXISTS(${lname} ${func} "" HAVE_${targetname}_${lname})
     if(HAVE_${targetname}_${lname})
-      set(${targetname}_LIBRARY "${lname}")
+      RESOLVE_LIBRARIES (${targetname}_LIBRARY "-l${lname}")
+      set(${targetname}_LINKOPT "-l${lname}" CACHE STRING "${targetname} link option")
+      mark_as_advanced(${targetname}_LINKOPT)
     endif(HAVE_${targetname}_${lname})
   endif(NOT ${targetname}_LIBRARY)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_TMP}")

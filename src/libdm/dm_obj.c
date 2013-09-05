@@ -715,6 +715,7 @@ dmo_drawDataAxes_tcl(void *clientData, int argc, const char **argv)
 	return TCL_ERROR;
     }
 
+#if 1
     memset(&gdas, 0, sizeof(struct ged_data_axes_state));
     VMOVE(gdas.gdas_points[0], modelAxesPos);
     gdas.gdas_size = axesSize;
@@ -724,6 +725,7 @@ dmo_drawDataAxes_tcl(void *clientData, int argc, const char **argv)
     dm_draw_data_axes(dmop->dmo_dmp,
 		      viewSize,
 		      &gdas);
+#endif
 
     bu_vls_free(&vls);
     return TCL_OK;

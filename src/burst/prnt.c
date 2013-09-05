@@ -889,6 +889,21 @@ prntTitle(char *title_str)
 }
 
 
+static char *usage[] =
+{
+    "Usage: burst [-b]",
+    "\tThe -b option suppresses the screen display (for batch jobs).",
+    NULL
+};
+void
+prntUsage()
+{
+    char **p = usage;
+    while (*p != NULL)
+	(void) fprintf(stderr, "%s\n", *p++);
+}
+
+
 void
 prompt(char *str)
 {

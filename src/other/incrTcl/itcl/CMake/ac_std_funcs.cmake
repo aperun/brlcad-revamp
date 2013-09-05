@@ -9,6 +9,7 @@ INCLUDE(CheckTypeSize)
 INCLUDE(CheckLibraryExists)
 INCLUDE(CheckStructHasMember)
 INCLUDE(CheckCSourceCompiles)
+INCLUDE(ResolveCompilerPaths)
 
 SET(CMAKE_TEST_SRCS_DIR "NOTFOUND")
 FOREACH($candidate_dir ${CMAKE_MODULE_PATH})

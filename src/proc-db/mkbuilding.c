@@ -23,6 +23,7 @@
  *
  */
 
+#include "common.h"
 #include "mkbuilding.h"
 
 void mkbdlg_usage(void)

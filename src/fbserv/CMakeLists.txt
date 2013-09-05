@@ -4,6 +4,7 @@ include_directories(
 
 BRLCAD_ADDEXEC(fbserv "fbserv.c;server.c" libfb)
 
+CMAKEFILES(Makefile.am)
 
 # Local Variables:
 # tab-width: 8

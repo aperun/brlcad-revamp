@@ -48,10 +48,6 @@ if(BRLCAD_ENABLE_X11 AND BRLCAD_ENABLE_TK)
   set(MGED_DM_SOURCES "${MGED_DM_SOURCES};dm-X.c")
 endif(BRLCAD_ENABLE_X11 AND BRLCAD_ENABLE_TK)
 
-if(BRLCAD_ENABLE_QT AND BRLCAD_ENABLE_TK)
-  set(MGED_DM_SOURCES "${MGED_DM_SOURCES};dm-qt.c")
-endif(BRLCAD_ENABLE_QT AND BRLCAD_ENABLE_TK)
-
 #if(BRLCAD_ENABLE_TK)
 #  set(MGED_DM_SOURCES "${MGED_DM_SOURCES};dm-tk.c")
 #endif(BRLCAD_ENABLE_TK)
@@ -69,6 +65,7 @@ set(MGED_SOURCES
   arbs.c
   attach.c
   axes.c
+  bodyio.c
   buttons.c
   chgmodel.c
   chgtree.c
@@ -82,7 +79,6 @@ set(MGED_SOURCES
   dm-generic.c
   dm-plot.c
   dm-ps.c
-  dm-txt.c
   dodraw.c
   doevent.c
   dozoom.c
@@ -136,9 +132,12 @@ endif(LEX_EXECUTABLE AND YACC_EXECUTABLE)
 
 # mged depends on the creation/installation of all the
 # tclscripts.
-foreach(item ${tclindex_target_list})
+foreach(item ${pkgIndex_target_list})
   ADD_DEPENDENCIES(mged ${item})
-endforeach(item ${tclindex_target_list})
+endforeach(item ${pkgIndex_target_list})
+foreach(item ${tclIndex_target_list})
+  ADD_DEPENDENCIES(mged ${item})
+endforeach(item ${tclIndex_target_list})
 
 BRLCAD_ADDEXEC(cad_boundp cad_boundp.c "libbu;${M_LIBRARY}")
 
@@ -161,7 +160,6 @@ set(mged_ignore_files
   comb_bool_parse.y
   comb_bool_scan.l
   dm-ogl.c
-  dm-qt.c
   dm-rtgl.c
   dm-tk.c
   dm-wgl.c
@@ -179,6 +177,7 @@ set(mged_ignore_files
   titles.h
   )
 CMAKEFILES(${mged_ignore_files})
+CMAKEFILES(Makefile.am)
 
 # Local Variables:
 # tab-width: 8

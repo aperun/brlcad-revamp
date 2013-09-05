@@ -3496,9 +3496,9 @@ cd_memprint(int argc, char **argv)
 	return 1;
 
     if (BU_STR_EQUAL(argv[1], "on")) {
-	RTG.debug |= (DEBUG_MEM|DEBUG_MEM_FULL);
+	rt_g.debug |= (DEBUG_MEM|DEBUG_MEM_FULL);
     } else if (BU_STR_EQUAL(argv[1], "off")) {
-	RTG.debug &= ~(DEBUG_MEM|DEBUG_MEM_FULL);
+	rt_g.debug &= ~(DEBUG_MEM|DEBUG_MEM_FULL);
     } else {
 	bu_prmem("memprint command");
     }

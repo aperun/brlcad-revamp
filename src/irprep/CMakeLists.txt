@@ -19,6 +19,7 @@ BRLCAD_ADDEXEC(secpass "secpass.c;subroutines.c" "librt;${M_LIBRARY}")
 BRLCAD_ADDEXEC(shapefact shapefact.c "librt;${M_LIBRARY}")
 
 CMAKEFILES(pictx.c)
+CMAKEFILES(Makefile.am)
 
 # Local Variables:
 # tab-width: 8

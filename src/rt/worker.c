@@ -199,9 +199,9 @@ do_pixel(int cpu, int pat_num, int pixelnum)
     if (Query_one_pixel) {
 	if (a.a_x == query_x && a.a_y == query_y) {
 	    rdebug = query_rdebug;
-	    RTG.debug = query_debug;
+	    rt_g.debug = query_debug;
 	} else {
-	    RTG.debug = rdebug = 0;
+	    rt_g.debug = rdebug = 0;
 	}
     }
 
@@ -714,7 +714,7 @@ do_run(int a, int b)
     int p[2] = {0, 0};
     struct resource *tmp_res;
 
-    if (RTG.rtg_parallel) {
+    if (rt_g.rtg_parallel) {
 	buffer = bu_calloc(npsw, sizeof(resource[0]), "buffer");
 	if (pipe(p) == -1) {
 	    perror("pipe failed");
@@ -725,7 +725,7 @@ do_run(int a, int b)
     cur_pixel = a;
     last_pixel = b;
 
-    if (!RTG.rtg_parallel) {
+    if (!rt_g.rtg_parallel) {
 	/*
 	 * SERIAL case -- one CPU does all the work.
 	 */
@@ -790,7 +790,7 @@ do_run(int a, int b)
     } /* end parallel case */
 
 #ifdef USE_FORKED_THREADS
-    if (RTG.rtg_parallel) {
+    if (rt_g.rtg_parallel) {
 	tmp_res = (struct resource *)buffer;
     } else {
 	tmp_res = resource;

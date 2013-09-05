@@ -391,8 +391,8 @@ proc pipe {pts} {
     eval "$cmd"
 
     close $fd
-    set asc2plot3 [file join [bu_brlcad_root "bin"] asc-plot3]
-    exec "$asc2plot3 < pipe$pipe_number.plasc > pipe$pipe_number.plot3"
+    set asc2pl [file join [bu_brlcad_root "bin"] asc-pl]
+    exec "$asc2pl < pipe$pipe_number.plasc > pipe$pipe_number.pl"
 
     incr pipe_number
 
@@ -697,9 +697,9 @@ if { 1 == 0 } {
 	set c "Q"
     }
     close $fd
-    set asc2plot3 [file join [bu_brlcad_root "bin"] asc-plot3]
-    exec "$asc2plot3 < pipe.asc > pipe.plot3"
-    overlay pipe.plot3
+    set asc2pl [file join [bu_brlcad_root "bin"] asc-pl]
+    exec "$asc2pl < pipe.asc > pipe.pl"
+    overlay pipe.pl
     file delete pipe.asc
 
     pipe $pipe_pts

@@ -38,7 +38,7 @@ rt_obj_print(const struct soltab *stp)
     if (id < 0)
 	return -2;
 
-    ft = &OBJ[id];
+    ft = &rt_functab[id];
     if (!ft)
 	return -3;
     if (!ft->ft_print)

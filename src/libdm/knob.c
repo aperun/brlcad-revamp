@@ -33,6 +33,10 @@
 
 #ifdef IR_KNOBS
 
+int dm_limit();  /* provides knob dead spot */
+int dm_unlimit();  /* */
+fastf_t dm_wrap(); /* wrap given value to new value in the range (-1.0, 1.0) */
+
 /*
  *                      D M _ L I M I T
  *
@@ -42,7 +46,8 @@
  */
 
 int
-dm_limit(int i)
+dm_limit(i)
+    int i;
 {
     if ( i > NOISE )
 	return i-NOISE;
@@ -57,7 +62,8 @@ dm_limit(int i)
  * This function reverses the effects of dm_limit.
  */
 int
-dm_unlimit(int i)
+dm_unlimit(i)
+    int i;
 {
     if ( i > 0 )
 	return i + NOISE;
@@ -69,10 +75,13 @@ dm_unlimit(int i)
 /*			D M _ W R A P
  *
  * Wrap the given value "f" to a new value in the range (-1.0, 1.0).
+ * The value of f is assumed to be in the range (-2.0, 2.0).
  */
 fastf_t
-dm_wrap(fastf_t f)
+dm_wrap(f)
+    fastf_t f;
 {
+#if 1
     int i;
     fastf_t tmp_f;
 
@@ -100,6 +109,13 @@ dm_wrap(fastf_t f)
     }
 
     return f;
+#else
+    if (f > 1.0)
+	return f - 2.0;
+    if (f < -1.0)
+	return f + 2.0;
+    return f;
+#endif
 }
 #endif
 

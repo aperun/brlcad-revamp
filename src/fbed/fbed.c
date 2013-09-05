@@ -1480,9 +1480,8 @@ f_Save_RLE() /* Save framebuffer image with Run-Length Encoding. */
 	};
     if ( fb_getwidth(fbp) == 1024 )
     {
-	args[1] = "-s";
-	args[2] = "1024";
-	args[3] = rle_file_nm;
+	args[1] = "-h";
+	args[2] = rle_file_nm;
     }
     if ( ! get_Input( rle_file_nm, MAX_LN, "Enter RLE file name : " ) )
 	return 0;
@@ -1882,17 +1881,17 @@ pars_Argv(int argc, char **argv)
     int c;
 
     /* Parse options. */
-    while ( (c = bu_getopt( argc, argv, "Hph?" )) != -1 )
+    while ( (c = bu_getopt( argc, argv, "hp" )) != -1 )
     {
 	switch ( c )
 	{
-	    case 'H' :
+	    case 'h' :
 		cur_width = 1024;
 		break;
 	    case 'p' :
 		pad_flag = true;
 		break;
-	    default :
+	    case '?' :
 		return 0;
 	}
     }

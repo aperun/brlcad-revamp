@@ -38,7 +38,6 @@ target_link_libraries(BrlcadCore
   libbrep-static
   libbu-static
   libgcv-static
-  libgdiam-static
   libged-static
   regex-static
   librt-static
@@ -106,7 +105,6 @@ target_link_libraries(brlcad
   libbn-static
   libbrep-static
   libbu-static
-  libgdiam-static
   libged-static
   regex-static
   librt-static

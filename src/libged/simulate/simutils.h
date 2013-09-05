@@ -33,8 +33,6 @@
     extern "C" {
 #endif
 
-#include "common.h"
-
 /* System Headers */
 #include <stdlib.h>
 #include <ctype.h>

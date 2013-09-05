@@ -40,21 +40,15 @@
 #include "rtgeom.h"
 #include "raytrace.h"
 
+
 extern union tree *do_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, genptr_t client_data);
 
-static void
-usage(const char *argv0)
-{
-    bu_log("Usage: %s [-v] [-xX lvl] [-a abs_tol] [-r rel_tol] [-n norm_tol] [-P #_of_CPUs] [-o out_file] brlcad_db.g object(s)\n",
-	argv0);
-    bu_exit(1, NULL);
-}
+static char	usage[] = "Usage: %s [-v] [-xX lvl] [-a abs_tol] [-r rel_tol] [-n norm_tol] [-o out_file] brlcad_db.g object(s)\n";
 
 static int	NMG_debug=0;		/* saved arg of -X, for longjmp handling */
 static int	verbose;
 static int	curr_id;		/* Current region ident code */
 static int	face_count;		/* Count of faces output for a region id */
-static int	ncpu = 1;
 static char	*out_file = NULL;	/* Output filename */
 static FILE	*fp_out;		/* Output file pointer */
 static int	*idents;		/* Array of region ident numbers */
@@ -109,7 +103,9 @@ fastf_print(FILE *out, size_t length, fastf_t f)
 
     ptr = strchr(buffer, '.');
     if ((size_t)(ptr - buffer) > length)
+    {
 	bu_exit(1, "ERROR: Value (%f) too large for format length (%zu)\n", f, length);
+    }
 
     for (i=0; i<length; i++)
 	fputc(buffer[i], out);
@@ -492,7 +488,7 @@ main(int argc, char **argv)
     bu_setprogname(argv[0]);
     bu_setlinebuf(stderr);
 
-    RTG.debug = 0;
+    rt_g.debug = 0;
 
     ttol.magic = RT_TESS_TOL_MAGIC;
     /* Defaults, updated by command line options. */
@@ -520,10 +516,10 @@ main(int argc, char **argv)
 	/* WTF: This value is specific to the Bradley */
 	nmg_eue_dist = 2.0;
     }
-    BU_LIST_INIT(&RTG.rtg_vlfree);	/* for vlist macros */
+    BU_LIST_INIT(&rt_g.rtg_vlfree);	/* for vlist macros */
 
     /* Get command line arguments. */
-    while ((c = bu_getopt(argc, argv, "a:n:o:r:vx:P:X:h?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "a:n:o:r:s:vx:P:X:")) != -1) {
 	switch (c) {
 	    case 'a':		/* Absolute tolerance. */
 		ttol.abs = atof(bu_optarg);
@@ -543,22 +539,25 @@ main(int argc, char **argv)
 		verbose++;
 		break;
 	    case 'P':
-		ncpu = atoi(bu_optarg);
+/*			ncpu = atoi(bu_optarg); */
+		rt_g.debug = 1;	/* NOTE: setting DEBUG_ALLRAYS to get core dumps */
 		break;
 	    case 'x':
-		sscanf(bu_optarg, "%x", (unsigned int *)&RTG.debug);
+		sscanf(bu_optarg, "%x", (unsigned int *)&rt_g.debug);
 		break;
 	    case 'X':
-		sscanf(bu_optarg, "%x", (unsigned int *)&RTG.NMG_debug);
-		NMG_debug = RTG.NMG_debug;
+		sscanf(bu_optarg, "%x", (unsigned int *)&rt_g.NMG_debug);
+		NMG_debug = rt_g.NMG_debug;
 		break;
 	    default:
-		usage(argv[0]);
+		bu_exit(1, usage, argv[0]);
+		break;
 	}
     }
 
-    if (bu_optind+1 >= argc)
-	usage(argv[0]);
+    if (bu_optind+1 >= argc) {
+	bu_exit(1, usage, argv[0]);
+    }
 
     /* Open BRL-CAD database */
     if ((dbip = db_open(argv[bu_optind], DB_OPEN_READONLY)) == DBI_NULL)
@@ -623,7 +622,7 @@ main(int argc, char **argv)
 	tree_state.ts_ttol = &ttol;
 
 	(void)db_walk_tree(dbip, argc-bu_optind, (const char **)(&argv[bu_optind]),
-			   ncpu,
+			   1,			/* ncpu */
 			   &tree_state,
 			   select_region,
 			   do_region_end,
@@ -674,7 +673,7 @@ process_boolean(union tree *curtree, struct db_tree_state *tsp, const struct db_
 	/* Sometimes the NMG library adds debugging bits when
 	 * it detects an internal error, before before bombing out.
 	 */
-	RTG.NMG_debug = NMG_debug;/* restore mode */
+	rt_g.NMG_debug = NMG_debug;/* restore mode */
 
 	/* Release any intersector 2d tables */
 	nmg_isect2d_final_cleanup();

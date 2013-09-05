@@ -552,7 +552,7 @@ view_init(struct application *ap, char *file, char *UNUSED(obj), int minus_o, in
 	 * Output is to a file stream.  Do not allow parallel
 	 * processing since we can't seek to the rows.
 	 */
-	RTG.rtg_parallel = 0;
+	rt_g.rtg_parallel = 0;
 	bu_log("view_init: deactivating parallelism due to -o option.\n");
 	/*
 	 * The overlay and blend cannot be used in -o mode.  Note that
@@ -817,8 +817,7 @@ view_eol(struct application *ap)
 	 * Write to a file.
 	 */
 	bu_semaphore_acquire(BU_SEM_SYSCALL);
-	/* TODO : Add double type data to maintain resolution */
-	icv_writeline(bif, ap->a_y, scanline[cpu],  ICV_DATA_UCHAR);
+	icv_image_save_writeline(bif, ap->a_y, scanline[cpu]);
 	bu_semaphore_release(BU_SEM_SYSCALL);
     }
     if (fbp == FBIO_NULL && outputfile == NULL)
@@ -845,8 +844,10 @@ void view_cleanup(struct rt_i *UNUSED(rtip))
 /**
  * end of each frame
  */
-void view_end(struct application *UNUSED(ap))
-{
+void view_end(struct application *UNUSED(ap)) {
+    if (bif)
+	icv_image_save_close(bif);
+    bif = NULL;
 }
 
 

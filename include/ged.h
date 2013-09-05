@@ -901,11 +901,6 @@ GED_EXPORT extern int ged_center(struct ged *gedp, int argc, const char *argv[])
 GED_EXPORT extern int ged_clone(struct ged *gedp, int argc, const char *argv[]);
 
 /**
- * Make coil shapes.
- */
-GED_EXPORT extern int ged_coil(struct ged *gedp, int argc, const char *argv[]);
-
-/**
  * Make color entry.
  */
 GED_EXPORT extern int ged_color(struct ged *gedp, int argc, const char *argv[]);
@@ -1614,11 +1609,6 @@ GED_EXPORT extern int ged_pset(struct ged *gedp, int argc, const char *argv[]);
 GED_EXPORT extern int ged_ptranslate(struct ged *gedp, int argc, const char *argv[]);
 
 /**
- *Pull objects' path transformations from primitives
- */
-GED_EXPORT extern int ged_pull(struct ged *gedp, int argc, const char *argv[]);
-
-/**
  * Push objects' path transformations to primitives
  */
 GED_EXPORT extern int ged_push(struct ged *gedp, int argc, const char *argv[]);
@@ -1903,6 +1893,7 @@ GED_EXPORT extern int ged_tra(struct ged *gedp, int argc, const char *argv[]);
  */
 GED_EXPORT extern int ged_track(struct ged *gedp, int argc, const char *argv[]);
 
+#if 0
 /**
  *
  *
@@ -1910,6 +1901,7 @@ GED_EXPORT extern int ged_track(struct ged *gedp, int argc, const char *argv[]);
  *     tracker [-fh] [# links] [increment] [spline.iges] [link...]
  */
 GED_EXPORT extern int ged_tracker(struct ged *gedp, int argc, const char *argv[]);
+#endif
 
 /**
  * Return the object hierarchy for all object(s) specified or for all currently displayed

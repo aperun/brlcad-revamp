@@ -35,7 +35,8 @@
 
 int nflag = 0;
 
-static const char usage[] = "Usage: d-a [-n] < doubles > ascii\n";
+static const char usage[] = "\
+Usage: d-a [-n] < doubles > ascii\n";
 
 int
 main(int argc, char **argv)

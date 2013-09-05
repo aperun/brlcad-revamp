@@ -44,6 +44,15 @@
 #  endif
 #endif
 
+/*
+ *  Macros for providing function prototypes, regardless of whether
+ *  the compiler understands them or not.
+ *  It is vital that the argument list given for "args" be enclosed
+ *  in parens.
+ */
+#define PKG_EXTERN(type_and_name, args) extern type_and_name args
+#define PKG_ARGS(args) args
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,8 +60,8 @@ extern "C" {
 
 struct pkg_conn;
 
-typedef void (*pkg_callback)(struct pkg_conn*, char*);
-typedef void (*pkg_errlog)(char *msg);
+typedef void (*pkg_callback)PKG_ARGS((struct pkg_conn*, char*));
+typedef void (*pkg_errlog)PKG_ARGS((char *msg));
 
 struct pkg_switch {
     unsigned short pks_type;	/**< @brief Type code */
@@ -116,19 +125,19 @@ struct pkg_conn {
  *
  * Returns PKC_ERROR on error.
  */
-PKG_EXPORT extern struct pkg_conn *pkg_open(const char *host, const char *service, const char *protocol, const char *username, const char *passwd, const struct pkg_switch* switchp, pkg_errlog errlog);
+PKG_EXPORT PKG_EXTERN(struct pkg_conn *pkg_open, (const char *host, const char *service, const char *protocol, const char *username, const char *passwd, const struct pkg_switch* switchp, pkg_errlog errlog));
 
 /**
  * Close a network connection.
  *
  * Gracefully release the connection block and close the connection.
  */
-PKG_EXPORT extern void pkg_close(struct pkg_conn* pc);
+PKG_EXPORT PKG_EXTERN(void pkg_close, (struct pkg_conn* pc));
 
 /**
  *
  */
-PKG_EXPORT extern int pkg_process(struct pkg_conn *);
+PKG_EXPORT PKG_EXTERN(int pkg_process, (struct pkg_conn *));
 
 /**
  * Suck all data from the operating system into the internal buffer.
@@ -156,7 +165,7 @@ PKG_EXPORT extern int pkg_process(struct pkg_conn *);
  *	 0 on EOF
  *	 1 success
  */
-PKG_EXPORT extern int pkg_suckin(struct pkg_conn *);
+PKG_EXPORT PKG_EXTERN(int pkg_suckin, (struct pkg_conn *));
 
 /**
  * Send a message on the connection.
@@ -171,7 +180,7 @@ PKG_EXPORT extern int pkg_suckin(struct pkg_conn *);
  *
  * Returns number of bytes of user data actually sent.
  */
-PKG_EXPORT extern int pkg_send(int type, const char *buf, size_t len, struct pkg_conn* pc);
+PKG_EXPORT PKG_EXTERN(int pkg_send, (int type, const char *buf, size_t len, struct pkg_conn* pc));
 
 /**
  * Send a two part message on the connection.
@@ -179,7 +188,7 @@ PKG_EXPORT extern int pkg_send(int type, const char *buf, size_t len, struct pkg
  * Exactly like pkg_send, except user's data is located in two
  * disjoint buffers, rather than one.  Fiendishly useful!
  */
-PKG_EXPORT extern int pkg_2send(int type, const char *buf1, size_t len1, const char *buf2, size_t len2, struct pkg_conn* pc);
+PKG_EXPORT PKG_EXTERN(int pkg_2send, (int type, const char *buf1, size_t len1, const char *buf2, size_t len2, struct pkg_conn* pc));
 
 /**
  * Send a message that doesn't need a push.
@@ -193,7 +202,7 @@ PKG_EXPORT extern int pkg_2send(int type, const char *buf1, size_t len1, const c
  *
  * Returns number of bytes of user data actually sent (or queued).
  */
-PKG_EXPORT extern int pkg_stream(int type, const char *buf, size_t len, struct pkg_conn* pc);
+PKG_EXPORT PKG_EXTERN(int pkg_stream, (int type, const char *buf, size_t len, struct pkg_conn* pc));
 
 /**
  * Empty the stream buffer of any queued messages.
@@ -202,7 +211,7 @@ PKG_EXPORT extern int pkg_stream(int type, const char *buf, size_t len, struct p
  *
  * Returns < 0 on failure, else number of bytes sent.
  */
-PKG_EXPORT extern int pkg_flush(struct pkg_conn* pc);
+PKG_EXPORT PKG_EXTERN(int pkg_flush, (struct pkg_conn* pc));
 
 /**
  * Wait for a specific msg, user buf, processing others.
@@ -214,7 +223,7 @@ PKG_EXPORT extern int pkg_flush(struct pkg_conn* pc);
  *
  * Returns the length of the message actually received, or -1 on error.
  */
-PKG_EXPORT extern int pkg_waitfor(int type, char *buf, size_t len, struct pkg_conn* pc);
+PKG_EXPORT PKG_EXTERN(int pkg_waitfor, (int type, char *buf, size_t len, struct pkg_conn* pc));
 
 /**
  * Wait for specific msg, malloc buf, processing others.
@@ -229,7 +238,7 @@ PKG_EXPORT extern int pkg_waitfor(int type, char *buf, size_t len, struct pkg_co
  *
  * Returns pointer to message buffer, or NULL.
  */
-PKG_EXPORT extern char *pkg_bwaitfor(int type, struct pkg_conn* pc);
+PKG_EXPORT PKG_EXTERN(char *pkg_bwaitfor, (int type, struct pkg_conn* pc));
 
 /**
  * Wait until a full message has been read.
@@ -247,7 +256,7 @@ PKG_EXPORT extern char *pkg_bwaitfor(int type, struct pkg_conn* pc);
  * Control returns to the caller after one full message is processed.
  * Returns -1 on error, etc.
  */
-PKG_EXPORT extern int pkg_block(struct pkg_conn* pc);
+PKG_EXPORT PKG_EXTERN(int pkg_block, (struct pkg_conn* pc));
 
 /**
  * Become a transient network server
@@ -259,7 +268,7 @@ PKG_EXPORT extern int pkg_block(struct pkg_conn* pc);
  *
  * Returns PKC_ERROR or a pointer to a pkg_conn structure.
  */
-PKG_EXPORT extern struct pkg_conn *pkg_transerver(const struct pkg_switch* switchp, pkg_errlog errlog);
+PKG_EXPORT PKG_EXTERN(struct pkg_conn *pkg_transerver, (const struct pkg_switch* switchp, pkg_errlog errlog));
 
 /**
  * Create a network server, and listen for connection.
@@ -270,7 +279,7 @@ PKG_EXPORT extern struct pkg_conn *pkg_transerver(const struct pkg_switch* switc
  *
  * Returns fd to listen on (>=0), -1 on error.
  */
-PKG_EXPORT extern int pkg_permserver(const char *service, const char *protocol, int backlog, pkg_errlog);
+PKG_EXPORT PKG_EXTERN(int pkg_permserver, (const char *service, const char *protocol, int backlog, pkg_errlog));
 
 /**
  * Create network server from IP address, and listen for connection.
@@ -281,7 +290,7 @@ PKG_EXPORT extern int pkg_permserver(const char *service, const char *protocol, 
  *
  * Returns fd to listen on (>=0), -1 on error.
  */
-PKG_EXPORT extern int pkg_permserver_ip(const char *ipOrHostname, const char *service, const char *protocol, int backlog, pkg_errlog errlog);
+PKG_EXPORT PKG_EXTERN(int pkg_permserver_ip, (const char *ipOrHostname, const char *service, const char *protocol, int backlog, pkg_errlog errlog));
 
 /**
  * As permanent network server, accept a new connection
@@ -295,7 +304,7 @@ PKG_EXPORT extern int pkg_permserver_ip(const char *ipOrHostname, const char *se
  *	 PKC_NULL accept would block, try again later
  *	PKC_ERROR fatal error
  */
-PKG_EXPORT extern struct pkg_conn *pkg_getclient(int fd, const struct pkg_switch *switchp, pkg_errlog errlog, int nodelay);
+PKG_EXPORT PKG_EXTERN(struct pkg_conn *pkg_getclient, (int fd, const struct pkg_switch *switchp, pkg_errlog errlog, int nodelay));
 
 
 /****************************
@@ -305,28 +314,28 @@ PKG_EXPORT extern struct pkg_conn *pkg_getclient(int fd, const struct pkg_switch
 /**
  * Get a 16-bit short from a char[2] array
  */
-PKG_EXPORT extern unsigned short pkg_gshort(char *buf);
+PKG_EXPORT PKG_EXTERN(unsigned short pkg_gshort, (char *buf));
 
 /**
  * Get a 32-bit long from a char[4] array
  */
-PKG_EXPORT extern unsigned long pkg_glong(char *buf);
+PKG_EXPORT PKG_EXTERN(unsigned long pkg_glong, (char *buf));
 
 /**
  * Put a 16-bit short into a char[2] array
  */
-PKG_EXPORT extern char *pkg_pshort(char *buf, unsigned short s);
+PKG_EXPORT PKG_EXTERN(char *pkg_pshort, (char *buf, unsigned short s));
 
 /**
  * Put a 32-bit long into a char[4] array
  */
-PKG_EXPORT extern char *pkg_plong(char *buf, unsigned long l);
+PKG_EXPORT PKG_EXTERN(char *pkg_plong, (char *buf, unsigned long l));
 
 /**
  * returns a human-readable string describing this version of the
  * LIBPKG library.
  */
-PKG_EXPORT extern const char *pkg_version(void);
+PKG_EXPORT PKG_EXTERN(const char *pkg_version, (void));
 
 #ifdef __cplusplus
 }

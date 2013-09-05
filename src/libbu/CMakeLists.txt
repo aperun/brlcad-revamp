@@ -29,7 +29,6 @@ set(LIBBU_SOURCES
   ctype.c
   dirent.c
   dirname.c
-  date-time.c
   dlfcn.c
   endian.c
   escape.c
@@ -111,6 +110,7 @@ set(bu_ignore_files
   vls_internals.h
   )
 CMAKEFILES(${bu_ignore_files})
+CMAKEFILES(Makefile.am)
 
 # Local Variables:
 # tab-width: 8

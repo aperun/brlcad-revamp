@@ -47,8 +47,11 @@ struct pixel {
 int pixel_size = 3;		/* Bytes/pixel */
 FILE *outfp = NULL;		/* output file */
 
-static const char usage[]     = "Usage: pixcount [-# bytes_per_pixel] [infile.pix [outfile]]\n";
-static const char optstring[] = "#:?";
+static const char usage[] = "\
+Usage: 'pixcount [-# bytes_per_pixel]\n\
+		 [infile.pix [outfile]]'\n";
+#define OPT_STRING "#:?"
+
 
 static void print_usage (void)
 {
@@ -181,7 +184,7 @@ main (int argc, char **argv)
     /*
      * Process the command line
      */
-    while ((ch = bu_getopt(argc, argv, optstring)) != -1)
+    while ((ch = bu_getopt(argc, argv, OPT_STRING)) != -1)
 	switch (ch) {
 	    case '#':
 		if (sscanf(bu_optarg, "%d", &pixel_size) != 1) {

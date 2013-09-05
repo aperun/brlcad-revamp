@@ -177,9 +177,6 @@ DM_EXPORT extern int
 null_makeCurrent(struct dm *dmp);
 
 
-DM_EXPORT extern void
-null_processEvents(struct dm *dmp);
-
 #endif  /* __DM_NULL__ */
 
 /** @} */

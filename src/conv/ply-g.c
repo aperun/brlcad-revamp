@@ -297,8 +297,12 @@ get_double( int type )
 		    buf2[0] = buf1[0];
 		    break;
 		case 2:
+#if 1
 		    buf2[0] = buf1[1];
 		    buf2[1] = buf1[0];
+#else
+		    swab( buf1, buf2, 2 );
+#endif
 		    break;
 		case 4:
 		    lswap4( (unsigned int *)buf1, (unsigned int *)buf2 );
@@ -394,8 +398,12 @@ get_int( int type )
 		    buf2[0] = buf1[0];
 		    break;
 		case 2:
+#if 1
 		    buf2[0] = buf1[1];
 		    buf2[1] = buf1[0];
+#else
+		    swab( buf1, buf2, 2 );
+#endif
 		    break;
 		case 4:
 		    lswap4( (unsigned int *)buf1, (unsigned int *)buf2 );

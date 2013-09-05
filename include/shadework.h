@@ -26,7 +26,7 @@
 #ifndef SHADEWORK_H
 #define SHADEWORK_H
 
-/* for light_specific, cyclic dependency */
+/* for light_specific */
 /* # include "light.h" */
 
 #define SW_NLIGHTS	16		/* Max # of light sources */

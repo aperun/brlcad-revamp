@@ -45,7 +45,7 @@ rt_obj_vshot(struct soltab *stp[], struct xray *rp[], struct seg *segp, int n, s
     if (id < 0)
 	return -2;
 
-    ft = &OBJ[id];
+    ft = &rt_functab[id];
     if (!ft)
 	return -3;
     if (!ft->ft_vshot)

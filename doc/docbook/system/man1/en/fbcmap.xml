@@ -31,6 +31,7 @@
 is used to change the color map of a frame buffer.
 The environment
 variable
+<!-- B elided -->
 <envar>FB_FILE</envar>
 is used to select the display device (see
 <citerefentry><refentrytitle>brlcad</refentrytitle><manvolnum>1</manvolnum></citerefentry>).

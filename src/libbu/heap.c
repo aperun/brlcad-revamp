@@ -37,7 +37,7 @@
  * Embedded or memory-constrained environments probably want to set
  * this a lot smaller than the default.
  */
-#define HEAP_BINS 256
+#define HEAP_BINS 1024
 
 /**
  * This specifies how much memory we should preallocate for each
@@ -50,7 +50,7 @@
  * Embedded or memory-constrained environments probably want to set
  * this a lot smaller than the default.
  */
-#define HEAP_PAGESIZE (HEAP_BINS * 256)
+#define HEAP_PAGESIZE (HEAP_BINS * 1024)
 
 
 struct heap {
@@ -88,18 +88,6 @@ struct cpus {
 static struct cpus per_cpu[MAX_PSW] = {{{{0, 0, 0}}, 0}};
 
 
-bu_heap_func_t
-bu_heap_log(bu_heap_func_t log)
-{
-    static bu_heap_func_t heap_log = (bu_heap_func_t)&bu_log;
-
-    if (log)
-	heap_log = log;
-
-    return heap_log;
-}
-
-
 static void
 heap_print()
 {
@@ -112,20 +100,16 @@ heap_print()
     size_t total_pages = 0;
     size_t ncpu = bu_avail_cpus();
 
-    bu_heap_func_t log = bu_heap_log(NULL);
-
-    struct bu_vls str = BU_VLS_INIT_ZERO;
-
-    /* this may get atexit()-registered multiple times, so make sure
-     * we only do this once
+    /* this may get registered for atexit() multiple times, so make
+     * sure we only do this once
      */
     if (printed++ > 0) {
 	return;
     }
 
-    log("=======================\n"
-	"Memory Heap Information\n"
-	"-----------------------\n", NULL);
+    bu_log("=======================\n"
+	   "Memory Heap Information\n"
+	   "-----------------------\n");
 
     for (h=0; h < ncpu; h++) {
 	for (i=0; i < HEAP_BINS; i++) {
@@ -136,29 +120,20 @@ heap_print()
 	    if (got > 0) {
 		/* last page is partial */
 		got -= (HEAP_PAGESIZE - per_cpu[h].heap[i].given)/(i+1);
-		bu_vls_sprintf(&str, "%04zu [%02zu] => %zu\n", i, per_cpu[h].heap[i].count, got);
-		log(bu_vls_addr(&str), NULL);
+		bu_log("%04zu [%02zu] => %zu\n", i, per_cpu[h].heap[i].count, got);
 		allocs += got;
 	    }
 	    total_pages += per_cpu[h].heap[i].count;
 	}
 	misses += per_cpu[h].misses;
     }
-    bu_vls_sprintf(&str, "-----------------------\n"
-		   "size [pages] => count\n"
-		   "Heap range: 1-%d bytes\n"
-		   "Page size: %d bytes\n"
-		   "Pages: %zu (%.2lfMB)\n"
-		   "%zu allocs, %zu misses\n"
-		   "=======================\n",
-		   HEAP_BINS,
-		   HEAP_PAGESIZE,
-		   total_pages,
-		   (double)(total_pages * HEAP_PAGESIZE) / (1024.0*1024.0),
-		   allocs,
-		   misses);
-    log(bu_vls_addr(&str), NULL);
-    bu_vls_free(&str);
+    bu_log("-----------------------\n"
+	   "size [pages] => count\n"
+	   "Heap range: 1-%d bytes\n"
+	   "Page size: %d bytes\n"
+	   "Pages: %zu (%.2lfMB)\n"
+	   "%zu allocs, %zu misses\n"
+	   "=======================\n", HEAP_BINS, HEAP_PAGESIZE, total_pages, (double)(total_pages * HEAP_PAGESIZE) / (1024.0*1024.0), allocs, misses);
 }
 
 
@@ -167,14 +142,13 @@ bu_heap_get(size_t sz)
 {
     char *ret;
     register size_t smo = sz-1;
-    static int registered = 0;
+    static int printit = 0;
     int oncpu;
     struct heap *heap;
 
     /* what thread are we? */
     oncpu = bu_parallel_id();
 
-#ifdef DEBUG
     if (sz > HEAP_BINS || sz == 0) {
 	per_cpu[oncpu].misses++;
 
@@ -187,18 +161,15 @@ bu_heap_get(size_t sz)
 	}
 	return bu_calloc(1, sz, "heap calloc");
     }
-#endif
 
     heap = &per_cpu[oncpu].heap[smo];
 
     /* init */
     if (heap->count == 0) {
 
-	if (registered++ == 0) {
-	    ret = getenv("BU_HEAP_PRINT");
-	    if ((++registered == 2) && (ret && atoi(ret) > 0)) {
-		atexit(heap_print);
-	    }
+	if (bu_debug && printit == 0) {
+	    printit++;
+	    atexit(heap_print);
 	}
 
 	heap->count++;
@@ -235,6 +206,63 @@ bu_heap_put(void *ptr, size_t sz)
 
     return;
 }
+
+
+/* test driver application, intended to become part of unit test */
+#if 0
+
+int main (int ac, char *av[])
+{
+    int i;
+    void *ptr;
+    size_t allocalls = 0;
+    size_t freecalls = 0;
+
+    srand(time(0));
+
+    for (i=0; i<1024*1024*50; i++) {
+	size_t sz = (((double)rand() / (double)(RAND_MAX-1)) * (double)HEAP_BINS) + 1;
+	bu_log("allocating %d: %zd\n", i, sz);
+#ifdef USE_MALLOC
+	ptr = malloc(sz);
+#else
+	ptr = bu_fastalloc(sz);
+#endif
+	allocalls++;
+
+	if (i%3==0) {
+	    bu_log("freeing sz=%zd allocation\n", sz);
+#ifdef USE_MALLOC
+	    free(ptr);
+#else
+	    bu_fastfree(ptr);
+#endif
+	    freecalls++;
+	}
+	if (i % (1024 * 1024) == 0) {
+#ifdef USE_MALLOC
+	    free(NULL);
+#else
+	    bu_fastfree(NULL);
+#endif
+	    freecalls++;
+	}
+
+    }
+
+#ifdef USE_MALLOC
+    free(NULL);
+#else
+    bu_fastfree(NULL);
+#endif
+    freecalls++;
+
+    bu_log("calls: %zd, free: %zd\n", allocalls, freecalls);
+
+    return 0;
+}
+
+#endif
 
 
 /* sanity */

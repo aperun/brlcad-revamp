@@ -184,11 +184,17 @@ tk_loadMatrix(struct dm *dmp, fastf_t *mat, int which_eye)
 
 	bu_log("which eye = %d\t", which_eye);
 	bu_log("transformation matrix = \n");
-
+#if 1
 	bu_log("%g %g %g %g\n", mat[0], mat[1], mat[2], mat[3]);
 	bu_log("%g %g %g %g\n", mat[4], mat[5], mat[6], mat[7]);
 	bu_log("%g %g %g %g\n", mat[8], mat[9], mat[10], mat[11]);
 	bu_log("%g %g %g %g\n", mat[12], mat[13], mat[14], mat[15]);
+#else
+	bu_log("%g %g %g %g\n", mat[0], mat[4], mat[8], mat[12]);
+	bu_log("%g %g %g %g\n", mat[1], mat[5], mat[9], mat[13]);
+	bu_log("%g %g %g %g\n", mat[2], mat[6], mat[10], mat[14]);
+	bu_log("%g %g %g %g\n", mat[3], mat[7], mat[11], mat[15]);
+#endif
     }
 
     MAT_COPY(((struct x_vars *)dmp->dm_vars.priv_vars)->xmat, mat);
@@ -204,6 +210,7 @@ tk_loadMatrix(struct dm *dmp, fastf_t *mat, int which_eye)
 HIDDEN int
 tk_drawVList(struct dm *dmp, struct bn_vlist *vp)
 {
+#if 1
     static vect_t spnt, lpnt, pnt;
     struct bn_vlist *tvp;
     XSegment segbuf[1024];		/* XDrawSegments list */
@@ -435,6 +442,7 @@ tk_drawVList(struct dm *dmp, struct bn_vlist *vp)
 		      ((struct x_vars *)dmp->dm_vars.priv_vars)->gc, segbuf, nseg);
     }
 
+#endif
     return TCL_OK;
 }
 
@@ -835,7 +843,6 @@ struct dm dm_tk = {
     null_getDisplayImage,	/* display to image function */
     null_reshape,
     null_makeCurrent,
-    null_processEvents,
     0,
     0,				/* no displaylist */
     0,				/* no stereo */

@@ -74,8 +74,8 @@
     extern const struct bu_structparse rt_##name##_parse[]; \
     extern void rt_##name##_volume(fastf_t *vol, const struct rt_db_internal *ip); \
     extern void rt_##name##_surf_area(fastf_t *area, const struct rt_db_internal *ip); \
-    extern void rt_##name##_centroid(point_t *cent, const struct rt_db_internal *ip); \
-    extern int rt_##name##_oriented_bbox(struct rt_arb_internal *bbox, struct rt_db_internal *ip, const fastf_t tol)
+    extern void rt_##name##_centroid(point_t *cent, const struct rt_db_internal *ip)
+
 
 RT_DECLARE_INTERFACE(tor);
 RT_DECLARE_INTERFACE(tgc);
@@ -113,7 +113,6 @@ RT_DECLARE_INTERFACE(revolve);
 RT_DECLARE_INTERFACE(constraint);
 /* RT_DECLARE_INTERFACE(binunif); */
 RT_DECLARE_INTERFACE(pnts);
-RT_DECLARE_INTERFACE(hrt);
 
 #if OBJ_BREP
 RT_DECLARE_INTERFACE(brep);
@@ -152,7 +151,7 @@ extern int rt_cline_form(struct bu_vls *logstr, const struct rt_functab *ftp);
 extern int rt_extrude_form(struct bu_vls *logstr, const struct rt_functab *ftp);
 
 
-const struct rt_functab OBJ[] = {
+const struct rt_functab rt_functab[] = {
     {
 	/* 0: unused, for sanity checking. */
 	RT_FUNCTAB_MAGIC, "ID_NULL", "NULL",
@@ -183,7 +182,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	0,
 	0,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -234,7 +232,6 @@ const struct rt_functab OBJ[] = {
 	rt_tor_volume,
 	rt_tor_surf_area,
 	rt_tor_centroid,
-	NULL,
     },
 
     {
@@ -276,7 +273,6 @@ const struct rt_functab OBJ[] = {
 	rt_tgc_volume,
 	rt_tgc_surf_area,
 	rt_tgc_centroid,
-	NULL,
     },
 
     {
@@ -318,7 +314,6 @@ const struct rt_functab OBJ[] = {
 	rt_ell_volume,
 	rt_ell_surf_area,
 	rt_ell_centroid,
-	NULL,
     },
 
     {
@@ -360,7 +355,6 @@ const struct rt_functab OBJ[] = {
 	rt_arb_volume,
 	NULL,
 	rt_arb_centroid,
-	NULL,
     },
 
     {
@@ -399,7 +393,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	rt_ars_params,
 	rt_ars_bbox,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -443,8 +436,7 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,
-	NULL,
+	NULL
     },
 
     {
@@ -486,7 +478,6 @@ const struct rt_functab OBJ[] = {
 	rt_tgc_volume,
 	rt_tgc_surf_area,
 	rt_tgc_centroid,
-	NULL,
     },
 
     {
@@ -525,7 +516,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	rt_pg_params,
 	rt_pg_bbox,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -570,7 +560,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,
     },
 
     {
@@ -612,7 +601,6 @@ const struct rt_functab OBJ[] = {
 	rt_ell_volume,
 	rt_ell_surf_area,
 	rt_ell_centroid,
-	NULL,
     },
 
     {
@@ -651,7 +639,6 @@ const struct rt_functab OBJ[] = {
 	rt_nmg_make,
 	rt_nmg_params,
 	rt_nmg_bbox,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -695,7 +682,6 @@ const struct rt_functab OBJ[] = {
 	rt_ebm_bbox,
 	NULL,
 	NULL,
-	rt_ebm_centroid,
 	NULL,
     },
 
@@ -735,7 +721,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	rt_vol_params,
 	rt_vol_bbox,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -780,7 +765,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,
     },
 
     {
@@ -819,9 +803,8 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	rt_pipe_params,
 	rt_pipe_bbox,
-	rt_pipe_volume,
-	rt_pipe_surf_area,
-	rt_pipe_centroid,
+	NULL,
+	NULL,
 	NULL,
     },
 
@@ -864,7 +847,6 @@ const struct rt_functab OBJ[] = {
 	rt_part_volume,
 	rt_part_surf_area,
 	NULL,
-	NULL,
     },
 
     {
@@ -906,7 +888,6 @@ const struct rt_functab OBJ[] = {
 	rt_rpc_volume,
 	rt_rpc_surf_area,
 	rt_rpc_centroid,
-	NULL,
     },
 
     {
@@ -947,7 +928,6 @@ const struct rt_functab OBJ[] = {
 	rt_rhc_bbox,
 	NULL,
 	rt_rhc_surf_area,
-	NULL,
 	NULL,
     },
 
@@ -990,7 +970,6 @@ const struct rt_functab OBJ[] = {
 	rt_epa_volume,
 	rt_epa_surf_area,
 	rt_epa_centroid,
-	NULL,
     },
 
     {
@@ -1029,7 +1008,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	rt_ehy_params,
 	rt_ehy_bbox,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1074,7 +1052,6 @@ const struct rt_functab OBJ[] = {
 	rt_eto_volume,
 	rt_eto_surf_area,
 	rt_eto_centroid,
-	NULL,
     },
 
     {
@@ -1116,7 +1093,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,
     },
 
     {
@@ -1149,7 +1125,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	0,
 	0,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1200,7 +1175,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,
     },
 
     {
@@ -1239,7 +1213,6 @@ const struct rt_functab OBJ[] = {
 	rt_dsp_make,
 	rt_dsp_params,
 	rt_dsp_bbox,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1284,7 +1257,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	rt_sketch_surf_area,
 	NULL,
-	NULL,
     },
 
     {
@@ -1326,7 +1298,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,
     },
 
     {
@@ -1364,7 +1335,6 @@ const struct rt_functab OBJ[] = {
 	rt_generic_form,
 	NULL,
 	rt_submodel_params,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1410,7 +1380,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,
     },
 
     {
@@ -1452,7 +1421,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	rt_bot_centroid,
-	rt_bot_oriented_bbox,
     },
 
     {
@@ -1494,7 +1462,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,
     },
 
     {
@@ -1529,7 +1496,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	0,
 	0,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1580,7 +1546,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,
     },
 
     {
@@ -1615,7 +1580,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	0,
 	0,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1666,7 +1630,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,
     },
 
     {
@@ -1705,7 +1668,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	rt_metaball_params,
 	rt_metaball_bbox,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1751,7 +1713,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,
     },
 #else
     {
@@ -1784,7 +1745,6 @@ const struct rt_functab OBJ[] = {
 	0,
 	0,
 	0,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1835,7 +1795,6 @@ const struct rt_functab OBJ[] = {
 	rt_hyp_volume,
 	rt_hyp_surf_area,
 	rt_hyp_centroid,
-	NULL,
     },
 
     {
@@ -1868,7 +1827,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	0,
 	0,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -1919,7 +1877,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,
     },
 
     {
@@ -1958,7 +1915,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	rt_pnts_bbox,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -2003,49 +1959,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,
-    },
-
-    {
-	/* 43 */
-	RT_FUNCTAB_MAGIC, "ID_HRT", "hrt",
-	1,
-	rt_hrt_prep,
-	rt_hrt_shot,
-	rt_hrt_print,
-	rt_hrt_norm,
-	NULL,
-	NULL,
-	rt_hrt_uv,
-	rt_hrt_curve,
-	rt_hrt_class,
-	rt_hrt_free,
-	rt_hrt_plot,
-	rt_hrt_adaptive_plot,
-	rt_hrt_vshot,
-	rt_hrt_tess,
-	NULL,
-	NULL,
-	rt_hrt_import5,
-	rt_hrt_export5,
-	NULL,
-	NULL,
-	rt_hrt_ifree,
-	rt_hrt_describe,
-	rt_generic_xform,
-	rt_hrt_parse,
-	sizeof(struct rt_hrt_internal),
-	RT_HRT_INTERNAL_MAGIC,
-	rt_generic_get,
-	rt_generic_adjust,
-	rt_generic_form,
-	NULL,
-	rt_hrt_params,
-	rt_hrt_bbox,
-	rt_hrt_volume,
-	rt_hrt_surf_area,
-	rt_hrt_centroid,
-	NULL,
     },
 
     {
@@ -2078,7 +1991,6 @@ const struct rt_functab OBJ[] = {
 	NULL,
 	0,
 	0,
-	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -2179,7 +2091,7 @@ rt_id_solid(struct bu_external *ep)
 		break;
 	    }
 	    bu_log("rt_id_solid(%s):  String solid type '%s' unknown\n",
-		    rec->ss.ss_name, rec->ss.ss_keyword);
+		   rec->ss.ss_name, rec->ss.ss_keyword);
 	    id = ID_NULL;		/* BAD */
 	    break;
 	case DBID_ARBN:
@@ -2223,14 +2135,14 @@ rt_id_solid(struct bu_external *ep)
  * R T _ G E T _ F U N C T A B _ B Y _ L A B E L
  *
  * Given the Tcl 'label' for a given solid type, find the appropriate
- * entry in OBJ[].
+ * entry in rt_functab[].
  */
 const struct rt_functab *
 rt_get_functab_by_label(const char *label)
 {
     register const struct rt_functab *ftp;
 
-    for (ftp = OBJ; ftp->magic != 0; ftp++) {
+    for (ftp = rt_functab; ftp->magic != 0; ftp++) {
 	if (bu_strncmp(label, ftp->ft_label, 8) == 0)
 	    return ftp;
     }

@@ -18,18 +18,13 @@
  * information.
  */
 /** @file fbed/squash.c
- *
- * squash.c - Filter super-sampled image for one scan line
- *
+ *	Author:		Gary S. Moss
  */
-
-#include "common.h"
-
+/*
+ * squash.c - Filter super-sampled image for one scan line
+ */
 #include <stdio.h>
-
 #include "./std.h"
-
-
 #define DEBUG_SQUASH	false
 /* Cone filtering weights.
  * #define CNTR_WT 0.23971778

@@ -50,16 +50,16 @@ int onestep = 0;
 FBIO *fbp;
 
 static char usage[] = "\
-Usage: fbcmrot [-H -i increment] steps_per_second\n";
+Usage: fbcmrot [-h] [-i increment] steps_per_second\n";
 
 int
 get_args(int argc, char **argv)
 {
     int c;
 
-    while ((c = bu_getopt(argc, argv, "Hi:h?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "hi:")) != -1) {
 	switch (c) {
-	    case 'H':
+	    case 'h':
 		/* high-res */
 		size = 1024;
 		break;
@@ -73,8 +73,10 @@ get_args(int argc, char **argv)
 	}
     }
 
-	/* if bu_optind >= argc , then no fps specified (and stays 0) */
-    if (bu_optind < argc) {
+    if (bu_optind >= argc) {
+	/* no fps specified */
+	fps = 0;
+    } else {
 	fps = atof(argv[bu_optind]);
 	if (NEAR_ZERO(fps, VDIVIDE_TOL))
 	    onestep++;
@@ -86,11 +88,6 @@ get_args(int argc, char **argv)
     return 1;		/* OK */
 }
 
-void
-printusage(void)
-{
-	(void)fputs(usage, stderr);
-}
 
 int
 main(int argc, char **argv)
@@ -98,13 +95,8 @@ main(int argc, char **argv)
     int i;
     struct timeval tv;
 
-    if (argc == 1 && isatty(fileno(stdin)) && isatty(fileno(stdout))) {
-	printusage();
-	fprintf(stderr, "       Program continues running:\n");
-    }
-
     if (!get_args(argc, argv)) {
-    	printusage();
+	(void)fputs(usage, stderr);
 	bu_exit(1, NULL);
     }
 

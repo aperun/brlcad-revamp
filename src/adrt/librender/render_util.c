@@ -36,7 +36,6 @@ struct render_segment_s {
     tfloat thickness;
 };
 
-
 struct render_shotline_s {
     struct render_segment_s *seglist;
     point_t in_hit;
@@ -78,7 +77,6 @@ render_util_spall_vec(vect_t UNUSED(dir), fastf_t UNUSED(angle), int UNUSED(vec_
     }
 #endif
 }
-
 
 static void* shot_hit(struct tie_ray_s *ray, struct tie_id_s *id, struct tie_tri_s *tri, void *ptr) {
     adrt_mesh_t *mesh = (adrt_mesh_t *)(tri->ptr);
@@ -123,7 +121,6 @@ static void* shot_hit(struct tie_ray_s *ray, struct tie_id_s *id, struct tie_tri
 
     return NULL;
 }
-
 
 void
 render_util_shotline_list(struct tie_s *tie, struct tie_ray_s *ray, void **data, int *dlen) {
@@ -174,7 +171,6 @@ render_util_shotline_list(struct tie_s *tie, struct tie_ray_s *ray, void **data,
     /* Free shotline data */
     bu_free(shotline.seglist, "render_util_shotline_list: shotline data");
 }
-
 
 void
 render_util_spall_list(struct tie_s *UNUSED(tie), struct tie_ray_s *UNUSED(ray), tfloat UNUSED(angle), void **UNUSED(data), int *UNUSED(dlen)) {
@@ -267,7 +263,6 @@ render_util_spall_list(struct tie_s *UNUSED(tie), struct tie_ray_s *UNUSED(ray),
     *dlen = ind;
 #endif
 }
-
 
 /*
  * Local Variables:

@@ -91,6 +91,7 @@ set(libfb_ignore_files
   if_tk.c
   )
 CMAKEFILES(${libfb_ignore_files})
+CMAKEFILES(Makefile.am)
 
 # Local Variables:
 # tab-width: 8

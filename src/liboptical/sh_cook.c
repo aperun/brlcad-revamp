@@ -1,7 +1,7 @@
 /*                       S H _ C O O K . C
  * BRL-CAD
  *
- * Copyright (c) 1985-2014 United States Government as represented by
+ * Copyright (c) 1985-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -102,6 +102,8 @@ struct mfuncs cook_mfuncs[] = {
 #define RI_AIR 1.0    /* Refractive index of air.		*/
 
 /*
+ * C O O K _ S E T U P
+ *
  * Note:  I can see two ways to set this up.  One is for a (nearly)
  * colorless object with a given index(s) of refraction.  Compute
  * the reflect/transmit etc. from that.  The other is for a colored
@@ -133,9 +135,9 @@ cook_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, co
 	/ (1.0 - sqrt(rp->reg_mater.ma_color[1]*.99));
     pp->n[2] = (1.0 + sqrt(rp->reg_mater.ma_color[2]*.99))
 	/ (1.0 - sqrt(rp->reg_mater.ma_color[2]*.99));
-    pp->rd[0] = fresnel(0.0, pp->n[0]) * M_1_PI;
-    pp->rd[1] = fresnel(0.0, pp->n[1]) * M_1_PI;
-    pp->rd[2] = fresnel(0.0, pp->n[2]) * M_1_PI;
+    pp->rd[0] = fresnel(0.0, pp->n[0]) / bn_pi;
+    pp->rd[1] = fresnel(0.0, pp->n[1]) / bn_pi;
+    pp->rd[2] = fresnel(0.0, pp->n[2]) / bn_pi;
 
     if (bu_struct_parse(matparm, cook_parse, (char *)pp) < 0) {
 	BU_PUT(pp, struct cook_specific);
@@ -149,6 +151,9 @@ cook_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, co
 }
 
 
+/*
+ * M I R R O R _ S E T U P
+ */
 HIDDEN int
 cmirror_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *UNUSED(mfp), struct rt_i *UNUSED(rtip))
 
@@ -173,9 +178,9 @@ cmirror_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp,
     pp->n[0] = (1.0 + sqrt(pp->reflect*.99))
 	/ (1.0 - sqrt(pp->reflect*.99));
     pp->n[1] = pp->n[2] = pp->n[0];
-    pp->rd[0] = fresnel(0.0, pp->n[0]) * M_1_PI;
-    pp->rd[1] = fresnel(0.0, pp->n[1]) * M_1_PI;
-    pp->rd[2] = fresnel(0.0, pp->n[2]) * M_1_PI;
+    pp->rd[0] = fresnel(0.0, pp->n[0]) / bn_pi;
+    pp->rd[1] = fresnel(0.0, pp->n[1]) / bn_pi;
+    pp->rd[2] = fresnel(0.0, pp->n[2]) / bn_pi;
 
     if (bu_struct_parse(matparm, cook_parse, (char *)pp) < 0)
 	return -1;
@@ -187,6 +192,9 @@ cmirror_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp,
 }
 
 
+/*
+ * G L A S S _ S E T U P
+ */
 HIDDEN int
 cglass_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *UNUSED(mfp), struct rt_i *UNUSED(rtip))
 
@@ -211,9 +219,9 @@ cglass_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, 
 
     pp->n[0] = pp->refrac_index;
     pp->n[1] = pp->n[2] = pp->n[0];
-    pp->rd[0] = fresnel(0.0, pp->n[0]) * M_1_PI;
-    pp->rd[1] = fresnel(0.0, pp->n[1]) * M_1_PI;
-    pp->rd[2] = fresnel(0.0, pp->n[2]) * M_1_PI;
+    pp->rd[0] = fresnel(0.0, pp->n[0]) / bn_pi;
+    pp->rd[1] = fresnel(0.0, pp->n[1]) / bn_pi;
+    pp->rd[2] = fresnel(0.0, pp->n[2]) / bn_pi;
 
     if (bu_struct_parse(matparm, cook_parse, (char *)pp) < 0)
 	return -1;
@@ -225,6 +233,9 @@ cglass_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, 
 }
 
 
+/*
+ * C O O K _ P R I N T
+ */
 HIDDEN void
 cook_print(register struct region *rp, genptr_t dp)
 {
@@ -232,6 +243,9 @@ cook_print(register struct region *rp, genptr_t dp)
 }
 
 
+/*
+ * C O O K _ F R E E
+ */
 HIDDEN void
 cook_free(genptr_t cp)
 {
@@ -240,6 +254,8 @@ cook_free(genptr_t cp)
 
 
 /*
+ * C O O K _ R E N D E R
+ *
  * El = Il (N.L) dw	Energy from a light (w is solid angle)
  *
  * I = Sum (r * El)

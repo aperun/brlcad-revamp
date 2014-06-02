@@ -1,7 +1,7 @@
 /*                       D B _ T R E E . C
  * BRL-CAD
  *
- * Copyright (c) 1988-2014 United States Government as represented by
+ * Copyright (c) 1988-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -34,13 +34,11 @@
 #include <ctype.h>
 #include "bio.h"
 
-
-#include "bu/parallel.h"
+#include "bu.h"
 #include "vmath.h"
 #include "bn.h"
 #include "nmg.h"
 #include "raytrace.h"
-#include "./librt_private.h"
 
 
 void
@@ -108,6 +106,9 @@ db_init_db_tree_state(struct db_tree_state *tsp, struct db_i *dbip, struct resou
 }
 
 
+/**
+ *
+ */
 struct combined_tree_state *
 db_new_combined_tree_state(const struct db_tree_state *tsp, const struct db_full_path *pathp)
 {
@@ -126,6 +127,9 @@ db_new_combined_tree_state(const struct db_tree_state *tsp, const struct db_full
 }
 
 
+/**
+ *
+ */
 struct combined_tree_state *
 db_dup_combined_tree_state(const struct combined_tree_state *old_ctsp)
 {
@@ -141,6 +145,9 @@ db_dup_combined_tree_state(const struct combined_tree_state *old_ctsp)
 }
 
 
+/**
+ *
+ */
 void
 db_free_combined_tree_state(struct combined_tree_state *ctsp)
 {
@@ -152,6 +159,9 @@ db_free_combined_tree_state(struct combined_tree_state *ctsp)
 }
 
 
+/**
+ *
+ */
 void
 db_pr_tree_state(const struct db_tree_state *tsp)
 {
@@ -159,8 +169,8 @@ db_pr_tree_state(const struct db_tree_state *tsp)
 
     RT_CK_DBTS(tsp);
 
-    bu_log("db_pr_tree_state(%p):\n", (void *)tsp);
-    bu_log(" ts_dbip=%p\n", (void *)tsp->ts_dbip);
+    bu_log("db_pr_tree_state(x%x):\n", tsp);
+    bu_log(" ts_dbip=x%x\n", tsp->ts_dbip);
     bu_printb(" ts_sofar", tsp->ts_sofar, "\020\3REGION\2INTER\1MINUS");
     bu_log("\n");
     bu_log(" ts_regionid=%d\n", tsp->ts_regionid);
@@ -179,17 +189,20 @@ db_pr_tree_state(const struct db_tree_state *tsp)
 	bu_log("\t%s = %s\n", tsp->ts_attrs.avp[i].name, tsp->ts_attrs.avp[i].value);
     }
     bn_mat_print("ts_mat", tsp->ts_mat);
-    bu_log(" ts_resp=%p\n", (void *)tsp->ts_resp);
+    bu_log(" ts_resp=x%x\n", tsp->ts_resp);
 }
 
 
+/**
+ *
+ */
 void
 db_pr_combined_tree_state(const struct combined_tree_state *ctsp)
 {
     char *str;
 
     RT_CK_CTS(ctsp);
-    bu_log("db_pr_combined_tree_state(%p):\n", (void *)ctsp);
+    bu_log("db_pr_combined_tree_state(x%x):\n", ctsp);
     db_pr_tree_state(&(ctsp->cts_s));
     str = db_path_to_string(&(ctsp->cts_p));
     bu_log(" path='%s'\n", str);
@@ -217,11 +230,11 @@ db_apply_state_from_comb(struct db_tree_state *tsp, const struct db_full_path *p
 	    /* DB_INH_LOWER was set -- lower nodes in tree override */
 	    tsp->ts_mater.ma_color_valid = 1;
 	    tsp->ts_mater.ma_color[0] =
-		(((float)(comb->rgb[0])) / 255.0);
+		(((float)(comb->rgb[0]))*bn_inv255);
 	    tsp->ts_mater.ma_color[1] =
-		(((float)(comb->rgb[1])) / 255.0);
+		(((float)(comb->rgb[1]))*bn_inv255);
 	    tsp->ts_mater.ma_color[2] =
-		(((float)(comb->rgb[2])) / 255.0);
+		(((float)(comb->rgb[2]))*bn_inv255);
 	    /* Track further inheritance as specified by this combination */
 	    tsp->ts_mater.ma_cinherit = comb->inherit;
 	}
@@ -462,6 +475,9 @@ db_find_named_leafs_parent(int *side, union tree *tp, const char *cp)
 }
 
 
+/**
+ *
+ */
 void
 db_tree_del_lhs(union tree *tp, struct resource *resp)
 {
@@ -508,6 +524,9 @@ db_tree_del_lhs(union tree *tp, struct resource *resp)
 }
 
 
+/**
+ *
+ */
 void
 db_tree_del_rhs(union tree *tp, struct resource *resp)
 {
@@ -640,16 +659,12 @@ db_tree_funcleaf(
     struct db_i *dbip,
     struct rt_comb_internal *comb,
     union tree *comb_tree,
-    void (*leaf_func)(struct db_i *, struct rt_comb_internal *, union tree *,
-                      void *, void *, void *, void *),
+    void (*leaf_func)(),
     genptr_t user_ptr1,
     genptr_t user_ptr2,
     genptr_t user_ptr3,
     genptr_t user_ptr4)
 {
-    void (*lfunc)(struct db_i *, struct rt_comb_internal *, union tree *,
-		  void *, void *, void *, void *);
-
     RT_CK_DBI(dbip);
 
     if (!comb_tree)
@@ -657,10 +672,9 @@ db_tree_funcleaf(
 
     RT_CK_TREE(comb_tree);
 
-    lfunc = (void (*)(struct db_i *, struct rt_comb_internal *, union tree *, void *, void *, void *, void *))leaf_func;
     switch (comb_tree->tr_op) {
 	case OP_DB_LEAF:
-	    lfunc(dbip, comb, comb_tree, user_ptr1, user_ptr2, user_ptr3, user_ptr4);
+	    (*leaf_func)(dbip, comb, comb_tree, user_ptr1, user_ptr2, user_ptr3, user_ptr4);
 	    break;
 	case OP_UNION:
 	case OP_INTERSECT:
@@ -700,8 +714,8 @@ db_follow_path(
     if (RT_G_DEBUG&DEBUG_TREEWALK) {
 	char *sofar = db_path_to_string(total_path);
 	char *toofar = db_path_to_string(new_path);
-	bu_log("db_follow_path() total_path='%s', tsp=%p, new_path='%s', noisy=%d, depth=%ld\n",
-	       sofar, (void *)tsp, toofar, noisy, depth);
+	bu_log("db_follow_path() total_path='%s', tsp=x%x, new_path='%s', noisy=%d, depth=%ld\n",
+	       sofar, tsp, toofar, noisy, depth);
 	bu_free(sofar, "path string");
 	bu_free(toofar, "path string");
     }
@@ -864,6 +878,28 @@ db_follow_path_for_state(struct db_tree_state *tsp, struct db_full_path *total_p
     return ret;
 }
 
+
+/**
+ * Helper routine to detect cyclic references
+ */
+HIDDEN int
+_db_detect_cycle(struct db_full_path *pathp, union tree *tp)
+{
+    /* skip the last one added since it is currently being tested. */
+    long int depth = pathp->fp_len - 1;
+
+    /* check the path to see if it is groundhog day */
+    while (--depth >= 0) {
+	if (BU_STR_EQUAL(tp->tr_l.tl_name, pathp->fp_names[depth]->d_namep)) {
+	    return 1;
+	}
+    }
+
+    /* not found */
+    return 0;
+}
+
+
 /**
  * Helper routine for db_recurse()
  */
@@ -894,7 +930,7 @@ _db_recurse_subtree(union tree *tp, struct db_tree_state *msp, struct db_full_pa
 	    }
 
 	    /* protect against cyclic geometry */
-	    if (cyclic_path(pathp, tp->tr_l.tl_name)) {
+	    if (_db_detect_cycle(pathp, tp)) {
 		int depth = pathp->fp_len;
 
 		bu_log("Detected cyclic reference of %s\nPath stack is:\n", tp->tr_l.tl_name);
@@ -986,9 +1022,9 @@ db_recurse(struct db_tree_state *tsp, struct db_full_path *pathp, struct combine
 
     if (RT_G_DEBUG&DEBUG_TREEWALK) {
 	char *sofar = db_path_to_string(pathp);
-	bu_log("db_recurse() pathp='%s', tsp=%p, *statepp=%p, tsp->ts_sofar=%d\n",
-	       sofar, (void *)tsp,
-	       (void *)*region_start_statepp, tsp->ts_sofar);
+	bu_log("db_recurse() pathp='%s', tsp=x%x, *statepp=x%x, tsp->ts_sofar=%d\n",
+	       sofar, tsp,
+	       *region_start_statepp, tsp->ts_sofar);
 	bu_free(sofar, "path string");
 	if (bn_mat_ck("db_recurse() tsp->ts_mat at start", tsp->ts_mat) < 0) {
 	   bu_log("db_recurse(%s):  matrix does not preserve axis perpendicularity.\n",  dp->d_namep);
@@ -1054,8 +1090,8 @@ db_recurse(struct db_tree_state *tsp, struct db_full_path *pathp, struct combine
 
 	    /* Take note of full state here at region start */
 	    if (*region_start_statepp != (struct combined_tree_state *)0) {
-		bu_log("db_recurse() ERROR at start of a region, *region_start_statepp = %p\n",
-		       (void *)*region_start_statepp);
+		bu_log("db_recurse() ERROR at start of a region, *region_start_statepp = x%x\n",
+		       *region_start_statepp);
 		db_free_db_tree_state(&nts);
 		curtree = TREE_NULL;		/* FAIL */
 		goto out;
@@ -1063,7 +1099,7 @@ db_recurse(struct db_tree_state *tsp, struct db_full_path *pathp, struct combine
 	    ctsp =  db_new_combined_tree_state(&nts, pathp);
 	    *region_start_statepp = ctsp;
 	    if (RT_G_DEBUG&DEBUG_TREEWALK) {
-		bu_log("setting *region_start_statepp to %p\n", (void *)ctsp);
+		bu_log("setting *region_start_statepp to x%x\n", ctsp);
 		db_pr_combined_tree_state(ctsp);
 	    }
 	}
@@ -1130,8 +1166,8 @@ db_recurse(struct db_tree_state *tsp, struct db_full_path *pathp, struct combine
 	     * Take note of full state here at "region start".
 	     */
 	    if (*region_start_statepp != (struct combined_tree_state *)0) {
-		bu_log("db_recurse(%s) ERROR at start of a region (bare solid), *region_start_statepp = %p\n",
-		       sofar, (void *)*region_start_statepp);
+		bu_log("db_recurse(%s) ERROR at start of a region (bare solid), *region_start_statepp = x%x\n",
+		       sofar, *region_start_statepp);
 		curtree = TREE_NULL;		/* FAIL */
 		goto out;
 	    }
@@ -1144,8 +1180,8 @@ db_recurse(struct db_tree_state *tsp, struct db_full_path *pathp, struct combine
 	    ctsp->cts_s.ts_sofar |= TS_SOFAR_REGION;
 	    *region_start_statepp = ctsp;
 	    if (RT_G_DEBUG&DEBUG_TREEWALK) {
-		bu_log("db_recurse(%s): setting *region_start_statepp to %p (bare solid)\n",
-		       sofar, (void *)ctsp);
+		bu_log("db_recurse(%s): setting *region_start_statepp to x%x (bare solid)\n",
+		       sofar, ctsp);
 		db_pr_combined_tree_state(ctsp);
 	    }
 	    bu_free(sofar, "path string");
@@ -1173,9 +1209,9 @@ out:
     }
     if (RT_G_DEBUG&DEBUG_TREEWALK) {
 	char *sofar = db_path_to_string(pathp);
-	bu_log("db_recurse() return curtree=%p, pathp='%s', *statepp=%p\n",
-	       (void *)curtree, sofar,
-	       (void *)*region_start_statepp);
+	bu_log("db_recurse() return curtree=x%x, pathp='%s', *statepp=x%x\n",
+	       curtree, sofar,
+	       *region_start_statepp);
 	bu_free(sofar, "path string");
     }
     if (curtree) RT_CK_TREE(curtree);
@@ -1183,6 +1219,9 @@ out:
 }
 
 
+/**
+ *
+ */
 union tree *
 db_dup_subtree(const union tree *tp, struct resource *resp)
 {
@@ -1248,6 +1287,9 @@ db_dup_subtree(const union tree *tp, struct resource *resp)
 }
 
 
+/**
+ *
+ */
 void
 db_ck_tree(const union tree *tp)
 {
@@ -1693,6 +1735,9 @@ db_is_tree_all_unions(const union tree *tp)
 }
 
 
+/**
+ *
+ */
 int
 db_count_subtree_regions(const union tree *tp)
 {
@@ -1729,6 +1774,9 @@ db_count_subtree_regions(const union tree *tp)
 }
 
 
+/**
+ *
+ */
 int
 db_tally_subtree_regions(
     union tree *tp,
@@ -1838,6 +1886,9 @@ struct db_walk_parallel_state {
 #define DB_CK_WPS(_p) BU_CKMAG(_p, DB_WALK_PARALLEL_STATE_MAGIC, "db_walk_parallel_state")
 
 
+/**
+ *
+ */
 HIDDEN void
 _db_walk_subtree(
     union tree *tp,
@@ -2352,8 +2403,7 @@ rt_shader_mat(
     RT_CK_RTI(rtip);
     RT_CK_RESOURCE(resp);
 
-    reg_name = (char *)bu_calloc(strlen(rp->reg_name), sizeof(char), "rt_shader_mat reg_name");
-    bu_basename(reg_name, rp->reg_name);
+    reg_name = bu_basename(rp->reg_name);
     /* get model-to-region space mapping */
     if (db_region_mat(model_to_region, rtip->rti_dbip, rp->reg_name, resp) < 0) {
 	bu_free(reg_name, "reg_name free");

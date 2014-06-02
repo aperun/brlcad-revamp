@@ -1,7 +1,7 @@
 /*                     G - V A R . C
  * BRL-CAD
  *
- * Copyright (c) 2002-2014 United States Government as represented by
+ * Copyright (c) 2002-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -38,8 +38,6 @@
 #include <math.h>
 
 /* interface headers */
-#include "bu/endian.h"
-#include "bu/getopt.h"
 #include "wdb.h"
 #include "raytrace.h"
 
@@ -322,7 +320,7 @@ void write_mesh_data()
 		fprintf(stderr, ">> .. normals will be computed\n");
 	    }
 	    /* normals need to be computed */
-	    normals = (float *)bu_calloc(sizeof(float), curr->bot->num_vertices * 3, "normals");
+	    normals = bu_calloc(sizeof(float), curr->bot->num_vertices * 3, "normals");
 	    get_normals(curr->bot, normals);
 	    ret = fwrite(normals, sizeof(float), curr->bot->num_vertices * 3, fp_out);
 	    if (ret != curr->bot->num_vertices * 3)
@@ -407,7 +405,7 @@ int main(int argc, char *argv[])
     rt_init_resource(&rt_uniresource, 0, NULL);
 
     /* process command line arguments */
-    while ((c = bu_getopt(argc, argv, "vo:ys:fh?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "vo:ys:f")) != -1) {
 	switch (c) {
 	    case 'v':
 		verbose++;
@@ -431,12 +429,13 @@ int main(int argc, char *argv[])
 
 	    default:
 		bu_exit(1, usage, argv[0]);
+		break;
 	}
     }
     /* param check */
-    if (bu_optind+1 >= argc)
+    if (bu_optind+1 >= argc) {
 	bu_exit(1, usage, argv[0]);
-
+    }
     /* get database filename and object */
     db_file = argv[bu_optind++];
     object = argv[bu_optind];
@@ -446,16 +445,19 @@ int main(int argc, char *argv[])
 	perror(argv[0]);
 	bu_exit(1, "Cannot open geometry database file %s\n", db_file);
     }
-    if (db_dirbuild(dbip))
+    if (db_dirbuild(dbip)) {
 	bu_exit(1, "db_dirbuild() failed!\n");
-
-    if (verbose)
+    }
+    if (verbose) {
 	fprintf(stderr, ">> opened db '%s'\n", dbip->dbi_title);
+    }
 
     /* setup output stream */
     if (out_file == NULL) {
 	fp_out = stdout;
+#if defined(_WIN32) && !defined(__CYGWIN__)
 	setmode(fileno(fp_out), O_BINARY);
+#endif
     } else {
 	if ((fp_out = fopen(out_file, "wb")) == NULL) {
 	    bu_log("Cannot open %s\n", out_file);
@@ -468,13 +470,15 @@ int main(int argc, char *argv[])
     db_update_nref(dbip, &rt_uniresource);
 
     dp = db_lookup(dbip, object, 0);
-    if (dp == RT_DIR_NULL)
+    if (dp == RT_DIR_NULL) {
 	bu_exit(1, "Object %s not found in database!\n", object);
+    }
 
     /* generate mesh list */
     db_functree(dbip, dp, NULL, mesh_tracker, &rt_uniresource, NULL);
-    if (verbose)
+    if (verbose) {
 	fprintf(stderr, ">> mesh count: %d\n", mesh_count);
+    }
 
     /* write out header */
     write_header(dbip);

@@ -61,7 +61,6 @@ set(LIBGED_SOURCES
   comb_std.c
   combmem.c
   concat.c
-  constraint/constraint.c
   copy.c
   copyeval.c
   copymat.c
@@ -103,7 +102,6 @@ set(LIBGED_SOURCES
   find.c
   form.c
   fracture.c
-  gdiff.c
   ged.c
   ged_util.c
   get.c
@@ -288,6 +286,7 @@ set(LIBGED_SOURCES
   vrot.c
   vutil.c
   wcodes.c
+  wdb_bigE.c
   wdb_comb_std.c
   wdb_importFg4Section.c
   wdb_nirt.c
@@ -337,16 +336,14 @@ BRLCAD_ADDLIB(libged "${LIBGED_SOURCES}" "libwdb;librt;libfb;libbu;libicv;libana
 SET_TARGET_PROPERTIES(libged PROPERTIES VERSION 20.0.1 SOVERSION 20)
 
 set(ged_ignore_files
-  TODO
   ged_private.h
   joint.h
   qray.h
+  wdb_qray.h
   simulate/simcollisionalgo.h
   simulate/simrt.h
   simulate/simulate.h
   simulate/simutils.h
-  wdb_qray.h
-  osg.cpp
   )
 CMAKEFILES(${ged_ignore_files})
 

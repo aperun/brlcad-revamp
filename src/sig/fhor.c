@@ -1,7 +1,7 @@
 /*                          F H O R . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -30,10 +30,9 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <math.h>
+#include <math.h>		/* XXX - temp debug */
 #include "bio.h"
 
-#include "bu/log.h"
 #include "fb.h"
 
 #define MYMETHOD on
@@ -48,14 +47,10 @@
 #define ABOVE 1
 #define BELOW -1
 
+/* Max and Min horizon holders */
+static int upper[HSCREEN], lower[HSCREEN];
 
-/* Max and Min horizon holders.
- *
- * FIXME: need to get packed into a struct and passed instead of
- * relying on them being global.
- */
-static int upper[HSCREEN];
-static int lower[HSCREEN];
+FBIO *fbp = NULL;	/* XXX - debug */
 
 
 static int
@@ -145,7 +140,7 @@ Horizon(int x_1, int y_1, int x_2, int y_2)
  * An integer Bresenham algorithm for any quadrant.
  */
 static void
-Draw(FBIO *fbp, int x_1, int y_1, int x_2, int y_2)
+Draw(int x_1, int y_1, int x_2, int y_2)
 {
     int x, y, deltx, delty, error, i;
     int temp, s1, s2, interchange;
@@ -232,7 +227,7 @@ Intersect(int x_1, int y_1, int x_2, int y_2, int *hor, int *xi, int *yi)
  * This one goes "behind" the last one.
  */
 static void
-fhnewz(FBIO *fbp, int *f, int num)
+fhnewz(int *f, int num)
 {
     int x, y, Xprev, Yprev, Xi, Yi;
     int Previously, Currently;
@@ -259,7 +254,7 @@ fhnewz(FBIO *fbp, int *f, int num)
 		 * Current and Previous point both
 		 * visible on same side of horizon.
 		 */
-		Draw(fbp, Xprev, Yprev, x, y);
+		Draw(Xprev, Yprev, x, y);
 		Horizon(Xprev, Yprev, x, y);
 	    }
 	    /* else both invisible */
@@ -274,22 +269,22 @@ fhnewz(FBIO *fbp, int *f, int num)
 			Intersect(Xprev, Yprev, x, y, upper, &Xi, &Yi);
 		    else /* previously BELOW */
 			Intersect(Xprev, Yprev, x, y, lower, &Xi, &Yi);
-		    Draw(fbp, Xprev, Yprev, Xi, Yi);
+		    Draw(Xprev, Yprev, Xi, Yi);
 		    Horizon(Xprev, Yprev, Xi, Yi);
 		    break;
 
 		case ABOVE:
 		    if (Previously == INVISIBLE) {
 			Intersect(Xprev, Yprev, x, y, lower, &Xi, &Yi);
-			Draw(fbp, Xi, Yi, x, y);
+			Draw(Xi, Yi, x, y);
 			Horizon(Xi, Yi, x, y);
 		    } else {
 			/* previously BELOW */
 			Intersect(Xprev, Yprev, x, y, lower, &Xi, &Yi);
-			Draw(fbp, Xprev, Yprev, Xi, Yi);
+			Draw(Xprev, Yprev, Xi, Yi);
 			Horizon(Xprev, Yprev, Xi, Yi);
 			Intersect(Xprev, Yprev, x, y, upper, &Xi, &Yi);
-			Draw(fbp, Xi, Yi, x, y);
+			Draw(Xi, Yi, x, y);
 			Horizon(Xi, Yi, x, y);
 		    }
 		    break;
@@ -297,15 +292,15 @@ fhnewz(FBIO *fbp, int *f, int num)
 		case BELOW:
 		    if (Previously == INVISIBLE) {
 			Intersect(Xprev, Yprev, x, y, lower, &Xi, &Yi);
-			Draw(fbp, Xi, Yi, x, y);
+			Draw(Xi, Yi, x, y);
 			Horizon(Xi, Yi, x, y);
 		    } else {
 			/* previously ABOVE */
 			Intersect(Xprev, Yprev, x, y, upper, &Xi, &Yi);
-			Draw(fbp, Xprev, Yprev, Xi, Yi);
+			Draw(Xprev, Yprev, Xi, Yi);
 			Horizon(Xprev, Yprev, Xi, Yi);
 			Intersect(Xprev, Yprev, x, y, lower, &Xi, &Yi);
-			Draw(fbp, Xi, Yi, x, y);
+			Draw(Xi, Yi, x, y);
 			Horizon(Xi, Yi, x, y);
 		    }
 		    break;
@@ -330,8 +325,6 @@ main(int argc, char **argv)
 {
     static const char usage[] = "Usage: fhor [width] < doubles\n";
 
-    FBIO *fbp = NULL;
-
     double inbuf[512];
     int f[512];
     int i, x, z;
@@ -354,7 +347,7 @@ main(int argc, char **argv)
     fb_clear(fbp, PIXEL_NULL);
 
     memset((char *)f, 0, 512*sizeof(*f));
-    fhnewz(fbp, f, 512);
+    fhnewz(f, 512);
 
     /*
      * Nearest to Farthest
@@ -373,7 +366,7 @@ main(int argc, char **argv)
 		f[x] += 128 * inbuf[i];
 	    }
 	}
-	fhnewz(fbp, f, 512);
+	fhnewz(f, 512);
 	z++;
     }
 

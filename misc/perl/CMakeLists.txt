@@ -1,8 +1,11 @@
 set(misc_ignore_files rt.i)
 CMAKEFILES(${misc_ignore_files})
 
+find_package(SWIG)
+mark_as_advanced(SWIG_EXECUTABLE)
+
 # see p. 48 in CMake book
-if(SWIG_FOUND AND NOT "${SWIG_USE_FILE}" STREQUAL "")
+if(SWIG_FOUND)
 
   set(CMAKE_SWIG_FLAGS "")
 
@@ -28,7 +31,7 @@ if(SWIG_FOUND AND NOT "${SWIG_USE_FILE}" STREQUAL "")
 
   #message("Swig module: \"${SWIG_MODULE_${RT}_REAL_NAME}\"")
 
-endif(SWIG_FOUND AND NOT "${SWIG_USE_FILE}" STREQUAL "")
+endif(SWIG_FOUND)
 
 # Local Variables:
 # tab-width: 8

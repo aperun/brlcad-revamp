@@ -179,7 +179,6 @@
 
 #if !defined(_WINDOWS_)
 /* windows.h has not been read - read just what we need */
-#define NOMINMAX
 #define WIN32_LEAN_AND_MEAN  /* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #endif

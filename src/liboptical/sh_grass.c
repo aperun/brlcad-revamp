@@ -1,7 +1,7 @@
 /*                      S H _ G R A S S . C
  * BRL-CAD
  *
- * Copyright (c) 1998-2014 United States Government as represented by
+ * Copyright (c) 1998-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -30,7 +30,6 @@
 #include <string.h>
 #include <math.h>
 
-#include "bu/parallel.h"
 #include "vmath.h"
 #include "plot3.h"
 #include "raytrace.h"
@@ -392,7 +391,7 @@ make_proto(struct grass_specific *grass_sp)
      * for all the other blades.  Most significantly, the others are just
      * a rotation/scale of this first one.
      */
-    bn_mat_zrot(r, sin(DEG2RAD*137.0), cos(DEG2RAD*137.0));
+    bn_mat_zrot(r, sin(bn_degtorad*137.0), cos(bn_degtorad*137.0));
     MAT_COPY(m, r);
 
     seg_delta_angle = (87.0 / (double)BLADE_SEGS_MAX);
@@ -413,7 +412,7 @@ make_proto(struct grass_specific *grass_sp)
 	    grass_sp->proto.b[blade].leaf[seg].magic = LEAF_MAGIC;
 
 	    angle = start_angle - (double)seg * seg_delta_angle;
-	    angle *= DEG2RAD;
+	    angle *= bn_degtorad;
 	    VSET(grass_sp->proto.b[blade].leaf[seg].blade,
 		 cos(angle), 0.0, sin(angle));
 
@@ -478,7 +477,8 @@ make_proto(struct grass_specific *grass_sp)
 }
 
 
-/*
+/* G R A S S _ S E T U P
+ *
  * This routine is called (at prep time)
  * once for each region which uses this shader.
  * Any shader-specific initialization should be done here.
@@ -544,6 +544,9 @@ grass_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, c
 }
 
 
+/*
+ * G R A S S _ P R I N T
+ */
 HIDDEN void
 grass_print(register struct region *rp, genptr_t dp)
 {
@@ -551,6 +554,9 @@ grass_print(register struct region *rp, genptr_t dp)
 }
 
 
+/*
+ * G R A S S _ F R E E
+ */
 HIDDEN void
 grass_free(genptr_t cp)
 {
@@ -635,7 +641,7 @@ make_bush(struct plant *pl, double seed, const fastf_t *cell_pos, const struct g
     VSCALE(pt, pl->root, grass_sp->size);
 
     plant_scale(pl, w);	/* must come first */
-    plant_rot(pl, BN_RANDOM(idx) * M_2PI);/* computes bounding box */
+    plant_rot(pl, BN_RANDOM(idx) * M_PI * 2.0);/* computes bounding box */
 
     /* set bounding boxes */
     for (blade=0; blade < pl->blades; blade++) {
@@ -727,11 +733,11 @@ isect_blade(const struct blade *bl, const fastf_t *root, struct grass_ray *r, st
 	    bu_log("\t    ");
 	    switch (cond) {
 		case -2: bu_log("lines parallel  "); break;
-		case -1: bu_log("lines collinear "); break;
+		case -1: bu_log("lines colinear  "); break;
 		case  0: bu_log("lines intersect "); break;
 		case  1: bu_log("lines miss      "); break;
 	    }
-	    bu_log("d1:%d d2:%g %g\n", cond, V2ARGS(ldist));
+	    bu_log("d1:%d d2:%g\n", cond, V2ARGS(ldist));
 	}
 	if (ldist[0] < 0.0 		/* behind ray */ ||
 	    ldist[0] >= r->d_max	/* beyond out point */ ||
@@ -922,7 +928,8 @@ plot_cell(long int *cell, struct grass_ray *r, struct grass_specific *grass_sp)
 }
 
 
-/*
+/* I S E C T _ C E L L
+ *
  * Intersects a region-space ray with a grid cell of grass.
  *
  */
@@ -1096,6 +1103,8 @@ do_cells(long int *cell_num, struct grass_ray *r, short int flags, struct shadew
 
 
 /*
+ * G R A S S _ R E N D E R
+ *
  * This is called (from viewshade() in shade.c) once for each hit point
  * to be shaded.  The purpose here is to fill in values in the shadework
  * structure.

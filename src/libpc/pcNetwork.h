@@ -1,7 +1,7 @@
 /*                    P C N E T W O R K . H
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -24,33 +24,17 @@
  * Class definition of Constraint Network
  *
  */
-#ifndef LIBPC_PCNETWORK_H
-#define LIBPC_PCNETWORK_H
+#ifndef __PCNETWORK_H__
+#define __PCNETWORK_H__
 
 #include "common.h"
 
 #include <iostream>
 #include <string>
 #include <vector>
-
-/* for g++ to quell warnings */
-#if HAVE_GCC_DIAG_PRAGMAS
-#  pragma GCC diagnostic push /* start new diagnostic pragma */
-#  pragma GCC diagnostic ignored "-Wshadow"
-#elif HAVE_CLANG_DIAG_PRAGMAS
-#  pragma clang diagnostic push /* start new diagnostic pragma */
-#  pragma clang diagnostic ignored "-Wshadow"
-#endif
-
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graphviz.hpp>
-
-#if HAVE_GCC_DIAG_PRAGMAS
-#  pragma GCC diagnostic pop /* end ignoring warnings */
-#elif HAVE_CLANG_DIAG_PRAGMAS
-#  pragma clang diagnostic pop /* end ignoring warnings */
-#endif
 
 #include "pcBasic.h"
 #include "pcVariable.h"
@@ -68,8 +52,7 @@ class Vertexwriter {
     typedef boost::graph_traits<Graph> GraphTraits;
     typedef typename GraphTraits::vertex_descriptor Vertex;
 public:
-    Vertexwriter(const Graph& graph) : g(graph) {
-    }
+    Vertexwriter(const Graph& graph) : g(graph) {};
     void operator() (std::ostream& output, const Vertex& v) const {
 	output << "[label=\"" << g[v]->getID() << "\"]";
     }
@@ -84,8 +67,7 @@ class Edgewriter {
     typedef boost::graph_traits<Graph> GraphTraits;
     typedef typename GraphTraits::edge_descriptor Edge;
 public:
-    Edgewriter(const Graph& graph) : g(graph) {
-    }
+    Edgewriter(const Graph& graph) : g(graph) {};
     void operator() (std::ostream& output, const Edge& e) const {
 	output << "[label=\"" << g[e]->getExp() << "\"]";
     }

@@ -1,7 +1,7 @@
 /*                S I M C O L L I S I O N A L G O . H
  * BRL-CAD
  *
- * Copyright (c) 2011-2014 United States Government as represented by
+ * Copyright (c) 2011-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef LIBGED_SIMULATE_SIMCOLLISIONALGO_H_
-#define LIBGED_SIMULATE_SIMCOLLISIONALGO_H_
+#ifndef SIMULATE_COLL_ALGO_H_
+#define SIMULATE_COLL_ALGO_H_
 
 #include "common.h"
 
@@ -91,7 +91,7 @@ public:
 
 #endif
 
-#endif /* LIBGED_SIMULATE_SIMCOLLISIONALGO_H_ */
+#endif /* SIMULATE_COLL_ALGO_H_ */
 
 // Local Variables:
 // tab-width: 8

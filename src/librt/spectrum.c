@@ -1,7 +1,7 @@
 /*                      S P E C T R U M . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -40,7 +40,6 @@
 #include <math.h>
 #include "bio.h"
 
-#include "bu/debug.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "spectrum.h"
@@ -249,8 +248,8 @@ rt_spect_black_body(struct bn_tabdata *data, double temp, unsigned int n)
     BN_CK_TABLE(tabp);
 
     if (bu_debug&BU_DEBUG_TABDATA) {
-	bu_log("rt_spect_black_body(%p, %g degK) %g um to %g um\n",
-	       (void *)data, temp,
+	bu_log("rt_spect_black_body(x%x, %g degK) %g um to %g um\n",
+	       data, temp,
 	       tabp->x[0] * 0.001,	/* nm to um */
 	       tabp->x[tabp->nx] * 0.001	/* nm to um */
 	    );
@@ -306,8 +305,8 @@ rt_spect_black_body_fast(struct bn_tabdata *data, double temp)
     BN_CK_TABLE(tabp);
 
     if (bu_debug&BU_DEBUG_TABDATA) {
-	bu_log("rt_spect_black_body_fast(%p, %g degK)\n",
-	       (void *)data, temp);
+	bu_log("rt_spect_black_body_fast(x%x, %g degK)\n",
+	       data, temp);
     }
 
     for (j = 0; j < tabp->nx; j++) {
@@ -335,8 +334,8 @@ rt_spect_black_body_points(struct bn_tabdata *data, double temp)
     BN_CK_TABLE(tabp);
 
     if (bu_debug&BU_DEBUG_TABDATA) {
-	bu_log("rt_spect_black_body_points(%p, %g degK)\n",
-	       (void *)data, temp);
+	bu_log("rt_spect_black_body_points(x%x, %g degK)\n",
+	       data, temp);
     }
 
     for (j = 0; j < tabp->nx; j++) {

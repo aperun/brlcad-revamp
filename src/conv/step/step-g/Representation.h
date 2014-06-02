@@ -1,7 +1,7 @@
 /*                 Representation.h
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -23,15 +23,15 @@
  * structures.
  *
  */
-#ifndef CONV_STEP_STEP_G_REPRESENTATION_H
-#define CONV_STEP_STEP_G_REPRESENTATION_H
+#ifndef REPRESENTATION_H_
+#define REPRESENTATION_H_
 
 #include "common.h"
 
 /* system headers */
 #include <list>
 
-/* interface headers */
+/* inteface headers */
 #include "STEPEntity.h"
 #include "STEPWrapper.h"
 
@@ -61,7 +61,6 @@ public:
     double GetLengthConversionFactor();
     double GetPlaneAngleConversionFactor();
     double GetSolidAngleConversionFactor();
-    string GetRepresentationContextName();
     bool Load(STEPWrapper *sw, SDAI_Application_instance *sse);
     virtual void Print(int level);
 
@@ -70,7 +69,7 @@ public:
 };
 
 
-#endif /* CONV_STEP_STEP_G_REPRESENTATION_H */
+#endif /* REPRESENTATION_H_ */
 
 /*
  * Local Variables:

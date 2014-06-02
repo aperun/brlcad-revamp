@@ -1,7 +1,7 @@
 /*                        G _ D I F F . C
  * BRL-CAD
  *
- * Copyright (c) 1998-2014 United States Government as represented by
+ * Copyright (c) 1998-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -21,14 +21,13 @@
  *
  * Routine to determine the differences between two BRL-CAD databases.
  *
- * With no options, the output to stdout is human readable descriptions
- * of the differences between the files. If the -m option is supplied,
- * a script file is generated that may be provided as input to MGED to
- * convert the first database to the match the second.  The script uses
- * the MGED "db" command to make the changes.  Some solid types do not
- * yet have support in the "db" command.  Such solids that change from
- * one database to the next, will be noted by a comment in the database
- * as: "#IMPORT solid_name from database_name".
+ * With no options, the output to stdout is an MGED script that may be
+ * provided as input to MGED to convert the first database to the
+ * match the second.  The script uses the MGED "db" command to make
+ * the changes.  Some solid types do not yet have support in the "db"
+ * command.  Such solids that change from one database to the next,
+ * will be noted by a comment in the database as: "#IMPORT solid_name
+ * from database_name".
  *
  */
 

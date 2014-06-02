@@ -14,7 +14,6 @@ set(docbook_man1_EN
   benchmark.xml
   bot_dump.xml
   bot_shell-vtk.xml
-  brep_simple.xml
   brlcad-config.xml
   brlcad.xml
   buffer.xml
@@ -99,7 +98,6 @@ set(docbook_man1_EN
   g-obj.xml
   g-raw.xml
   g-shell-rect.xml
-  g-step.xml
   g-stl.xml
   g-tankill.xml
   g-var.xml
@@ -108,7 +106,6 @@ set(docbook_man1_EN
   g2asc.xml
   g_diff.xml
   g_lint.xml
-  gdiff2.xml
   gencolor.xml
   gif-fb.xml
   gif2fb.xml
@@ -208,7 +205,6 @@ set(docbook_man1_EN
   rtarea.xml
   rtcheck.xml
   rtedge.xml
-  rtexample.xml
   rtg3.xml
   rthide.xml
   rtpp.xml
@@ -239,7 +235,6 @@ set(docbook_man1_EN
   vdeck.xml
   viewpoint-g.xml
   wavelet.xml
-  wdb_example.xml
   )
 
 # Some DocBook man pages generate multiple output files, if they

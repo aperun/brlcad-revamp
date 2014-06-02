@@ -351,22 +351,18 @@ namespace boost { namespace proto
         template<typename Expr, typename Tag, typename Args, long Arity, typename If, typename Then, typename Else>
         struct matches_<Expr, proto::basic_expr<Tag, Args, Arity>, proto::if_<If, Then, Else> >
           : mpl::eval_if_c<
-                static_cast<bool>(
-                    remove_reference<
-                        typename when<_, If>::template impl<Expr, int, int>::result_type
-                    >::type::value
-                )
+                remove_reference<
+                    typename when<_, If>::template impl<Expr, int, int>::result_type
+                >::type::value
               , matches_<Expr, proto::basic_expr<Tag, Args, Arity>, typename Then::proto_grammar>
               , matches_<Expr, proto::basic_expr<Tag, Args, Arity>, typename Else::proto_grammar>
             >::type
         {
             typedef
                 typename mpl::if_c<
-                    static_cast<bool>(
-                        remove_reference<
-                            typename when<_, If>::template impl<Expr, int, int>::result_type
-                        >::type::value
-                    )
+                    remove_reference<
+                        typename when<_, If>::template impl<Expr, int, int>::result_type
+                    >::type::value
                   , Then
                   , Else
                 >::type
@@ -406,24 +402,6 @@ namespace boost { namespace proto
         {};
 
         // handle proto::switch_
-        template<typename Expr, typename Tag, typename Args, long Arity, typename Cases, typename Transform>
-        struct matches_<Expr, proto::basic_expr<Tag, Args, Arity>, switch_<Cases, Transform> >
-          : matches_<
-                Expr
-              , proto::basic_expr<Tag, Args, Arity>
-              , typename Cases::template case_<
-                    typename when<_,Transform>::template impl<Expr,int,int>::result_type
-                >::proto_grammar
-            >
-        {
-            typedef
-                typename Cases::template case_<
-                    typename when<_, Transform>::template impl<Expr, int, int>::result_type
-                >
-            which;
-        };
-
-        // handle proto::switch_ with the default Transform for specially for better compile times
         template<typename Expr, typename Tag, typename Args, long Arity, typename Cases>
         struct matches_<Expr, proto::basic_expr<Tag, Args, Arity>, switch_<Cases> >
           : matches_<
@@ -469,9 +447,8 @@ namespace boost { namespace proto
     ///     and \c V defaults to \c not_\<_\>.)
     /// \li An expression \c E matches <tt>not_\<T\></tt> if \c E does
     ///     not match \c T.
-    /// \li An expression \c E matches <tt>switch_\<C,T\></tt> if
-    ///     \c E matches <tt>C::case_\<boost::result_of\<T(E)\>::type\></tt>.
-    ///     (Note: T defaults to <tt>tag_of\<_\>()</tt>.)
+    /// \li An expression \c E matches <tt>switch_\<C\></tt> if
+    ///     \c E matches <tt>C::case_\<E::proto_tag\></tt>.
     ///
     /// A terminal expression <tt>expr\<AT,term\<A\> \></tt> matches
     /// a grammar <tt>expr\<BT,term\<B\> \></tt> if \c BT is \c AT or
@@ -571,7 +548,11 @@ namespace boost { namespace proto
 
             /// \param expr An expression
             /// \return \c e
-            BOOST_PROTO_RETURN_TYPE_STRICT_LOOSE(result_type, typename impl::expr_param)
+            #ifdef BOOST_PROTO_STRICT_RESULT_OF
+            result_type
+            #else
+            typename impl::expr_param 
+            #endif
             operator()(
                 typename impl::expr_param e
               , typename impl::state_param
@@ -616,11 +597,15 @@ namespace boost { namespace proto
             /// \param e An expression
             /// \pre <tt>matches\<Expr,not_\>::value</tt> is \c true.
             /// \return \c e
-            BOOST_PROTO_RETURN_TYPE_STRICT_LOOSE(result_type, typename impl::expr_param)
+            #ifdef BOOST_PROTO_STRICT_RESULT_OF
+            result_type
+            #else
+            typename impl::expr_param 
+            #endif
             operator()(
                 typename impl::expr_param e
-              , typename impl::state_param
-              , typename impl::data_param
+                , typename impl::state_param
+                , typename impl::data_param
             ) const
             {
                 return e;
@@ -696,7 +681,7 @@ namespace boost { namespace proto
 
             typedef
                 typename mpl::if_c<
-                    static_cast<bool>(remove_reference<condition>::type::value)
+                    remove_reference<condition>::type::value
                   , when<_, Then>
                   , when<_, Else>
                 >::type
@@ -784,46 +769,32 @@ namespace boost { namespace proto
     };
 
     /// \brief For matching one of a set of alternate grammars, which
-    /// are looked up based on some property of an expression. The
-    /// property on which to dispatch is specified by the \c Transform
-    /// template parameter, which defaults to <tt>tag_of\<_\>()</tt>.
-    /// That is, when the \c Trannsform is not specified, the alternate
-    /// grammar is looked up using the tag type of the current expression.
-    ///
-    /// When used as a transform, \c switch_\<\> applies the transform
-    /// associated with the grammar that matches the expression.
+    /// are looked up based on an expression's tag type. When used as a
+    /// transform, \c switch_\<\> applies the transform associated with
+    /// the grammar that matches the expression.
     ///
     /// \note \c switch_\<\> is functionally identical to \c or_\<\> but
-    /// is often more efficient. It does a fast, O(1) lookup using the
-    /// result of the specified transform to find a sub-grammar that may
-    /// potentially match the expression.
+    /// is often more efficient. It does a fast, O(1) lookup based on an
+    /// expression's tag type to find a sub-grammar that may potentially
+    /// match the expression.
     ///
-    /// An expression type \c E matches <tt>switch_\<C,T\></tt> if \c E
-    /// matches <tt>C::case_\<boost::result_of\<T(E)\>::type\></tt>.
+    /// An expression type \c E matches <tt>switch_\<C\></tt> if \c E
+    /// matches <tt>C::case_\<E::proto_tag\></tt>.
     ///
-    /// When applying <tt>switch_\<C,T\></tt> as a transform with an
-    /// expression \c e of type \c E, state \c s of type \S and data
-    /// \c d of type \c D, it is equivalent to
-    /// <tt>C::case_\<boost::result_of\<T(E,S,D)\>::type\>()(e, s, d)</tt>.
-    template<typename Cases, typename Transform>
-    struct switch_ : transform<switch_<Cases, Transform> >
-    {
-        typedef switch_ proto_grammar;
-
-        template<typename Expr, typename State, typename Data>
-        struct impl
-          : Cases::template case_<
-                typename when<_, Transform>::template impl<Expr, State, Data>::result_type
-            >::template impl<Expr, State, Data>
-        {};
-    };
-
-    /// INTERNAL ONLY (This is merely a compile-time optimization for the common case)
-    ///
+    /// When applying <tt>switch_\<C\></tt> as a transform with an
+    /// expression \c e of type \c E, state \c s and data \c d, it is
+    /// equivalent to <tt>C::case_\<E::proto_tag\>()(e, s, d)</tt>.
     template<typename Cases>
-    struct switch_<Cases> : transform<switch_<Cases> >
+    struct switch_ : transform<switch_<Cases> >
     {
         typedef switch_ proto_grammar;
+
+        /// \param e An expression
+        /// \param s The current state
+        /// \param d A data of arbitrary type
+        /// \pre <tt>matches\<Expr,switch_\>::value</tt> is \c true.
+        /// \return <tt>which()(e, s, d)</tt>, where <tt>which</tt> is
+        /// <tt>Cases::case_<typename Expr::proto_tag></tt>
 
         template<typename Expr, typename State, typename Data>
         struct impl
@@ -930,8 +901,8 @@ namespace boost { namespace proto
 
     /// INTERNAL ONLY
     ///
-    template<typename Cases, typename Transform>
-    struct is_callable<switch_<Cases, Transform> >
+    template<typename Cases>
+    struct is_callable<switch_<Cases> >
       : mpl::true_
     {};
 

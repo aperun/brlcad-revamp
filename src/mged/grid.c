@@ -1,7 +1,7 @@
 /*                          G R I D . C
  * BRL-CAD
  *
- * Copyright (c) 1998-2014 United States Government as represented by
+ * Copyright (c) 1998-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -42,9 +42,9 @@ extern point_t curr_e_axes_pos;  /* from edsol.c */
 
 void draw_grid(void);
 void snap_to_grid(fastf_t *mx, fastf_t *my);
-static void grid_set_dirty_flag(const struct bu_structparse *, const char *, void *, const char *);
-static void set_grid_draw(const struct bu_structparse *, const char *, void *, const char *);
-static void set_grid_res(const struct bu_structparse *, const char *, void *, const char *);
+static void grid_set_dirty_flag(void);
+static void set_grid_draw(void);
+static void set_grid_res(void);
 
 
 struct _grid_state default_grid_state = {
@@ -73,10 +73,7 @@ struct bu_structparse grid_vparse[] = {
 
 
 static void
-grid_set_dirty_flag(const struct bu_structparse *UNUSED(sdp),
-		    const char *UNUSED(name),
-		    void *UNUSED(base),
-		    const char *UNUSED(value))
+grid_set_dirty_flag(void)
 {
     struct dm_list *dmlp;
 
@@ -87,10 +84,7 @@ grid_set_dirty_flag(const struct bu_structparse *UNUSED(sdp),
 
 
 static void
-set_grid_draw(const struct bu_structparse *sdp,
-	      const char *name,
-	      void *base,
-	      const char *value)
+set_grid_draw(void)
 {
     struct dm_list *dlp;
 
@@ -99,7 +93,7 @@ set_grid_draw(const struct bu_structparse *sdp,
 	return;
     }
 
-    grid_set_dirty_flag(sdp, name, base, value);
+    grid_set_dirty_flag();
 
     /* This gets done at most one time. */
     if (grid_auto_size && grid_state->gr_draw) {
@@ -115,14 +109,11 @@ set_grid_draw(const struct bu_structparse *sdp,
 
 
 static void
-set_grid_res(const struct bu_structparse *sdp,
-	     const char *name,
-	     void *base,
-	     const char *value)
+set_grid_res(void)
 {
     struct dm_list *dlp;
 
-    grid_set_dirty_flag(sdp, name, base, value);
+    grid_set_dirty_flag();
 
     if (grid_auto_size)
 	FOR_ALL_DISPLAYS(dlp, &head_dm_list.l)

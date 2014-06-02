@@ -1,7 +1,7 @@
 /*                        P I X - P S . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -132,7 +132,6 @@ hexout(FILE *fp, int byte)
     putc(symbol[low], fp);
 }
 
-char Stdin[] = "[stdin]";
 
 int
 get_args(int argc, char **argv)
@@ -183,7 +182,7 @@ get_args(int argc, char **argv)
     if (bu_optind >= argc) {
 	if (isatty(fileno(stdin)))
 	    return 0;
-	file_name = Stdin;
+	file_name = "[stdin]";
 	infp = stdin;
     } else {
 	file_name = argv[bu_optind];
@@ -246,10 +245,10 @@ main(int argc, char **argv)
 
 	/* start a patch */
 	fprintf(ofp, "save\n");
-	fprintf(ofp, "%lu %lu 8 [%lu 0 0 %lu 0 %ld] {<\n ",
+	fprintf(ofp, "%lu %lu 8 [%lu 0 0 %lu 0 %lu] {<\n ",
 		(unsigned long)width, (unsigned long)scans_per_patch,		/* patch size */
 		(unsigned long)width, (unsigned long)height,			/* total size = 1.0 */
-		-(long)y);				/* patch y origin */
+		(unsigned long)-y);				/* patch y origin */
 
 	/* data */
 	num = 0;

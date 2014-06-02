@@ -1,7 +1,7 @@
 /*                        C O M M O N . H
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -33,8 +33,8 @@
  *
  */
 
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef __COMMON_H__
+#define __COMMON_H__
 
 /* include the venerable config.h file.  use a pregenerated one for
  * windows when we cannot autogenerate it easily. do not include
@@ -55,12 +55,7 @@
 #  ifndef HAVE_DRAND48
 #    define drand48() ((double)rand() / (double)(RAND_MAX + 1))
 #    define HAVE_DRAND48 1
-#    define srand48(seed) (srand(seed))
-#  endif
-
-#  if !defined(__cplusplus) && !defined(HAVE_LRINT) && defined(HAVE_WORKING_LRINT_MACRO)
-#    define lrint(_x) ((long int)(((_x)<0)?(_x)-0.5:(_x)+0.5))
-#    define HAVE_LRINT 1
+#	 define srand48(seed) (srand(seed))
 #  endif
 
 #endif  /* BRLCADBUILD & HAVE_CONFIG_H */
@@ -241,6 +236,27 @@ typedef ptrdiff_t ssize_t;
 #endif
 
 /**
+ * IGNORE provides a common mechanism for innocuously ignoring a
+ * parameter that is sometimes used and sometimes not.  It should
+ * "practically" result in nothing of concern happening.  It's
+ * commonly used by macros that disable functionality based on
+ * compilation settings (e.g., BU_ASSERT()) and shouldn't normally
+ * need to be used directly by code.
+ *
+ * We can't use (void)(sizeof((parameter)) because MSVC2010 will
+ * reportedly issue a warning about the value being unused.
+ * (Consequently calls into question (void)(parameter) but untested.)
+ *
+ * Possible alternative:
+ * ((void)(1 ? 0 : sizeof((parameter)) - sizeof((parameter))))
+ */
+#ifdef IGNORE
+#  undef IGNORE
+#  warning "IGNORE unexpectedly defined.  Ensure common.h is included first."
+#endif
+#define IGNORE(parameter) (void)(parameter)
+
+/**
  * LIKELY provides a common mechanism for providing branch prediction
  * hints to the compiler so that it can better optimize.  It should be
  * used when it's exceptionally likely that an expected code path will
@@ -319,35 +335,7 @@ typedef ptrdiff_t ssize_t;
 #  define __STDC_VERSION__ 0
 #endif
 
-/* Provide macros to indicate availability of diagnostic pragmas for
- * GCC and Clang.
- */
-#define HAVE_GCC_DIAG_PRAGMAS \
-    (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)) && !defined(__clang__))
-
-#define HAVE_CLANG_DIAG_PRAGMAS \
-    (defined(__clang__) && (__clang_major__ > 2 || (__clang_major__ == 2 && __clang_minor__ >= 8)))
-
-
-/**
- * Provide a macro for different treatment of initialized extern const
- * variables between C and C++.  In C the following initialization
- * (definition) is acceptable for external linkage:
- *
- *   const int var = 10;
- *
- * but in C++ const is implicitly internal linkage so it must have
- * extern qualifier:
- *
- *   extern const int var = 10;
- */
-#if defined(__cplusplus)
-  #define EXTERNVARINIT extern
-#else
-  #define EXTERNVARINIT
-#endif
-
-#endif  /* COMMON_H */
+#endif  /* __COMMON_H__ */
 /** @} */
 /*
  * Local Variables:

@@ -1,7 +1,7 @@
 /*                      C A N O N L I B . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -79,9 +79,11 @@ char	*arg_v[MAX_ARGS];
 int	arg_c;
 char *print_queue = "canon";
 
-
-void
-usage(const char *s)
+/*
+ *	U S A G E --- tell user how to invoke this program, then exit
+ */
+void usage(s)
+    char *s;
 {
     if (s) (void)fputs(s, stderr);
 
@@ -99,9 +101,12 @@ usage(const char *s)
     bu_exit(1, NULL);
 }
 
-
-int
-parse_args(int ac, char **av)
+/*
+ *	P A R S E _ A R G S --- Parse through command line flags
+ */
+int parse_args(ac, av)
+    int ac;
+    char *av[];
 {
     int  c;
     char *p;

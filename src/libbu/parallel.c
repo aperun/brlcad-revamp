@@ -1,7 +1,7 @@
 /*                      P A R A L L E L . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -111,11 +111,7 @@
 
 #include "bio.h"
 
-#include "bu/debug.h"
-#include "bu/log.h"
-#include "bu/malloc.h"
-#include "bu/parallel.h"
-#include "bu/str.h"
+#include "bu.h"
 
 #include "./parallel.h"
 
@@ -140,6 +136,12 @@ static int parallel_nthreads_started = 0;
 
 /* # threads properly finished */
 static int parallel_nthreads_finished = 0;
+
+/* User's arg to his threads */
+static genptr_t parallel_arg;
+
+/* user function to run in parallel */
+static void (*parallel_func)(int, genptr_t);
 
 
 int
@@ -199,7 +201,7 @@ bu_nice_set(int newnice)
 }
 
 
-size_t
+int
 bu_avail_cpus(void)
 {
     int ncpu = -1;
@@ -347,12 +349,8 @@ parallel_interface_arg(struct thread_data *user_thread_data)
     thread_set_cpu(user_thread_data->cpu_id);
 
     if (user_thread_data->affinity) {
-	int ret;
 	/* lock us onto a core corresponding to our parallel ID number */
-	ret = parallel_set_affinity(user_thread_data->cpu_id);
-	if (ret) {
-	    bu_log("WARNING: encountered unexpected problem setting CPU affinity\n");
-	}
+	parallel_set_affinity(user_thread_data->cpu_id);
     }
 
     if (!user_thread_data->counted) {
@@ -370,21 +368,49 @@ parallel_interface_arg(struct thread_data *user_thread_data)
     }
 }
 
-#if defined(_WIN32)
+
 /**
- * A separate stub to call parallel_interface_arg that avoids a
- *  potential crash* on 64-bit windows and calls ExitThread to
- *  cleanly stop the thread.
- *  *See ThreadProc MSDN documentation.
+ * Interface layer between bu_parallel and the user's function.
+ * Necessary so that we can provide unique thread numbers as a
+ * parameter to the user's function, and to decrement the global
+ * counter when the user's function returns to us (as opposed to
+ * dumping core or longjmp'ing too far).
+ *
+ * Note that not all architectures can pass an argument (e.g. the
+ * pointer to the user's function), so we depend on using a global
+ * variable to communicate this.  This is no problem, since only one
+ * copy of bu_parallel() may be active at any one time.
  */
-HIDDEN DWORD
-parallel_interface_arg_stub(struct thread_data *user_thread_data)
+HIDDEN void
+parallel_interface(void)
 {
-    parallel_interface_arg(user_thread_data);
-    ExitThread(0);
-    return 0; /* Extraneous */
+    struct thread_data user_thread_data_pi;
+    char *libbu_affinity = NULL;
+
+    /* OFF by default until linux issue is debugged */
+    int affinity = 0;
+
+    user_thread_data_pi.user_func = parallel_func;
+    user_thread_data_pi.user_arg  = parallel_arg;
+
+    bu_semaphore_acquire(BU_SEM_SYSCALL);
+    user_thread_data_pi.cpu_id = parallel_nthreads_started++;
+    bu_semaphore_release(BU_SEM_SYSCALL);
+
+    libbu_affinity = getenv("LIBBU_AFFINITY");
+    if (libbu_affinity)
+	affinity = (int)strtol(libbu_affinity, NULL, 0x10);
+
+    user_thread_data_pi.counted = 1;
+    user_thread_data_pi.affinity = affinity;
+
+    parallel_interface_arg(&user_thread_data_pi);
+
+    bu_semaphore_acquire(BU_SEM_SYSCALL);
+    parallel_nthreads_finished++;
+    bu_semaphore_release(BU_SEM_SYSCALL);
 }
-#endif
+
 
 #endif /* PARALLEL */
 
@@ -424,12 +450,6 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
     rt_thread_t thread_tbl[MAX_PSW];
     int i;
 #  endif /* SUNOS */
-#  ifdef WIN32
-    int nthreadc = ncpu;
-    HANDLE hThreadArray[MAX_PSW] = {0};
-    int i;
-    DWORD returnCode;
-#  endif /* WIN32 */
 
     if (UNLIKELY(bu_debug & BU_DEBUG_PARALLEL))
 	bu_log("bu_parallel(%d, %p)\n", ncpu, arg);
@@ -445,21 +465,17 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
     }
     parallel_nthreads_started = 0;
     parallel_nthreads_finished = 0;
+    parallel_func = func;
+    parallel_arg = arg;
 
     libbu_affinity = getenv("LIBBU_AFFINITY");
     if (libbu_affinity)
 	affinity = (int)strtol(libbu_affinity, NULL, 0x10);
-    if (UNLIKELY(bu_debug & BU_DEBUG_PARALLEL)) {
-	if (affinity)
-	    bu_log("CPU affinity enabled. (LIBBU_AFFINITY=%d)\n", affinity);
-	else
-	    bu_log("CPU affinity disabled.\n", affinity);
-    }
 
     user_thread_data_bu = (struct thread_data *)bu_calloc(ncpu, sizeof(*user_thread_data_bu), "struct thread_data *user_thread_data_bu");
 
     /* Fill in the data of user_thread_data_bu structures of all threads */
-    for (x = 0; x < ncpu; x++) {
+    for(x = 0; x < ncpu; x++) {
 	user_thread_data_bu[x].user_func = func;
 	user_thread_data_bu[x].user_arg  = arg;
 	user_thread_data_bu[x].cpu_id    = x;
@@ -636,37 +652,43 @@ bu_parallel(void (*func)(int, genptr_t), int ncpu, genptr_t arg)
 
 
 #  ifdef WIN32
+    /* Win32 Threads */
+
+    thread = 0;
+    nthreadc = 0;
+    DWORD dwThreadIdArray[ncpu];
+    HANDLE hThreadArray[ncpu] = {0};
+
     /* Create the Win32 threads */
 
-    for (i = 0; i < nthreadc; i++) {
+    for(int i = 0; i < ncpu; i++) {
+
 	hThreadArray[i] = CreateThread(
 	    NULL,
 	    0,
-	    (LPTHREAD_START_ROUTINE)parallel_interface_arg_stub,
+	    (LPVOID)parallel_interface,
 	    &user_thread_data_bu[i],
 	    0,
-	    NULL);
+	    &dwThreadIdArray[i]);
 
-	/* Ensure that all successfully created threads are in sequential order.*/
 	if (hThreadArray[i] == NULL) {
-	    bu_log("bu_parallel(): Error in CreateThread, Win32 error code %d.\n", GetLastError());
-	    --nthreadc;
+	    bu_log("bu_parallel(): Error in CreateThread");
+	    bu_exit();
 	}
+
+	nthreadc++;
     }
     /* Wait for other threads in the array */
 
-
-    returnCode = WaitForMultipleObjects(nthreadc, hThreadArray, TRUE, INFINITE);
-    if (returnCode == WAIT_FAILED) {
-	bu_log("bu_parallel(): Error in WaitForMultipleObjects, Win32 error code %d.\n", GetLastError());
-    }
-
+    WaitForMultipleObjects(nthreadc, hThreadArray, TRUE, INFINITE);
     for (x = 0; x < nthreadc; x++) {
 	int ret;
-	if ((ret = CloseHandle(hThreadArray[x]) == 0)) {
-	    /* Thread didn't close properly if return value is zero; don't retry and potentially loop forever.  */
-	    bu_log("bu_parallel(): Error closing thread %d of %d, Win32 error code %d.\n", x, nthreadc, GetLastError());
+	if ((ret = CloseHandle(hThreadArray[x]) != 0)) {
+	    /* The thread not closing properly */
+	    bu_log("bu_parallel(): Error closing threads");
+	    x--;
 	}
+	nthreade++;
     }
 #  endif /* end if Win32 threads */
 

@@ -1,7 +1,7 @@
 #                P I P E E D I T F R A M E . T C L
 # BRL-CAD
 #
-# Copyright (c) 2002-2014 United States Government as represented by
+# Copyright (c) 2002-2013 United States Government as represented by
 # the U.S. Army Research Laboratory.
 #
 # This library is free software; you can redistribute it and/or
@@ -74,8 +74,6 @@
 	method initTranslate {}
 	method updateGeometry {}
 	method createGeometry {_name}
-	method checkpointGeometry {}
-	method revertGeometry {}
 	method moveElement {_dm _obj _vx _vy _ocenter}
 	method p {obj args}
     }
@@ -84,10 +82,6 @@
 	variable mDetail
 	variable mCurrentPipePoint 0
 	variable mPrevPipeObject ""
-
-	# Checkpoint values
-	variable checkpointed_name ""
-	variable cmDetail
 
 	# Methods used by the constructor
 	# override methods in GeometryEditFrame
@@ -201,10 +195,6 @@
     } elseif {$mCurrentPipePoint > 0} {
 	pipePointSelectCallback [expr {$mCurrentPipePoint - 1}]
     }
-
-    set curr_name $itk_option(-geometryObject)
-    if {"$checkpointed_name" != "$curr_name"} {checkpointGeometry}
-
 }
 
 
@@ -271,18 +261,6 @@
 
     eval $itk_option(-mged) adjust $itk_option(-geometryObject) $pipe_spec
     GeometryEditFrame::updateGeometry
-}
-
-::itcl::body PipeEditFrame::checkpointGeometry {} {
-    set checkpointed_name $itk_option(-geometryObject)
-    array unset cmDetail
-    array set cmDetail [array get mDetail]
-}
-
-::itcl::body PipeEditFrame::revertGeometry {} {
-    array unset mDetail
-    array set mDetail [array get cmDetail]
-    updateGeometry
 }
 
 ::itcl::body PipeEditFrame::createGeometry {obj} {
@@ -418,18 +396,6 @@
 
     bind $itk_component(pointSizeE) <Return> [::itcl::code $this updatePointSize]
 
-    itk_component add checkpointButton {
-	::ttk::button $parent.checkpointButton \
-	-text {CheckPoint} \
-	-command "[::itcl::code $this checkpointGeometry]"
-    } {}
-
-    itk_component add revertButton {
-	::ttk::button $parent.revertButton \
-	-text {Revert} \
-	-command "[::itcl::code $this revertGeometry]"
-    } {}
-
     incr row
     grid rowconfigure $parent $row -weight 1
     incr row
@@ -437,20 +403,6 @@
     incr row
     grid $itk_component(pointSizeL) -column 0 -row $row -sticky e
     grid $itk_component(pointSizeE) -column 1 -row $row -sticky ew
-
-    incr row
-    set col 0
-    grid $itk_component(checkpointButton) \
-	-row $row \
-	-column $col \
-	-sticky nsew
-    incr col
-    grid $itk_component(revertButton) \
-	-row $row \
-	-column $col \
-	-sticky nsew
-
-
     grid columnconfigure $parent 1 -weight 1
 }
 

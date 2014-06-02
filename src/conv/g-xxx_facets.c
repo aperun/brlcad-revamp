@@ -1,7 +1,7 @@
 /*                  G - X X X _ F A C E T S . C
  * BRL-CAD
  *
- * Copyright (c) 2003-2014 United States Government as represented by
+ * Copyright (c) 2003-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -32,8 +32,6 @@
 #include <math.h>
 #include <string.h>
 
-#include "bu/getopt.h"
-#include "bu/parallel.h"
 #include "vmath.h"
 #include "nmg.h"
 #include "rtgeom.h"
@@ -70,6 +68,9 @@ static int		regions_converted = 0;
 static int		regions_written = 0;
 static size_t tot_polygons = 0;
 
+/*
+ *			M A I N
+ */
 int
 main(int argc, char **argv)
 {
@@ -106,7 +107,7 @@ main(int argc, char **argv)
     the_model = nmg_mm();
 
     /* Get command line arguments. */
-    while ((c = bu_getopt(argc, argv, "r:a:n:o:vx:D:X:h?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "r:a:n:o:vx:D:X:")) != -1) {
 	switch (c) {
 	    case 'r':		/* Relative tolerance. */
 		ttol.rel = atof(bu_optarg);
@@ -139,11 +140,13 @@ main(int argc, char **argv)
 		break;
 	    default:
 		bu_exit(1, usage, argv[0]);
+		break;
 	}
     }
 
-    if (bu_optind+1 >= argc)
+    if (bu_optind+1 >= argc) {
 	bu_exit(1, usage, argv[0]);
+    }
 
     /* Open output file */
 
@@ -155,8 +158,9 @@ main(int argc, char **argv)
 	perror(argv[0]);
 	bu_exit(1, "ERROR: Unable to open geometry database file (%s)\n", argv[0]);
     }
-    if (db_dirbuild(dbip))
+    if (db_dirbuild(dbip)) {
 	bu_exit(1, "db_dirbuild failed\n");
+    }
 
     BN_CK_TOL(tree_state.ts_tol);
     RT_CK_TESS_TOL(tree_state.ts_ttol);
@@ -268,16 +272,18 @@ output_nmg(struct nmgregion *r, const struct db_full_path *pathp, int UNUSED(reg
 		    continue;
 
 		/* loop through the edges in this loop (facet) */
-		if (verbose)
+		if (verbose) {
 		    printf("\tfacet:\n");
+		}
 		for (BU_LIST_FOR(eu, edgeuse, &lu->down_hd))
 		{
 		    NMG_CK_EDGEUSE(eu);
 
 		    v = eu->vu_p->v_p;
 		    NMG_CK_VERTEX(v);
-		    if (verbose)
+		    if (verbose) {
 			printf("\t\t(%g %g %g)\n", V3ARGS(v->vg_p->coord));
+		    }
 		}
 		tot_polygons++;
 	    }
@@ -374,6 +380,8 @@ process_boolean(union tree *curtree, struct db_tree_state *tsp, const struct db_
 
 
 /*
+ *			D O _ R E G I O N _ E N D
+ *
  *  Called from db_walk_tree().
  *
  *  This routine must be prepared to run in parallel.
@@ -415,8 +423,9 @@ union tree *do_region_end(struct db_tree_state *tsp, const struct db_full_path *
 	r = ret_tree->tr_d.td_r;
     else
     {
-	if (verbose)
+	if (verbose) {
 	    bu_log("\tNothing left of this region after Boolean evaluation\n");
+	}
 	regions_written++; /* don't count as a failure */
 	r = (struct nmgregion *)NULL;
     }

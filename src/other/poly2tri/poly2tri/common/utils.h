@@ -56,4 +56,3 @@ extern bool InScanArea(Point& pa, Point& pb, Point& pc, Point& pd);
 }
 
 #endif
-

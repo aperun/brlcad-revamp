@@ -1,7 +1,7 @@
 /*                           L E X . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -23,9 +23,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
-#include "bu/log.h"
-#include "bu/malloc.h"
-#include "bu/str.h"
+#include "bu.h"
 
 static int bu_lex_reading_comment = 0;
 

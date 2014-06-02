@@ -39,7 +39,6 @@ set(docbook_mann_EN
   bot_split.xml
   bot_sync.xml
   bot_vertex_fuse.xml
-  brep.xml
   build_region.xml
   c.xml
   cat.xml
@@ -160,7 +159,6 @@ set(docbook_mann_EN
   preview.xml
   prj_add.xml
   ps.xml
-  pull.xml
   push.xml
   put_comb.xml
   putmat.xml

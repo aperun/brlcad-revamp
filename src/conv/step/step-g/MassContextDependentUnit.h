@@ -1,7 +1,7 @@
 /*                 MassContextDependentUnit.h
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef CONV_STEP_STEP_G_MASSCONTEXTDEPENDENTUNIT_H
-#define CONV_STEP_STEP_G_MASSCONTEXTDEPENDENTUNIT_H
+#ifndef MASSCONTEXTDEPENDENTUNIT_H_
+#define MASSCONTEXTDEPENDENTUNIT_H_
 
 #include "MassUnit.h"
 #include "ContextDependentUnit.h"
@@ -49,7 +49,7 @@ public:
     static STEPEntity *Create(STEPWrapper *sw, SDAI_Application_instance *sse);
 };
 
-#endif /* CONV_STEP_STEP_G_MASSCONTEXTDEPENDENTUNIT_H */
+#endif /* MASSCONTEXTDEPENDENTUNIT_H_ */
 
 /*
  * Local Variables:

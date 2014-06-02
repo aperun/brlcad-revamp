@@ -1,7 +1,7 @@
 /*                       S H _ F I R E . C
  * BRL-CAD
  *
- * Copyright (c) 1997-2014 United States Government as represented by
+ * Copyright (c) 1997-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -62,7 +62,6 @@
 #include <string.h>
 #include <math.h>
 
-#include "bu/units.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "optical.h"
@@ -198,14 +197,18 @@ const double flame_colors[18][3] = {
 };
 
 
-/*
+/* F I R E _ S E T U P
+ *
  * This routine is called (at prep time)
  * once for each region which uses this shader.
  * Any shader-specific initialization should be done here.
  */
 HIDDEN int
 fire_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *UNUSED(mfp), struct rt_i *rtip)
+
+
 /* pointer to reg_udata in *rp */
+
 /* New since 4.4 release */
 {
     register struct fire_specific *fire_sp;
@@ -267,6 +270,9 @@ fire_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, co
 }
 
 
+/*
+ * F I R E _ P R I N T
+ */
 HIDDEN void
 fire_print(register struct region *rp, genptr_t dp)
 {
@@ -274,6 +280,9 @@ fire_print(register struct region *rp, genptr_t dp)
 }
 
 
+/*
+ * F I R E _ F R E E
+ */
 HIDDEN void
 fire_free(genptr_t cp)
 {
@@ -282,12 +291,16 @@ fire_free(genptr_t cp)
 
 
 /*
+ * F I R E _ R E N D E R
+ *
  * This is called (from viewshade() in shade.c) once for each hit point
  * to be shaded.  The purpose here is to fill in values in the shadework
  * structure.
  */
 int
 fire_render(struct application *ap, const struct partition *pp, struct shadework *swp, genptr_t dp)
+
+
 /* defined in material.h */
 /* ptr to the shader-specific struct */
 {

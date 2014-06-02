@@ -1,7 +1,7 @@
 /*                            M M . H
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef BURST_MM_H
-#define BURST_MM_H
+#ifndef __MM_H__
+#define __MM_H__
 
 /* Emulate MUVES Mm package using malloc. */
 
@@ -41,7 +41,7 @@
 #define MmStrDup(str) bu_strdup(str)
 #define MmStrFree(str) bu_free(str, BU_FLSTR)
 
-#endif  /* BURST_MM_H */
+#endif  /* __MM_H__ */
 
 /*
  * Local Variables:

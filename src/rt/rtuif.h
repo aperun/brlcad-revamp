@@ -1,7 +1,7 @@
 /*                         R T U I F . H
  * BRL-CAD
  *
- * Copyright (c) 1985-2014 United States Government as represented by
+ * Copyright (c) 1985-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -30,8 +30,8 @@
  *
  */
 
-#ifndef RT_RTUIF_H
-#define RT_RTUIF_H
+#ifndef __RTUIF_H__
+#define __RTUIF_H__
 
 #include "common.h"
 
@@ -87,7 +87,7 @@ extern void view_end(struct application *ap);
  */
 extern void view_cleanup(struct rt_i *rtip);
 
-#endif  /* RT_RTUIF_H */
+#endif  /* __RTUIF_H__ */
 /*
  * Local Variables:
  * mode: C

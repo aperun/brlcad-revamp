@@ -1,7 +1,7 @@
 /*                          N T P . H
  * BRL-CAD
  *
- * Copyright (c) 2006-2014 United States Government as represented by
+ * Copyright (c) 2006-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -23,9 +23,6 @@
  *
  */
 
-#ifndef LIBPKG_EXAMPLE_NTP_H
-#define LIBPKG_EXAMPLE_NTP_H
-
 /* simple network transport protocol. connection starts with a HELO,
  * then a variable number of GEOM/ARGS messages, then a CIAO to end.
  */
@@ -36,8 +33,6 @@
 
 /* maximum number of digits on a port number */
 #define MAX_DIGITS      5
-
-#endif /* LIBPKG_EXAMPLE_NTP_H */
 
 /*
  * Local Variables:

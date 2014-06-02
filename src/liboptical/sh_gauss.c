@@ -1,7 +1,7 @@
 /*                      S H _ G A U S S . C
  * BRL-CAD
  *
- * Copyright (c) 1998-2014 United States Government as represented by
+ * Copyright (c) 1998-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -286,7 +286,8 @@ tree_solids(union tree *tp, struct tree_bark *tb, int op, struct resource *resp)
 }
 
 
-/*
+/* G A U S S _ S E T U P
+ *
  * This routine is called (at prep time)
  * once for each region which uses this shader.
  * Any shader-specific initialization should be done here.
@@ -357,13 +358,19 @@ gauss_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, c
 }
 
 
-HIDDEN void
+/*
+   * G A U S S _ P R I N T
+   */
+HIDDEN void
 gauss_print(register struct region *rp, genptr_t dp)
 {
     bu_struct_print(rp->reg_name, gauss_print_tab, (char *)dp);
 }
 
 
+/*
+ * G A U S S _ F R E E
+ */
 HIDDEN void
 gauss_free(genptr_t cp)
 {
@@ -465,6 +472,8 @@ eval_seg(struct application *ap, struct reg_db_internals *dbint, struct seg *seg
 
 
 /*
+ * G A U S S _ R E N D E R
+ *
  * This is called (from viewshade() in shade.c) once for each hit point
  * to be shaded.  The purpose here is to fill in values in the shadework
  * structure.

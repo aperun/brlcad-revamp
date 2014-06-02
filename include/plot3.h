@@ -1,7 +1,7 @@
 /*                         P L O T 3 . H
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -27,16 +27,19 @@
  *
  */
 
-#ifndef PLOT3_H
-#define PLOT3_H
+#ifndef	PLOT3_H
+#define	PLOT3_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "common.h"
 
-#include "bu/defines.h"
+#include "bu.h"
 #include "vmath.h"
 #include "bn.h"
 
-__BEGIN_DECLS
 
 #define	pl_mat_idn( _mat )		MAT_IDN( _mat )
 #define pl_mat_zero( _mat )		MAT_ZERO( _mat )
@@ -46,7 +49,7 @@ __BEGIN_DECLS
 #define PL_OUTPUT_MODE_TEXT 1
 
 
-BN_EXPORT extern int pl_getOutputMode(void);
+BN_EXPORT extern int pl_getOutputMode();
 BN_EXPORT extern void pl_setOutputMode(int mode);
 BN_EXPORT extern void pl_point(FILE *plotfp,
 		     int x,
@@ -169,7 +172,7 @@ BN_EXPORT extern void pd_box(FILE *plotfp,
 		     double y_2);
 
 /* Double 3-D both in vector and enumerated versions */
-#ifdef VMATH_H
+#ifdef __VMATH_H__
 BN_EXPORT extern void pdv_3space(FILE *plotfp,
 		     const vect_t min,
 		     const vect_t max);
@@ -185,7 +188,7 @@ BN_EXPORT extern void pdv_3line(FILE *plotfp,
 BN_EXPORT extern void pdv_3box(FILE *plotfp,
 		     const vect_t a,
 		     const vect_t b);
-#endif /* VMATH_H */
+#endif /* __VMATH_H__ */
 BN_EXPORT extern void pd_3space(FILE *plotfp,
 		     double x_1,
 		     double y_1,
@@ -477,10 +480,12 @@ BN_EXPORT extern void BU_FORTRAN(f3vect, F3VECT)(FILE **fp,
 		     float *fl,
 		     float *tl);
 
-__END_DECLS
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* PLOT3_H */
-
 /** @} */
 /*
  * Local Variables:

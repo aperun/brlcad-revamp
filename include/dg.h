@@ -1,7 +1,7 @@
 /*                            D G . H
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -27,10 +27,8 @@
  *
  */
 
-#ifndef DG_H
-#define DG_H
-
-#include "common.h"
+#ifndef __DG_H__
+#define __DG_H__
 
 #include "ged.h"
 #include "obj.h"
@@ -106,7 +104,7 @@ struct dg_obj {
     struct vd_curve		*dgo_currVHead;		/**< @brief current vdraw head */
     struct solid		*dgo_freeSolids;	/**< @brief ptr to head of free solid list */
     char			**dgo_rt_cmd;
-    ssize_t			dgo_rt_cmd_len;
+    size_t			dgo_rt_cmd_len;
     struct bu_observer		dgo_observers;
     struct run_rt		dgo_headRunRt;		/**< @brief head of forked rt processes */
     struct bu_vls		dgo_qray_basename;	/**< @brief basename of query ray vlist */
@@ -250,7 +248,7 @@ GED_EXPORT extern int vdraw_cmd_tcl(struct dg_obj *dgop,
 
 __END_DECLS
 
-#endif /* DG_H */
+#endif /* __DG_H__ */
 
 /** @} */
 

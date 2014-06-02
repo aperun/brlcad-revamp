@@ -1,7 +1,7 @@
 /*                      R E G T A B . H
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -27,8 +27,8 @@
  *	IABG mbH (Germany)
  */
 
-#ifndef CONV_INTAVAL_REGTAB_H
-#define CONV_INTAVAL_REGTAB_H
+#ifndef REGTAB_INCLUDED
+#define REGTAB_INCLUDED
 
 #include "common.h"
 
@@ -169,4 +169,4 @@ private:
 };
 
 
-#endif /* CONV_INTAVAL_REGTAB_H */
+#endif // REGTAB_INCLUDED

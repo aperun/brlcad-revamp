@@ -1,7 +1,7 @@
 /*                     B A S E N A M E . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -20,52 +20,55 @@
 
 #include "common.h"
 
+#include "bu.h"
 #include <string.h>
 #include <ctype.h>
 
-#include "bu/log.h"
-#include "bu/str.h"
 
-void
-bu_basename(char *basename, const char *path)
+char *
+bu_basename(const char *str)
 {
     const char *p;
+    char *base_str;
     size_t len;
 
-    if (UNLIKELY(!path)) {
-	bu_strlcpy(basename, ".", strlen(".")+1);
-	return;
+    if (UNLIKELY(!str)) {
+	return bu_strdup(".");
     }
 
     /* skip the filesystem disk/drive name if we're on a DOS-capable
      * platform that uses '\' for paths, e.g., C:\ -> \
      */
-    if (BU_DIR_SEPARATOR == '\\' && isalpha((int)(path[0])) && path[1] == ':') {
-	path += 2;
+    if (BU_DIR_SEPARATOR == '\\' && isalpha((int)(str[0])) && str[1] == ':') {
+	str += 2;
     }
 
     /* Skip leading separators, e.g., ///foo/bar -> foo/bar */
-    for (p = path; *p != '\0'; p++) {
+    for (p = str; *p != '\0'; p++) {
 	/* check native separator as well as / so we can use this
 	 * routine for geometry paths too.
 	 */
 	if ((p[0] == BU_DIR_SEPARATOR && p[1] != BU_DIR_SEPARATOR && p[1] != '\0')
 	    || (p[0] == '/' && p[1] != '/' && p[1] != '\0')) {
-	    path = p+1;
+	    str = p+1;
 	}
     }
 
-    len = strlen(path);
+    len = strlen(str);
 
     /* Remove trailing separators */
-    while (len > 1 && (path[len - 1] == BU_DIR_SEPARATOR || path[len - 1] == '/'))
+    while (len > 1 && (str[len - 1] == BU_DIR_SEPARATOR || str[len - 1] == '/'))
 	len--;
 
+    /* Create a new string */
+    base_str = bu_calloc(len + 2, sizeof(char), "bu_basename alloc");
     if (len > 0) {
-	bu_strlcpy(basename, path, len+1);
+	bu_strlcpy(base_str, str, len+1);
     } else {
-	basename[0] = '.';
+	base_str[0] = '.';
     }
+
+    return base_str;
 }
 
 /*

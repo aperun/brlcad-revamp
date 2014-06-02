@@ -1,7 +1,7 @@
 /*                           R E C . C
  * BRL-CAD
  *
- * Copyright (c) 1985-2014 United States Government as represented by
+ * Copyright (c) 1985-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -157,6 +157,8 @@ struct rec_specific {
 };
 
 /**
+ * R E C _ B B O X
+ *
  * Calculate the RPP for an REC
  */
 int
@@ -260,6 +262,8 @@ rt_rec_bbox(struct rt_db_internal *ip, point_t *min, point_t *max, const struct 
 }
 
 /**
+ * R E C _ P R E P
+ *
  * Given a pointer to a GED database record, and a transformation matrix,
  * determine if this is a valid REC,
  * and if so, precompute various terms of the formulas.
@@ -396,6 +400,9 @@ rt_rec_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip)
 }
 
 
+/**
+ * R E C _ P R I N T
+ */
 void
 rt_rec_print(const struct soltab *stp)
 {
@@ -416,6 +423,8 @@ rt_rec_print(const struct soltab *stp)
 
 
 /**
+ * R E C _ S H O T
+ *
  * Intersect a ray with a right elliptical cylinder,
  * where all constant terms have
  * been precomputed by rt_rec_prep().  If an intersection occurs,
@@ -628,6 +637,8 @@ rt_rec_shot(struct soltab *stp, struct xray *rp, struct application *ap, struct 
 
 #define RT_REC_SEG_MISS(SEG)		(SEG).seg_stp=(struct soltab *) 0;
 /**
+ * R E C _ V S H O T
+ *
  * This is the Becker vector version
  */
 void
@@ -750,6 +761,8 @@ rt_rec_vshot(struct soltab **stp, struct xray **rp, struct seg *segp, int n, str
 
 
 /**
+ * R E C _ N O R M
+ *
  * Given ONE ray distance, return the normal and entry/exit point.
  * hit_surfno is a flag indicating if normal needs to be computed or not.
  */
@@ -782,6 +795,8 @@ rt_rec_norm(struct hit *hitp, struct soltab *stp, struct xray *rp)
 
 
 /**
+ * R E C _ C U R V E
+ *
  * Return the "curvature" of the cylinder.  If an endplate,
  * pick a principle direction orthogonal to the normal, and
  * indicate no curvature.  Otherwise, compute curvature.
@@ -821,6 +836,8 @@ rt_rec_curve(struct curvature *cvp, struct hit *hitp, struct soltab *stp)
 
 
 /**
+ * R E C _ U V
+ *
  * For a hit on the surface of an REC, return the (u, v) coordinates
  * of the hit point, 0 <= u, v <= 1.
  *
@@ -854,7 +871,7 @@ rt_rec_uv(struct application *ap, struct soltab *stp, struct hit *hitp, struct u
 		ratio = 1.0;
 	    if (ratio < -1.0)
 		ratio = -1.0;
-	    uvp->uv_u = acos(ratio) * M_1_2PI;
+	    uvp->uv_u = acos(ratio) * bn_inv2pi;
 	    uvp->uv_v = pprime[Z];		/* height */
 	    break;
 	case REC_NORM_TOP:
@@ -865,7 +882,7 @@ rt_rec_uv(struct application *ap, struct soltab *stp, struct hit *hitp, struct u
 		ratio = 1.0;
 	    if (ratio < -1.0)
 		ratio = -1.0;
-	    uvp->uv_u = acos(ratio) * M_1_2PI;
+	    uvp->uv_u = acos(ratio) * bn_inv2pi;
 	    uvp->uv_v = len;		/* rim v = 1 */
 	    break;
 	case REC_NORM_BOT:
@@ -876,7 +893,7 @@ rt_rec_uv(struct application *ap, struct soltab *stp, struct hit *hitp, struct u
 		ratio = 1.0;
 	    if (ratio < -1.0)
 		ratio = -1.0;
-	    uvp->uv_u = acos(ratio) * M_1_2PI;
+	    uvp->uv_u = acos(ratio) * bn_inv2pi;
 	    uvp->uv_v = 1 - len;	/* rim v = 0 */
 	    break;
     }
@@ -894,6 +911,10 @@ rt_rec_uv(struct application *ap, struct soltab *stp, struct hit *hitp, struct u
 }
 
 
+/**
+ * R T _ R E C _ P A R A M S
+ *
+ */
 int
 rt_rec_params(struct pc_pc_set *UNUSED(ps), const struct rt_db_internal *ip)
 {
@@ -903,6 +924,9 @@ rt_rec_params(struct pc_pc_set *UNUSED(ps), const struct rt_db_internal *ip)
 }
 
 
+/**
+ * R E C _ F R E E
+ */
 void
 rt_rec_free(struct soltab *stp)
 {
@@ -910,6 +934,13 @@ rt_rec_free(struct soltab *stp)
 	(struct rec_specific *)stp->st_specific;
 
     BU_PUT(rec, struct rec_specific);
+}
+
+
+int
+rt_rec_class(void)
+{
+    return 0;
 }
 
 

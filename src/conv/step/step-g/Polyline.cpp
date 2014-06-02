@@ -1,7 +1,7 @@
 /*                 Polyline.cpp
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -48,7 +48,14 @@ Polyline::Polyline(STEPWrapper *sw, int step_id)
 
 Polyline::~Polyline()
 {
-    // elements created through factory will be deleted there.
+    /* list clear
+       LIST_OF_POINTS::iterator i = points.begin();
+
+       while(i != points.end()) {
+       delete (*i);
+       i = points.erase(i);
+       }
+    */
     points.clear();
 }
 

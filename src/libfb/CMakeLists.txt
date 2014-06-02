@@ -8,7 +8,6 @@ set(FB_INCLUDE_DIRS
   ${OPENGL_INCLUDE_DIR_GLX}
   ${TCL_INCLUDE_DIRS}
   ${TK_INCLUDE_PATH}
-  ${OPENNURBS_INCLUDE_DIR}
   )
 BRLCAD_LIB_INCLUDE_DIRS(fb FB_INCLUDE_DIRS "")
 
@@ -35,17 +34,12 @@ if(BRLCAD_ENABLE_TK)
   set(LINKLIBS ${LINKLIBS} ${TK_LIBRARY})
   set(fbtk_srcs if_tk.c)
 endif(BRLCAD_ENABLE_TK)
-if(BRLCAD_ENABLE_QT)
-  set(FBQTDEFS "-DIF_QT")
-  set(fbqt_srcs if_qt.c)
-endif(BRLCAD_ENABLE_QT)
 
 set(LIBFB_SOURCES
   ${fbX11_srcs}
   ${fbogl_srcs}
   ${fbwgl_srcs}
   ${fbtk_srcs}
-  ${fbqt_srcs}
   asize.c
   fb_generic.c
   fb_log.c
@@ -64,6 +58,12 @@ set(LIBFB_SOURCES
   vers.c
   )
 
+# Unfortunately, on Mac OS X the OpenGL headers are not C90
+# compliant - anything pulling them in needs the C99 flag
+get_property(libfb_C_FLAGS GLOBAL PROPERTY libfb_C_FLAGS)
+LIST(APPEND libfb_C_FLAGS "${C99_FLAG}")
+set_property(GLOBAL PROPERTY libfb_C_FLAGS "${libfb_C_FLAGS}")
+
 add_definitions(
   -DIF_REMOTE
   -DIF_AB
@@ -71,7 +71,6 @@ add_definitions(
   ${FBOGLDEFS}
   ${FBTKDEFS}
   ${XOPEN_DEFINE}
-  ${FBQTDEFS}
   )
 
 BRLCAD_ADDLIB(libfb "${LIBFB_SOURCES}" "libbu;libpkg;${LINKLIBS}")
@@ -83,12 +82,13 @@ endif(BRLCAD_BUILD_LOCAL_TK AND BRLCAD_ENABLE_TK)
 set(libfb_ignore_files
   dmdfb.h
   if_TEMPLATE.c
+  nilcursor.h
+  oglcursor.h
   if_X.c
   if_X24.c
   if_ogl.c
-  if_qt.c
-  if_tk.c
   if_wgl.c
+  if_tk.c
   )
 CMAKEFILES(${libfb_ignore_files})
 

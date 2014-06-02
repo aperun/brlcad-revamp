@@ -1,7 +1,7 @@
 /*                          M A I N . C
  * BRL-CAD
  *
- * Copyright (c) 1985-2014 United  States Government as represented by
+ * Copyright (c) 1985-2013 United  States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -39,7 +39,6 @@
 #include <math.h>
 #include "bio.h"
 
-#include "bu.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "fb.h"
@@ -51,7 +50,7 @@
 #include "brlcad_ident.h"
 
 
-extern void application_init(void);
+extern void application_init();
 
 extern const char title[];
 
@@ -102,6 +101,9 @@ extern struct resource	resource[];	/* from opt.c */
 int	save_overlaps=0;	/* flag for setting rti_save_overlaps */
 
 
+/*
+ *			S I G I N F O _ H A N D L E R
+ */
 void
 siginfo_handler(int UNUSED(arg))
 {
@@ -115,6 +117,9 @@ siginfo_handler(int UNUSED(arg))
 }
 
 
+/*
+ *			M E M O R Y _ S U M M A R Y
+ */
 void
 memory_summary(void)
 {
@@ -133,6 +138,9 @@ memory_summary(void)
     n_realloc = bu_n_realloc;
 }
 
+/*
+ *			M A I N
+ */
 int main(int argc, const char **argv)
 {
     struct rt_i *rtip = NULL;
@@ -141,12 +149,14 @@ int main(int argc, const char **argv)
     struct bu_vls times = BU_VLS_INIT_ZERO;
     int i;
 
+#if defined(_WIN32) && !defined(__CYGWIN__)
     setmode(fileno(stdin), O_BINARY);
     setmode(fileno(stdout), O_BINARY);
     setmode(fileno(stderr), O_BINARY);
-
+#else
     bu_setlinebuf( stdout );
     bu_setlinebuf( stderr );
+#endif
 
     azimuth = 35.0;			/* GIFT defaults */
     elevation = 25.0;
@@ -186,9 +196,15 @@ int main(int argc, const char **argv)
 
     /* Identify what host we're running on */
     if (rt_verbosity & VERBOSE_LIBVERSIONS) {
-	char hostname[512] = {0};
-	if (bu_gethostname(hostname, sizeof(hostname)) >= 0)
+	char	hostname[512] = {0};
+#ifndef _WIN32
+	if (gethostname(hostname, sizeof(hostname)) >= 0 &&
+	    hostname[0] != '\0' )
 	    fprintf(stderr, "Running on %s\n", hostname);
+#else
+	sprintf(hostname, "Microsoft Windows");
+	fprintf(stderr, "Running on %s\n", hostname);
+#endif
     }
 
     if (bu_optind >= argc) {

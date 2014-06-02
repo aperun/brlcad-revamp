@@ -1,7 +1,7 @@
 /*                     P R E D I C T O R . C
  * BRL-CAD
  *
- * Copyright (c) 1992-2014 United States Government as represented by
+ * Copyright (c) 1992-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -46,6 +46,9 @@
 #include "./cmd.h"
 #include "./mged_dm.h"
 
+/*
+ * I N I T _ T R A I L
+ */
 static void
 init_trail(struct trail *tp)
 {
@@ -55,6 +58,8 @@ init_trail(struct trail *tp)
 
 
 /*
+ * P U S H _ T R A I L
+ *
  * Add a new point to the end of the trail.
  */
 static void
@@ -68,6 +73,8 @@ push_trail(struct trail *tp, fastf_t *pt)
 
 
 /*
+ * P O L Y _ T R A I L
+ *
  * Draw from the most recently added points in two trails, as polygons.
  * Proceeds backwards.
  * t1 should be below (lower screen Y) t2.
@@ -128,6 +135,9 @@ predictor_init(void)
 }
 
 
+/*
+ * P R E D I C T O R _ K I L L
+ */
 void
 predictor_kill(void)
 {
@@ -147,6 +157,8 @@ predictor_kill(void)
 	VADD2(_m, framecenter_m, edgevect_m); }
 
 /*
+ * P R E D I C T O R _ F R A M E
+ *
  * Draw the frame itself as four polygons:
  * ABFE, HGCD, EILH, and JFGK.
  * The streamers will attach at edges AE, BF, GC, and HD.
@@ -308,6 +320,8 @@ predictor_frame(void)
 
 
 /*
+ * P R E D I C T O R _ H O O K
+ *
  * Called from set.c when the predictor variables are modified.
  */
 void

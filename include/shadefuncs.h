@@ -1,7 +1,7 @@
 /*			S H A D E F U N C S . H
  * BRL-CAD
  *
- * Copyright (c) 1993-2014 United States Government as represented by
+ * Copyright (c) 1993-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -23,10 +23,8 @@
  *
  */
 
-#ifndef SHADEFUNCS_H
-#define SHADEFUNCS_H
-
-#include "common.h"
+#ifndef SHADEFUNCS
+#define SHADEFUNCS
 
 #include "shadework.h"
 
@@ -43,6 +41,8 @@
 #endif
 
 /**
+ *			M F U N C S
+ *
  *  The interface to the various material property & texture routines.
  */
 struct mfuncs {
@@ -83,8 +83,6 @@ struct mfuncs {
 /* mf_flags lists important details about individual shaders */
 #define MFF_PROC	0x01		/**< @brief  shader is procedural, computes tr/re/hits */
 
-__BEGIN_DECLS
-
 /* defined in material.c */
 OPTICAL_EXPORT extern void mlib_add_shader(struct mfuncs **headp,
 					   struct mfuncs *mfp1);
@@ -96,16 +94,14 @@ OPTICAL_EXPORT extern int mlib_setup(struct mfuncs **headp,
 OPTICAL_EXPORT extern void mlib_free(struct region *rp);
 
 /**
+ * L O A D _ D Y N A M I C _ S H A D E R
+ *
  * Given a shader/material name, try to find a DSO to supply the
  * shader.
  */
 OPTICAL_EXPORT extern struct mfuncs *load_dynamic_shader(const char *material);
 
-__END_DECLS
-
-#endif /* SHADEFUNCS_H */
-
-
+#endif
 /** @} */
 /*
  * Local Variables:

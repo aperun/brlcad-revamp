@@ -1,7 +1,7 @@
 /*                       N M G - R I B . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "bu/getopt.h"
 #include "vmath.h"
 #include "nmg.h"
 #include "raytrace.h"
@@ -44,9 +43,10 @@ char *options = "ht";
 char *progname = "(noname)";
 int triangulate = 0;
 
-
-void
-usage(char *s)
+/*
+ *	U S A G E --- tell user how to invoke this program, then exit
+ */
+void usage(char *s)
 {
     if (s) {
 	bu_log(s);
@@ -56,9 +56,10 @@ usage(char *s)
 		   progname);
 }
 
-
-int
-parse_args(int ac, char **av)
+/*
+ *	P A R S E _ A R G S --- Parse through command line flags
+ */
+int parse_args(int ac, char **av)
 {
     int  c;
     char *strrchr(const char *, int);
@@ -163,6 +164,8 @@ nmg_to_rib(struct model *m)
 
 
 /*
+ *	M A I N
+ *
  *	Call parse_args to handle command line arguments first, then
  *	process input.
  */

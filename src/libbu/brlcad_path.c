@@ -1,7 +1,7 @@
 /*                   B R L C A D _ P A T H . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -28,12 +28,7 @@
 #include <string.h>
 #include "bio.h"
 
-#include "bu/debug.h"
-#include "bu/file.h"
-#include "bu/log.h"
-#include "bu/malloc.h"
-#include "bu/str.h"
-#include "bu/vls.h"
+#include "bu.h"
 #include "sysv.h"
 
 /* private headers */
@@ -51,7 +46,7 @@
 
 
 HIDDEN const char *
-_brlcad_data(void)
+_brlcad_data()
 {
     static char path[MAXPATHLEN] = {0};
 
@@ -75,6 +70,8 @@ _brlcad_data(void)
 
 
 /**
+ * b u _ r o o t _ m i s s i n g
+ *
  *print out an error/warning message if we cannot find the specified
  * BRLCAD_ROOT (compile-time install path)
  */
@@ -103,6 +100,8 @@ for sh/bash users:\n\
 
 
 /**
+ * b u _ d a t a _ m i s s i n g
+ *
  * print out an error/warning message if we cannot find the specified
  * BRLCAD_DATA (compile-time install path)
  */

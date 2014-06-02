@@ -1,7 +1,7 @@
 /*                         S O L I D . H
  * BRL-CAD
  *
- * Copyright (c) 1985-2014 United States Government as represented by
+ * Copyright (c) 1985-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -25,10 +25,10 @@
  *
  */
 
-#ifndef SOLID_H
-#define SOLID_H
+#ifndef __SOLID_H__
+#define __SOLID_H__
 
-#include "bu/list.h"
+#include "bu.h"
 #include "raytrace.h"
 
 struct solid  {
@@ -100,7 +100,7 @@ struct solid  {
 	BU_LIST_NOT_HEAD(p1, hp);\
 	(p1)=BU_LIST_PNEXT(structure, p1)
 
-#endif /* SOLID_H */
+#endif /* __SOLID_H__ */
 
 /** @} */
 /*

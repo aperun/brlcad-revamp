@@ -396,7 +396,7 @@ terrain
 tire
 torii
 tube
-vegetation
+vegitation
 wdb_example
 window
 window_frame
@@ -417,4 +417,5 @@ loop
 news2tracker.sh
 query
 tracker.sh
+trimconfig.sh
 ttcp

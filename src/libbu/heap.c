@@ -1,7 +1,7 @@
 /*                          H E A P . C
  * BRL-CAD
  *
- * Copyright (c) 2013-2014 United States Government as represented by
+ * Copyright (c) 2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -20,13 +20,8 @@
 
 #include "common.h"
 
-#include <stdlib.h> /* for getenv, atoi, and atexit */
+#include "bu.h"
 
-#include "bu/debug.h"
-#include "bu/log.h"
-#include "bu/malloc.h"
-#include "bu/parallel.h"
-#include "bu/vls.h"
 
 /**
  * This number specifies the range of byte sizes to support for fast
@@ -106,7 +101,7 @@ bu_heap_log(bu_heap_func_t log)
 
 
 static void
-heap_print(void)
+heap_print()
 {
     static int printed = 0;
 

@@ -1,7 +1,7 @@
 #                      A R C H E R C O R E . T C L
 # BRL-CAD
 #
-# Copyright (c) 2002-2014 United States Government as represented by
+# Copyright (c) 2002-2013 United States Government as represented by
 # the U.S. Army Research Laboratory.
 #
 # This library is free software; you can redistribute it and/or
@@ -40,7 +40,6 @@ namespace eval ArcherCore {
 
     itk_option define -quitcmd quitCmd Command {}
     itk_option define -master master Master "."
-    itk_option define -geometry geometry Geometry ""
 
     constructor {{_viewOnly 0} {_noCopy 0} {_noTree 0} {_noToolbar 0} args} {}
     destructor {}
@@ -272,7 +271,6 @@ namespace eval ArcherCore {
 	method protate             {args}
 	method pscale              {args}
 	method ptranslate          {args}
-	method pull                {args}
 	method push                {args}
 	method put                 {args}
 	method put_comb            {args}
@@ -395,7 +393,6 @@ namespace eval ArcherCore {
 
 	# variables for preference state
 	variable mWindowGeometry ""
-	variable mCmdWindowGeometry ""
 	variable mEnableAffectedNodeHighlight 0
 	variable mEnableAffectedNodeHighlightPref ""
 	variable mEnableListView 0
@@ -585,7 +582,7 @@ namespace eval ArcherCore {
 	    killtree l ls make make_bb make_name make_pnts man mater mirror move \
 	    move_arb_edge move_arb_face mv mvall nmg_collapse \
 	    nmg_simplify ocenter opendb orotate oscale otranslate p q \
-	    quit packTree prefix protate pscale ptranslate pull push put \
+	    quit packTree prefix protate pscale ptranslate push put \
 	    put_comb putmat pwd r rcodes red rfarb rm rmater rotate \
 	    rotate_arb_face scale search sed shader shells tire title \
 	    track translate unhide units unpackTree vmake wmater xpush \
@@ -710,11 +707,6 @@ namespace eval ArcherCore {
 	variable mImage_botInter ""
 	variable mImage_botSub ""
 	variable mImage_botUnion ""
-	variable mImage_brep ""
-	variable mImage_brepLabeled ""
-	variable mImage_brepInter ""
-	variable mImage_brepSub ""
-	variable mImage_brepUnion ""
 	variable mImage_dsp ""
 	variable mImage_dspLabeled ""
 	variable mImage_dspInter ""
@@ -846,7 +838,6 @@ namespace eval ArcherCore {
 	method newDb             {}
 	method openDb            {}
 	method saveDb            {}
-	method exportDb          {}
 	method primaryToolbarAdd        {_type _name {args ""}}
 	method primaryToolbarRemove     {_index}
 
@@ -1607,7 +1598,7 @@ namespace eval ArcherCore {
 	set rmode [lindex $rdata 0]
 	set rtrans [lindex $rdata 1]
 
-	if {$rmode == $DISPLAY_MODE_HIDDEN} {
+	if [ $rmode == $DISPLAY_MODE_HIDDEN ] {
 	    gedCmd draw -h $obj
 	} else {
 	    gedCmd draw -m$rmode -x$rtrans $obj
@@ -1800,12 +1791,6 @@ namespace eval ArcherCore {
     set mImage_botInter [image create photo -file [file join $mImgDir bot_intersect.png]]
     set mImage_botSub [image create photo -file [file join $mImgDir bot_subtract.png]]
     set mImage_botUnion [image create photo -file [file join $mImgDir bot_union.png]]
-
-    set mImage_brep [image create photo -file [file join $mImgDir brep.png]]
-    set mImage_brepLabeled [image create photo -file [file join $mImgDir brep_labeled.png]]
-    set mImage_brepInter [image create photo -file [file join $mImgDir brep_intersect.png]]
-    set mImage_brepSub [image create photo -file [file join $mImgDir brep_subtract.png]]
-    set mImage_brepUnion [image create photo -file [file join $mImgDir brep_union.png]]
 
     set mImage_dsp [image create photo -file [file join $mImgDir dsp.png]]
     set mImage_dspLabeled [image create photo -file [file join $mImgDir dsp_labeled.png]]
@@ -2125,33 +2110,26 @@ namespace eval ArcherCore {
 }
 
 ::itcl::body ArcherCore::openDb {} {
-
-    package require cadwidgets::GeometryIO
-
     set typelist {
-	{"BRL-CAD Database" {".g" ".asc"}}
-	{"3dm (Rhino)" {".3dm"}}
-	{"FASTGEN 4" {".bdf" ".fas" ".fg" ".fg4"}}
-	{"STEP" {".stp" ".step"}}
-	{"STL" {".stl"}}
+	{"BRL-CAD Database" {".g"}}
 	{"All Files" {*}}
     }
 
-    set input_target [tk_getOpenFile -parent $itk_interior \
+    set target [tk_getOpenFile -parent $itk_interior \
 		    -initialdir $mLastSelectedDir \
 		    -title "Open Database" \
 		    -filetypes $typelist]
 
-    if {$input_target == ""} {
+    if {$target == ""} {
 	return
     } else {
-	set mLastSelectedDir [file dirname $input_target]
+	set mLastSelectedDir [file dirname $target]
     }
-
-    set target [cadwidgets::geom_load $input_target 1]
 
     ::update
     Load $target
+
+    cd $mLastSelectedDir
 }
 
 ::itcl::body ArcherCore::saveDb {} {
@@ -2182,32 +2160,6 @@ namespace eval ArcherCore {
 
     set mTarget $target
     file copy -force $mTargetCopy $mTarget
-}
-
-::itcl::body ArcherCore::exportDb {} {
-
-    package require cadwidgets::GeometryIO
-
-    set typelist {
-	{"All Files" {*}}
-	{"STL" {".stl"}}
-	{"Wavefront OBJ" {".obj"}}
-    }
-
-    set target [tk_getSaveFile -parent $itk_interior \
-        -initialdir $mLastSelectedDir \
-        -title "Save the Database As..." \
-        -filetypes $typelist]
-
-    # Sanity
-    if {$target == "" ||
-	$mTargetCopy == "" ||
-	$mDbNoCopy} {
-	return
-    }
-
-    set mTarget $target
-    cadwidgets::geom_save $mTargetCopy $mTarget $itk_component(ged)
 }
 
 ::itcl::body ArcherCore::primaryToolbarAdd {type name {args ""}} {
@@ -4568,7 +4520,6 @@ namespace eval ArcherCore {
 	arbn -
 	ars -
 	bot -
-	brep -
 	dsp -
 	ehy -
 	ell -
@@ -5019,15 +4970,12 @@ namespace eval ArcherCore {
     if {$_rflag} {
 	rebuildTree
 
-	if {$mSelectedObj != ""} {
-	    if {$mEnableListView} {
-		selectTreePath $mSelectedObj
-	    } else {
-		if {![catch {set paths [gedCmd search -Q / -name $mSelectedObj]}]} {
-		    if {[llength $paths]} {
-		       selectTreePath [lindex $paths 0]
-		    }
-		}
+	if {$mEnableListView} {
+	    selectTreePath $mSelectedObj
+	} else {
+	    set paths [gedCmd search / -name $mSelectedObj]
+	    if {[llength $paths]} {
+		selectTreePath [lindex $paths 0]
 	    }
 	}
     }
@@ -6775,10 +6723,6 @@ namespace eval ArcherCore {
 
 ::itcl::body ArcherCore::ptranslate {args} {
     eval gedWrapper ptranslate 0 0 1 0 $args
-}
-
-::itcl::body ArcherCore::pull {args} {
-    eval gedWrapper pull 0 1 1 0 $args
 }
 
 ::itcl::body ArcherCore::push {args} {

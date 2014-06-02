@@ -1,7 +1,7 @@
 /*                       F B - O R L E . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -53,6 +53,7 @@ static char *fb_file = (char *)NULL;
 
 extern void cmap_crunch(RGBpixel (*scan_buf), int pixel_ct, ColorMap *cmap);
 
+/* m a i n ()							*/
 int
 main(int argc, char **argv)
 {
@@ -66,7 +67,7 @@ main(int argc, char **argv)
 	return 1;
     }
     fp = stdout;
-    setbuf(fp, (char *)malloc(BUFSIZ));
+    setbuf(fp, malloc(BUFSIZ));
 
     rle_wlen(xlen, ylen, 1);
     rle_wpos(xpos, ypos, 1);
@@ -150,6 +151,7 @@ main(int argc, char **argv)
 }
 
 
+/* p a r s A r g v ()						*/
 static int
 parsArgv(int argc, char **argv)
 {
@@ -227,7 +229,7 @@ parsArgv(int argc, char **argv)
     return 1;
 }
 
-/*
+/* p r n t U s a g e ()
    Print usage message.
 */
 static void

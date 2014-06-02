@@ -353,4 +353,3 @@ inline void Triangle::IsChecked(bool b)
 }
 
 #endif
-

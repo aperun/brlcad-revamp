@@ -1343,7 +1343,7 @@ proc ::combobox::WidgetProc {w command args} {
 	    # events for traversal
 	    focus -force $widgets(entry)
 
-	    # select something by default, but only if it's an
+	    # select something by default, but only if its an
 	    # exact match...
 	    ::combobox::Find $widgets(this) 1
 

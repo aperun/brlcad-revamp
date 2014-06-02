@@ -126,7 +126,8 @@ public:
 } // namespace boost
 
 #ifdef BOOST_MSVC
-#  pragma warning(pop) 
+#  pragma warning(push)
+#  pragma warning(disable : 4511 4512)
 #endif
 
 #include <boost/archive/detail/abi_suffix.hpp> // pops abi_suffix.hpp pragmas

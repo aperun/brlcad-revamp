@@ -1,7 +1,7 @@
 /*                       W A V E L E T . C
  * BRL-CAD
  *
- * Copyright (c) 1998-2014 United States Government as represented by
+ * Copyright (c) 1998-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -77,6 +77,9 @@ size_t limit = 0;
 int decomp_recon;
 
 
+/*
+ * U S A G E --- tell user how to invoke this program, then exit
+ */
 void
 usage(char *s)
 {
@@ -90,6 +93,9 @@ usage(char *s)
 }
 
 
+/*
+ * P A R S E _ A R G S --- Parse through command line flags
+ */
 int
 parse_args(int ac, char **av)
 {
@@ -185,27 +191,27 @@ wlt_decompose_1d(void)
 
 	switch (value_type) {
 	    case DOUBLE:
-		bn_wlt_haar_1d_double_decompose((double *)tbuf, (double *)buf, width,
+		bn_wlt_haar_1d_double_decompose(tbuf, buf, width,
 						channels, limit);
 		break;
 	    case FLOAT:
-		bn_wlt_haar_1d_float_decompose((float *)tbuf, (float *)buf, width,
+		bn_wlt_haar_1d_float_decompose(tbuf, buf, width,
 					       channels, limit);
 		break;
 	    case CHAR:
-		bn_wlt_haar_1d_char_decompose((char *)tbuf, (char *)buf, width,
+		bn_wlt_haar_1d_char_decompose(tbuf, buf, width,
 					      channels, limit);
 		break;
 	    case SHORT:
-		bn_wlt_haar_1d_short_decompose((short int *)tbuf, (short int *)buf, width,
+		bn_wlt_haar_1d_short_decompose(tbuf, buf, width,
 					       channels, limit);
 		break;
 	    case INT:
-		bn_wlt_haar_1d_int_decompose((int *)tbuf, (int *)buf, width,
+		bn_wlt_haar_1d_int_decompose(tbuf, buf, width,
 					     channels, limit);
 		break;
 	    case LONG:
-		bn_wlt_haar_1d_long_decompose((long int *)tbuf, (long int *)buf, width,
+		bn_wlt_haar_1d_long_decompose(tbuf, buf, width,
 					      channels, limit);
 		break;
 	}
@@ -248,27 +254,27 @@ wlt_decompose_2d(void)
 
     switch (value_type) {
 	case DOUBLE:
-	    bn_wlt_haar_2d_double_decompose((double *)tbuf, (double *)buf, width,
+	    bn_wlt_haar_2d_double_decompose(tbuf, buf, width,
 					    channels, limit);
 	    break;
 	case FLOAT:
-	    bn_wlt_haar_2d_float_decompose((float *)tbuf, (float *)buf, width,
+	    bn_wlt_haar_2d_float_decompose(tbuf, buf, width,
 					   channels, limit);
 	    break;
 	case CHAR:
-	    bn_wlt_haar_2d_char_decompose((char *)tbuf, (char *)buf, width,
+	    bn_wlt_haar_2d_char_decompose(tbuf, buf, width,
 					  channels, limit);
 	    break;
 	case SHORT:
-	    bn_wlt_haar_2d_short_decompose((short int *)tbuf, (short int *)buf, width,
+	    bn_wlt_haar_2d_short_decompose(tbuf, buf, width,
 					   channels, limit);
 	    break;
 	case INT:
-	    bn_wlt_haar_2d_int_decompose((int *)tbuf, (int *)buf, width,
+	    bn_wlt_haar_2d_int_decompose(tbuf, buf, width,
 					 channels, limit);
 	    break;
 	case LONG:
-	    bn_wlt_haar_2d_long_decompose((long int *)tbuf, (long int *)buf, width,
+	    bn_wlt_haar_2d_long_decompose(tbuf, buf, width,
 					  channels, limit);
 	    break;
     }
@@ -308,27 +314,27 @@ wlt_reconstruct_1d(void)
 
 	switch (value_type) {
 	    case DOUBLE:
-		bn_wlt_haar_1d_double_reconstruct((double *)tbuf, (double *)buf, width,
+		bn_wlt_haar_1d_double_reconstruct(tbuf, buf, width,
 						  channels, avg_size, limit);
 		break;
 	    case FLOAT:
-		bn_wlt_haar_1d_float_reconstruct((float *)tbuf, (float *)buf, width,
+		bn_wlt_haar_1d_float_reconstruct(tbuf, buf, width,
 						 channels, avg_size, limit);
 		break;
 	    case CHAR:
-		bn_wlt_haar_1d_char_reconstruct((char *)tbuf, (char *)buf, width,
+		bn_wlt_haar_1d_char_reconstruct(tbuf, buf, width,
 						channels, avg_size, limit);
 		break;
 	    case SHORT:
-		bn_wlt_haar_1d_short_reconstruct((short int *)tbuf, (short int *)buf, width,
+		bn_wlt_haar_1d_short_reconstruct(tbuf, buf, width,
 						 channels, avg_size, limit);
 		break;
 	    case INT:
-		bn_wlt_haar_1d_int_reconstruct((int *)tbuf, (int *)buf, width,
+		bn_wlt_haar_1d_int_reconstruct(tbuf, buf, width,
 					       channels, avg_size, limit);
 		break;
 	    case LONG:
-		bn_wlt_haar_1d_long_reconstruct((long int *)tbuf, (long int *)buf, width,
+		bn_wlt_haar_1d_long_reconstruct(tbuf, buf, width,
 						channels, avg_size, limit);
 		break;
 	}
@@ -374,23 +380,23 @@ wlt_reconstruct_2d(void)
 					      channels, avg_size, limit);
 	    break;
 	case FLOAT:
-	    bn_wlt_haar_2d_float_reconstruct((float *)tbuf, (float *)buf, width,
+	    bn_wlt_haar_2d_float_reconstruct(tbuf, buf, width,
 					     channels, avg_size, limit);
 	    break;
 	case CHAR:
-	    bn_wlt_haar_2d_char_reconstruct((char *)tbuf, (char *)buf, width,
+	    bn_wlt_haar_2d_char_reconstruct(tbuf, buf, width,
 					    channels, avg_size, limit);
 	    break;
 	case SHORT:
-	    bn_wlt_haar_2d_short_reconstruct((short int *)tbuf, (short int *)buf, width,
+	    bn_wlt_haar_2d_short_reconstruct(tbuf, buf, width,
 					     channels, avg_size, limit);
 	    break;
 	case INT:
-	    bn_wlt_haar_2d_int_reconstruct((int *)tbuf, (int *)buf, width,
+	    bn_wlt_haar_2d_int_reconstruct(tbuf, buf, width,
 					   channels, avg_size, limit);
 	    break;
 	case LONG:
-	    bn_wlt_haar_2d_long_reconstruct((long int *)tbuf, (long int *)buf, width,
+	    bn_wlt_haar_2d_long_reconstruct(tbuf, buf, width,
 					    channels, avg_size, limit);
 	    break;
     }
@@ -402,6 +408,8 @@ wlt_reconstruct_2d(void)
 
 
 /*
+ * M A I N
+ *
  * Call parse_args to handle command line arguments first, then
  * process input.
  */

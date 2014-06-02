@@ -1,7 +1,7 @@
 /*                         E D C O D E S . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -30,8 +30,6 @@
 #include <string.h>
 #include "bio.h"
 
-#include "bu/getopt.h"
-#include "bu/sort.h"
 #include "./ged_private.h"
 
 
@@ -41,7 +39,7 @@
 
 
 HIDDEN int
-edcodes_id_compare(const void *p1, const void *p2, void *UNUSED(arg))
+edcodes_id_compare(const void *p1, const void *p2)
 {
     int id1, id2;
 
@@ -53,7 +51,7 @@ edcodes_id_compare(const void *p1, const void *p2, void *UNUSED(arg))
 
 
 HIDDEN int
-edcodes_reg_compare(const void *p1, const void *p2, void *UNUSED(arg))
+edcodes_reg_compare(const void *p1, const void *p2)
 {
     char *reg1, *reg2;
 
@@ -262,9 +260,9 @@ ged_edcodes(struct ged *gedp, int argc, const char *argv[])
 
 	/* sort the array of lines */
 	if (sort_by_ident) {
-	    bu_sort((void *)line_array, line_count, sizeof(char *), edcodes_id_compare, NULL);
+	    qsort(line_array, line_count, sizeof(char *), edcodes_id_compare);
 	} else {
-	    bu_sort((void *)line_array, line_count, sizeof(char *), edcodes_reg_compare, NULL);
+	    qsort(line_array, line_count, sizeof(char *), edcodes_reg_compare);
 	}
 
 	/* rewrite the temp file using the sorted lines */

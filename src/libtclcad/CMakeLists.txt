@@ -6,12 +6,21 @@ set(TCLCAD_INCLUDE_DIRS
   ${GED_INCLUDE_DIRS}
   )
 
-# Include directories only needed by the implementation
+# We need to guarantee internal Tcl headers
 set(TCLCAD_LOCAL_INCLUDE_DIRS
+  ${CMAKE_SOURCE_DIR}/src/other/tcl/generic
+  ${CMAKE_SOURCE_DIR}/src/other/tcl/unix
+  ${CMAKE_SOURCE_DIR}/src/other/incrTcl/itcl/generic
+  ${CMAKE_SOURCE_DIR}/src/other/incrTcl/itk/generic
   ${PNG_INCLUDE_DIR}
   )
 
 BRLCAD_LIB_INCLUDE_DIRS(tclcad TCLCAD_INCLUDE_DIRS TCLCAD_LOCAL_INCLUDE_DIRS)
+
+add_definitions(
+  ${C99_FLAG}
+  ${XOPEN_DEFINE}
+  )
 
 if(BRLCAD_ENABLE_X11)
   set(TCLCAD_XLIBS ${TCLCAD_XLIBS} ${X11_LIBRARIES} ${X11_Xi_LIB})

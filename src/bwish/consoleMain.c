@@ -76,8 +76,6 @@ main(
 	}
     }
 
-    bu_setprogname(argv[0]);
-
 #ifdef TCL_LOCAL_MAIN_HOOK
     TCL_LOCAL_MAIN_HOOK(&argc, &argv);
 #endif

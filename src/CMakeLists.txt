@@ -34,7 +34,6 @@ set(level_1_dirs
   libsysv
   libbrep
   librt
-  libwdb
   )
 
 # Level 2 directories are the remainder of BRL-CAD's libraries.  Setting
@@ -59,6 +58,7 @@ endif(BRLCAD_ENABLE_RTSERVER)
 set(level_2_dirs
   libpkg
   libfb
+  libwdb
   libgcv
   libanalyze
   libged
@@ -152,7 +152,7 @@ while(${current_level} LESS ${HIGHEST_TARGET_LEVEL})
   math(EXPR current_level "${current_level} + 1")
   foreach(subdir ${level_${current_level}_dirs})
     if(${current_level} LESS ${BRLCAD_ENABLE_TARGETS} OR ${current_level} EQUAL ${BRLCAD_ENABLE_TARGETS} )
-      verbose_add_subdirectory(src ${subdir})
+      add_subdirectory(${subdir})
     else(${current_level} LESS ${BRLCAD_ENABLE_TARGETS} OR ${current_level} EQUAL ${BRLCAD_ENABLE_TARGETS} )
       CMAKEFILES(${subdir})
     endif(${current_level} LESS ${BRLCAD_ENABLE_TARGETS} OR ${current_level} EQUAL ${BRLCAD_ENABLE_TARGETS} )

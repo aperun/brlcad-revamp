@@ -1,4 +1,4 @@
-/** @File opennurbs_fit.h
+/** @file opennurbs_fit.h
  *
  * Extensions to the openNURBS library, based off of Thomas Mörwald's
  * surface fitting code in the Point Cloud Library (pcl). His code is
@@ -36,8 +36,8 @@
  *
  */
 
-#ifndef LIBBREP_OPENNURBS_FIT_H
-#define LIBBREP_OPENNURBS_FIT_H
+#ifndef __OPENNURBS_FIT
+#define __OPENNURBS_FIT
 
 #include "opennurbs.h"
 #include <vector>

@@ -1,7 +1,7 @@
 /*                          W I N M A I N . C
  * BRL-CAD
  *
- * Copyright (c) 1998-2014 United States Government as represented by
+ * Copyright (c) 1998-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -132,8 +132,6 @@ WinMain(HINSTANCE hInstance,
 	}
     }
 
-    bu_setprogname(argv[0]);
-
 #ifdef TK_LOCAL_MAIN_HOOK
     TK_LOCAL_MAIN_HOOK(&argc, &argv);
 #endif
@@ -190,7 +188,7 @@ Tcl_AppInit(Tcl_Interp *interp)
 
 error:
     MessageBeep(MB_ICONEXCLAMATION);
-    MessageBox(NULL, (LPCSTR)Tcl_GetStringResult(interp), (LPCSTR)"Error in bwish",
+    MessageBox(NULL, (LPCWSTR)Tcl_GetStringResult(interp), (LPCWSTR)"Error in bwish",
 	       MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
     ExitProcess(1);
 
@@ -228,7 +226,7 @@ BwishPanic(const char *format, ...)
     vsnprintf(buf, 1024, format, argList);
 
     MessageBeep(MB_ICONEXCLAMATION);
-    MessageBox(NULL, (LPCSTR)buf, (LPCSTR)"Fatal Error in bwish",
+    MessageBox(NULL, (LPCWSTR)buf, (LPCWSTR)"Fatal Error in bwish",
 	       MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
 #ifdef _MSC_VER
     DebugBreak();

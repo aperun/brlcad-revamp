@@ -1,7 +1,7 @@
 /*                        G I F 2 F B . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -97,13 +97,7 @@ struct GIF_Image Im;
 
 char *framebuffer=NULL;
 
-void
-usage(char **argv)
-{
-    fprintf(stderr,"Usage: %s [-H] [-v] [-F frame_buffer] [gif_file]\n", argv[0]);
-    fprintf(stderr,"       (stdin used with '<' construct if gif_file not supplied)\n");
-}
-
+void usage(char **argv);
 int getByte(FILE *inp);
 
 int
@@ -127,9 +121,9 @@ main(int argc, char **argv)
     FBIO *fbp;
     FILE *fp;
 
-    while ((code = bu_getopt(argc, argv, "HvFh?")) != -1) {
+    while ((code = bu_getopt(argc, argv, "vFh")) != -1) {
 	switch (code) {
-	    case 'H':
+	    case 'h':
 		headers=1;
 		break;
 	    case 'v':
@@ -146,6 +140,7 @@ main(int argc, char **argv)
 
     if (bu_optind >= argc) {
 	if (isatty(fileno(stdin))) {
+	    (void) fprintf(stderr, "%s: No input file.\n", argv[0]);
 	    usage(argv);
 	    return 1;
 	}
@@ -229,7 +224,7 @@ main(int argc, char **argv)
 		Im.IH_Flags>>7, (Im.IH_Flags>>6)&0x01, Im.IH_Flags&0x03);
     }
 
-    if (WORD(Im.IH_Height) < 0 || WORD(Im.IH_Height) > 65535)
+    if(WORD(Im.IH_Height) < 0 || WORD(Im.IH_Height) > 65535)
 	bu_exit(1, "Bad height info in GIF header\n");
 
     interlaced = (Im.IH_Flags>>6)&0x01;
@@ -279,7 +274,7 @@ main(int argc, char **argv)
 	int ih_height = WORD(Im.IH_Height);
 	int ih_width = WORD(Im.IH_Width);
 
-	if (ih_height < 0 || ih_height > 0xffff || ih_width < 0 || ih_height > 0xffff)
+	if(ih_height < 0 || ih_height > 0xffff || ih_width < 0 || ih_height > 0xffff)
 	    bu_exit(1, "Invalid height in GIF Header\n");
 
 	/*
@@ -497,6 +492,12 @@ int getByte(FILE *inp)
     }
     return code;
 }
+void
+usage(char **argv)
+{
+    fprintf(stderr, "%s [-h] [-v] [-F frame_buffer] [gif_file]\n", argv[0]);
+}
+
 
 /*
  * Local Variables:

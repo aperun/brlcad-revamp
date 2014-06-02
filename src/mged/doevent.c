@@ -1,7 +1,7 @@
 /*                       D O E V E N T . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -50,7 +50,7 @@
 #include "vmath.h"
 #include "mater.h"
 #include "ged.h"
-#include "dm/dm_xvars.h"
+#include "dm_xvars.h"
 
 #include "./mged.h"
 #include "./mged_dm.h"
@@ -270,15 +270,7 @@ motion_event_handler(XMotionEvent *xmotion)
 		 * differences caused by floating point fuzz.
 		 */
 		rect_image2view();
-
-		{
-		    /* need dummy values for func signature--they are unused in the func */
-		    const struct bu_structparse *sdp = 0;
-		    const char name[] = "name";
-		    void *base = 0;
-		    const char value[] = "value";
-		    rb_set_dirty_flag(sdp, name, base, value);
-		}
+		rb_set_dirty_flag();
 
 		goto handled;
 	    } else if (doMotion)

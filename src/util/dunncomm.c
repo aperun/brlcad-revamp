@@ -1,7 +1,7 @@
 /*                      D U N N C O M M . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -102,6 +102,9 @@ unsnooze(int UNUSED(x))
 }
 
 
+/*
+ * D U N N O P E N
+ */
 void
 dunnopen(void)
 {
@@ -176,6 +179,8 @@ dunnopen(void)
 
 
 /*
+ * G O O D S T A T U S
+ *
  * Checks the status of the Dunn camera and returns 1 for good status
  * and 0 for bad status.
  *
@@ -231,6 +236,8 @@ goodstatus(void)
 
 
 /*
+ * H A N G T E N
+ *
  * Provides a 10 millisecond delay when called
  *
  */
@@ -244,6 +251,8 @@ hangten(void)
 
 
 /*
+ * R E A D Y
+ *
  * Sends a ready test command to the Dunn camera and returns 1 if the
  * camera is ready or 0 if the camera is not ready after waiting the
  * number of seconds specified by the argument.
@@ -307,10 +316,12 @@ ready(int nsecs)
 
 
 /*
+ * G E T E X P O S U R E
+ *
  * Get and print the current exposure
  */
 void
-getexposure(const char *title)
+getexposure(char *title)
 {
     struct timeval waittime;
     int readval;
@@ -348,6 +359,10 @@ getexposure(const char *title)
 }
 
 
+/*
+ * D U N N S E N D
+ *
+ */
 int
 dunnsend(char color, int val)
 {

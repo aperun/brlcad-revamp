@@ -1,3 +1,5 @@
+<!-- Converted by db4-upgrade version 1.0 -->
+
 <article xmlns="http://docbook.org/ns/docbook" version="5.0">
   <info><title>Crear una esfera en una caja exhibidora transparente</title>
 
@@ -61,10 +63,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged09_globe_outside_display_box.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged09_globe_outside_display_box.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -86,10 +85,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged09_globe_inside_outside_box.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged09_globe_inside_outside_box.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -136,10 +132,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged09_globe_wireframe.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged09_globe_wireframe.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -227,10 +220,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged09_globe_raytraced.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged09_globe_raytraced.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -341,10 +331,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged09_globe_base_box_wireframe.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged09_globe_base_box_wireframe.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -397,10 +384,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged09_globe_base_box_raytraced.png" format="PNG"/>
-	  </imageobject>
-	<imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged09_globe_base_box_raytraced.png" format="PNG"/>
 	  </imageobject>
 	</mediaobject>

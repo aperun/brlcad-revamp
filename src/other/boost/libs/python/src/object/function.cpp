@@ -433,23 +433,23 @@ void function::add_to_namespace(
     if (attribute.ptr()->ob_type == &function_type)
     {
         function* new_func = downcast<function>(attribute.ptr());
-        handle<> dict;
+        PyObject* dict = 0;
         
 #if PY_VERSION_HEX < 0x03000000
         // Old-style class gone in Python 3
         if (PyClass_Check(ns))
-            dict = handle<>(borrowed(((PyClassObject*)ns)->cl_dict));
+            dict = ((PyClassObject*)ns)->cl_dict;
         else
 #endif        
         if (PyType_Check(ns))
-            dict = handle<>(borrowed(((PyTypeObject*)ns)->tp_dict));
+            dict = ((PyTypeObject*)ns)->tp_dict;
         else    
-            dict = handle<>(PyObject_GetAttrString(ns, const_cast<char*>("__dict__")));
+            dict = PyObject_GetAttrString(ns, const_cast<char*>("__dict__"));
 
         if (dict == 0)
             throw_error_already_set();
 
-        handle<> existing(allow_null(::PyObject_GetItem(dict.get(), name.ptr())));
+        handle<> existing(allow_null(::PyObject_GetItem(dict, name.ptr())));
         
         if (existing)
         {

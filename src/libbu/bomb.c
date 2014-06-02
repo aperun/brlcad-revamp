@@ -1,7 +1,7 @@
 /*                          B O M B . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -26,10 +26,8 @@
 #include <stdarg.h>
 #include "bio.h"
 
-#include "bu/debug.h"
-#include "bu/file.h"
-#include "bu/log.h"
-#include "bu/parallel.h"
+#include "bu.h"
+
 
 /**
  * list of callbacks to call during bu_bomb.
@@ -124,7 +122,7 @@ bu_bomb(const char *str)
 #ifdef HAVE_UNISTD_H
     /*
      * No application level error handling,
-     * Go to extra pains to ensure that user gets to see this message.
+     * go to extra pains to ensure that user gets to see this message.
      * For example, mged hijacks output sent to stderr.
      */
     {
@@ -151,8 +149,8 @@ bu_bomb(const char *str)
 #if defined(DEBUG)
     /* save a backtrace, should hopefully have debug symbols */
     {
-	/* If the file already exists, there's probably another thread
-	 * writing out a report for the current process. Acquire a
+	/* if the file already exists, there's probably another thread
+	 * writing out a report for the current process. acquire a
 	 * mapped file semaphore so we only have one thread writing to
 	 * the file at a time (can't just use BU_SEM_SYSCALL).
 	 */

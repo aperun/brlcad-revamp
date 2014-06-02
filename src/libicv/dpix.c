@@ -1,7 +1,7 @@
 /*                          D P I X . C
  * BRL-CAD
  *
- * Copyright (c) 2013-2014 United States Government as represented by
+ * Copyright (c) 2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -68,7 +68,7 @@ icv_normalize(icv_image_t *bif)
 	data++;
     }
     /* strict Condition for avoiding normalization */
-    if (max <= 1.0 || min >= 0.0)
+    if(max <= 1.0 || min >= 0.0)
 	return bif;
 
     data = bif->data;
@@ -83,14 +83,12 @@ icv_normalize(icv_image_t *bif)
     return bif;
 }
 
-
-icv_image_t *
+HIDDEN icv_image_t *
 dpix_read(const char *filename, int width, int height)
 {
     icv_image_t *bif;
     int fd;
-    size_t size;
-    ssize_t ret;
+    ssize_t size;
 
     if (width == 0 || height == 0) {
 	bu_log("dpix_read : Using default size.\n");
@@ -100,8 +98,8 @@ dpix_read(const char *filename, int width, int height)
 
     if (filename == NULL)
 	fd = fileno(stdin);
-    else if ((fd = open(filename, O_RDONLY|O_BINARY, WRMODE)) <0) {
-	bu_log("dpix_read : Cannot open file %s for reading\n, ", filename);
+    else if ((fd = open(filename, O_RDONLY, WRMODE)) <0 ) {
+	bu_log("dpix_read : Cannot open file %s for reading\n,", filename);
 	return NULL;
     }
 
@@ -110,27 +108,20 @@ dpix_read(const char *filename, int width, int height)
     /* Size in Bytes for reading. */
     size = width*height*3*sizeof(bif->data[0]);
 
-    /* read dpix data */
-    ret = read(fd, bif->data, size);
-
-    if (ret != (ssize_t)size) {
+    if (read(fd, bif->data, size) !=size) {
 	bu_log("dpix_read : Error while reading\n");
 	icv_destroy(bif);
 	return NULL;
     }
-
     icv_normalize(bif);
-
     return bif;
 }
 
-
-int
+HIDDEN int
 dpix_write(icv_image_t *bif, const char *filename)
 {
     int fd;
-    size_t size;
-    ssize_t ret;
+    size_t ret, size;
 
     if (bif->color_space == ICV_COLOR_SPACE_GRAY) {
 	icv_gray2rgb(bif);
@@ -139,7 +130,7 @@ dpix_write(icv_image_t *bif, const char *filename)
 	return -1;
     }
 
-    if (filename==NULL)
+    if(filename==NULL)
 	fd = fileno(stdout);
     else if ((fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, WRMODE)) < 0) {
 	bu_log("dpix_write: Cannot open file for saving\n");
@@ -147,19 +138,15 @@ dpix_write(icv_image_t *bif, const char *filename)
     }
 
     /* size in bytes */
-    size = bif->width*bif->height*3*sizeof(bif->data[0]);
-
-    /* write dpix data */
+    size = (size_t) bif->width*bif->height*3*sizeof(bif->data[0]);
     ret = write(fd, bif->data, size);
     close(fd);
-
-    if (ret != (ssize_t)size) {
+    if (ret != size) {
 	bu_log("dpix_write : Short Write");
 	return -1;
     }
     return 0;
 }
-
 
 /*
  * Local Variables:

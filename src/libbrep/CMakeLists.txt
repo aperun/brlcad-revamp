@@ -19,9 +19,7 @@ set(BREP_LOCAL_INCLUDE_DIRS
 BRLCAD_LIB_INCLUDE_DIRS(brep BREP_INCLUDE_DIRS BREP_LOCAL_INCLUDE_DIRS)
 
 set(LIBBREP_SOURCES
-  BBNode.cpp
   boolean.cpp
-  BRNode.cpp
   intersect.cpp
   libbrep_brep_tools.cpp
   opennurbs_ext.cpp
@@ -29,8 +27,6 @@ set(LIBBREP_SOURCES
   px_event.cpp
   PullbackCurve.cpp
   ssx_event.cpp
-  Subcurve.cpp
-  Subsurface.cpp
   )
 
 set(libbrep_ignored_files

@@ -1,7 +1,7 @@
 /*                        G _ L I N T . C
  * BRL-CAD
  *
- * Copyright (c) 1995-2014 United States Government as represented by
+ * Copyright (c) 1995-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -41,13 +41,15 @@
 #define made_it()	bu_log("Made it to %s:%d\n", __FILE__, __LINE__);
 
 #define OPT_STRING	"a:ce:g:opr:st:ux:?h"
-#define RAND_NUM	(rand()/(fastf_t)RAND_MAX)
+#define RAND_NUM	((fastf_t)rand()/RAND_MAX)
 #define RAND_OFFSET	((1 - cell_center) * 	\
 			 (RAND_NUM * celsiz - celsiz / 2))
 #define TITLE_LEN	80
 
 
 /**
+ * G _ L I N T _ C T R L
+ *
  * Specification of what and how to report results
  */
 struct g_lint_ctrl
@@ -86,6 +88,8 @@ struct g_lint_ctrl
 
 
 /**
+ * G _ L I N T _ S E G
+ *
  * The critical information about a particular overlap found on one
  * ray.
  */
@@ -103,6 +107,8 @@ struct g_lint_seg
 
 
 /**
+ * G _ L I N T _ O V L P
+ *
  * A pair of overlapping regions and a list of all the offending ray
  * intervals.
  */
@@ -147,10 +153,10 @@ int log_2 (unsigned long x)
 static char *usage[] = {
     "Usage: 'g_lint [options] model.g object ...'\n",
     "Options (defaults in parentheses):\n",
-    "  -a azim      View target from azimuth of azim, in degrees (0.0)\n",
+    "  -a azim      View target from azimuth of azim (0.0 degrees)\n",
     "  -c           Fire rays from center of grid cell (random point)\n",
-    "  -e elev      View target from elevation of elev, in degrees (0.0)\n",
-    "  -g gridsize  Use grid-cell spacing of gridsize, in mm (100.0)\n",
+    "  -e elev      View target from elevation of elev (0.0 degrees)\n",
+    "  -g gridsize  Use grid-cell spacing of gridsize (100.0 mm)\n",
     "  -o           Include ray-origin on each line\n",
     "  -p           Produce plot3(5) output\n",
     "  -r bits      Set report-specification flag=bits...\n",
@@ -161,7 +167,7 @@ static char *usage[] = {
     "                 16  air last on shotlines\n",
     "                 32  vacuums\n",
     "  -s           Sort overlaps (report without sorting)\n",
-    "  -t tol       Ignore overlaps/voids of length < tol, in mm (0.0)\n",
+    "  -t tol       Ignore overlaps/voids of length < tol (0.0 mm)\n",
     "  -u           Report on air (overlaps only)\n",
     "  -x bits      Set diagnostic flag=bits\n",
     0
@@ -169,6 +175,8 @@ static char *usage[] = {
 
 
 /**
+ * P R I N T U S A G E
+ *
  * Reports a usage message on stderr.
  */
 void printusage(void)
@@ -180,6 +188,9 @@ void printusage(void)
 }
 
 
+/**
+ * C R E A T E _ S E G M E N T
+ */
 struct g_lint_seg *create_segment(void)
 {
     struct g_lint_seg *sp;
@@ -194,6 +205,8 @@ struct g_lint_seg *create_segment(void)
 
 
 /**
+ * P R I N T _ S E G M E N T
+ *
  * This routine writes one overlap segment to stdout.
  * It's the workhorse of the reporting process for overlaps.
  */
@@ -207,6 +220,9 @@ void print_segment(const char *r1name, const char *r2name, double seg_length, po
 }
 
 
+/**
+ * C R E A T E _ O V E R L A P
+ */
 struct g_lint_ovlp *create_overlap(struct region *r1, struct region *r2)
 {
     struct g_lint_ovlp *op;
@@ -235,6 +251,9 @@ struct g_lint_ovlp *create_overlap(struct region *r1, struct region *r2)
 }
 
 
+/**
+ * F R E E _ O V E R L A P
+ */
 void free_overlap(struct g_lint_ovlp *op)
 {
     BU_CKMAG(op, G_LINT_OVLP_MAGIC, "g_lint overlap structure");
@@ -249,6 +268,8 @@ void free_overlap(struct g_lint_ovlp *op)
 
 
 /**
+ * _ P R I N T _ O V E R L A P
+ *
  * The call-back for finally outputting data for all the overlap
  * segments between any two regions.
  */
@@ -273,6 +294,8 @@ void _print_overlap(void *v, int show_origin)
 
 
 /**
+ * P R I N T _ O V E R L A P
+ *
  * A wrapper for _print_overlap() for use when you don't want to print
  * the ray origin.
  */
@@ -283,6 +306,8 @@ void print_overlap(void *v, int UNUSED(depth))
 
 
 /**
+ * P R I N T _ O V E R L A P _ O
+ *
  * A wrapper for _print_overlap() for use when you do want to print
  * the ray origin.
  */
@@ -293,6 +318,8 @@ void print_overlap_o(void *v, int UNUSED(depth))
 
 
 /**
+ * C O M P A R E _ O V E R L A P S
+ *
  * The red-black-tree comparison callback for the overlap log.
  */
 int compare_overlaps(void *v1, void *v2)
@@ -317,6 +344,8 @@ int compare_overlaps(void *v1, void *v2)
 
 
 /**
+ * C O M P A R E _ B Y _ V O L
+ *
  * The red-black-tree comparison callback for the final re-sorting of
  * the overlaps by volume.
  */
@@ -338,6 +367,8 @@ int compare_by_vol(void *v1, void *v2)
 
 
 /**
+ * I N S E R T _ B Y _ V O L
+ *
  * The call-back, used in traversing the overlap log, to insert
  * overlaps into the sorted-by-volume tree.
  */
@@ -353,6 +384,8 @@ void insert_by_vol(void *v, int UNUSED(depth))
 
 
 /**
+ * U P D A T E _ O V L P _ L O G
+ *
  * Log an overlap found along a ray.
  *
  * If regions r1 and r2 were not already known to overlap, this
@@ -408,6 +441,8 @@ unsigned char *get_color(unsigned char *ucp, unsigned long x)
 
 
 /**
+ * R P T _ H I T
+ *
  * Ray-hit handler for use by rt_shootray().
  *
  * Checks every partition along the ray, reporting on stdout possible
@@ -661,6 +696,8 @@ static int rpt_hit(struct application *ap, struct partition *ph, struct seg *UNU
 
 
 /**
+ * N O _ O P _ O V E R L A P
+ *
  * Null event handler for use by rt_shootray().
  */
 static int no_op_overlap(struct application *UNUSED(ap), struct partition *UNUSED(pp), struct region *UNUSED(r1), struct region *UNUSED(r2), struct partition *UNUSED(hp))
@@ -670,6 +707,8 @@ static int no_op_overlap(struct application *UNUSED(ap), struct partition *UNUSE
 
 
 /**
+ * N O _ O P _ H I T
+ *
  * Null event handler for use by rt_shootray().
  */
 static int no_op_hit(struct application *UNUSED(ap), struct partition *UNUSED(ph), struct seg *UNUSED(dummy))
@@ -679,6 +718,8 @@ static int no_op_hit(struct application *UNUSED(ap), struct partition *UNUSED(ph
 
 
 /**
+ * N O _ O P _ M I S S
+ *
  * Null event handler for use by rt_shootray().
  */
 static int no_op_miss(struct application *UNUSED(ap))
@@ -688,6 +729,8 @@ static int no_op_miss(struct application *UNUSED(ap))
 
 
 /**
+ * R P T _ O V L P
+ *
  * Overlap handler for use by rt_shootray().
  *
  * Reports the current overlap on stdout, if the overlap is of length
@@ -858,7 +901,7 @@ main(int argc, char **argv)
 		use_air = ((control.glc_what_to_report & G_LINT_A_ANY) != 0);
 		break;
 	    case 's':
-		ovlp_log = bu_rb_create1("overlap log", BU_RB_COMPARE_FUNC_CAST_AS_FUNC_ARG(compare_overlaps));
+		ovlp_log = bu_rb_create1("overlap log", compare_overlaps);
 		if (control.glc_how_to_report == G_LINT_PLOT3)
 		    control.glc_how_to_report = G_LINT_ASCII;
 		bu_rb_uniq_on1(ovlp_log);
@@ -993,14 +1036,14 @@ main(int argc, char **argv)
      * sort them now and then print them out.
      */
     if (ovlp_log) {
-	ovlps_by_vol = bu_rb_create1("overlaps by volume", BU_RB_COMPARE_FUNC_CAST_AS_FUNC_ARG(compare_by_vol));
+	ovlps_by_vol = bu_rb_create1("overlaps by volume", compare_by_vol);
 	bu_rb_uniq_on1(ovlps_by_vol);
-	bu_rb_walk1(ovlp_log, (void (*)(void))insert_by_vol, BU_RB_WALK_INORDER);
+	bu_rb_walk1(ovlp_log, insert_by_vol, INORDER);
 
 	if (control.glc_how_to_report == G_LINT_ASCII_WITH_ORIGIN)
-	    bu_rb_walk1(ovlps_by_vol, (void (*)(void))print_overlap_o, BU_RB_WALK_INORDER);
+	    bu_rb_walk1(ovlps_by_vol, print_overlap_o, INORDER);
 	else
-	    bu_rb_walk1(ovlps_by_vol, (void (*)(void))print_overlap, BU_RB_WALK_INORDER);
+	    bu_rb_walk1(ovlps_by_vol, print_overlap, INORDER);
     }
 
     return 0;

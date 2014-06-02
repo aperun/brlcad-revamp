@@ -1,7 +1,7 @@
 /*                        B W C R O P . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -190,7 +190,7 @@ main(int argc, char **argv)
 	else
 	    return 1;
     } else {
-	double xval, yval;
+	float xval, yval;
 	unsigned long len;
 	/* Get info */
 	printf("Scanline length in input file: ");
@@ -202,7 +202,7 @@ main(int argc, char **argv)
 	    bu_exit(4, "bwcrop: scanlen = %zu, don't be ridiculous\n", scanlen);
 	}
 	printf("Line Length and Number of scan lines (in new file)?: ");
-	ret = scanf("%lf%lf", &xval, &yval);
+	ret = scanf("%f%f", &xval, &yval);
 	if (ret != 2) {
 	    perror("scanf");
 	}

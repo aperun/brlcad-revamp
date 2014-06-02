@@ -72,4 +72,3 @@ lazyFileReader::lazyFileReader( std::string fname, lazyInstMgr * i, fileID fid )
 lazyFileReader::~lazyFileReader() {
     delete _header;
 }
-

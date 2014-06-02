@@ -1,7 +1,7 @@
 /*                  S H _ T R E E T H E R M . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -211,7 +211,8 @@ build_tree(struct bu_list *br, struct region *rp)
 }
 
 
-/*
+/* T R E E T H E R M _ S E T U P
+ *
  * This routine is called (at prep time)
  * once for each region which uses this shader.
  * Any shader-specific initialization should be done here.
@@ -277,7 +278,7 @@ tthrm_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, c
 	bu_log("Error mapping \"%s\"\n",  tthrm_sp->tt_name);
 	bu_bomb("shader tthrm: can't get thermal data");
     }
-    tt_data = (char *)tt_file->buf;
+    tt_data = tt_file->buf;
 
 
     if (rdebug&RDEBUG_SHADE)
@@ -456,6 +457,9 @@ tthrm_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, c
 }
 
 
+/*
+ * T R E E T H E R M _ P R I N T
+ */
 HIDDEN void
 tthrm_print(register struct region *UNUSED(rp), genptr_t dp)
 {
@@ -466,6 +470,9 @@ tthrm_print(register struct region *UNUSED(rp), genptr_t dp)
 }
 
 
+/*
+ * T R E E T H E R M _ F R E E
+ */
 HIDDEN void
 tthrm_free(genptr_t cp)
 {
@@ -520,6 +527,8 @@ get_solid_number(const struct partition *pp)
 
 
 /*
+ * T R E E T H E R M _ R E N D E R
+ *
  * This is called (from viewshade() in shade.c) once for each hit point
  * to be shaded.  The purpose here is to fill in values in the shadework
  * structure.

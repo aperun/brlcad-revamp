@@ -1,7 +1,7 @@
 /*                 T E S T _ B A S E N A M E . C
  * BRL-CAD
  *
- * Copyright (c) 2011-2014 United States Government as represented by
+ * Copyright (c) 2011-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -35,9 +35,9 @@ void
 automatic_test(const char *input)
 {
 
-    char buf_input[1000];
     char *ans = NULL;
-    char *res = (char *)bu_calloc(strlen(buf_input), sizeof(char), "automatic_test res");
+    char buf_input[1000];
+    char *res = NULL;
 
 #ifdef HAVE_BASENAME
     if (input)
@@ -50,19 +50,20 @@ automatic_test(const char *input)
 	ans = basename(buf_input);
 
     if (!input)
-	bu_basename(res, NULL);
+	res = bu_basename(NULL);
     else
-	bu_basename(res, buf_input);
+	res = bu_basename(buf_input);
 
     if (BU_STR_EQUAL(res, ans))
 	printf("%24s -> %24s [PASSED]\n", input, res);
     else
 	bu_exit(EXIT_FAILURE, "%24s -> %24s (should be: %s) [FAIL]\n", input, res, ans);
-    bu_free(res, NULL);
 
+    bu_free(res, NULL);
 #else
     printf("BASENAME not available on this platform\n");
 #endif
+
     /* FIXME: this does not functionally halt */
 }
 

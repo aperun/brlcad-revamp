@@ -1,7 +1,7 @@
 /*                     P I X F I L T E R . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -41,8 +41,8 @@ unsigned char *top, *middle, *bottom, *temp;
 
 /* The filter kernels */
 struct kernels {
-    const char *name;
-    const char *uname;		/* What is needed to recognize it */
+    char *name;
+    char *uname;		/* What is needed to recognize it */
     int kern[9];
     int kerndiv;	/* Divisor for kernel */
     int kernoffset;	/* To be added to result */
@@ -69,13 +69,11 @@ int oflag = 0;	/* Different offset specified */
 char *file_name;
 FILE *infp;
 
-void select_filter(const char *str), dousage(void);
+void select_filter(char *str), dousage(void);
 
 char usage[] = "\
 Usage: pixfilter [-f type] [-v] [-d div] [-o offset]\n\
 	[-s squaresize] [-w width] [-n height] [file.pix] > file.pix\n";
-
-char hyphen[] = "-";
 
 int
 get_args(int argc, char **argv)
@@ -115,7 +113,7 @@ get_args(int argc, char **argv)
     if (bu_optind >= argc) {
 	if (isatty(fileno(stdin)))
 	    return 0;
-	file_name = hyphen;
+	file_name = "-";
 	infp = stdin;
     } else {
 	file_name = argv[bu_optind];
@@ -238,11 +236,13 @@ main(int argc, char **argv)
 
 
 /*
+ * S E L E C T _ F I L T E R
+ *
  * Looks at the command line string and selects a filter
  * based on it.
  */
 void
-select_filter(const char *str)
+select_filter(char *str)
 {
     int i;
 

@@ -1,7 +1,7 @@
 /*                          S H A D E W O R K . H
  * BRL-CAD
  *
- * Copyright (c) 1993-2014 United States Government as represented by
+ * Copyright (c) 1993-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -26,13 +26,14 @@
 #ifndef SHADEWORK_H
 #define SHADEWORK_H
 
-#include "common.h"
-
 /* for light_specific, cyclic dependency */
 /* # include "light.h" */
 
 #define SW_NLIGHTS	16		/* Max # of light sources */
 
+/**
+ * S H A D E W O R K
+ */
 struct shadework {
 /* FIXME: At least the first three of these need to be spectral curves */
     fastf_t		sw_transmit;	/**< @brief  0.0 -> 1.0 */
@@ -86,14 +87,9 @@ struct shadework {
  */
 };
 
-__BEGIN_DECLS
-
 extern void pr_shadework(const char *str, const struct shadework *swp);
 
-__END_DECLS
-
-#endif /* SHADEWORK_H */
-
+#endif
 /** @} */
 /*
  * Local Variables:

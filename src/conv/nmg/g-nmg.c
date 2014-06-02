@@ -1,7 +1,7 @@
 /*                         G - N M G . C
  * BRL-CAD
  *
- * Copyright (c) 1993-2014 United States Government as represented by
+ * Copyright (c) 1993-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -116,6 +116,8 @@ process_boolean(union tree *curtree, struct db_tree_state *tsp, const struct db_
 
 
 /*
+ *			D O _ R E G I O N _ E N D
+ *
  *  Called from db_walk_tree().
  *
  *  This routine must be prepared to run in parallel.
@@ -413,6 +415,9 @@ csg_comb_func(struct db_i *db, struct directory *dp, genptr_t UNUSED(ptr))
     }
 }
 
+/*
+ *			M A I N
+ */
 int
 main(int argc, char **argv)
 {
@@ -456,7 +461,7 @@ main(int argc, char **argv)
 		ttol.rel = 0.0;
 		break;
 	    case 'n':		/* Surface normal tolerance. */
-		ttol.norm = atof(bu_optarg)*M_PI/180.0;
+		ttol.norm = atof(bu_optarg)*bn_pi/180.0;
 		ttol.rel = 0.0;
 		break;
 	    case 'o':		/* Output file name */

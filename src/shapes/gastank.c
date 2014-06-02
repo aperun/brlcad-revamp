@@ -1,7 +1,7 @@
 /*                       G A S T A N K . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -37,8 +37,6 @@
 #include "raytrace.h"
 #include "wdb.h"
 
-static const char explain[]   = "This program constructs a solid gas tank with all\n\
-edges and corners rounded.\n";
 
 int
 main(int argc, char **argv)
@@ -66,8 +64,7 @@ main(int argc, char **argv)
     char regnam[9];		/* Region name. */
     char grpnam[5];		/* Group name. */
     int numtnk=0;		/* Number of gas tanks to be created */
-				/* (<=maxnumtnk). */
-    int maxnumtnk = 26;
+				/* (<=26). */
 
     struct wmember comb;	/* Used to make regions. */
     struct wmember comb1;	/* Used to make groups. */
@@ -105,29 +102,31 @@ main(int argc, char **argv)
 	/* START # 3 */
 
 	/* Print info about the window. */
-	printf("\n%s\n",explain);
+	printf("\nThis program constructs a solid gas tank with all\n");
+	printf("edges and corners rounded.\n\n");
 
 	/* Find name of mged file to be created. */
 	printf("Enter the mged file to be created (25 char max).\n\t");
 	(void)fflush(stdout);
 	ret = scanf("%26s", filemged);
-	if (ret == 0)
+	if (ret == 0) {
 	    perror("scanf");
+	}
 	if (BU_STR_EQUAL(filemged, ""))
 	    bu_strlcpy(filemged, "gastank.g", sizeof(filemged));
 
 	/* Find the number of gas tanks to create. */
-	printf("Enter the number of gas tanks to create (%d max).\n\t",maxnumtnk);
+	printf("Enter the number of gas tanks to create (26 max).\n\t");
 	(void)fflush(stdout);
 	ret = scanf("%d", &numtnk);
 	if (ret == 0) {
 	    perror("scanf");
 	    numtnk = 1;
 	}
-	else if (numtnk < 1)
+	if (numtnk < 1)
 	    numtnk = 1;
-	else if (numtnk > maxnumtnk)
-	    numtnk = maxnumtnk;
+	if (numtnk > 26)
+	    numtnk = 26;
 
 	/* Find the dimensions of the gas tanks. */
 	printf("Enter the height, width, and depth of the gas tank.\n\t");
@@ -161,10 +160,9 @@ main(int argc, char **argv)
     else {
 	/* START # 4 */
 	/* List options. */
-	/* -h or -? help page */
 	/* -fname - name = mged file name. */
 	/* -n# - # = number of gas tanks. */
-	/* -H# - # = height of gas tank in mm. */
+	/* -h# - # = height of gas tank in mm. */
 	/* -w# - # = width of gas tank in mm. */
 	/* -d# - # = depth of gas tank in mm. */
 	/* -r# - # = radius of corners in mm. */
@@ -173,13 +171,6 @@ main(int argc, char **argv)
 	    /* START # 5 */
 	    /* Put argument in temporary character string. */
 	    temp = argv[i];
-
-	    if (temp[1] == 'h' || temp[1] == '?') {
-	    	fprintf(stderr,"%s",explain);
-		fprintf(stderr,"Usage: gastank -fname [-f mged_file_name] [-n #_of_gastanks] [-H gas_tank_height]\n");
-		fprintf(stderr,"       [-w gas_tank_width] [-d gas_tank_depth] [-r radius_of_corners]");
-		bu_exit(2,     "       (units of mm)\n");
-	    }
 
 	    /* -f - mged file. */
 	    if (temp[1] == 'f') {
@@ -210,11 +201,8 @@ main(int argc, char **argv)
 		temp1[k] = '\0';
 		if (temp[1] == 'n') {
 		    sscanf(temp1, "%d", &numtnk);
-		    if (numtnk < 1)
-			numtnk = 1;
-		    else if (numtnk > maxnumtnk)
-			numtnk = maxnumtnk;
-		} else if (temp[1] == 'H') {
+		    if (numtnk > 26) numtnk = 26;
+		} else if (temp[1] == 'h') {
 		    sscanf(temp1, "%lf", &hgt);
 		} else if (temp[1] == 'w') {
 		    sscanf(temp1, "%lf", &wid);

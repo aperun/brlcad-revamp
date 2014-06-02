@@ -1,7 +1,7 @@
 /*                         V F O N T . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -21,9 +21,8 @@
 #include "common.h"
 
 #include <stdio.h>
-#include "bu/file.h"
-#include "bu/malloc.h"
-#include "bu/vfont-if.h"
+#include "vfont-if.h"
+#include "bu.h"
 
 #define FONTDIR2 "/usr/lib/vfont"
 #define DEFAULT_FONT "nonie.r.12"
@@ -31,6 +30,8 @@
 
 
 /**
+ * _ V A X _ G S H O R T
+ *
  * Obtain a 16-bit signed integer from two adjacent characters, stored
  * in VAX order, regardless of word alignment.
  */
@@ -57,15 +58,15 @@ vfont_get(char *font)
     unsigned char dispatch[10*256];	/* 256 10-byte structs */
     uint16_t magic;
     int size;
-    const char *const_font;
 
-    const_font = (font == NULL) ? DEFAULT_FONT : (const char *)font;
+    if (font == NULL)
+	font = DEFAULT_FONT;
 
     /* Open the file and read in the header information. */
-    if ((fp = fopen(const_font, "rb")) == NULL) {
-	snprintf(fname, FONTNAMESZ, "%s/%s", (char *)bu_brlcad_data("vfont", 0), const_font);
+    if ((fp = fopen(font, "rb")) == NULL) {
+	snprintf(fname, FONTNAMESZ, "%s/%s", (char *)bu_brlcad_data("vfont", 0), font);
 	if ((fp = fopen(fname, "rb")) == NULL) {
-	    snprintf(fname, FONTNAMESZ, "%s/%s", FONTDIR2, const_font);
+	    snprintf(fname, FONTNAMESZ, "%s/%s", FONTDIR2, font);
 	    if ((fp = fopen(fname, "rb")) == NULL) {
 		return VFONT_NULL;
 	    }

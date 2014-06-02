@@ -1,3 +1,5 @@
+<!-- Converted by db4-upgrade version 1.0 -->
+
 <article xmlns="http://docbook.org/ns/docbook" version="5.0">
   <info><title>Expresiones Booleanas</title>
 
@@ -122,10 +124,7 @@
 
 	<informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged05_unionspheres.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged05_unionspheres.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -159,10 +158,7 @@
 
 	<informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged05_subtractionspheres.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged05_subtractionspheres.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -205,10 +201,7 @@
 
 	<informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged05_intersectionspheres.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged05_intersectionspheres.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -245,10 +238,7 @@
 
 	<informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged05_twoprimitivespheres.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged05_twoprimitivespheres.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -315,10 +305,7 @@
 
 	<informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged05_combinationeditor.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged05_combinationeditor.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -363,9 +350,9 @@
 	<tgroup cols="2">
 	  <tbody>
 	    <row>
-	      <entry><inlinemediaobject><imageobject role="html"><imagedata fileref="../../lessons/es/images/mged05_raytracedpart1.png"/></imageobject><imageobject role="fo"><imagedata fileref="../../lessons/es/images/mged05_raytracedpart1.png"/></imageobject></inlinemediaobject>
+	      <entry><inlinemediaobject><imageobject><imagedata fileref="../../lessons/es/images/mged05_raytracedpart1.png"/></imageobject></inlinemediaobject>
 	      </entry>
-	      <entry><inlinemediaobject><imageobject role="html"><imagedata fileref="../../lessons/es/images/mged05_raytracedpart2.png"/></imageobject><imageobject role="fo"><imagedata fileref="../../lessons/es/images/mged05_raytracedpart2.png"/></imageobject></inlinemediaobject>
+	      <entry><inlinemediaobject><imageobject><imagedata fileref="../../lessons/es/images/mged05_raytracedpart2.png"/></imageobject></inlinemediaobject>
 	      </entry>
 	    </row>
 	    <row>
@@ -448,10 +435,7 @@
 
 	<informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged05_raytracedpart3.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged05_raytracedpart3.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -520,10 +504,7 @@
 
 	<informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged05_raytraceddome.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged05_raytraceddome.png" format="PNG"/>
 	  </imageobject>
 	  <caption>

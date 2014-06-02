@@ -1,7 +1,7 @@
 /*                         D M - P S . C
  * BRL-CAD
  *
- * Copyright (c) 1985-2014 United States Government as represented by
+ * Copyright (c) 1985-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -46,8 +46,8 @@
 #include "raytrace.h"
 
 #include "dm.h"
-#include "dm/dm-ps.h"
-#include "dm/dm-Null.h"
+#include "dm-ps.h"
+#include "dm-Null.h"
 
 #include "solid.h"
 
@@ -67,6 +67,8 @@ static mat_t psmat;
 
 
 /*
+ * P S _ C L O S E
+ *
  * Gracefully release the display.
  */
 HIDDEN int
@@ -92,6 +94,8 @@ ps_close(struct dm *dmp)
 
 
 /*
+ * P S _ P R O L O G
+ *
  * There are global variables which are parameters to this routine.
  */
 HIDDEN int
@@ -104,6 +108,9 @@ ps_drawBegin(struct dm *dmp)
 }
 
 
+/*
+ * P S _ E P I L O G
+ */
 HIDDEN int
 ps_drawEnd(struct dm *dmp)
 {
@@ -122,6 +129,8 @@ ps_drawEnd(struct dm *dmp)
 
 
 /*
+ * P S _ N E W R O T
+ *
  * Load a new transformation matrix.  This will be followed by
  * many calls to ps_draw().
  */
@@ -157,6 +166,9 @@ ps_loadMatrix(struct dm *dmp, fastf_t *mat, int which_eye)
 }
 
 
+/*
+ * P S _ D R A W V L I S T
+ */
 /* ARGSUSED */
 HIDDEN int
 ps_drawVList(struct dm *dmp, struct bn_vlist *vp)
@@ -292,6 +304,9 @@ ps_drawVList(struct dm *dmp, struct bn_vlist *vp)
 }
 
 
+/*
+ * P S _ D R A W
+ */
 /* ARGSUSED */
 HIDDEN int
 ps_draw(struct dm *dmp, struct bn_vlist *(*callback_function)(void *), genptr_t *data)
@@ -314,6 +329,8 @@ ps_draw(struct dm *dmp, struct bn_vlist *(*callback_function)(void *), genptr_t 
 
 
 /*
+ * P S _ N O R M A L
+ *
  * Restore the display processor to a normal mode of operation
  * (i.e., not scaled, rotated, displaced, etc.).
  * Turns off windowing.
@@ -329,6 +346,8 @@ ps_normal(struct dm *dmp)
 
 
 /*
+ * P S _ D R A W S T R I N G 2 D
+ *
  * Output a string into the displaylist.
  * The starting position of the beam is as specified.
  */
@@ -367,6 +386,10 @@ ps_drawString2D(struct dm *dmp, const char *str, fastf_t x, fastf_t y, int size,
 }
 
 
+/*
+ * P S _ D R A W L I N E 2 D
+ *
+ */
 HIDDEN int
 ps_drawLine2D(struct dm *dmp, fastf_t xpos1, fastf_t ypos1, fastf_t xpos2, fastf_t ypos2)
 {
@@ -460,12 +483,6 @@ ps_debug(struct dm *dmp, int lvl)
     return TCL_OK;
 }
 
-HIDDEN int
-ps_logfile(struct dm *dmp, const char *filename)
-{
-    bu_vls_sprintf(&dmp->dm_log, "%s", filename);
-    return TCL_OK;
-}
 
 HIDDEN int
 ps_setWinBounds(struct dm *dmp, fastf_t *w)
@@ -515,7 +532,6 @@ struct dm dm_ps = {
     null_setDepthMask,
     null_setZBuffer,
     ps_debug,
-    ps_logfile,
     null_beginDList,
     null_endDList,
     null_drawDList,
@@ -524,6 +540,7 @@ struct dm dm_ps = {
     null_getDisplayImage,	/* display to image function */
     null_reshape,
     null_makeCurrent,
+    null_processEvents,
     0,
     0,				/* no displaylist */
     0,                            /* no stereo */
@@ -550,7 +567,6 @@ struct dm dm_ps = {
     {0.0, 0.0, 0.0},		/* clipmin */
     {0.0, 0.0, 0.0},		/* clipmax */
     0,				/* no debugging */
-    BU_VLS_INIT_ZERO,		/* bu_vls logfile */
     0,				/* no perspective */
     0,				/* no lighting */
     0,				/* no transparency */
@@ -564,6 +580,8 @@ struct dm dm_ps = {
 
 
 /*
+ * P S _ O P E N
+ *
  * Open the output file, and output the PostScript prolog.
  *
  */

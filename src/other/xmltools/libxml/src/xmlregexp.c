@@ -1743,7 +1743,7 @@ xmlFAGenerateTransitions(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr from,
 	    xmlRegStateAddTrans(ctxt, to, atom, to, -1, -1);
 	    break;
 	case XML_REGEXP_QUANT_RANGE: 
-#ifdef DV_test
+#if DV_test
 	    if (atom->min == 0) {
 		xmlFAGenerateEpsilonTransition(ctxt, from, to);
 	    }

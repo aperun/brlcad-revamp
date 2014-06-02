@@ -1,7 +1,7 @@
 /*                      O B S E R V E R . C
  * BRL-CAD
  *
- * Copyright (c) 1997-2014 United States Government as represented by
+ * Copyright (c) 1997-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -23,7 +23,8 @@
 #include <string.h>
 #include "bio.h"
 
-#include "bu/cmd.h"
+#include "cmd.h"                  /* includes bu.h */
+
 
 /**
  * Attach observer.
@@ -182,7 +183,7 @@ static struct bu_cmdtab bu_observer_cmds[] = {
     {"attach",	observer_attach},
     {"detach",	observer_detach},
     {"show",	observer_show},
-    {(const char *)NULL, BU_CMD_NULL}
+    {(char *)0,	BU_CMD_NULL}
 };
 
 

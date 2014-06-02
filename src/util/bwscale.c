@@ -1,7 +1,7 @@
 /*                       B W S C A L E . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -63,8 +63,6 @@ static char usage[] = "\
 Usage: bwscale [-r] [-s squareinsize] [-w inwidth] [-n inheight]\n\
 	[-S squareoutsize] [-W outwidth] [-N outheight] [in.bw] > out.bw\n";
 
-static char hyphen[] = "hyphen";
-
 static int
 get_args(int argc, char **argv)
 {
@@ -124,7 +122,7 @@ get_args(int argc, char **argv)
 	if (isatty(fileno(stdin))) {
 	    return 0;
 	}
-	file_name = hyphen;
+	file_name = "-";
 	buffp = stdin;
     } else {
 	file_name = argv[bu_optind];

@@ -2,7 +2,7 @@
 #                       C A D B U G . S H
 # BRL-CAD
 #
-# Copyright (c) 2004-2014 United States Government as represented by
+# Copyright (c) 2004-2013 United States Government as represented by
 # the U.S. Army Research Laboratory.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -137,7 +137,7 @@ if [ -x /usr/bin/mail ] ; then
     exit
 fi
 
-if [ $FAILED -eq 1 ] ; then
+if [ $FAILED -eq 1] ; then
     /bin/echo "Mail delivery failed.  Send file $BUG_REPORT to $BUGEMAIL"
 else
     /bin/echo "Mail agent not found.  Send file $BUG_REPORT to $BUGEMAIL"

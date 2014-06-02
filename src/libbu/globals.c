@@ -1,7 +1,7 @@
 /*                       G L O B A L S . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -27,11 +27,8 @@
  *
  */
 
-#include "bu/debug.h"
-#include "bu/getopt.h"
-#include "bu/malloc.h"
-#include "bu/parallel.h"
-#include "bu/vls.h"
+#include "bu.h"
+
 
 /**
  * number of calls to bu_malloc()/bu_calloc()/bu_alloc().
@@ -62,14 +59,14 @@ long bu_n_realloc = 0;
  *
  * NOT published in a public header.
  */
-EXTERNVARINIT const char bu_vls_message[] = "bu_vls_str";
+const char bu_vls_message[] = "bu_vls_str";
 
 /**
  * used by malloc and vls as the bu_strdup debug string.
  *
  * NOT published in a public header.
  */
-EXTERNVARINIT const char bu_strdup_message[] = "bu_strdup string";
+const char bu_strdup_message[] = "bu_strdup string";
 
 /**
  * bu_setjmp_valid is global because BU_SETJUMP() *must* be a macro.
@@ -85,7 +82,7 @@ int bu_setjmp_valid = 0;
  */
 jmp_buf bu_jmpbuf;
 
-/* externed in bu/ headers */
+/* externed in bu.h */
 int bu_debug = 0;
 int bu_opterr = 1;
 int bu_optind = 1;

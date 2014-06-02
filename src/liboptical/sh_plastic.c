@@ -1,7 +1,7 @@
 /*                    S H _ P L A S T I C . C
  * BRL-CAD
  *
- * Copyright (c) 1998-2014 United States Government as represented by
+ * Copyright (c) 1998-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -96,6 +96,9 @@ extern double phg_ipow();
 
 #define RI_AIR 1.0    /* Refractive index of air.		*/
 
+/*
+ * P H O N G _ S E T U P
+ */
 HIDDEN int
 phong_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *mfp, struct rt_i *UNUSED(rtip))
 {
@@ -126,6 +129,9 @@ phong_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, c
 }
 
 
+/*
+ * M I R R O R _ S E T U P
+ */
 HIDDEN int
 mirror_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *mfp, struct rt_i *UNUSED(rtip))
 {
@@ -156,6 +162,9 @@ mirror_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, 
 }
 
 
+/*
+ * G L A S S _ S E T U P
+ */
 HIDDEN int
 glass_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *mfp, struct rt_i *UNUSED(rtip))
 {
@@ -187,6 +196,9 @@ glass_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, c
 }
 
 
+/*
+ * P H O N G _ P R I N T
+ */
 HIDDEN void
 phong_print(register struct region *rp, genptr_t dp)
 {
@@ -194,6 +206,9 @@ phong_print(register struct region *rp, genptr_t dp)
 }
 
 
+/*
+ * P H O N G _ F R E E
+ */
 HIDDEN void
 phong_free(genptr_t cp)
 {
@@ -202,6 +217,8 @@ phong_free(genptr_t cp)
 
 
 /*
+ * P H O N G _ R E N D E R
+ *
  Color pixel based on the energy of a point light source (Eps)
  plus some diffuse illumination (Epd) reflected from the point
  <x, y> :
@@ -535,6 +552,8 @@ phong_render(register struct application *ap, const struct partition *pp, struct
 
 #ifndef PHAST_PHONG
 /*
+ * I P O W
+ *
  * Raise a floating point number to an integer power
  */
 double

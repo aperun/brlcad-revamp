@@ -1,7 +1,7 @@
 /*                       S H _ B R D F . C
  * BRL-CAD
  *
- * Copyright (c) 1996-2014 United States Government as represented by
+ * Copyright (c) 1996-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -98,6 +98,9 @@ struct mfuncs brdf_mfuncs[] = {
 
 #define RI_AIR 1.0    /* Refractive index of air.		*/
 
+/*
+ * B R D F _ S E T U P
+ */
 HIDDEN int
 brdf_setup(register struct region *UNUSED(rp), struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *UNUSED(mfp), struct rt_i *UNUSED(rtip))
 {
@@ -122,10 +125,13 @@ brdf_setup(register struct region *UNUSED(rp), struct bu_vls *matparm, genptr_t 
     }
 
     pp->rms_sq = pp->rms_slope * pp->rms_slope;
-    pp->denom = 4.0 * M_PI * pp->rms_sq;
+    pp->denom = 4.0 * bn_pi * pp->rms_sq;
 
     return 1;
 }
+/*
+ * B R D F _ P R I N T
+ */
 HIDDEN void
 brdf_print(register struct region *rp, genptr_t dp)
 {
@@ -133,6 +139,9 @@ brdf_print(register struct region *rp, genptr_t dp)
 }
 
 
+/*
+ * B R D F _ F R E E
+ */
 HIDDEN void
 brdf_free(genptr_t cp)
 {
@@ -141,6 +150,8 @@ brdf_free(genptr_t cp)
 
 
 /*
+ * B R D F _ R E N D E R
+ *
  Color pixel based on the energy of a point light source (Eps)
  plus some diffuse illumination (Epd) reflected from the point
  <x, y> :

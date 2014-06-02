@@ -1,7 +1,7 @@
 /*                        D M - O G L . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -64,8 +64,8 @@
 #include "vmath.h"
 #include "mater.h"
 #include "raytrace.h"
-#include "dm/dm_xvars.h"
-#include "dm/dm-ogl.h"
+#include "dm_xvars.h"
+#include "dm-ogl.h"
 
 #include "./mged.h"
 #include "./sedit.h"
@@ -73,25 +73,20 @@
 
 
 extern void dm_var_init();		/* defined in attach.c */
-
-/* external sp_hook functions */
-extern void cs_set_bg(const struct bu_structparse *, const char *, void *, const char *); /* defined in color_scheme.c */
+extern void cs_set_bg();		/* defined in color_scheme.c */
 
 static int Ogl_dm();
 static int Ogl_doevent();
-
-/* local sp_hook functions */
-static void Ogl_colorchange(const struct bu_structparse *, const char *, void *, const char *);
-static void zclip_hook(const struct bu_structparse *, const char *, void *, const char *);
-static void establish_zbuffer(const struct bu_structparse *, const char *, void *, const char *);
-static void establish_lighting(const struct bu_structparse *, const char *, void *, const char *);
-static void establish_transparency(const struct bu_structparse *, const char *, void *, const char *);
-static void do_fogHint(const struct bu_structparse *, const char *, void *, const char *);
-static void dirty_hook(const struct bu_structparse *, const char *, void *, const char *);
-static void debug_hook(const struct bu_structparse *, const char *, void *, const char *);
-static void logfile_hook(const struct bu_structparse *, const char *, void *, const char *);
-static void bound_hook(const struct bu_structparse *, const char *, void *, const char *);
-static void boundFlag_hook(const struct bu_structparse *, const char *, void *, const char *);
+static void Ogl_colorchange();
+static void establish_zbuffer();
+static void establish_lighting();
+static void establish_transparency();
+static void dirty_hook();
+static void zclip_hook();
+static void debug_hook();
+static void bound_hook();
+static void boundFlag_hook();
+static void do_fogHint();
 
 struct bu_structparse Ogl_vparse[] = {
     {"%d",  1, "depthcue",		Ogl_MV_O(cueing_on),	Ogl_colorchange, NULL, NULL },
@@ -106,7 +101,6 @@ struct bu_structparse Ogl_vparse[] = {
     {"%d",  1, "has_doublebuffer",	Ogl_MV_O(doublebuffer), BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d",  1, "depth",		Ogl_MV_O(depth),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d",  1, "debug",		Ogl_MV_O(debug),	debug_hook, NULL, NULL },
-    {"%V",  1, "log",	Ogl_MV_O(log),	logfile_hook, NULL, NULL },
     {"%g",  1, "bound",		Ogl_MV_O(bound),	bound_hook, NULL, NULL },
     {"%d",  1, "useBound",		Ogl_MV_O(boundFlag),	boundFlag_hook, NULL, NULL },
     {"",	0,  (char *)0,		0,			BU_STRUCTPARSE_FUNC_NULL, NULL, NULL }
@@ -159,7 +153,7 @@ Ogl_fb_open()
 
     *fbp = ogl_interface; /* struct copy */
 
-    fbp->if_name = (char *)bu_malloc((unsigned)strlen(ogl_name)+1, "if_name");
+    fbp->if_name = bu_malloc((unsigned)strlen(ogl_name)+1, "if_name");
     bu_strlcpy(fbp->if_name, ogl_name, strlen(ogl_name)+1);
 
     /* Mark OK by filling in magic number */
@@ -203,6 +197,8 @@ Ogl_doevent(ClientData UNUSED(clientData),
 
 
 /*
+ * O G L _ D M
+ *
  * Implement display-manager specific commands, from MGED "dm" command.
  */
 static int
@@ -252,10 +248,7 @@ Ogl_dm(int argc,
 
 
 static void
-Ogl_colorchange(const struct bu_structparse *UNUSED(sdp),
-		const char *UNUSED(name),
-		void *UNUSED(base),
-		const char *UNUSED(value))
+Ogl_colorchange()
 {
     if (((struct ogl_vars *)dmp->dm_vars.priv_vars)->mvars.cueing_on) {
 	glEnable(GL_FOG);
@@ -268,10 +261,7 @@ Ogl_colorchange(const struct bu_structparse *UNUSED(sdp),
 
 
 static void
-establish_zbuffer(const struct bu_structparse *UNUSED(sdp),
-		  const char *UNUSED(name),
-		  void *UNUSED(base),
-		  const char *UNUSED(value))
+establish_zbuffer()
 {
     (void)DM_MAKE_CURRENT(dmp);
     (void)DM_SET_ZBUFFER(dmp, ((struct ogl_vars *)dmp->dm_vars.priv_vars)->mvars.zbuffer_on);
@@ -280,10 +270,7 @@ establish_zbuffer(const struct bu_structparse *UNUSED(sdp),
 
 
 static void
-establish_lighting(const struct bu_structparse *UNUSED(sdp),
-		   const char *UNUSED(name),
-		   void *UNUSED(base),
-		   const char *UNUSED(value))
+establish_lighting()
 {
     (void)DM_MAKE_CURRENT(dmp);
     (void)DM_SET_LIGHT(dmp, ((struct ogl_vars *)dmp->dm_vars.priv_vars)->mvars.lighting_on);
@@ -292,10 +279,7 @@ establish_lighting(const struct bu_structparse *UNUSED(sdp),
 
 
 static void
-establish_transparency(const struct bu_structparse *UNUSED(sdp),
-		   const char *UNUSED(name),
-		   void *UNUSED(base),
-		   const char *UNUSED(value))
+establish_transparency()
 {
     (void)DM_MAKE_CURRENT(dmp);
     (void)DM_SET_TRANSPARENCY(dmp, ((struct ogl_vars *)dmp->dm_vars.priv_vars)->mvars.transparency_on);
@@ -304,10 +288,7 @@ establish_transparency(const struct bu_structparse *UNUSED(sdp),
 
 
 static void
-do_fogHint(const struct bu_structparse *UNUSED(sdp),
-	   const char *UNUSED(name),
-	   void *UNUSED(base),
-	   const char *UNUSED(value))
+do_fogHint()
 {
     dm_fogHint(dmp, ((struct ogl_vars *)dmp->dm_vars.priv_vars)->mvars.fastfog);
     view_state->vs_flag = 1;
@@ -315,26 +296,20 @@ do_fogHint(const struct bu_structparse *UNUSED(sdp),
 
 
 static void
-dirty_hook(const struct bu_structparse *UNUSED(sdp),
-	   const char *UNUSED(name),
-	   void *UNUSED(base),
-	   const char *UNUSED(value))
+dirty_hook()
 {
     dirty = 1;
 }
 
 
 static void
-zclip_hook(const struct bu_structparse *sdp,
-	   const char *name,
-	   void *base,
-	   const char *value)
+zclip_hook()
 {
     fastf_t bounds[6] = { GED_MIN, GED_MAX, GED_MIN, GED_MAX, GED_MIN, GED_MAX };
 
     dmp->dm_zclip = ((struct ogl_vars *)dmp->dm_vars.priv_vars)->mvars.zclipping_on;
     view_state->vs_gvp->gv_zclip = dmp->dm_zclip;
-    dirty_hook(sdp, name, base, value);
+    dirty_hook();
 
     if (dmp->dm_zclip) {
 	bounds[4] = -1.0;
@@ -347,44 +322,27 @@ zclip_hook(const struct bu_structparse *sdp,
 
 
 static void
-debug_hook(const struct bu_structparse *UNUSED(sdp),
-	   const char *UNUSED(name),
-	   void *UNUSED(base),
-	   const char *UNUSED(value))
+debug_hook()
 {
     DM_DEBUG(dmp, ((struct ogl_vars *)dmp->dm_vars.priv_vars)->mvars.debug);
 }
 
-static void
-logfile_hook(const struct bu_structparse *UNUSED(sdp),
-	   const char *UNUSED(name),
-	   void *UNUSED(base),
-	   const char *UNUSED(value))
-{
-    DM_LOGFILE(dmp, bu_vls_addr(&((struct ogl_vars *)dmp->dm_vars.priv_vars)->mvars.log));
-}
 
 static void
-bound_hook(const struct bu_structparse *sdp,
-	   const char *name,
-	   void *base,
-	   const char *value)
+bound_hook()
 {
     dmp->dm_bound =
 	((struct ogl_vars *)dmp->dm_vars.priv_vars)->mvars.bound;
-    dirty_hook(sdp, name, base, value);
+    dirty_hook();
 }
 
 
 static void
-boundFlag_hook(const struct bu_structparse *sdp,
-	       const char *name,
-	       void *base,
-	       const char *value)
+boundFlag_hook()
 {
     dmp->dm_boundFlag =
 	((struct ogl_vars *)dmp->dm_vars.priv_vars)->mvars.boundFlag;
-    dirty_hook(sdp, name, base, value);
+    dirty_hook();
 }
 
 

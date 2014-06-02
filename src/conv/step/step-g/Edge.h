@@ -1,7 +1,7 @@
 /*                 Edge.h
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef CONV_STEP_STEP_G_EDGE_H
-#define CONV_STEP_STEP_G_EDGE_H
+#ifndef EDGE_H_
+#define EDGE_H_
 
 #include "TopologicalRepresentationItem.h"
 
@@ -60,7 +60,7 @@ public:
     static STEPEntity *Create(STEPWrapper *sw, SDAI_Application_instance *sse);
 };
 
-#endif /* CONV_STEP_STEP_G_EDGE_H */
+#endif /* EDGE_H_ */
 
 /*
  * Local Variables:

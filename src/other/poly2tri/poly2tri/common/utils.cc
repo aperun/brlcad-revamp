@@ -29,7 +29,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <exception>
-#ifdef _WIN32
+#ifdef WIN32
 // Otherwise #defines like M_PI are undeclared under Visual Studio
 # define _USE_MATH_DEFINES
 #endif
@@ -116,4 +116,3 @@ bool InScanArea(Point& pa, Point& pb, Point& pc, Point& pd)
 }
 
 }
-

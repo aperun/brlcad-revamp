@@ -1,7 +1,7 @@
 /*                      O R L E - P I X . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -50,6 +50,7 @@ static void prnt_Cmap(ColorMap *cmap);
 static void prnt_Usage(void);
 static int non_linear_cmap = 0;
 
+/* m a i n ()							*/
 int
 main(int argc, char **argv)
 {
@@ -97,7 +98,7 @@ main(int argc, char **argv)
 	    (void) fprintf(stderr,
 			   "Reading color map from file\n"
 		);
-	if (rle_rmap(fp, (RLEColorMap *)&cmap) == -1)
+	if (rle_rmap(fp, &cmap) == -1)
 	    return 1;
 	if (rle_verbose)
 	    prnt_Cmap(&cmap);
@@ -150,6 +151,7 @@ main(int argc, char **argv)
 }
 
 
+/* p a r s _ A r g v ()						*/
 static int
 pars_Argv(int argc, char **argv)
 {
@@ -218,7 +220,7 @@ pars_Argv(int argc, char **argv)
 }
 
 
-/*
+/* p r n t _ U s a g e ()
    Print usage message.
 */
 static void

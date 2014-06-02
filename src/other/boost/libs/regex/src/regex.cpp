@@ -19,7 +19,6 @@
 
 #define BOOST_REGEX_SOURCE
 
-#include <boost/config.hpp>
 #include <new>
 #include <boost/regex.hpp>
 #include <boost/throw_exception.hpp>

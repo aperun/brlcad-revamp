@@ -21,8 +21,6 @@
 
 using namespace boost;
 
-namespace {
-
 class graphml_reader
 {
 public:
@@ -34,23 +32,17 @@ public:
     }
 
     static void get_graphs(const boost::property_tree::ptree& top,
-                           size_t desired_idx /* or -1 for all */,
                            std::vector<const boost::property_tree::ptree*>& result) {
       using boost::property_tree::ptree;
-      size_t current_idx = 0;
       BOOST_FOREACH(const ptree::value_type& n, top) {
         if (n.first == "graph") {
-          if (current_idx == desired_idx || desired_idx == (size_t)(-1)) {
-            result.push_back(&n.second);
-            get_graphs(n.second, (size_t)(-1), result);
-            if (desired_idx != (size_t)(-1)) break;
-          }
-          ++current_idx;
+          result.push_back(&n.second);
+          get_graphs(n.second, result);
         }
       }
     }
     
-    void run(std::istream& in, size_t desired_idx)
+    void run(std::istream& in)
     {
       using boost::property_tree::ptree;
       ptree pt;
@@ -71,7 +63,6 @@ public:
         else if (for_ == "port") kind = port_key;
         else if (for_ == "endpoint") kind = endpoint_key;
         else if (for_ == "all") kind = all_key;
-        else if (for_ == "graphml") kind = graphml_key;
         else {BOOST_THROW_EXCEPTION(parse_error("Attribute for is not valid: " + for_));}
         m_keys[id] = kind;
         m_key_name[id] = name;
@@ -81,7 +72,7 @@ public:
       }
       // Search for graphs
       std::vector<const ptree*> graphs;
-      get_graphs(gml, desired_idx, graphs);
+      get_graphs(gml, graphs);
       BOOST_FOREACH(const ptree* gr, graphs) {
         // Search for nodes
         BOOST_FOREACH(const ptree::value_type& node, *gr) {
@@ -133,8 +124,7 @@ private:
         hyperedge_key,
         port_key,
         endpoint_key, 
-        all_key,
-        graphml_key
+        all_key
     };
 
     void 
@@ -212,14 +202,12 @@ private:
     std::vector<any> m_edge;
 };
 
-}
-
 namespace boost
 {
 void BOOST_GRAPH_DECL
-read_graphml(std::istream& in, mutate_graph& g, size_t desired_idx)
+read_graphml(std::istream& in, mutate_graph& g)
 {    
     graphml_reader reader(g);
-    reader.run(in, desired_idx);
+    reader.run(in);
 }
 }

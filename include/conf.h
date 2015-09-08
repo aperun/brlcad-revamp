@@ -1,7 +1,7 @@
 /*                          C O N F . H
  * BRL-CAD
  *
- * Copyright (c) 1993-2014 United States Government as represented by
+ * Copyright (c) 1993-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -24,14 +24,14 @@
  * @deprecated
  * The conf.h header is deprecated -- use common.h instead
  */
-#ifndef CONF_H
-#define CONF_H
+#ifndef __CONF_H__
+#define __CONF_H__
 
 #warning "The conf.h header is deprecated -- use common.h instead"
 
 #include "common.h"
 
-#endif /* CONF_H */
+#endif /* __CONF_H__ */
 /** @} */
 /*
  * Local Variables:

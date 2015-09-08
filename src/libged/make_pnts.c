@@ -1,7 +1,7 @@
 /*                        M A K E _ P N T S . C
  * BRL-CAD
  *
- * Copyright (c) 2009-2014 United States Government as represented by
+ * Copyright (c) 2009-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -28,10 +28,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include "bio.h"
 
-#include "bu/sort.h"
-#include "bu/units.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
 #include "wdb.h"
 
 #include "./ged_private.h"
@@ -93,10 +92,10 @@ static char *p_make_pnts[] = {
 
 
 /*
- * Character compare function used by bu_sort function.
+ * Character compare function used by qsort function.
  */
 int
-compare_char(const char *a, const char *b, void *UNUSED(arg))
+compare_char(const char *a, const char *b)
 {
     return (int)(*a - *b);
 }
@@ -133,7 +132,7 @@ str2type(const char *format_string, rt_pnt_type *pnt_type, struct bu_vls *ged_re
 	bu_vls_trimspace(&str);
 
 	temp_string = bu_vls_addr(&str);
-	bu_sort(temp_string, strlen(temp_string), sizeof(char), (int (*)(const void *a, const void *b, void *arg))compare_char, NULL);
+	qsort(temp_string, strlen(temp_string), sizeof(char), (int (*)(const void *a, const void *b))compare_char);
 
 	if (BU_STR_EQUAL(temp_string, "xyz")) {
 	    *pnt_type = RT_PNT_TYPE_PNT;
@@ -669,7 +668,7 @@ ged_make_pnts(struct ged *gedp, int argc, const char *argv[])
 
     pnts->count = numPoints;
 
-    GED_DB_DIRADD(gedp, dp, argv[1], RT_DIR_PHONY_ADDR, 0, RT_DIR_SOLID, (void *)&internal.idb_type, GED_ERROR);
+    GED_DB_DIRADD(gedp, dp, argv[1], RT_DIR_PHONY_ADDR, 0, RT_DIR_SOLID, (genptr_t)&internal.idb_type, GED_ERROR);
     GED_DB_PUT_INTERNAL(gedp, dp, &internal, &rt_uniresource, GED_ERROR);
 
     bu_vls_free(&format_string);

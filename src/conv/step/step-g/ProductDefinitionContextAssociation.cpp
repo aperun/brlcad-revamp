@@ -1,7 +1,7 @@
 /*                 ProductDefinitionContextAssociation.cpp
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -78,7 +78,6 @@ bool ProductDefinitionContextAssociation::Load(STEPWrapper *sw, SDAI_Application
 	    definition = dynamic_cast<ProductDefinition *>(Factory::CreateObject(sw, entity));
 	} else {
 	    std::cout << CLASSNAME << ":Error loading attribute 'formation'." << std::endl;
-	    sw->entity_status[id] = STEP_LOAD_ERROR;
 	    return false;
 	}
     }
@@ -89,7 +88,6 @@ bool ProductDefinitionContextAssociation::Load(STEPWrapper *sw, SDAI_Application
 	    frame_of_reference = dynamic_cast<ProductDefinitionContext *>(Factory::CreateObject(sw, entity));
 	} else {
 	    std::cout << CLASSNAME << ":Error loading attribute 'frame_of_reference'." << std::endl;
-	    sw->entity_status[id] = STEP_LOAD_ERROR;
 	    return false;
 	}
     }
@@ -100,12 +98,9 @@ bool ProductDefinitionContextAssociation::Load(STEPWrapper *sw, SDAI_Application
 	    role = dynamic_cast<ProductDefinitionContextRole *>(Factory::CreateObject(sw, entity));
 	} else {
 	    std::cout << CLASSNAME << ":Error loading attribute 'role'." << std::endl;
-	    sw->entity_status[id] = STEP_LOAD_ERROR;
 	    return false;
 	}
     }
-
-    sw->entity_status[id] = STEP_LOADED;
 
     return true;
 }

@@ -1,7 +1,7 @@
 #                        G R O U P E R . T C L
 # BRL-CAD
 #
-# Copyright (c) 2005-2014 United States Government as represented by
+# Copyright (c) 2005-2013 United States Government as represented by
 # the U.S. Army Research Laboratory.
 #
 # This library is free software; you can redistribute it and/or
@@ -55,31 +55,18 @@ namespace eval Grouper {
     set size_orig ""
     set ae_orig ""
 
-
-    proc getTreeMembers {_comb} {
-	if {![exists $_comb]} {
-	    return ""
-	}
-
-	set i 0
-
-	set tlist {}
-	foreach item [regsub -all {/|/R} [lrange [split [tree -d 1 $_comb] "\n"] 1 end-1] ""] {
-	    lappend tlist [lindex $item 1]
-	    incr i
-	}
-
-	return $tlist
-    }
-
-
     proc remdup { GroupName } {
-	set ItemList [getTreeMembers $GroupName]
+	set ItemList [search $GroupName -maxdepth 1]
+	set ItemList [lrange $ItemList 1 end]
 	set ItemList [lsort -unique $ItemList]
 
-	make_name -s 0
-	set tmp_grp [make_name tmp_group]
-
+	set found_tmp 0
+	while { !$found_tmp } {
+	    set tmp_grp [expr rand()]
+	    if { [search -name $tmp_grp] == "" } {
+		set found_tmp 1
+	    }
+	}
 	eval g $tmp_grp $ItemList
 	kill $GroupName
 	mv $tmp_grp $GroupName
@@ -112,19 +99,11 @@ namespace eval Grouper {
 	if { $dimX > 0 } {
 	    # Rectangle was created left-to-right. Select only
 	    # objects completely in the rectangle.
-#	    set objs [select $posX $posY $dimX $dimY]
-	    if {[catch {select -- $posX $posY $dimX $dimY} objs]} {
-		puts $objs
-		return "no_result"
-	    }
+	    set objs [select $posX $posY $dimX $dimY]
 	} else {
 	    # Rectangle was created right-to-left. Select everything
 	    # completely and partly in the rectangle.
-#	    set objs [select -p $posX $posY $dimX $dimY]
-	    if {[catch {select -p -- $posX $posY $dimX $dimY} objs]} {
-		puts $objs
-		return "no_result"
-	    }
+	    set objs [select -p $posX $posY $dimX $dimY]
 	}
 
 	if { $objs == "" } {
@@ -165,15 +144,27 @@ namespace eval Grouper {
 	set size_orig [size]
 	set ae_orig [ae]
 
-	if {[exists $::Grouper::GroupNameGlobal]} {
-	    erase $::Grouper::GroupNameGlobal
+	# Temporarily erase group from display while getting objects in rectangle"
+	after 1 {
+	    if { [search -name $::Grouper::GroupNameGlobal] != "" } {
+		set ::Grouper::erase_status [erase $::Grouper::GroupNameGlobal]
+	    } else {
+		set ::Grouper::erase_status 1
+	    }
 	}
-	set ::Grouper::objs [::Grouper::getObjInRectangle]
+
+	# Wait for the group to be erased from the display before we continue
+	vwait ::Grouper::erase_status
+
+	after 1 {set ::Grouper::objs [::Grouper::getObjInRectangle]}
+
+	puts stdout "Selection running ..."
+	vwait ::Grouper::objs
 
 	if { $objs == "invalid_selection" } {
 	    puts stdout "Invalid selection (zero area selection box)."
 	    # highlight in yellow current group
-	    if {[exists $GroupName]} {
+	    if { [search -name $GroupName] != "" } {
 		e -C255/255/0 $GroupName
 		center $center_orig
 		size $size_orig
@@ -185,7 +176,7 @@ namespace eval Grouper {
 	if { $objs == "no_result" } {
 	    puts stdout "Nothing selected."
 	    # highlight in yellow current group
-	    if {[exists $GroupName]} {
+	    if { [search -name $GroupName] != "" } {
 		e -C255/255/0 $GroupName
 		center $center_orig
 		size $size_orig
@@ -197,36 +188,34 @@ namespace eval Grouper {
 	set objs [lsort -unique $objs]
 	set tot_obj_in_rect [llength $objs]
 
-	if {![exists $GroupName]} {
+	if { [search -name $GroupName] == "" } {
 	    set grp_obj_list_before ""
 	    set grp_obj_list_len_before 0
 	} else {
-	    set grp_obj_list_before [getTreeMembers $GroupName]
-	    set grp_obj_list_len_before [llength $grp_obj_list_before]
+	    set grp_obj_list_before [search $GroupName -maxdepth 1]
+	    set grp_obj_list_len_before [expr [llength $grp_obj_list_before] - 1]
 	}
 
 	if { $Boolean == "+" } {
 	    foreach obj $objs {
-		#puts "Adding $obj to $GroupName ..."
-		catch {g $GroupName $obj}
+		g $GroupName $obj
 	    }
 	} else {
 	    foreach obj $objs {
-		#puts "Removing $obj from $GroupName ..."
-		catch {rm $GroupName $obj}
+		catch {rm $GroupName $obj} tmp_msg
 	    }
 	}
 
-	if {[exists $GroupName] && $Boolean == "+"} {
+	if { ([search -name $GroupName] != "") && ($Boolean == "+") } {
 	    remdup $GroupName
 	}
 
-	if {![exists $GroupName]} {
+	if { [search -name $GroupName] == "" } {
 	    set grp_obj_list_after ""
 	    set grp_obj_list_len_after 0
 	} else {
-	    set grp_obj_list_after [getTreeMembers $GroupName]
-	    set grp_obj_list_len_after [llength $grp_obj_list_after]
+	    set grp_obj_list_after [search $GroupName -maxdepth 1]
+	    set grp_obj_list_len_after [expr [llength $grp_obj_list_after] - 1]
 	}
 
 	if { $grp_obj_list_len_after > $grp_obj_list_len_before } {
@@ -269,7 +258,7 @@ namespace eval Grouper {
 	}
 
 	# highlight in yellow current group
-	if {[exists $GroupName]} {
+	if { [search -name $GroupName] != "" } {
 	    e -C255/255/0 $GroupName
 	    center $center_orig
 	    size $size_orig
@@ -363,7 +352,7 @@ proc grouper { args } {
     bind $mged_gui($id,active_dm) <Control-ButtonRelease-2> " winset $mged_gui($id,active_dm); dm idle; done_grouper"
 
     # highlight in yellow current group
-    if {[exists $GroupName]} {
+    if { [search -name $GroupName] != "" } {
 	e -C255/255/0 $GroupName
 	center $::Grouper::center_orig
 	size $::Grouper::size_orig
@@ -396,7 +385,7 @@ proc done_grouper {} {
     bind $mged_gui($id,active_dm) <ButtonRelease-2> ""
 
     # remove yellow highlights from the display
-    if {[exists $::Grouper::GroupNameGlobal]} {
+    if { [search -name $::Grouper::GroupNameGlobal] != "" } {
 	erase $::Grouper::GroupNameGlobal
     }
     set ::Grouper::GrouperRunning 0

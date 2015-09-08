@@ -1,7 +1,7 @@
 /*                          I G E S . H
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -17,9 +17,6 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-
-#ifndef CONV_IGES_IGES_H
-#define CONV_IGES_IGES_H
 
 #define CSG_MODE 1
 #define FACET_MODE 2
@@ -42,8 +39,6 @@ struct iges_properties
     unsigned char color[3];
 
 };
-
-#endif /* CONV_IGES_IGES_H */
 
 
 /*

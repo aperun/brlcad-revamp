@@ -259,8 +259,8 @@ TkpGetNativeAppBitmap(
 	GetResInfo(resource, &id, &theType, dummy);
 	ReleaseResource(resource);
 	resource = (Handle) GetCIcon(id);
-	PlotCIcon(&destRect, resource);
-	DisposeCIcon(resource);
+	PlotCIcon(&destRect, (CIconHandle) resource);
+	DisposeCIcon((CIconHandle) resource);
     }
 
     *width = 32;

@@ -1,7 +1,7 @@
 /*                 CartesianTransformationOperator2D.h
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef CONV_STEP_STEP_G_CARTESIANTRANSFORMATIONOPERATOR2D_H
-#define CONV_STEP_STEP_G_CARTESIANTRANSFORMATIONOPERATOR2D_H
+#ifndef CARTESIAN_TRANSFORMATION_OPERATOR_2D_H_
+#define CARTESIAN_TRANSFORMATION_OPERATOR_2D_H_
 
 #include "CartesianTransformationOperator.h"
 
@@ -49,7 +49,7 @@ public:
     static STEPEntity *Create(STEPWrapper *sw, SDAI_Application_instance *sse);
 };
 
-#endif /* CONV_STEP_STEP_G_CARTESIANTRANSFORMATIONOPERATOR2D_H */
+#endif /* CARTESIAN_TRANSFORMATION_OPERATOR_2D_H_ */
 
 /*
  * Local Variables:

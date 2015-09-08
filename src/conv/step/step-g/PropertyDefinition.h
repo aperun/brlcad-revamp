@@ -1,7 +1,7 @@
 /*                 PropertyDefinition.h
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef CONV_STEP_STEP_G_PROPERTYDEFINITION_H
-#define CONV_STEP_STEP_G_PROPERTYDEFINITION_H
+#ifndef PROPERTY_DEFINITION_H_
+#define PROPERTY_DEFINITION_H_
 
 #include "STEPEntity.h"
 
@@ -33,8 +33,7 @@
 
 // forward declaration of class
 class ON_Brep;
-class CharacterizedDefinition;
-class ProductDefinition;
+//class CharacterizedDefinition;
 
 class PropertyDefinition: virtual public STEPEntity
 {
@@ -45,14 +44,12 @@ private:
 protected:
     string name;
     string description;
-    CharacterizedDefinition *definition;
+    //CharacterizedDefinition *definition;
 
 public:
     PropertyDefinition();
     virtual ~PropertyDefinition();
     PropertyDefinition(STEPWrapper *sw, int step_id);
-    ProductDefinition *GetRelatingProductDefinition();
-    ProductDefinition *GetRelatedProductDefinition();
     bool Load(STEPWrapper *sw, SDAI_Application_instance *sse);
     virtual bool LoadONBrep(ON_Brep *brep);
     string ClassName();
@@ -64,7 +61,7 @@ public:
     static STEPEntity *Create(STEPWrapper *sw, SDAI_Application_instance *sse);
 };
 
-#endif /* CONV_STEP_STEP_G_PROPERTYDEFINITION_H */
+#endif /* PROPERTY_DEFINITION_H_ */
 
 /*
  * Local Variables:

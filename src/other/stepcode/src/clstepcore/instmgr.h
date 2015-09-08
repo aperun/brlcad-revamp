@@ -22,8 +22,6 @@
 
 #include <sc_export.h>
 
-#include <map>
-
 // IT IS VERY IMPORTANT THAT THE ORDER OF THE FOLLOWING INCLUDE FILES
 // BE PRESERVED
 
@@ -47,7 +45,7 @@ class SC_CORE_EXPORT InstMgr {
         MgrNodeArray * master;  // master array of all MgrNodes made up of
         // complete, incomplete, new, delete MgrNodes lists
         // this corresponds to the display list object by index
-	std::map<int, MgrNode *> *sortedMaster;  // master array sorted by fileId
+        MgrNodeArraySorted * sortedMaster;  // master array sorted by fileId
 //    StateList *master; // this will be an sorted array of ptrs to MgrNodes
 
     public:

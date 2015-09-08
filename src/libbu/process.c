@@ -1,7 +1,7 @@
 /*                       P R O C E S S . C
  * BRL-CAD
  *
- * Copyright (c) 2007-2014 United States Government as represented by
+ * Copyright (c) 2007-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -25,7 +25,8 @@
 #include "bio.h"
 
 /* common headers */
-#include "bu/parallel.h"
+#include "bu.h"
+
 
 int
 bu_process_id()

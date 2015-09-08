@@ -12,14 +12,7 @@ if(LEX_EXECUTABLE)
   LEX_TARGET(SS_Scanner script.l
     ${CMAKE_CURRENT_BINARY_DIR}/script.c COMPILE_FLAGS "-l")
   BRLCAD_ADDEXEC(scriptsort "scriptsort.c;${LEX_SS_Scanner_OUTPUTS}" librt)
-
-  if(ENABLE_POSIX_COMPLIANCE)
-    # need something special here for label find_rule:
-    SET_TARGET_PROPERTIES(scriptsort PROPERTIES COMPILE_FLAGS "-Wno-error -Wno-unused-label")
-  else()
-    SET_TARGET_PROPERTIES(scriptsort PROPERTIES COMPILE_FLAGS "-Wno-error")
-  endif()
-
+  SET_TARGET_PROPERTIES(scriptsort PROPERTIES COMPILE_FLAGS "-Wno-error")
 else(LEX_EXECUTABLE)
   CMAKEFILES(scriptsort.c)
 endif(LEX_EXECUTABLE)

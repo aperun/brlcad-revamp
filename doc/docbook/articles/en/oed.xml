@@ -1,3 +1,5 @@
+<!-- Converted by db4-upgrade version 1.0 -->
+
 <article xmlns="http://docbook.org/ns/docbook" version="5.0">
   <info><title>Object Editing - the <command>oed</command> Command</title>
 
@@ -11,7 +13,7 @@
   </info>
 
 
-  <section xml:id="oed_Basic_Syntax_and_Operations"><info><title><command>oed</command> - Basic Syntax and Operations</title></info>
+  <section><info><title><command>oed</command> - Basic Syntax and Operations</title></info>
 
 
     <para> The syntax of <command>oed</command> is fairly
@@ -53,14 +55,7 @@
 
     <para>
     <screenshot>
-      <mediaobject>
-        <imageobject role="html">
-          <imagedata align="center" fileref="../../articles/en/images/oed_fig01.png" format="PNG"/>
-        </imageobject>
-        <imageobject role="fo">
-          <imagedata align="center" fileref="../../articles/en/images/oed_fig01.png" format="PNG"/>
-        </imageobject>
-      </mediaobject>
+      <mediaobject><imageobject><imagedata align="center" fileref="../../articles/en/images/oed_fig01.png"/></imageobject></mediaobject>
     </screenshot>
     </para>
 
@@ -207,19 +202,12 @@ lollipop/
 
     <para>
       <screenshot>
-	<mediaobject>
-          <imageobject role="html">
-             <imagedata align="center" fileref="../../articles/en/images/oed_fig02.png" format="PNG"/>
-          </imageobject>
-          <imageobject role="fo">
-             <imagedata align="center" fileref="../../articles/en/images/oed_fig02.png" format="PNG"/>
-          </imageobject>
-        </mediaobject>
+	<mediaobject><imageobject><imagedata align="center" fileref="../../articles/en/images/oed_fig02.png"/></imageobject></mediaobject>
       </screenshot>
     </para>
 
     <para> Before beginning the editing process, the
-    <command>l</command> command (a.k.a. the "list" command) can be used to view both the
+    <command>l</command> command (a.k.a the "list" command) can be used to view both the
     combination and its component primitives:
     <note>
       <para>Note that the list command uses the lower case letter L (l) and
@@ -277,14 +265,7 @@ cube.s:  ARB8
 
     <para>
       <screenshot>
-	<mediaobject>
-          <imageobject role="html">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig03.png" format="PNG"/>
-          </imageobject>
-          <imageobject role="fo">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig03.png" format="PNG"/>
-          </imageobject>
-        </mediaobject>
+	<mediaobject><imageobject><imagedata align="center" fileref="../../articles/en/images/oed_fig03.png"/></imageobject></mediaobject>
       </screenshot>
     </para>
 
@@ -297,14 +278,7 @@ cube.s:  ARB8
 
     <para>
       <screenshot>
-	<mediaobject>
-          <imageobject role="html">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig04.png" format="PNG"/>
-          </imageobject>
-          <imageobject role="fo">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig04.png" format="PNG"/>
-          </imageobject>
-        </mediaobject>
+	<mediaobject><imageobject><imagedata align="center" fileref="../../articles/en/images/oed_fig04.png"/></imageobject></mediaobject>
       </screenshot>
     </para>
 
@@ -316,14 +290,7 @@ cube.s:  ARB8
 
     <para>
       <screenshot>
-	<mediaobject>
-          <imageobject role="html">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig05.png" format="PNG"/>
-          </imageobject>
-          <imageobject role="fo">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig05.png" format="PNG"/>
-          </imageobject>
-        </mediaobject>
+	<mediaobject><imageobject><imagedata align="center" fileref="../../articles/en/images/oed_fig05.png"/></imageobject></mediaobject>
       </screenshot>
     </para>
 
@@ -374,14 +341,7 @@ cube.s:  ARB8
 
     <para>
       <screenshot>
-	<mediaobject>
-          <imageobject role="html">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig06.png" format="PNG"/>
-          </imageobject>
-          <imageobject role="fo">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig06.png" format="PNG"/>
-          </imageobject>
-        </mediaobject>
+	<mediaobject><imageobject><imagedata align="center" fileref="../../articles/en/images/oed_fig06.png"/></imageobject></mediaobject>
       </screenshot>
     </para>
 
@@ -473,7 +433,7 @@ cube.s:  ARB8
 
   </section>
 
-  <section xml:id="Right_Hand_Path_Section"><info><title>Right Hand Path Selection - Reasons and
+  <section><info><title>Right Hand Path Selection - Reasons and
     Implications</title></info>
 
 
@@ -509,14 +469,7 @@ cube.s:  ARB8
 
     <para>
       <screenshot>
-	<mediaobject>
-          <imageobject role="html">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig07.png" format="PNG"/>
-          </imageobject>
-          <imageobject role="fo">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig07.png" format="PNG"/>
-          </imageobject>
-        </mediaobject>
+	<mediaobject><imageobject><imagedata align="center" fileref="../../articles/en/images/oed_fig07.png"/></imageobject></mediaobject>
       </screenshot>
     </para>
 
@@ -557,14 +510,7 @@ cube.s:  ARB8
 
     <para>
       <screenshot>
-	<mediaobject>
-          <imageobject role="html">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig08.png" format="PNG"/>
-          </imageobject>
-          <imageobject role="fo">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig08.png" format="PNG"/>
-          </imageobject>
-        </mediaobject>
+	<mediaobject><imageobject><imagedata align="center" fileref="../../articles/en/images/oed_fig08.png"/></imageobject></mediaobject>
       </screenshot>
     </para>
 
@@ -587,7 +533,7 @@ object2.c:  --
   </section>
 
 
-  <section xml:id="Flexible_Manipulation"><info><title>Flexible Manipulation with <emphasis>keypoint</emphasis>
+  <section><info><title>Flexible Manipulation with <emphasis>keypoint</emphasis>
     </title></info>
 
 
@@ -636,14 +582,7 @@ object2.c:  --
     <literallayout class="monospaced">accept</literallayout>
 
     <screenshot>
-      <mediaobject>
-        <imageobject role="html">
-          <imagedata align="center" fileref="../../articles/en/images/oed_fig09.png" format="PNG"/>
-        </imageobject>
-        <imageobject role="fo">
-          <imagedata align="center" fileref="../../articles/en/images/oed_fig09.png" format="PNG"/>
-        </imageobject>
-      </mediaobject>
+      <mediaobject><imageobject><imagedata align="center" fileref="../../articles/en/images/oed_fig09.png"/></imageobject></mediaobject>
     </screenshot>
 
     <literallayout class="monospaced">
@@ -663,7 +602,7 @@ object2.c:  --
 
   </section>
 
-  <section xml:id="sub_combination_editing"><info><title>Sub-Combination Editing - using Left Hand Path
+  <section><info><title>Sub-Combination Editing - using Left Hand Path
     Selection</title></info>
 
 
@@ -680,14 +619,7 @@ object2.c:  --
 
     <para>
       <screenshot>
-	<mediaobject>
-          <imageobject role="html">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig10.png" format="PNG"/>
-          </imageobject>
-          <imageobject role="fo">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig10.png" format="PNG"/>
-          </imageobject>
-        </mediaobject>
+	<mediaobject><imageobject><imagedata align="center" fileref="../../articles/en/images/oed_fig10.png"/></imageobject></mediaobject>
       </screenshot>
     </para>
 
@@ -737,14 +669,7 @@ object1.c:  --
 
     <para>
       <screenshot>
-	<mediaobject>
-          <imageobject role="html">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig11.png" format="PNG"/>
-          </imageobject>
-          <imageobject role="fo">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig11.png" format="PNG"/>
-          </imageobject>
-        </mediaobject>
+	<mediaobject><imageobject><imagedata align="center" fileref="../../articles/en/images/oed_fig11.png"/></imageobject></mediaobject>
       </screenshot>
     </para>
 
@@ -759,14 +684,7 @@ object1.c:  --
 
     <para>
       <screenshot>
-	<mediaobject>
-          <imageobject role="html">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig12.png" format="PNG"/>
-          </imageobject>
-          <imageobject role="fo">
-            <imagedata align="center" fileref="../../articles/en/images/oed_fig12.png" format="PNG"/>
-          </imageobject>
-        </mediaobject>
+	<mediaobject><imageobject><imagedata align="center" fileref="../../articles/en/images/oed_fig12.png"/></imageobject></mediaobject>
       </screenshot>
     </para>
 
@@ -832,14 +750,7 @@ object1.c:  --
     <literallayout class="monospaced">B bigobject.r</literallayout>
 
     <screenshot>
-      <mediaobject>
-        <imageobject role="html">
-          <imagedata align="center" fileref="../../articles/en/images/oed_fig13.png" format="PNG"/>
-        </imageobject>
-        <imageobject role="fo">
-          <imagedata align="center" fileref="../../articles/en/images/oed_fig13.png" format="PNG"/>
-        </imageobject>
-      </mediaobject>
+      <mediaobject><imageobject><imagedata align="center" fileref="../../articles/en/images/oed_fig13.png"/></imageobject></mediaobject>
     </screenshot>
     </para>
 
@@ -885,7 +796,7 @@ object1.c:  --
     </para>
   </section>
 
-  <section xml:id="Summary"><info><title>Summary</title></info>
+  <section><info><title>Summary</title></info>
 
     <para>
       The major points of the <command>oed</command> command are:

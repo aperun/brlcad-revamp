@@ -1,7 +1,7 @@
 /*                       P I X F A D E . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -30,10 +30,8 @@
  *	-m	integer max value
  *	-f	fraction to fade
  *	-p	percentage of fade (fraction = percentage/100)
- *      -s      squaresize of input pixfile
- *      -w      width of input pixfile
- *      -n      height of input pixfile
- *	file	a picture file (if not given, use STDIN)
+ *	file	a picture file.
+ *	STDIN	a picture file if 'file' is not given.
  *
  * Output:
  *	STDOUT	the faded picture.
@@ -48,14 +46,11 @@
 #include "common.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "bio.h"
-
-#include "bu/getopt.h"
-#include "bu/log.h"
-#include "bu/mime.h"
-
 #include "icv.h"
+#include "bu.h"
 
 int inx=512, iny=512;
 char *out_file = NULL;
@@ -63,18 +58,17 @@ char *in_file = NULL;
 
 
 char usage[] = "\
-Usage: pixfade [-p percentage] [-f fraction] [-m max] [-s squaresize] [-w width] [-n height] \n\
-                [-o out_file.pix] [file.pix] > [out_file.pix]\n";
+Usage: pixfade [-h] [-p percentage] [-f fraction] [-s squaresize] [-w width] [-n height] \n\
+                [-o out_file.pix] [file.bw] > [out_file.pix]\n";
 
 double multiplier = 0.5;
-int max = -1;
 
 int
 get_args(int argc, char **argv)
 {
     int c;
 
-    while ((c = bu_getopt(argc, argv, "p:f:s:w:n:o:m:h?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "p:f:s:w:n:o:h?")) != -1) {
 	switch (c) {
             case 'p':
 		multiplier = atof(bu_optarg) / 100.0;
@@ -102,14 +96,8 @@ get_args(int argc, char **argv)
 	    case 'o':
 		out_file = bu_optarg;
 		break;
-	    case 'm':
-		max = atoi(bu_optarg);
-		if (max < 0 )
-		    max = 0;
-		else if (max > 255)
-		    max=255;
-		break;
-	    default:		/* 'h' '?' */
+	    case 'h':
+	    default:		/* '?' */
 		return 0;
 	}
     }
@@ -118,36 +106,24 @@ get_args(int argc, char **argv)
 	if (isatty(fileno(stdin))) {
 	    return 0;
 	}
+    } else {
+        in_file = argv[bu_optind];
+        bu_optind++;
+        return 1;
     }
 
-    in_file = argv[bu_optind];
-    bu_optind++;
+
+    if (!isatty(fileno(stdout)) && out_file!=NULL) {
+	return 0;
+    }
+
+    if (argc > ++bu_optind) {
+	bu_log("pixfade: excess argument(s) ignored\n");
+    }
+
     return 1;		/* OK */
-
 }
 
-int
-icv_ceiling(icv_image_t *img, int ceiling)
-{
-    size_t size;
-    double *data;
-
-    ICV_IMAGE_VAL_INT(img);
-
-    size= img->height*img->width*img->channels;
-
-   if (size == 0)
-	return -1;
-
-    data = img->data;
-
-    while (size--) {
-	if (*data > ceiling)
-	    *data = ceiling;
-	data++;
-    }
-    return 0;
-}
 
 int
 main(int argc, char **argv)
@@ -158,14 +134,11 @@ main(int argc, char **argv)
         return 1;
     }
 
-    img = icv_read(in_file, MIME_IMAGE_PIX, inx, iny);
+    img = icv_read(in_file, ICV_IMAGE_PIX, inx, iny);
     if (img == NULL)
         return 1;
-    if (max < 0 )
-	icv_fade(img, multiplier);
-    else
-	icv_ceiling(img, max);
-    icv_write(img, out_file, MIME_IMAGE_PIX);
+    icv_fade(img, multiplier);
+    icv_write(img, out_file, ICV_IMAGE_PIX);
 
     icv_destroy(img);
     return 0;

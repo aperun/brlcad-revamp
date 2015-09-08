@@ -1,7 +1,7 @@
 /*                           R E V O L V E . C
  * BRL-CAD
  *
- * Copyright (c) 1990-2014 United States Government as represented by
+ * Copyright (c) 1990-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -33,11 +33,9 @@
 #include <math.h>
 
 #include "vmath.h"
-#include "bu/cv.h"
-#include "bu/debug.h"
-#include "rt/db4.h"
+#include "db.h"
 #include "nmg.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
 #include "raytrace.h"
 
 /* local interface header */
@@ -73,7 +71,7 @@ rt_revolve_make(const struct rt_functab *ftp, struct rt_db_internal *intern)
     intern->idb_meth = ftp;
     BU_ALLOC(rev, struct rt_revolve_internal);
 
-    intern->idb_ptr = (void *)rev;
+    intern->idb_ptr = (genptr_t)rev;
     rev->magic = RT_REVOLVE_INTERNAL_MAGIC;
 
     BU_VLS_INIT(&rev->sketch_name);
@@ -82,6 +80,8 @@ rt_revolve_make(const struct rt_functab *ftp, struct rt_db_internal *intern)
 
 
 /**
+ * R T _ R E V O L V E _ B B O X
+ *
  * Calculate a bounding RPP around a sketch
  */
 int
@@ -192,6 +192,8 @@ rt_revolve_bbox(struct rt_db_internal *ip, point_t *min, point_t *max, const str
 }
 
 /**
+ * R T _ R E V O L V E _ P R E P
+ *
  * Given a pointer to a GED database record, and a transformation
  * matrix, determine if this is a valid REVOLVE, and if so, precompute
  * various terms of the formula.
@@ -230,7 +232,7 @@ rt_revolve_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip
     stp->st_meth = &OBJ[ID_REVOLVE];
 
     BU_GET(rev, struct revolve_specific);
-    stp->st_specific = (void *)rev;
+    stp->st_specific = (genptr_t)rev;
 
     VMOVE(rev->v3d, rip->v3d);
     VMOVE(rev->zUnit, rip->axis3d);
@@ -339,6 +341,9 @@ rt_revolve_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip
 }
 
 
+/**
+ * R T _ R E V O L V E _ P R I N T
+ */
 void
 rt_revolve_print(const struct soltab *stp)
 {
@@ -355,6 +360,8 @@ rt_revolve_print(const struct soltab *stp)
 
 
 /**
+ * R T _ R E V O L V E _ S H O T
+ *
  * Intersect a ray with a revolve.  If an intersection occurs, a struct
  * seg will be acquired and filled in.
  *
@@ -405,7 +412,7 @@ rt_revolve_shot(struct soltab *stp, struct xray *rp, struct application *ap, str
     VMOVE(ur, vr);
     VUNITIZE(ur);
 
-    if (rev->ang < M_2PI) {
+    if (rev->ang < 2*M_PI) {
 	VREVERSE(normS, rev->yUnit);	/* start normal */
 	start = (VDOT(normS, rev->v3d) - VDOT(normS, rp->r_pt)) / VDOT(normS, rp->r_dir);
 
@@ -523,7 +530,7 @@ rt_revolve_shot(struct soltab *stp, struct xray *rp, struct application *ap, str
 		if (pt1[X] < 0) {
 		    angle += M_PI;
 		} else if (angle < 0) {
-		    angle += M_2PI;
+		    angle += 2*M_PI;
 		}
 		hit2d[X] = -hit2d[X];
 		if (angle > rev->ang) {
@@ -580,7 +587,7 @@ rt_revolve_shot(struct soltab *stp, struct xray *rp, struct application *ap, str
 			hit2d[X] = -aa;		/* use neg to check for overlap in contains() */
 			hit2d[Y] = hit1[Z];
 			if (angle < 0) {
-			    angle += M_2PI;
+			    angle += 2*M_PI;
 			}
 			if (angle < rev->ang &&
 			    !((angle + M_PI < rev->ang || angle - M_PI > 0)
@@ -648,7 +655,7 @@ rt_revolve_shot(struct soltab *stp, struct xray *rp, struct application *ap, str
 			    if (hit2d[X] < 0) {
 				angle += M_PI;
 			    } else if (angle < 0) {
-				angle += M_2PI;
+				angle += 2*M_PI;
 			    }
 			    hit2d[X] = -hit2d[X];
 			    if (angle < rev->ang &&
@@ -675,7 +682,7 @@ rt_revolve_shot(struct soltab *stp, struct xray *rp, struct application *ap, str
 			    if (-hit2d[X] < 0) {
 				angle += M_PI;
 			    } else if (angle < 0) {
-				angle += M_2PI;
+				angle += 2*M_PI;
 			    }
 			    if (angle < rev->ang &&
 				!((angle + M_PI < rev->ang || angle - M_PI > 0)
@@ -719,7 +726,7 @@ rt_revolve_shot(struct soltab *stp, struct xray *rp, struct application *ap, str
 				if (hit2d[X] < 0) {
 				    angle += M_PI;
 				} else if (angle < 0) {
-				    angle += M_2PI;
+				    angle += 2*M_PI;
 				}
 				hit2d[X] = -hit2d[X];
 				if (angle < rev->ang) {
@@ -751,7 +758,7 @@ rt_revolve_shot(struct soltab *stp, struct xray *rp, struct application *ap, str
 				if (hit2d[X] < 0) {
 				    angle += M_PI;
 				} else if (angle < 0) {
-				    angle += M_2PI;
+				    angle += 2*M_PI;
 				}
 				hit2d[X] = -hit2d[X];
 				if (angle < rev->ang) {
@@ -788,7 +795,7 @@ rt_revolve_shot(struct soltab *stp, struct xray *rp, struct application *ap, str
 			    if (hit2d[X] < 0) {
 				angle += M_PI;
 			    } else if (angle < 0) {
-				angle += M_2PI;
+				angle += 2*M_PI;
 			    }
 			    hit2d[X] = -hit2d[X];
 			    if (angle < rev->ang) {
@@ -804,7 +811,7 @@ rt_revolve_shot(struct soltab *stp, struct xray *rp, struct application *ap, str
 				    if (ZERO(m)) {
 					hitp->hit_vpriv[Z] = 0.0;
 				    } else {
-					hitp->hit_vpriv[Z] = (hit2d[X]>0) ? 1.0/m : -1.0/m;
+					hitp->hit_vpriv[Z] = (hit2d[X]>0) ? 1.0/m : -1.0/m;;
 				    }
 				    hitp->hit_magic = RT_HIT_MAGIC;
 				    hitp->hit_dist = k1;
@@ -1005,6 +1012,8 @@ rt_revolve_shot(struct soltab *stp, struct xray *rp, struct application *ap, str
 
 
 /**
+ * R T _ R E V O L V E _ N O R M
+ *
  * Given ONE ray distance, return the normal and entry/exit point.
  */
 void
@@ -1076,6 +1085,8 @@ rt_revolve_norm(struct hit *hitp, struct soltab *stp, struct xray *rp)
 
 
 /**
+ * R T _ R E V O L V E _ C U R V E
+ *
  * Return the curvature of the revolve.
  */
 void
@@ -1094,6 +1105,8 @@ rt_revolve_curve(struct curvature *cvp, struct hit *hitp, struct soltab *stp)
 
 
 /**
+ * R T _ R E V O L V E _ U V
+ *
  * For a hit on the surface of an revolve, return the (u, v) coordinates
  * of the hit point, 0 <= u, v <= 1.
 
@@ -1140,7 +1153,7 @@ rt_revolve_uv(struct application *ap, struct soltab *stp, struct hit *hitp, stru
 	    break;
 	default:
 	    angle = atan2(hitp->hit_vpriv[Y], hitp->hit_vpriv[X]);
-	    if (angle < 0) angle += M_2PI;
+	    if (angle < 0) angle += 2*M_PI;
 	    uvp->uv_u = angle / rev->ang;
 
 	    lng = (uint32_t *)rev->skt->curve.segment[hitp->hit_surfno];
@@ -1191,6 +1204,9 @@ rt_revolve_uv(struct application *ap, struct soltab *stp, struct hit *hitp, stru
 }
 
 
+/**
+ * R T _ R E V O L V E _ F R E E
+ */
 void
 rt_revolve_free(struct soltab *stp)
 {
@@ -1201,6 +1217,19 @@ rt_revolve_free(struct soltab *stp)
 }
 
 
+/**
+ * R T _ R E V O L V E _ C L A S S
+ */
+int
+rt_revolve_class()
+{
+    return 0;
+}
+
+
+/**
+ * R T _ R E V O L V E _ P L O T
+ */
 int
 rt_revolve_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct rt_tess_tol *ttol, const struct bn_tol *UNUSED(tol), const struct rt_view_info *UNUSED(info))
 {
@@ -1213,7 +1242,7 @@ rt_revolve_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct r
     vect_t ell[16], cir[16], ucir[16], height, xdir, ydir, ux, uy, uz, rEnd, xEnd, yEnd;
     fastf_t cos22_5 = 0.9238795325112867385;
     fastf_t cos67_5 = 0.3826834323650898373;
-    int *endcount = NULL, ang_sign;
+    int *endcount = NULL;
     point_t add, add2, add3;
 
     BU_CK_LIST_HEAD(vhead);
@@ -1225,8 +1254,8 @@ rt_revolve_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct r
     verts = rip->skt->verts;
     crv = &rip->skt->curve;
 
-    if (rip->ang < M_2PI) {
-	narc = ceil(fabs(rip->ang * 8 * M_1_PI));
+    if (rip->ang < 2*M_PI) {
+	narc = ceil(rip->ang * 8 * M_1_PI);
     } else {
 	narc = 16;
     }
@@ -1244,12 +1273,11 @@ rt_revolve_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct r
     VUNITIZE(uz);
 
     /* setup unit circle to be scaled */
-    ang_sign = rip->ang < 0 ? -1 : 1;
     VMOVE(ucir[ 0], ux);
     VREVERSE(ucir[ 8], ucir[0]);
 
     VSCALE(xdir, ux, cos22_5);
-    VSCALE(ydir, uy, ang_sign * cos67_5);
+    VSCALE(ydir, uy, cos67_5);
     VADD2(ucir[ 1], xdir, ydir);
     VREVERSE(ucir[ 9], ucir[1]);
     VREVERSE(xdir, xdir);
@@ -1257,7 +1285,7 @@ rt_revolve_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct r
     VREVERSE(ucir[15], ucir[7]);
 
     VSCALE(xdir, ux, M_SQRT1_2);
-    VSCALE(ydir, uy, ang_sign * M_SQRT1_2);
+    VSCALE(ydir, uy, M_SQRT1_2);
     VADD2(ucir[ 2], xdir, ydir);
     VREVERSE(ucir[10], ucir[2]);
     VREVERSE(xdir, xdir);
@@ -1266,15 +1294,14 @@ rt_revolve_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct r
 
 
     VSCALE(xdir, ux, cos67_5);
-    VSCALE(ydir, uy, ang_sign * cos22_5);
+    VSCALE(ydir, uy, cos22_5);
     VADD2(ucir[ 3], xdir, ydir);
     VREVERSE(ucir[11], ucir[3]);
     VREVERSE(xdir, xdir);
     VADD2(ucir[ 5], xdir, ydir);
     VREVERSE(ucir[13], ucir[5]);
 
-    VSCALE(ydir, uy, ang_sign);
-    VMOVE(ucir[ 4], ydir);
+    VMOVE(ucir[ 4], uy);
     VREVERSE(ucir[12], ucir[4]);
 
     /* find open endpoints, and determine which points are used */
@@ -1419,6 +1446,8 @@ rt_revolve_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct r
 
 
 /**
+ * R T _ R E V O L V E _ T E S S
+ *
  * Returns -
  * -1 failure
  * 0 OK.  *r points to nmgregion that holds this tessellation.
@@ -1456,6 +1485,8 @@ rt_revolve_tess(struct nmgregion **UNUSED(r), struct model *UNUSED(m), struct rt
 
 
 /**
+ * R T _ R E V O L V E _ I M P O R T 5
+ *
  * Import an REVOLVE from the database format to the internal format.
  * Note that the data read will be in network order.  This means
  * Big-Endian integers and IEEE doubles for floating point.
@@ -1530,6 +1561,8 @@ rt_revolve_import5(struct rt_db_internal *ip, const struct bu_external *ep, cons
 
 
 /**
+ * R T _ R E V O L V E _ X F O R M
+ *
  * Apply a transformation matrix to the specified 'ip' input revolve
  * object, storing the results in the specified 'op' out pointer or
  * creating a copy if NULL.
@@ -1563,7 +1596,7 @@ rt_revolve_xform(
 	rop->magic = RT_REVOLVE_INTERNAL_MAGIC;
 	bu_vls_init(&rop->sketch_name);
 	bu_vls_vlscat(&rop->sketch_name, &rip->sketch_name);
-	op->idb_ptr = (void *)rop;
+	op->idb_ptr = (genptr_t)rop;
 	op->idb_meth = &OBJ[ID_REVOLVE];
 	op->idb_major_type = DB5_MAJORTYPE_BRLCAD;
 	op->idb_type = ID_REVOLVE;
@@ -1601,6 +1634,8 @@ rt_revolve_xform(
 
 
 /**
+ * R T _ R E V O L V E _ E X P O R T 5
+ *
  * Export an REVOLVE from internal form to external format.  Note that
  * this means converting all integers to Big-Endian format and
  * floating point data to IEEE double.
@@ -1626,7 +1661,7 @@ rt_revolve_export5(struct bu_external *ep, const struct rt_db_internal *ip, doub
 
     BU_CK_EXTERNAL(ep);
     ep->ext_nbytes = SIZEOF_NETWORK_DOUBLE * (ELEMENTS_PER_VECT*3 + 1) + bu_vls_strlen(&rip->sketch_name) + 1;
-    ep->ext_buf = (uint8_t *)bu_calloc(1, ep->ext_nbytes, "revolve external");
+    ep->ext_buf = (genptr_t)bu_calloc(1, ep->ext_nbytes, "revolve external");
 
     ptr = (unsigned char *)ep->ext_buf;
 
@@ -1649,6 +1684,8 @@ rt_revolve_export5(struct bu_external *ep, const struct rt_db_internal *ip, doub
 
 
 /**
+ * R T _ R E V O L V E _ D E S C R I B E
+ *
  * Make human-readable formatted presentation of this solid.  First
  * line describes type of solid.  Additional lines are indented one
  * tab, and give parameter values.
@@ -1696,6 +1733,8 @@ rt_revolve_describe(struct bu_vls *str, const struct rt_db_internal *ip, int ver
 
 
 /**
+ * R T _ R E V O L V E _ I F R E E
+ *
  * Free the storage associated with the rt_db_internal version of this
  * solid.
  */
@@ -1716,7 +1755,7 @@ rt_revolve_ifree(struct rt_db_internal *ip)
 	bu_log("Freeing bogus revolve, VLS string not initialized\n");
 
     bu_free((char *)revolve_ip, "revolve ifree");
-    ip->idb_ptr = ((void *)0);	/* sanity */
+    ip->idb_ptr = GENPTR_NULL;	/* sanity */
 }
 
 

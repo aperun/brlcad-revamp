@@ -1,7 +1,7 @@
 /*                   O B J _ X F O R M . C
  * BRL-CAD
  *
- * Copyright (c) 2010-2014 United States Government as represented by
+ * Copyright (c) 2010-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -20,7 +20,8 @@
 
 #include "common.h"
 
-#include "rt/func.h"
+#include "raytrace.h"
+
 
 int
 rt_obj_xform(struct rt_db_internal *op, const mat_t mat, struct rt_db_internal *ip, int release, struct db_i *dbip, struct resource *resp)

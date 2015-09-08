@@ -1,7 +1,7 @@
 /*                         L T . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -26,8 +26,9 @@
 #include "common.h"
 
 #include <string.h>
+#include "bio.h"
 
-#include "bu/cmd.h"
+#include "cmd.h"
 
 #include "./ged_private.h"
 
@@ -80,13 +81,13 @@ list_children(struct ged *gedp, struct directory *dp)
 
 	    switch (rt_tree_array[i].tl_op) {
 		case OP_UNION:
-		    op = DB_OP_UNION;
+		    op = 'u';
 		    break;
 		case OP_INTERSECT:
-		    op = DB_OP_INTERSECT;
+		    op = '+';
 		    break;
 		case OP_SUBTRACT:
-		    op = DB_OP_SUBTRACT;
+		    op = '-';
 		    break;
 		default:
 		    op = '?';

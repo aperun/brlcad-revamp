@@ -1,7 +1,7 @@
 /*         T E S T _ P O I N T _ I N T E R S E C T . C P P
  * BRL-CAD
  *
- * Copyright (c) 2013-2014 United States Government as represented by
+ * Copyright (c) 2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -26,22 +26,19 @@
 #include "common.h"
 
 #include "vmath.h"
-#include "bu/log.h"
+#include "bu.h"
 
 #include "brep.h"
 
-static void
+void
 test_ppi(ON_3dPoint &p1, ON_3dPoint &p2)
 {
     ON_wString wstr;
     ON_TextLog textlog(wstr);
     ON_ClassArray<ON_PX_EVENT> x;
-
     // Use default tolerance
     ON_Intersect(p1, p2, x);
-
-    bu_log("(%f,%f,%f) and (%f,%f,%f):\n", p1[0], p1[1], p1[2], p2[0], p2[1], p2[2]);
-
+    bu_log("(%lf,%lf,%lf) and (%lf,%lf,%lf):\n", p1[0], p1[1], p1[2], p2[0], p2[1], p2[2]);
     if (x.Count() == 0) {
 	bu_log("No intersection.\n");
     } else {
@@ -53,20 +50,18 @@ test_ppi(ON_3dPoint &p1, ON_3dPoint &p2)
     bu_log("\n\n");
 }
 
-
-static void
+void
 test_pci(ON_3dPoint &p, ON_Curve &c)
 {
     ON_wString wstr;
     ON_TextLog textlog(wstr);
     ON_ClassArray<ON_PX_EVENT> x;
-
     // Use default tolerance
     ON_Intersect(p, c, x);
 
     ON_3dPoint start = c.PointAtStart();
     ON_3dPoint end = c.PointAtEnd();
-    bu_log("(%f,%f,%f) and [(%f,%f,%f) to (%f,%f,%f)]:\n",
+    bu_log("(%lf,%lf,%lf) and [(%lf,%lf,%lf) to (%lf,%lf,%lf)]:\n",
 	   p[0], p[1], p[2], start[0], start[1], start[2], end[0], end[1], end[2]);
     if (x.Count() == 0) {
 	bu_log("No intersection.\n");
@@ -79,19 +74,17 @@ test_pci(ON_3dPoint &p, ON_Curve &c)
     bu_log("\n\n");
 }
 
-
-static void
+void
 test_psi(ON_3dPoint &p, ON_Surface &s)
 {
     ON_wString wstr;
     ON_TextLog textlog(wstr);
     ON_ClassArray<ON_PX_EVENT> x;
-
     // Use default tolerance
     ON_Intersect(p, s, x);
 
     // XXX: How to simply show a surface?
-    bu_log("(%f,%f,%f) and a surface:\n", p[0], p[1], p[2]);
+    bu_log("(%lf,%lf,%lf) and a surface:\n", p[0], p[1], p[2]);
     if (x.Count() == 0) {
 	bu_log("No intersection.\n");
     } else {
@@ -103,14 +96,12 @@ test_psi(ON_3dPoint &p, ON_Surface &s)
     bu_log("\n\n");
 }
 
-
-static double
+double
 rand_f(double min, double max)
 {
     double f = (double)rand() / RAND_MAX;
     return min + f * (max - min);
 }
-
 
 int
 main(int, char**)
@@ -137,7 +128,7 @@ main(int, char**)
     ON_Curve *curve = brep->m_C3[0];
 
     ON_3dPoint mid = curve->PointAt(curve->Domain().Mid());
-    bu_log("debug: %f %f %f\n", mid[0], mid[1], mid[2]);
+    bu_log("debug: %lf %lf %lf\n", mid[0], mid[1], mid[2]);
 
     bu_log("** Part 1 **\n");
     test_pci(p1, *curve);
@@ -197,7 +188,6 @@ main(int, char**)
 	test_psi(test_pt, *surf);
     }
 
-    delete brep;
     bu_log("All finished.\n");
     return 0;
 }

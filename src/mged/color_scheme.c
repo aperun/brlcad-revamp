@@ -1,7 +1,7 @@
 /*                  C O L O R _ S C H E M E . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -23,7 +23,10 @@
 
 #include "common.h"
 
+#include <stdio.h>
 
+#include "bio.h"
+#include "bu.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "./mged.h"
@@ -138,7 +141,7 @@ struct bu_structparse color_scheme_vparse[] = {
     {"%d", 1, "mode",		CS_O(cs_mode),			cs_update, NULL, NULL },
     {"%d", 3, "bg",		CS_O(cs_bg),			cs_set_bg, NULL, NULL },
     {"%d", 3, "bg_a",		CS_O(cs_bg_a),			BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
-    {"%d", 3, "bg_ia",		CS_O(cs_bg_ia),		        BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%d", 3, "bg_ia",		CS_O(cs_bg_ia),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "adc_line",	CS_O(cs_adc_line),		cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "adc_line_a",	CS_O(cs_adc_line_a),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "adc_line_ia",	CS_O(cs_adc_line_ia),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
@@ -155,7 +158,7 @@ struct bu_structparse color_scheme_vparse[] = {
     {"%d", 3, "geo_label_a",	CS_O(cs_geo_label_a),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "geo_label_ia",	CS_O(cs_geo_label_ia),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "rubber_band",	CS_O(cs_rubber_band),		cs_set_dirty_flag, NULL, NULL },
-    {"%d", 3, "rubber_band_a",	CS_O(cs_rubber_band_a),	        BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%d", 3, "rubber_band_a",	CS_O(cs_rubber_band_a),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "rubber_band_ia",	CS_O(cs_rubber_band_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "grid",		CS_O(cs_grid),			cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "grid_a",		CS_O(cs_grid_a),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
@@ -167,11 +170,11 @@ struct bu_structparse color_scheme_vparse[] = {
     {"%d", 3, "menu_line_a",	CS_O(cs_menu_line_a),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "menu_line_ia",	CS_O(cs_menu_line_ia),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "slider_line",	CS_O(cs_slider_line),		cs_set_dirty_flag, NULL, NULL },
-    {"%d", 3, "slider_line_a",	CS_O(cs_slider_line_a),	        BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%d", 3, "slider_line_a",	CS_O(cs_slider_line_a),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "slider_line_ia",	CS_O(cs_slider_line_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "other_line",	CS_O(cs_other_line),		cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "other_line_a",	CS_O(cs_other_line_a),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
-    {"%d", 3, "other_line_ia",	CS_O(cs_other_line_ia),	        BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%d", 3, "other_line_ia",	CS_O(cs_other_line_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "status_text1",	CS_O(cs_status_text1),		cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "status_text1_a",	CS_O(cs_status_text1_a),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "status_text1_ia",CS_O(cs_status_text1_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
@@ -186,31 +189,31 @@ struct bu_structparse color_scheme_vparse[] = {
     {"%d", 3, "slider_text2_ia",CS_O(cs_slider_text2_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "menu_text1",	CS_O(cs_menu_text1),		cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "menu_text1_a",	CS_O(cs_menu_text1_a),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
-    {"%d", 3, "menu_text1_ia",	CS_O(cs_menu_text1_ia),	        BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%d", 3, "menu_text1_ia",	CS_O(cs_menu_text1_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "menu_text2",	CS_O(cs_menu_text2),		cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "menu_text2_a",	CS_O(cs_menu_text2_a),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
-    {"%d", 3, "menu_text2_ia",	CS_O(cs_menu_text2_ia),	        BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%d", 3, "menu_text2_ia",	CS_O(cs_menu_text2_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "menu_title",	CS_O(cs_menu_title),		cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "menu_title_a",	CS_O(cs_menu_title_a),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
-    {"%d", 3, "menu_title_ia",	CS_O(cs_menu_title_ia),	        BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%d", 3, "menu_title_ia",	CS_O(cs_menu_title_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "menu_arrow",	CS_O(cs_menu_arrow),		cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "menu_arrow_a",	CS_O(cs_menu_arrow_a),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
-    {"%d", 3, "menu_arrow_ia",	CS_O(cs_menu_arrow_ia),	        BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%d", 3, "menu_arrow_ia",	CS_O(cs_menu_arrow_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "state_text1",	CS_O(cs_state_text1),		cs_set_dirty_flag, NULL, NULL },
-    {"%d", 3, "state_text1_a",	CS_O(cs_state_text1_a),	        BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%d", 3, "state_text1_a",	CS_O(cs_state_text1_a),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "state_text1_ia",	CS_O(cs_state_text1_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "state_text2",	CS_O(cs_state_text2),		cs_set_dirty_flag, NULL, NULL },
-    {"%d", 3, "state_text2_a",	CS_O(cs_state_text2_a),	        BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%d", 3, "state_text2_a",	CS_O(cs_state_text2_a),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "state_text2_ia",	CS_O(cs_state_text2_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "edit_info",	CS_O(cs_edit_info),		cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "edit_info_a",	CS_O(cs_edit_info_a),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "edit_info_ia",	CS_O(cs_edit_info_ia),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "center_dot",	CS_O(cs_center_dot),		cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "center_dot_a",	CS_O(cs_center_dot_a),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
-    {"%d", 3, "center_dot_ia",	CS_O(cs_center_dot_ia),	        BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%d", 3, "center_dot_ia",	CS_O(cs_center_dot_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "model_axes",		CS_O(cs_model_axes),		cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "model_axes_a",		CS_O(cs_model_axes_a),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
-    {"%d", 3, "model_axes_ia",		CS_O(cs_model_axes_ia),	        BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%d", 3, "model_axes_ia",		CS_O(cs_model_axes_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "model_axes_label",	CS_O(cs_model_axes_label),	cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "model_axes_label_a",	CS_O(cs_model_axes_label_a),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "model_axes_label_ia",	CS_O(cs_model_axes_label_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
@@ -222,10 +225,10 @@ struct bu_structparse color_scheme_vparse[] = {
     {"%d", 3, "view_axes_label_ia",	CS_O(cs_view_axes_label_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "edit_axes1",		CS_O(cs_edit_axes1),		cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "edit_axes1_a",		CS_O(cs_edit_axes1_a),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
-    {"%d", 3, "edit_axes1_ia",		CS_O(cs_edit_axes1_ia),	        BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%d", 3, "edit_axes1_ia",		CS_O(cs_edit_axes1_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "edit_axes2",		CS_O(cs_edit_axes2),		cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "edit_axes2_a",		CS_O(cs_edit_axes2_a),		BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
-    {"%d", 3, "edit_axes2_ia",		CS_O(cs_edit_axes2_ia),	        BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
+    {"%d", 3, "edit_axes2_ia",		CS_O(cs_edit_axes2_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "edit_axes_label1",	CS_O(cs_edit_axes_label1),	cs_set_dirty_flag, NULL, NULL },
     {"%d", 3, "edit_axes_label1_a",	CS_O(cs_edit_axes_label1_a),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
     {"%d", 3, "edit_axes_label1_ia",	CS_O(cs_edit_axes_label1_ia),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
@@ -237,11 +240,7 @@ struct bu_structparse color_scheme_vparse[] = {
 
 
 void
-cs_set_dirty_flag(const struct bu_structparse *UNUSED(sdp),
-		  const char *UNUSED(name),
-		  void *UNUSED(base),
-		  const char *UNUSED(value),
-		  void *UNUSED(data))
+cs_set_dirty_flag(void)
 {
     struct dm_list *dmlp;
 
@@ -252,11 +251,7 @@ cs_set_dirty_flag(const struct bu_structparse *UNUSED(sdp),
 
 
 void
-cs_update(const struct bu_structparse *sdp,
-	  const char *name,
-	  void *base,
-	  const char *value,
-	  void *data)
+cs_update(void)
 {
     struct bu_structparse *sp;
     struct bu_vls vls = BU_VLS_INIT_ZERO;
@@ -273,18 +268,13 @@ cs_update(const struct bu_structparse *sdp,
 	Tcl_Eval(INTERP, bu_vls_addr(&vls));
     }
 
-    cs_set_bg(sdp, name, base, value, data);
-
+    cs_set_bg();
     bu_vls_free(&vls);
 }
 
 
 void
-cs_set_bg(const struct bu_structparse *UNUSED(sdp),
-	  const char *UNUSED(name),
-	  void *UNUSED(base),
-	  const char *UNUSED(value),
-	  void *UNUSED(data))
+cs_set_bg(void)
 {
     struct dm_list *dmlp;
     struct dm_list *save_curr_dmlp = curr_dm_list;

@@ -1,7 +1,7 @@
 /*                        P I X R O T . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -37,9 +37,7 @@
 #include <stdlib.h>
 #include "bio.h"
 
-#include "bu/getopt.h"
-#include "bu/log.h"
-#include "bu/file.h"
+#include "bu.h"
 
 
 static const char usage[] = "\
@@ -69,8 +67,6 @@ void reverse_buffer(void);
 
 static char *file_name;
 FILE *ifp, *ofp;
-
-static char hyphen[] = "-";
 
 int
 get_args(int argc, char **argv)
@@ -121,7 +117,7 @@ get_args(int argc, char **argv)
     if (bu_optind >= argc) {
 	if (isatty(fileno(stdin)))
 	    return 0;
-	file_name = hyphen;
+	file_name = "-";
 	ifp = stdin;
     } else {
 	file_name = argv[bu_optind];
@@ -157,8 +153,8 @@ main(int argc, char **argv)
 	bu_exit(2, "pixrot: I'm not compiled to do a scanline that long!\n");
     }
     if (buflines > nyin) buflines = nyin;
-    buffer = (unsigned char *)malloc(buflines * scanbytes);
-    obuf = (nyin > nxin) ? (unsigned char *)malloc(nyin * pixbytes) : (unsigned char *)malloc(nxin * pixbytes);
+    buffer = malloc(buflines * scanbytes);
+    obuf = (nyin > nxin) ? malloc(nyin * pixbytes) : malloc(nxin * pixbytes);
     if (buffer == (unsigned char *)0 || obuf == (unsigned char *)0) {
 	bu_exit(3, "pixrot: malloc failed\n");
     }

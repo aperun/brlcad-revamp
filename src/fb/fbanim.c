@@ -1,7 +1,7 @@
 /*                        F B A N I M . C
  * BRL-CAD
  *
- * Copyright (c) 1985-2014 United States Government as represented by
+ * Copyright (c) 1985-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -29,16 +29,14 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "bsocket.h"
+#include "bselect.h"
+#include "bio.h"
 
 #ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>		/* For struct timeval */
 #endif
-#include <limits.h>
 
-#include "bu/getopt.h"
-#include "bu/log.h"
-
+#include "bu.h"
 #include "fb.h"
 
 
@@ -47,7 +45,7 @@ int usec;
 
 void newframe(int i);
 
-fb *fbp;
+FBIO *fbp;
 int screen_width;		/* Number of pixels/line in frame buffer */
 int screen_height;
 int verbose = 0;

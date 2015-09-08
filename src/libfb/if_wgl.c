@@ -1,7 +1,7 @@
 /*                       I F _ W G L . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -17,7 +17,7 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup libfb */
+/** @addtogroup if */
 /** @{ */
 /** @file if_wgl.c
  *
@@ -37,15 +37,13 @@
 
 #ifdef IF_WGL
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
-
-/* winsock (bsocket.h) first, ordering matters */
-#include "bsocket.h"
-#include "bio.h"
 #include <windowsx.h>
 
+#include "bio.h"
 #ifdef HAVE_GL_GL_H
 #  include <GL/gl.h>
 #endif
@@ -53,14 +51,13 @@
 
 #include "tk.h"
 #include "tkPlatDecls.h"
-#include "bu/color.h"
-#include "bu/str.h"
-#include "bu/parallel.h"
-#include "rt/geom.h"
+#include "bu.h"
+#include "vmath.h"
+#include "bn.h"
+#include "rtgeom.h"
 #include "raytrace.h"
 #include "fb.h"
-#include "fb_private.h"
-#include "fb/fb_wgl.h"
+
 
 #define CJDEBUG 0
 
@@ -69,21 +66,22 @@
 #define YMAXSCREEN 16383
 
 /* Internal callbacks etc.*/
-HIDDEN void wgl_do_event(fb *ifp);
-HIDDEN void expose_callback(fb *ifp, int eventPtr);
+HIDDEN void wgl_do_event(FBIO *ifp);
+HIDDEN void expose_callback(FBIO *ifp, int eventPtr);
+void wgl_configureWindow(FBIO *ifp, int width, int height);
 
 /* Other Internal routines */
-HIDDEN void wgl_clipper(fb *ifp);
-HIDDEN int wgl_getmem(fb *ifp);
-HIDDEN void backbuffer_to_screen(fb *ifp, int one_y);
-HIDDEN void wgl_cminit(fb *ifp);
-HIDDEN PIXELFORMATDESCRIPTOR * wgl_choose_visual(fb *ifp);
-HIDDEN int is_linear_cmap(fb *ifp);
+HIDDEN void wgl_clipper(FBIO *ifp);
+HIDDEN int wgl_getmem(FBIO *ifp);
+HIDDEN void backbuffer_to_screen(FBIO *ifp, int one_y);
+HIDDEN void wgl_cminit(FBIO *ifp);
+HIDDEN PIXELFORMATDESCRIPTOR * wgl_choose_visual(FBIO *ifp);
+HIDDEN int is_linear_cmap(FBIO *ifp);
 
 HIDDEN int wgl_nwindows = 0; 	/* number of open windows */
 
 
-fb *saveifp;
+FBIO *saveifp;
 int titleBarHeight = 0;
 int borderWidth = 0;
 
@@ -268,6 +266,8 @@ HIDDEN struct modeflags {
 /************************************************************************/
 
 /*
+ * W G L _ G E T M E M
+ *
  * Because there is no hardware zoom or pan, we need to repaint the
  * screen (with big pixels) to implement these operations.  This means
  * that the actual "contents" of the frame buffer need to be stored
@@ -293,7 +293,7 @@ HIDDEN struct modeflags {
  * might need to be increased.
  */
 HIDDEN int
-wgl_getmem(fb *ifp)
+wgl_getmem(FBIO *ifp)
 {
     int pixsize;
     int size;
@@ -339,12 +339,18 @@ fail:
 }
 
 
+/*
+ * W G L _ Z A P M E M
+ */
 void
 wgl_zapmem(void)
 {
 }
 
 
+/*
+ * S I G K I D
+ */
 HIDDEN void
 sigkid(int UNUSED(pid))
 {
@@ -352,12 +358,13 @@ sigkid(int UNUSED(pid))
 }
 
 
-/*
+/* W G L _ X M I T _ S C A N L I N E S
+ *
  * Note: unlike sgi_xmit_scanlines, this function updates an arbitrary
  * rectangle of the frame buffer
  */
 HIDDEN void
-wgl_xmit_scanlines(fb *ifp, int ybase, int nlines, int xbase, int npix)
+wgl_xmit_scanlines(FBIO *ifp, int ybase, int nlines, int xbase, int npix)
 {
     int y;
     int n;
@@ -544,7 +551,7 @@ MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
 HIDDEN int
-wgl_open(fb *ifp, const char *file, int width, int height)
+wgl_open(FBIO *ifp, const char *file, int width, int height)
 {
     static char title[128];
     int mode,  ret;
@@ -555,7 +562,7 @@ wgl_open(fb *ifp, const char *file, int width, int height)
     DWORD Dword;
     WNDCLASS wndclass;
 
-    FB_CK_FB(ifp);
+    FB_CK_FBIO(ifp);
 
     saveifp = ifp;
 
@@ -739,30 +746,9 @@ wgl_open(fb *ifp, const char *file, int width, int height)
     return 0;
 }
 
-HIDDEN struct fb_platform_specific *
-wgl_get_fbps(uint32_t magic)
-{
-    struct fb_platform_specific *fb_ps = NULL;
-    struct wgl_fb_info *data = NULL;
-    BU_GET(fb_ps, struct fb_platform_specific);
-    BU_GET(data, struct wgl_fb_info);
-    fb_ps->magic = magic;
-    fb_ps->data = data;
-    return fb_ps;
-}
-
-
-HIDDEN void
-wgl_put_fbps(struct fb_platform_specific *fbps)
-{
-    BU_CKMAG(fbps, FB_WGL_MAGIC, "wgl framebuffer");
-    BU_PUT(fbps->data, struct wgl_fb_info);
-    BU_PUT(fbps, struct fb_platform_specific);
-    return;
-}
 
 int
-_wgl_open_existing(fb *ifp,
+_wgl_open_existing(FBIO *ifp,
 		   Display *dpy,
 		   Window win,
 		   Colormap cmap,
@@ -839,19 +825,59 @@ _wgl_open_existing(fb *ifp,
 
 
 int
-wgl_open_existing(fb *ifp, int width, int height, struct fb_platform_specific *fb_p)
+wgl_open_existing(FBIO *ifp, int argc, const char **argv)
 {
-    struct wgl_fb_info *wgl_internal = (struct wgl_fb_info *)fb_p->data;
-    BU_CKMAG(fb_p, FB_WGL_MAGIC, "wgl framebuffer");
-    return _wgl_open_existing(ifp, wgl_internal->dpy, wgl_internal->win, wgl_internal->cmap,
-	    wgl_internal->vip, wgl_internal->hdc, width, height,
-	    wgl_internal->glxc, wgl_internal->double_buffer, wgl_internal->soft_cmap);
-    return 0;
+    Display *dpy;
+    Window win;
+    Colormap cmap;
+    PIXELFORMATDESCRIPTOR *vip;
+    HDC hdc;
+    int width;
+    int height;
+    HGLRC glxc;
+    int double_buffer;
+    int soft_cmap;
+
+    if (argc != 11)
+	return -1;
+
+    if (sscanf(argv[1], "%p", (void *)&dpy) != 1)
+	return -1;
+
+    if (sscanf(argv[2], "%p", (void *)&win) != 1)
+	return -1;
+
+    if (sscanf(argv[3], "%p", (void *)&cmap) != 1)
+	return -1;
+
+    if (sscanf(argv[4], "%p", (void *)&vip) != 1)
+	return -1;
+
+    if (sscanf(argv[5], "%p", (void *)&hdc) != 1)
+	return -1;
+
+    if (sscanf(argv[8], "%p", (void *)&glxc) != 1)
+	return -1;
+
+    if (sscanf(argv[6], "%d", &width) != 1)
+	return -1;
+
+    if (sscanf(argv[7], "%d", &height) != 1)
+	return -1;
+
+    if (sscanf(argv[9], "%d", &double_buffer) != 1)
+	return -1;
+
+    if (sscanf(argv[10], "%d", &soft_cmap) != 1)
+	return -1;
+
+    return _wgl_open_existing(ifp, dpy, win, cmap, vip, hdc, width, height,
+			      glxc, double_buffer, soft_cmap);
 }
 
 
 HIDDEN int
-wgl_final_close(fb *ifp)
+wgl_final_close(FBIO *ifp)
 {
 
     if (CJDEBUG) {
@@ -887,7 +913,7 @@ wgl_final_close(fb *ifp)
 
 
 HIDDEN int
-wgl_flush(fb *ifp)
+wgl_flush(FBIO *ifp)
 {
     if ((ifp->if_mode & MODE_12MASK) == MODE_12DELAY_WRITES_TILL_FLUSH) {
 
@@ -915,7 +941,7 @@ wgl_flush(fb *ifp)
 
 
 HIDDEN int
-wgl_close(fb *ifp)
+wgl_close(FBIO *ifp)
 {
 
     wgl_flush(ifp);
@@ -958,7 +984,7 @@ wgl_close(fb *ifp)
 
 
 int
-wgl_close_existing(fb *ifp)
+wgl_close_existing(FBIO *ifp)
 {
     /*
       if (WGL(ifp)->cursor)
@@ -984,10 +1010,12 @@ wgl_close_existing(fb *ifp)
 
 
 /*
+ * W G L _ P O L L
+ *
  * Handle any pending input events
  */
 HIDDEN int
-wgl_poll(fb *ifp)
+wgl_poll(FBIO *ifp)
 {
     wgl_do_event(ifp);
 
@@ -999,10 +1027,12 @@ wgl_poll(fb *ifp)
 
 
 /*
+ * W G L _ F R E E
+ *
  * Free shared memory resources, and close.
  */
 HIDDEN int
-wgl_free(fb *ifp)
+wgl_free(FBIO *ifp)
 {
     int ret;
 
@@ -1022,7 +1052,7 @@ wgl_free(fb *ifp)
  * pp is a pointer to beginning of memory segment
  */
 HIDDEN int
-wgl_clear(fb *ifp, unsigned char *pp)
+wgl_clear(FBIO *ifp, unsigned char *pp)
 {
     struct wgl_pixel bg;
     struct wgl_pixel *wglp;
@@ -1031,17 +1061,23 @@ wgl_clear(fb *ifp, unsigned char *pp)
 
     if (CJDEBUG) printf("entering wgl_clear\n");
 
+    if (wglMakeCurrent(WGL(ifp)->hdc, WGL(ifp)->glxc)==False) {
+	fb_log("Warning, wgl_clear: wglMakeCurrent unsuccessful.\n");
+    }
+
     /* Set clear colors */
     if (pp != RGBPIXEL_NULL) {
 	bg.alpha = 0;
 	bg.red   = (pp)[RED];
 	bg.green = (pp)[GRN];
 	bg.blue  = (pp)[BLU];
+	glClearColor(pp[RED]/255.0, pp[GRN]/255.0, pp[BLU]/255.0, 0.0);
     } else {
 	bg.alpha = 0;
 	bg.red   = 0;
 	bg.green = 0;
 	bg.blue  = 0;
+	glClearColor(0, 0, 0, 0);
     }
 
     /* Flood rectangle in shared memory */
@@ -1053,38 +1089,31 @@ wgl_clear(fb *ifp, unsigned char *pp)
 	}
     }
 
+
+    /* Update screen */
     if (WGL(ifp)->use_ext_ctrl) {
-	return 0;
-    }
-
-    if (wglMakeCurrent(WGL(ifp)->hdc, WGL(ifp)->glxc)==False) {
-	fb_log("Warning, wgl_clear: wglMakeCurrent unsuccessful.\n");
-    }
-
-    if (pp != RGBPIXEL_NULL) {
-	glClearColor(pp[RED]/255.0, pp[GRN]/255.0, pp[BLU]/255.0, 0.0);
-    } else {
-	glClearColor(0, 0, 0, 0);
-    }
-
-    if (WGL(ifp)->copy_flag) {
-	/* COPY mode: clear both buffers */
-	if (WGL(ifp)->front_flag) {
-	    glDrawBuffer(GL_BACK);
-	    glClear(GL_COLOR_BUFFER_BIT);
-	    glDrawBuffer(GL_FRONT);
-	    glClear(GL_COLOR_BUFFER_BIT);
-	} else {
-	    glDrawBuffer(GL_FRONT);
-	    glClear(GL_COLOR_BUFFER_BIT);
-	    glDrawBuffer(GL_BACK);
-	    glClear(GL_COLOR_BUFFER_BIT);
-	}
-    } else {
 	glClear(GL_COLOR_BUFFER_BIT);
-	if (SGI(ifp)->mi_doublebuffer) {
-	    SwapBuffers(WGL(ifp)->hdc);
+    } else {
+	if (WGL(ifp)->copy_flag) {
+	    /* COPY mode: clear both buffers */
+	    if (WGL(ifp)->front_flag) {
+		glDrawBuffer(GL_BACK);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDrawBuffer(GL_FRONT);
+		glClear(GL_COLOR_BUFFER_BIT);
+	    } else {
+		glDrawBuffer(GL_FRONT);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDrawBuffer(GL_BACK);
+		glClear(GL_COLOR_BUFFER_BIT);
+	    }
+	} else {
+	    glClear(GL_COLOR_BUFFER_BIT);
+	    if (SGI(ifp)->mi_doublebuffer) {
+		SwapBuffers(WGL(ifp)->hdc);
+	    }
 	}
+
     }
 
     /* unattach context for other threads to use */
@@ -1094,8 +1123,11 @@ wgl_clear(fb *ifp, unsigned char *pp)
 }
 
 
+/*
+ * W G L _ V I E W
+ */
 HIDDEN int
-wgl_view(fb *ifp, int xcenter, int ycenter, int xzoom, int yzoom)
+wgl_view(FBIO *ifp, int xcenter, int ycenter, int xzoom, int yzoom)
 {
     struct wgl_clip *clp;
 
@@ -1165,8 +1197,11 @@ wgl_view(fb *ifp, int xcenter, int ycenter, int xzoom, int yzoom)
 }
 
 
+/*
+ * W G L _ G E T V I E W
+ */
 HIDDEN int
-wgl_getview(fb *ifp, int *xcenter, int *ycenter, int *xzoom, int *yzoom)
+wgl_getview(FBIO *ifp, int *xcenter, int *ycenter, int *xzoom, int *yzoom)
 {
     if (CJDEBUG) printf("entering wgl_getview\n");
 
@@ -1183,7 +1218,7 @@ wgl_getview(fb *ifp, int *xcenter, int *ycenter, int *xzoom, int *yzoom)
  * read count pixels into pixelp starting at x, y
  */
 HIDDEN int
-wgl_read(fb *ifp, int x, int y, unsigned char *pixelp, size_t count)
+wgl_read(FBIO *ifp, int x, int y, unsigned char *pixelp, size_t count)
 {
     size_t n;
     size_t scan_count;	/* # pix on this scanline */
@@ -1236,7 +1271,7 @@ wgl_read(fb *ifp, int x, int y, unsigned char *pixelp, size_t count)
  * write count pixels from pixelp starting at xstart, ystart
  */
 HIDDEN int
-wgl_write(fb *ifp, int xstart, int ystart, const unsigned char *pixelp, size_t count)
+wgl_write(FBIO *ifp, int xstart, int ystart, const unsigned char *pixelp, size_t count)
 {
     size_t scan_count;	/* # pix on this scanline */
     size_t pix_count;	/* # pixels to send */
@@ -1359,12 +1394,14 @@ wgl_write(fb *ifp, int xstart, int ystart, const unsigned char *pixelp, size_t c
 
 
 /*
+ * W G L _ W R I T E R E C T
+ *
  * The task of this routine is to reformat the pixels into SGI
  * internal form, and then arrange to have them sent to the screen
  * separately.
  */
 HIDDEN int
-wgl_writerect(fb *ifp,
+wgl_writerect(FBIO *ifp,
 	      int xmin,
 	      int ymin,
 	      int width,
@@ -1428,12 +1465,14 @@ wgl_writerect(fb *ifp,
 
 
 /*
+ * W G L _ B W W R I T E R E C T
+ *
  * The task of this routine is to reformat the pixels into SGI
  * internal form, and then arrange to have them sent to the screen
  * separately.
  */
 HIDDEN int
-wgl_bwwriterect(fb *ifp,
+wgl_bwwriterect(FBIO *ifp,
 		int xmin,
 		int ymin,
 		int width,
@@ -1497,7 +1536,7 @@ wgl_bwwriterect(fb *ifp,
 
 
 HIDDEN int
-wgl_rmap(fb *ifp, ColorMap *cmp)
+wgl_rmap(FBIO *ifp, ColorMap *cmp)
 {
     int i;
 
@@ -1514,11 +1553,13 @@ wgl_rmap(fb *ifp, ColorMap *cmp)
 
 
 /*
+ * I S _ L I N E A R _ C M A P
+ *
  * Check for a color map being linear in R, G, and B.  Returns 1 for
  * linear map, 0 for non-linear map (i.e., non-identity map).
  */
 HIDDEN int
-is_linear_cmap(fb *ifp)
+is_linear_cmap(FBIO *ifp)
 {
     int i;
 
@@ -1531,8 +1572,11 @@ is_linear_cmap(fb *ifp)
 }
 
 
+/*
+ * W G L _ C M I N I T
+ */
 HIDDEN void
-wgl_cminit(fb *ifp)
+wgl_cminit(FBIO *ifp)
 {
     int i;
 
@@ -1544,8 +1588,11 @@ wgl_cminit(fb *ifp)
 }
 
 
+/*
+ * W G L _ W M A P
+ */
 HIDDEN int
-wgl_wmap(fb *ifp, const ColorMap *cmp)
+wgl_wmap(FBIO *ifp, const ColorMap *cmp)
 {
     int i;
     int prev;	/* !0 = previous cmap was non-linear */
@@ -1594,8 +1641,11 @@ wgl_wmap(fb *ifp, const ColorMap *cmp)
 }
 
 
+/*
+ * W G L _ H E L P
+ */
 HIDDEN int
-wgl_help(fb *ifp)
+wgl_help(FBIO *ifp)
 {
     struct modeflags *mfp;
 
@@ -1622,7 +1672,7 @@ wgl_help(fb *ifp)
 
 
 HIDDEN int
-wgl_setcursor(fb *ifp,
+wgl_setcursor(FBIO *ifp,
 	      const unsigned char *bits,
 	      int xbits,
 	      int ybits,
@@ -1634,13 +1684,15 @@ wgl_setcursor(fb *ifp,
 
 
 HIDDEN int
-wgl_cursor(fb *ifp, int mode, int x, int y)
+wgl_cursor(FBIO *ifp, int mode, int x, int y)
 {
     return 0;
 }
 
 
 /*
+ * W G L _ C L I P P E R ()
+ *
  * Given:
  * - the size of the viewport in pixels (vp_width, vp_height)
  * - the size of the framebuffer image (if_width, if_height)
@@ -1654,7 +1706,7 @@ wgl_cursor(fb *ifp, int mode, int x, int y)
  * (xpixmin, xpixmax, ypixmin, ypixmax)
  */
 HIDDEN void
-wgl_clipper(fb *ifp)
+wgl_clipper(FBIO *ifp)
 {
     struct wgl_clip *clp;
     int i;
@@ -1719,7 +1771,7 @@ wgl_clipper(fb *ifp)
 /********************************/
 
 HIDDEN void
-wgl_do_event(fb *ifp)
+wgl_do_event(FBIO *ifp)
 {
     MSG msg;
     BOOL bRet;
@@ -1737,7 +1789,7 @@ wgl_do_event(fb *ifp)
 
 
 HIDDEN void
-expose_callback(fb *ifp, int eventPtr)
+expose_callback(FBIO *ifp, int eventPtr)
 {
     /* XWindowAttributes xwa; */
     struct wgl_clip *clp;
@@ -1860,8 +1912,8 @@ expose_callback(fb *ifp, int eventPtr)
 }
 
 
-int
-wgl_configureWindow(fb *ifp, int width, int height)
+void
+wgl_configureWindow(FBIO *ifp, int width, int height)
 {
     if (width == WGL(ifp)->win_width &&
 	height == WGL(ifp)->win_height)
@@ -1881,8 +1933,6 @@ wgl_configureWindow(fb *ifp, int width, int height)
 
     wgl_getmem(ifp);
     wgl_clipper(ifp);
-
-    return 0;
 }
 
 
@@ -1891,7 +1941,7 @@ wgl_configureWindow(fb *ifp, int width, int height)
  * screen if one_y equals -1.
  */
 HIDDEN void
-backbuffer_to_screen(fb *ifp, int one_y)
+backbuffer_to_screen(FBIO *ifp, int one_y)
 {
     struct wgl_clip *clp;
 
@@ -1965,7 +2015,8 @@ backbuffer_to_screen(fb *ifp, int one_y)
 }
 
 
-/*
+/* W G L _ C H O O S E _ V I S U A L
+ *
  * Select an appropriate visual, and set flags.
  *
  * The user requires support for:
@@ -1989,7 +2040,7 @@ backbuffer_to_screen(fb *ifp, int one_y)
  * Return NULL on failure.
  */
 HIDDEN PIXELFORMATDESCRIPTOR *
-wgl_choose_visual(fb *ifp)
+wgl_choose_visual(FBIO *ifp)
 {
     int iPixelFormat;
     PIXELFORMATDESCRIPTOR pfd, *ppfd;
@@ -2038,7 +2089,7 @@ wgl_choose_visual(fb *ifp)
 
 
 int
-wgl_refresh(fb *ifp,
+wgl_refresh(FBIO *ifp,
 	    int x,
 	    int y,
 	    int w,
@@ -2079,24 +2130,16 @@ wgl_refresh(fb *ifp,
     glPopMatrix();
     glMatrixMode(mm);
 
-    if (!WGL(ifp)->use_ext_ctrl) {
-	glFlush();
-    }
-
+    glFlush();
     return 0;
 }
 
 
 /* This is the ONLY thing that we normally "export" */
-fb wgl_interface =
+FBIO wgl_interface =
 {
     0,			/* magic number slot */
-    FB_WGL_MAGIC,
     wgl_open,		/* open device */
-    wgl_open_existing,
-    wgl_close_existing,
-    wgl_get_fbps,
-    wgl_put_fbps,
     wgl_close,		/* close device */
     wgl_clear,		/* clear device */
     wgl_read,		/* read pixels */
@@ -2112,8 +2155,6 @@ fb wgl_interface =
     wgl_writerect,	/* write rectangle */
     fb_sim_bwreadrect,
     wgl_bwwriterect,	/* write rectangle */
-    wgl_configureWindow,
-    wgl_refresh,
     wgl_poll,		/* process events */
     wgl_flush,		/* flush output */
     wgl_free,		/* free resources */
@@ -2136,8 +2177,7 @@ fb wgl_interface =
     0,			/* page_dirty */
     0L,			/* page_curpos */
     0L,			/* page_pixels */
-    0,			/* debug */
-    250			/* refresh rate (from fbserv) */
+    0			/* debug */
 };
 
 

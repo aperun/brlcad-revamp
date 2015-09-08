@@ -1,7 +1,7 @@
 /*                       S H _ C A M O . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -38,7 +38,6 @@
 #include <string.h>
 #include <math.h>
 
-#include "bu/units.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "optical.h"
@@ -68,6 +67,23 @@ struct camo_specific {
     mat_t xform;	/* model->region coord sys matrix */
 };
 #define CK_camo_SP(_p) BU_CKMAG(_p, camo_MAGIC, "camo_specific")
+
+/* This allows us to specify the "size" parameter as values like ".5m"
+ * or "27in" rather than using mm all the time.
+ */
+void
+camo_cvt_parse(register const struct bu_structparse *sdp, register const char *UNUSED(name), char *base, const char *value)
+/* structure description */
+/* struct member name */
+/* beginning of structure */
+/* string containing value */
+{
+    double *p = (double *)(base+sdp->sp_offset);
+
+    /* reconvert with optional units */
+    *p = bu_mm_value(value);
+}
+
 
 static struct camo_specific camo_defaults = {
     camo_MAGIC,
@@ -106,8 +122,7 @@ static struct camo_specific marble_defaults = {
 #define SHDR_NULL ((struct camo_specific *)0)
 #define SHDR_O(m) bu_offsetof(struct camo_specific, m)
 
-/* local sp_hook function */
-void color_fix(const struct bu_structparse *, const char *, void *, const char *, void *);
+void color_fix(register const struct bu_structparse *sdp, register const char *name, char *base, const char *value);
 
 struct bu_structparse camo_print_tab[] = {
     {"%g", 1, "lacunarity",	SHDR_O(noise_lacunarity),	BU_STRUCTPARSE_FUNC_NULL, NULL, NULL },
@@ -147,12 +162,12 @@ struct bu_structparse camo_parse[] = {
 };
 
 
-HIDDEN int marble_setup(register struct region *rp, struct bu_vls *matparm, void **dpp, const struct mfuncs *mfp, struct rt_i *rtip);
-HIDDEN int marble_render(struct application *ap, const struct partition *pp, struct shadework *swp, void *dp);
-HIDDEN int camo_setup(register struct region *rp, struct bu_vls *matparm, void **dpp, const struct mfuncs *mfp, struct rt_i *rtip);
-HIDDEN int camo_render(struct application *ap, const struct partition *pp, struct shadework *swp, void *dp);
-HIDDEN void camo_print(register struct region *rp, void *dp);
-HIDDEN void camo_free(void *cp);
+HIDDEN int marble_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *mfp, struct rt_i *rtip);
+HIDDEN int marble_render(struct application *ap, const struct partition *pp, struct shadework *swp, genptr_t dp);
+HIDDEN int camo_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *mfp, struct rt_i *rtip);
+HIDDEN int camo_render(struct application *ap, const struct partition *pp, struct shadework *swp, genptr_t dp);
+HIDDEN void camo_print(register struct region *rp, genptr_t dp);
+HIDDEN void camo_free(genptr_t cp);
 
 struct mfuncs camo_mfuncs[] = {
     {MF_MAGIC,	"camo",		0,		MFI_HIT,	0,
@@ -171,22 +186,18 @@ struct mfuncs camo_mfuncs[] = {
  * Used as a hooked function for input of color values
  */
 void
-color_fix(const struct bu_structparse *sdp,
-	  const char *UNUSED(name),
-	  void *base,
-	  const char *UNUSED(value),
-	  void *UNUSED(data))
+color_fix(register const struct bu_structparse *sdp, register const char *UNUSED(name), char *base, const char *UNUSED(value))
 /* structure description */
 /* struct member name */
 /* beginning of structure */
 /* string containing value */
 {
-    register double *p = (double *)((char *)base + sdp->sp_offset);
+    register double *p = (double *)(base+sdp->sp_offset);
     size_t i;
     int ok;
 
     /* if all the values are in the range [0..1] there's nothing to do */
-    for (ok = 1, i = 0; i < sdp->sp_count; i++, p++) {
+    for (ok=1, i=0; i < sdp->sp_count; i++, p++) {
 	if (*p > 1.0) ok = 0;
     }
     if (ok) return;
@@ -194,15 +205,15 @@ color_fix(const struct bu_structparse *sdp,
     /* user specified colors in the range [0..255] so we need to
      * map those into [0..1]
      */
-    p = (double *)((char *)base + sdp->sp_offset);
-    for (i = 0; i < sdp->sp_count; i++, p++) {
+    p = (double *)(base+sdp->sp_offset);
+    for (i=0; i < sdp->sp_count; i++, p++) {
 	*p /= 255.0;
     }
 }
 
 
 HIDDEN int
-setup(register struct region *rp, struct bu_vls *matparm, void **dpp, struct rt_i *rtip, char *parameters, struct camo_specific defaults)
+setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, struct rt_i *rtip, char *parameters, struct camo_specific defaults)
 {
 /* pointer to reg_udata in *rp */
 
@@ -222,7 +233,7 @@ setup(register struct region *rp, struct bu_vls *matparm, void **dpp, struct rt_
     }
     memcpy(camo_sp, &defaults, sizeof(struct camo_specific));
 
-    if (bu_struct_parse(matparm, camo_parse, (char *)camo_sp, NULL) < 0)
+    if (bu_struct_parse(matparm, camo_parse, (char *)camo_sp) < 0)
 	return -1;
 
     /* Optional:  get the matrix which maps model space into
@@ -262,38 +273,47 @@ setup(register struct region *rp, struct bu_vls *matparm, void **dpp, struct rt_
 }
 
 
-/*
+/* C A M O _ S E T U P
+ *
  * This routine is called (at prep time)
  * once for each region which uses this shader.
  * Any shader-specific initialization should be done here.
  */
 HIDDEN int
-camo_setup(register struct region *rp, struct bu_vls *matparm, void **dpp, const struct mfuncs *UNUSED(mfp), struct rt_i *rtip)
+camo_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *UNUSED(mfp), struct rt_i *rtip)
 {
     return setup(rp, matparm, dpp, rtip, "camouflage parameters = ", camo_defaults);
 }
 
 
+/*
+ * C A M O _ P R I N T
+ */
 HIDDEN void
-camo_print(register struct region *rp, void *dp)
+camo_print(register struct region *rp, genptr_t dp)
 {
     bu_struct_print(rp->reg_name, camo_print_tab, (char *)dp);
 }
 
 
+/*
+ * C A M O _ F R E E
+ */
 HIDDEN void
-camo_free(void *cp)
+camo_free(genptr_t cp)
 {
     BU_PUT(cp, struct camo_specific);
 }
 
 
 /*
+ * C A M O _ R E N D E R
+ *
  * This is called (from viewshade() in shade.c)
  * once for each hit point to be shaded.
  */
 int
-camo_render(struct application *ap, const struct partition *pp, struct shadework *swp, void *dp)
+camo_render(struct application *ap, const struct partition *pp, struct shadework *swp, genptr_t dp)
 {
     register struct camo_specific *camo_sp =
 	(struct camo_specific *)dp;
@@ -344,24 +364,27 @@ camo_render(struct application *ap, const struct partition *pp, struct shadework
 
     return 1;
 }
-/*
+/* M A R B L E 2 _ S E T U P
+ *
  * This routine is called (at prep time)
  * once for each region which uses this shader.
  * Any shader-specific initialization should be done here.
  */
 HIDDEN int
-marble_setup(register struct region *rp, struct bu_vls *matparm, void **dpp, const struct mfuncs *UNUSED(mfp), struct rt_i *rtip)
+marble_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *UNUSED(mfp), struct rt_i *rtip)
 {
     return setup(rp, matparm, dpp, rtip, "marble parameters = ", marble_defaults);
 }
 
 
 /*
+ * M A R B L E 2 _ R E N D E R
+ *
  * This is called (from viewshade() in shade.c)
  * once for each hit point to be shaded.
  */
 int
-marble_render(struct application *ap, const struct partition *pp, struct shadework *swp, void *dp)
+marble_render(struct application *ap, const struct partition *pp, struct shadework *swp, genptr_t dp)
 {
     register struct camo_specific *camo_sp =
 	(struct camo_specific *)dp;

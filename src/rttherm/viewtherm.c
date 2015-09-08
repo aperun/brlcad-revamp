@@ -1,7 +1,7 @@
 /*                     V I E W T H E R M . C
  * BRL-CAD
  *
- * Copyright (c) 1996-2014 United States Government as represented by
+ * Copyright (c) 1996-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -44,17 +44,15 @@
 #endif
 
 #include "vmath.h"
+#include "mater.h"
 #include "raytrace.h"
 #include "fb.h"
-#include "bu/log.h"
-#include "bu/parse.h"
-#include "bu/parallel.h"
-#include "bu/malloc.h"
+#include "bu.h"
 #include "spectrum.h"
-#include "optical/shadefuncs.h"
-#include "optical/shadework.h"
-#include "bn/plot3.h"
-#include "optical/light.h"
+#include "shadefuncs.h"
+#include "shadework.h"
+#include "plot3.h"
+#include "light.h"
 
 /* private */
 #include "../rt/rtuif.h"
@@ -105,7 +103,7 @@ usage(const char *argv0)
 }
 
 
-extern fb *fbp;		/* Framebuffer handle */
+extern FBIO *fbp;		/* Framebuffer handle */
 
 extern int max_bounces;		/* from refract.c */
 extern int max_ireflect;	/* from refract.c */
@@ -173,6 +171,8 @@ curve_attach(struct application *app)
 
 
 /*
+ * B A C K G R O U N D _ R A D I A T I O N
+ *
  * Concoct _some_ kind of background radiation when the ray misses the
  * model and there is no environment map defined.  XXX For now this is
  * a gross hack.
@@ -197,6 +197,8 @@ background_radiation(struct application *app)
 
 
 /*
+ * V I E W _ P I X E L
+ *
  * Arrange to have the pixel "output".  For RTTHERM this is a
  * misnomer, as the pixel's spectral samples have been living in the
  * scanline buffer the whole time.  When a scaline is completed
@@ -243,7 +245,7 @@ view_pixel(struct application *app)
 	    bu_exit(EXIT_FAILURE, "view_pixel:  fwrite failure\n");
     }
 #ifdef MSWISS
-    if (fbp != FB_NULL) {
+    if (fbp != FBIO_NULL) {
 	/* MSWISS -- real-time multi-spectral case */
 	unsigned char obuf[4096];
 	int i;
@@ -296,6 +298,8 @@ view_pixel(struct application *app)
 
 
 /*
+ * V I E W _ E O L
+ *
  * This routine is not used;  view_pixel() determines when the last
  * pixel of a scanline is really done, for parallel considerations.
  */
@@ -307,6 +311,9 @@ view_eol(struct application *app)
 }
 
 
+/*
+ * V I E W _ E N D
+ */
 void
 view_end(struct application *app)
 {
@@ -316,6 +323,8 @@ view_end(struct application *app)
 
 
 /*
+ * V I E W _ S E T U P
+ *
  * Called before rt_prep() in do.c
  */
 void
@@ -365,6 +374,8 @@ view_setup(struct rt_i *rtip)
 
 
 /*
+ * V I E W _ C L E A N U P
+ *
  * Called before rt_clean() in do.c
  */
 void
@@ -388,6 +399,8 @@ view_cleanup(struct rt_i *rtip)
 
 
 /*
+ * H I T _ N O T H I N G
+ *
  * a_miss() routine called when no part of the model is hit.
  * Background texture mapping could be done here.  For now, return a
  * pleasant dark blue.
@@ -432,7 +445,7 @@ hit_nothing(struct application *app)
 	VREVERSE(u.sw.sw_hit.hit_normal, app->a_ray.r_dir);
 	/* U is azimuth, atan() range: -pi to +pi */
 	u.sw.sw_uv.uv_u = bn_atan2(app->a_ray.r_dir[Y],
-				   app->a_ray.r_dir[X]) * M_1_2PI;
+				   app->a_ray.r_dir[X]) * bn_inv2pi;
 	if (u.sw.sw_uv.uv_u < 0)
 	    u.sw.sw_uv.uv_u += 1.0;
 	/*
@@ -442,7 +455,7 @@ hit_nothing(struct application *app)
 	u.sw.sw_uv.uv_v = bn_atan2(app->a_ray.r_dir[Z],
 				   sqrt(app->a_ray.r_dir[X] * app->a_ray.r_dir[X] +
 					app->a_ray.r_dir[Y] * app->a_ray.r_dir[Y])) *
-	    M_1_PI + 0.5;
+	    bn_invpi + 0.5;
 	u.sw.sw_uv.uv_du = u.sw.sw_uv.uv_dv = 0;
 
 	u.sw.msw_color = bn_tabdata_get_constval(1.0, spectrum);
@@ -455,7 +468,7 @@ hit_nothing(struct application *app)
 
 	bn_tabdata_copy(app->a_spectrum, u.sw.msw_color);
 	app->a_user = 1;		/* Signal view_pixel:  HIT */
-	app->a_uptr = (void *)&env_region;
+	app->a_uptr = (genptr_t)&env_region;
 	return 1;
     }
 
@@ -466,6 +479,8 @@ hit_nothing(struct application *app)
 
 
 /*
+ * C O L O R V I E W
+ *
  * Manage the coloring of whatever it was we just hit.  This can be a
  * recursive procedure.
  */
@@ -487,7 +502,7 @@ colorview(struct application *app, struct partition *PartHeadp, struct seg *UNUS
 	return 0;
     }
     hitp = pp->pt_inhit;
-    app->a_uptr = (void *)pp->pt_regionp;	/* note which region was shaded */
+    app->a_uptr = (genptr_t)pp->pt_regionp;	/* note which region was shaded */
 
     if (rdebug&RDEBUG_HITS) {
 	bu_log("colorview: lvl=%d coloring %s\n",
@@ -654,6 +669,8 @@ free_scanlines(void)
 
 
 /*
+ * V I E W _ I N I T
+ *
  * Called once, early on in RT setup, before view size is set.
  */
 int
@@ -680,6 +697,8 @@ view_init(struct application *UNUSED(app), char *UNUSED(file), char *UNUSED(obj)
 
 
 /*
+ * V I E W _ 2 I N I T
+ *
  * Called each time a new image is about to be done.
  */
 void
@@ -749,6 +768,8 @@ view_2init(struct application *app, char *framename)
 
 
 /*
+ * A P P L I C A T I O N _ I N I T
+ *
  * Called once, very early on in RT setup, even before command line is
  * processed.
  */

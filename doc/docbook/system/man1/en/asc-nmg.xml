@@ -23,7 +23,7 @@
 
 
 <refsect1 xml:id='description'><title>DESCRIPTION</title>
-<para><command>asc-nmg</command>
+<para><emphasis remap='I'>asc-nmg</emphasis>
 converts the specified
 <emphasis remap='I'>ascii_file</emphasis>
 (not a .asc geometry database) to a binary BRL-CAD
@@ -88,15 +88,13 @@ l
 	v5	1 -1 1
 </literallayout> <!-- .fi -->
 
-<para>the command:</para>
+<para>Then, the command:</para>
 
 <synopsis>
-$ asc-nmg <emphasis remap='I'>ascii_file sample.g</emphasis>
+$ <emphasis remap='I'>asc-nmg ascii_file sample.g</emphasis>
 </synopsis>
 
-<para>will produce an 'L'-shaped NMG solid to the
-<emphasis remap='I'>sample.g</emphasis>
-database file.</para>
+<para>will produce an 'L'-shaped NMG solid to the sample.g database file.</para>
 </refsect1>
 
 <refsect1 xml:id='diagnostics'><title>DIAGNOSTICS</title>
@@ -110,7 +108,7 @@ database file.</para>
 </refsect1>
 
 <refsect1 xml:id='copyright'><title>COPYRIGHT</title>
-<para>This software is Copyright (c) 1994-2014 by the United States
+<para>This software is Copyright (c) 1994-2013 by the United States
 Government as represented by U.S. Army Research Laboratory.</para>
 </refsect1>
 

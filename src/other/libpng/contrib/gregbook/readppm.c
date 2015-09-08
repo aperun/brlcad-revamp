@@ -163,12 +163,8 @@ uch *readpng_get_image(double display_exponent, int *pChannels, ulg *pRowbytes)
 
     /* now we can go ahead and just read the whole image */
 
-    if (fread(image_data, 1L, rowbytes*height, saved_infile) <
-       rowbytes*height) {
-        free (image_data);
-        image_data = NULL;
-        return NULL;
-    }
+    fread(image_data, 1L, rowbytes*height, saved_infile);
+
 
     return image_data;
 }

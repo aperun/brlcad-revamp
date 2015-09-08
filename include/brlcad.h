@@ -1,7 +1,7 @@
 /*                        B R L C A D . H
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -29,8 +29,8 @@
  *
  */
 
-#ifndef BRLCAD_H
-#define BRLCAD_H
+#ifndef __BRLCAD_H__
+#define __BRLCAD_H__
 
 #include "common.h"
 
@@ -51,13 +51,13 @@
 #include "bn.h"
 
 /* database format storage types */
-#include "rt/db4.h"
+#include "db.h"
 
 /* raytrace interface constructs */
 #include "raytrace.h"
 
 /* trimmed nurb routines */
-#include "rt/nurb.h"
+#include "nurb.h"
 
 /* the write-only database library interface */
 #include "wdb.h"
@@ -65,13 +65,13 @@
 /* in-memory representations of the database geometry objects.  these
  * are subject to change and should not be relied upon.
  */
-#include "rt/geom.h"
+#include "rtgeom.h"
 
 /* database object functions
  */
-#include "rt/func.h"
+#include "rtfunc.h"
 
-#endif  /* BRLCAD_H */
+#endif  /* __BRLCAD_H__ */
 /** @} */
 /*
  * Local Variables:

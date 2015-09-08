@@ -1,7 +1,7 @@
 /*                   I G E S _ S T R U C T . H
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -18,9 +18,6 @@
  * information.
  */
 
-#ifndef CONV_IGES_IGES_STRUCT_H
-#define CONV_IGES_IGES_STRUCT_H
-
 #include "common.h"
 
 #include <stdlib.h>
@@ -31,8 +28,8 @@
 #include "vmath.h"
 #include "nmg.h"
 #include "raytrace.h"
-#include "rt/nurb.h"
-#include "rt/geom.h"
+#include "nurb.h"
+#include "rtgeom.h"
 #include "wdb.h"
 
 
@@ -222,6 +219,7 @@ extern int ell_to_iges(struct rt_db_internal *ip, char *name, FILE *fp_dir, FILE
 extern int nmg_to_iges(struct rt_db_internal *ip, char *name, FILE *fp_dir, FILE *fp_param);
 extern int nmgregion_to_iges(char *name, struct nmgregion *r, int dependent, FILE *fp_dir, FILE *fp_param);
 extern int null_to_iges(struct rt_db_internal *ip, char *name, FILE *fp_dir, FILE *fp_param);
+extern int planar_nurb(int entityno);
 extern int sph_to_iges(struct rt_db_internal *ip, char *name, FILE *fp_dir, FILE *fp_param);
 extern int tgc_to_iges(struct rt_db_internal *ip, char *name, FILE *fp_dir, FILE *fp_param);
 extern int tor_to_iges(struct rt_db_internal *ip, char *name, FILE *fp_dir, FILE *fp_param);
@@ -319,8 +317,6 @@ extern int brep(int entityno);
 extern void Readtime(char *id);
 extern void Readcols(char *id, int cols);
 extern void Readmatrix(int xform, mat_t rot);
-
-#endif /* CONV_IGES_IGES_STRUCT_H */
 
 /*
  * Local Variables:

@@ -1,7 +1,7 @@
 /*                        S H _ P R J . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -38,10 +38,11 @@
 #include <sys/stat.h>
 #include <math.h>
 
+#include "bu.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "optical.h"
-#include "bn/plot3.h"
+#include "plot3.h"
 
 
 #define prj_MAGIC 0x70726a00	/* "prj" */
@@ -93,13 +94,7 @@ struct prj_specific {
  * so that the image may be loaded automatically as needed from either a file or
  * from a database-embedded binary object.
  */
-HIDDEN void
-img_source_hook(const struct bu_structparse *UNUSED(sdp),
-		const char *sp_name,
-		void *base,
-		const char *UNUSED(value),
-		void *UNUSED(data))
-{
+HIDDEN void img_source_hook(const struct bu_structparse *UNUSED(ip), const char *sp_name, genptr_t base, char *UNUSED(p)) {
     struct img_specific *imageSpecific = (struct img_specific *)base;
     if (bu_strncmp(sp_name, "file", 4) == 0) {
 	imageSpecific->i_datasrc=IMG_SRC_FILE;
@@ -112,12 +107,12 @@ img_source_hook(const struct bu_structparse *UNUSED(sdp),
 
 
 /**
+ * i m g _ l o a d _ d a t a s o u r c e
+ *
  * This is a helper routine used in prj_setup() to load a projection image
  * either from a file or from a db object.
  */
-HIDDEN int
-img_load_datasource(struct img_specific *image, struct db_i *dbInstance, const unsigned long int size)
-{
+HIDDEN int img_load_datasource(struct img_specific *image, struct db_i *dbInstance, const unsigned long int size) {
     struct directory *dirEntry;
 
     RT_CK_DBI(dbInstance);
@@ -165,11 +160,9 @@ img_load_datasource(struct img_specific *image, struct db_i *dbInstance, const u
 
 	    /* check size of object */
 	    if (image->i_binunifp->count < size) {
-		bu_log("\nWARNING: %s needs %d bytes, binary object only has %zu\n", bu_vls_addr(&image->i_name), size, image->i_binunifp->count);
+		bu_log("\nWARNING: %V needs %d bytes, binary object only has %zu\n", &image->i_name, size, image->i_binunifp->count);
 	    } else if (image->i_binunifp->count > size) {
-		bu_log("\nWARNING: Binary object is larger than specified image size\n\tBinary Object: %lu pixels\n"
-		       "\tSpecified Image Size: %zu pixels\n...continuing to load using image subsection...",
-		       (unsigned long)image->i_binunifp->count);
+		bu_log("\nWARNING: Binary object is larger than specified image size\n\tBinary Object: %zu pixels\n\tSpecified Image Size: %zu pixels\n...continuing to load using image subsection...", image->i_binunifp->count);
 	    }
 	    image->i_img = (unsigned char *) image->i_binunifp->u.uint8;
 
@@ -188,7 +181,7 @@ img_load_datasource(struct img_specific *image, struct db_i *dbInstance, const u
 	    return -1;				/* FAIL */
 
 	if (image->i_data->buflen < size) {
-	    bu_log("\nWARNING: %s needs %lu bytes, file only has %lu\n", bu_vls_addr(&image->i_name), size, image->i_data->buflen);
+	    bu_log("\nWARNING: %V needs %lu bytes, file only has %lu\n", &image->i_name, size, image->i_data->buflen);
 	} else if (image->i_data->buflen > size) {
 	    bu_log("\nWARNING: Image file size is larger than specified image size\n\tInput File: %zu pixels\n\tSpecified Image Size: %lu pixels\n...continuing to load using image subsection...", image->i_data->buflen, size);
 	}
@@ -206,11 +199,7 @@ img_load_datasource(struct img_specific *image, struct db_i *dbInstance, const u
  * Bounds checking on perspective angle
  */
 HIDDEN void
-persp_hook(const struct bu_structparse *UNUSED(sdp),
-	   const char *UNUSED(name),
-	   void *base,
-	   const char *value,
-	   void *UNUSED(data))
+persp_hook(register const struct bu_structparse *UNUSED(sdp), register const char *UNUSED(name), char *base, const char *value)
 /* structure description */
 /* struct member name */
 /* beginning of structure */
@@ -237,11 +226,7 @@ persp_hook(const struct bu_structparse *UNUSED(sdp),
  * Check for value < 0.0
  */
 HIDDEN void
-dimen_hook(const struct bu_structparse *sdp,
-	   const char *UNUSED(name),
-	   void *base,
-	   const char *value,
-	   void *UNUSED(data))
+dimen_hook(register const struct bu_structparse *sdp, register const char *UNUSED(name), char *base, const char *value)
 /* structure description */
 /* struct member name */
 /* beginning of structure */
@@ -249,7 +234,7 @@ dimen_hook(const struct bu_structparse *sdp,
 {
     if (BU_STR_EQUAL("%f", sdp->sp_fmt)) {
 	fastf_t *f;
-	f = (fastf_t *)((char *)base + sdp->sp_offset);
+	f = (fastf_t *)(base + sdp->sp_offset);
 	if (*f < 0.0) {
 	    bu_log("%s value %g(%s) < 0.0\n",
 		   sdp->sp_name, *f, value);
@@ -257,7 +242,7 @@ dimen_hook(const struct bu_structparse *sdp,
 	}
     } else if (BU_STR_EQUAL("%d", sdp->sp_fmt)) {
 	int *i;
-	i = (int *)((char *)base + sdp->sp_offset);
+	i = (int *)(base + sdp->sp_offset);
 	if (*i < 0) {
 	    bu_log("%s value %d(%s) < 0.0\n",
 		   sdp->sp_name, *i, value);
@@ -276,11 +261,7 @@ dimen_hook(const struct bu_structparse *sdp,
  * XXX "orient" MUST ALWAYS BE THE LAST PARAMETER SPECIFIED FOR EACH IMAGE.
  */
 static void
-orient_hook(const struct bu_structparse *UNUSED(sdp),
-	    const char *UNUSED(name),
-	    void *base,
-	    const char *UNUSED(value),
-	    void *UNUSED(data))
+orient_hook(register const struct bu_structparse *UNUSED(sdp), register const char *UNUSED(name), char *base, const char *UNUSED(value))
 /* structure description */
 /* struct member name */
 /* beginning of structure */
@@ -339,7 +320,7 @@ orient_hook(const struct bu_structparse *UNUSED(sdp),
 	point_t pt;
 
 	prj_sp = (struct prj_specific *)
-	    ((struct prj_specific *)base - (bu_offsetof(struct prj_specific, prj_images)));
+	    (base - (bu_offsetof(struct prj_specific, prj_images)));
 	CK_prj_SP(prj_sp);
 
 	if (!prj_sp->prj_plfd)
@@ -411,10 +392,10 @@ struct bu_structparse img_print_tab[] = {
 };
 
 
-HIDDEN int prj_setup(register struct region *rp, struct bu_vls *matparm, void **dpp, const struct mfuncs *mfp, struct rt_i *rtip);
-HIDDEN int prj_render(struct application *ap, const struct partition *pp, struct shadework *swp, void *dp);
-HIDDEN void prj_print(register struct region *rp, void *dp);
-HIDDEN void prj_free(void *cp);
+HIDDEN int prj_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *mfp, struct rt_i *rtip);
+HIDDEN int prj_render(struct application *ap, const struct partition *pp, struct shadework *swp, genptr_t dp);
+HIDDEN void prj_print(register struct region *rp, genptr_t dp);
+HIDDEN void prj_free(genptr_t cp);
 
 /**
  * The "mfuncs" structure defines the external interface to the shader.
@@ -434,14 +415,18 @@ struct mfuncs prj_mfuncs[] = {
 };
 
 
-/**
+/** P R J _ S E T U P
+ *
  * This routine is called (at prep time)
  * once for each region which uses this shader.
  * Any shader-specific initialization should be done here.
  */
 HIDDEN int
-prj_setup(register struct region *rp, struct bu_vls *matparm, void **dpp, const struct mfuncs *UNUSED(mfp), struct rt_i *rtip)
+prj_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *UNUSED(mfp), struct rt_i *rtip)
+
+
 /* pointer to reg_udata in *rp */
+
 /* New since 4.4 release */
 {
     /* we use this to initialize new img_specific objects */
@@ -517,7 +502,7 @@ prj_setup(register struct region *rp, struct bu_vls *matparm, void **dpp, const 
     prj_sp->prj_images.i_datasrc = IMG_SRC_AUTO;
 
     if (bu_struct_parse(&parameter_data, img_parse_tab,
-			(char *)&prj_sp->prj_images, NULL) < 0) {
+			(char *)&prj_sp->prj_images) < 0) {
 	bu_log("ERROR: Unable to properly parse projection shader parameters\n");
 	return -1;
     }
@@ -574,8 +559,11 @@ prj_setup(register struct region *rp, struct bu_vls *matparm, void **dpp, const 
 }
 
 
+/**
+ * P R J _ P R I N T
+ */
 HIDDEN void
-prj_print(register struct region *rp, void *dp)
+prj_print(register struct region *rp, genptr_t dp)
 {
     struct prj_specific *prj_sp = (struct prj_specific *)dp;
     struct img_specific *img_sp;
@@ -586,8 +574,11 @@ prj_print(register struct region *rp, void *dp)
 }
 
 
+/**
+ * P R J _ F R E E
+ */
 HIDDEN void
-prj_free(void *cp)
+prj_free(genptr_t cp)
 {
     struct prj_specific *prj_sp = (struct prj_specific *)cp;
 
@@ -597,9 +588,9 @@ prj_free(void *cp)
 
 	img_sp->i_img = (unsigned char *)0;
 	if (img_sp->i_data) bu_close_mapped_file(img_sp->i_data);
-	img_sp->i_data = (struct bu_mapped_file *)NULL; /* sanity */
+	img_sp->i_data = GENPTR_NULL; /* sanity */
 	if (img_sp->i_binunifp) rt_binunif_free(img_sp->i_binunifp);
-	img_sp->i_binunifp = (struct rt_binunif_internal *)NULL; /* sanity */
+	img_sp->i_binunifp = GENPTR_NULL; /* sanity */
 	bu_vls_vlsfree(&img_sp->i_name);
 
 	BU_LIST_DEQUEUE(&img_sp->l);
@@ -645,8 +636,8 @@ project_point(point_t sh_color, struct img_specific *img_sp, struct prj_specific
 	|| (x*3 + y*img_sp->i_width*3) < 0
 	|| (x*3 + y*img_sp->i_width*3) > (img_sp->i_width * img_sp->i_height * 3))
     {
-	static int count = 0;
-	static int suppressed = 0;
+	static int count=0;
+	static int suppressed=0;
 	if (count++ < 10) {
 	    bu_log("INTERNAL ERROR: projection point is invalid\n");
 	} else {
@@ -685,12 +676,16 @@ project_point(point_t sh_color, struct img_specific *img_sp, struct prj_specific
 
 
 /**
+ * P R J _ R E N D E R
+ *
  * This is called (from viewshade() in shade.c) once for each hit point
  * to be shaded.  The purpose here is to fill in values in the shadework
  * structure.
  */
 int
-prj_render(struct application *ap, const struct partition *pp, struct shadework *swp, void *dp)
+prj_render(struct application *ap, const struct partition *pp, struct shadework *swp, genptr_t dp)
+
+
 /* defined in material.h */
 /* ptr to the shader-specific struct */
 {
@@ -748,7 +743,7 @@ prj_render(struct application *ap, const struct partition *pp, struct shadework 
 	 */
 
 	/* compute region coordinates for pixel extent */
-	for (i = 0; i < CORNER_PTS; i++) {
+	for (i=0; i < CORNER_PTS; i++) {
 	    MAT4X3PNT(r_pe.corner[i].r_pt,
 		      prj_sp->prj_m_to_sh,
 		      ap->a_pixelext->corner[i].r_pt);
@@ -762,7 +757,7 @@ prj_render(struct application *ap, const struct partition *pp, struct shadework 
 	r_N[H] = VDOT(r_N, r_pt);
 
 	/* project corner points into plane of hit point */
-	for (i = 0; i < CORNER_PTS; i++) {
+	for (i=0; i < CORNER_PTS; i++) {
 	    dist = 0.0;
 	    status = bn_isect_line3_plane(
 		&dist,

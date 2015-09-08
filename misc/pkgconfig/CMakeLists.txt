@@ -25,7 +25,6 @@ set(LIBPNG "-lpng")
 
 set(pkgconfig_DATA
   libanalyze.pc.in
-  libgm.pc.in
   libbn.pc.in
   libbrlcad.pc.in
   libbu.pc.in

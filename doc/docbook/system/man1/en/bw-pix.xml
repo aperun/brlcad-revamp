@@ -21,18 +21,17 @@
     <arg choice='opt'>-s <replaceable>squaresize</replaceable></arg>
     <arg choice='opt'>-w <replaceable>width</replaceable></arg>
     <arg choice='opt'>-n <replaceable>height</replaceable></arg>
-   </arg>
+   </arg> 
     <arg choice='opt'>-o <replaceable>out.pix</replaceable></arg>
-   <arg choice='opt'>
-     <arg choice='opt'>&lt;</arg><replaceable>in.bw</replaceable></arg>
-    <arg choice='plain'>&gt;</arg>
+    <arg choice='opt'><replaceable>in.bw</replaceable></arg>
+    <arg choice='plain'><replaceable>&gt;</replaceable></arg>
     <arg choice='opt'><replaceable>out.pix</replaceable></arg>
 </cmdsynopsis>
 </refsynopsisdiv>
 
 
 <refsect1 xml:id='description'><title>DESCRIPTION</title>
-<para><command>bw-pix</command>
+<para><emphasis remap='I'>Bw-pix</emphasis>
 converts a black and white
 <citerefentry><refentrytitle>bw</refentrytitle><manvolnum>5</manvolnum></citerefentry>
 format
@@ -48,7 +47,7 @@ is given.</para>
 </refsect1>
 
 <refsect1 xml:id='see_also'><title>SEE ALSO</title>
-<para><citerefentry><refentrytitle>brlcad</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>pix-bw</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>pix-bw3</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>pix</refentrytitle><manvolnum>5</manvolnum></citerefentry>, <citerefentry><refentrytitle>bw</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+<para><citerefentry><refentrytitle>brlcad</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>pix-bw</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>pix-bw3</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>pix</refentrytitle><manvolnum>5</manvolnum></citerefentry>, <citerefentry><refentrytitle>bw</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
 
 </refsect1>
 
@@ -58,7 +57,7 @@ is given.</para>
 </refsect1>
 
 <refsect1 xml:id='copyright'><title>COPYRIGHT</title>
-<para>This software is Copyright (c) 1989-2014 by the United States
+<para>This software is Copyright (c) 1989-2013 by the United States
 Government as represented by U.S. Army Research Laboratory.</para>
 </refsect1>
 

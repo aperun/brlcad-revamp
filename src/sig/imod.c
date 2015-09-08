@@ -1,7 +1,7 @@
 /*                          I M O D . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -34,11 +34,12 @@
 #include <math.h>
 #include "bio.h"
 
-#include "bu/getopt.h"
-#include "bu/log.h"
-#include "bu/malloc.h"
-#include "bu/file.h"
+#include "bu.h"
 #include "vmath.h"
+
+
+char *progname = "(noname)";
+char *file_name = NULL;
 
 
 #define ADD 1
@@ -47,22 +48,19 @@
 #define POW 4
 #define BUFLEN (8192*2)	/* usually 2 pages of memory, 16KB */
 
+int numop = 0;		/* number of operations */
+int op[256];		/* operations */
+double val[256];		/* arguments to operations */
+short iobuf[BUFLEN];		/* input buffer */
+int mapbuf[65536];		/* translation buffer/lookup table */
 
-static const char usage[] = "Usage: imod [-a add | -s sub | -m mult | -d div | -A | -e exp | -r root] [file.s]\n";
-static const char *progname = "imod";
-static int numop = 0;		/* number of operations */
-static int op[256];		/* operations */
-static double val[256];		/* arguments to operations */
-static int mapbuf[65536];	/* translation buffer/lookup table */
-
-
-static int
-get_args(int argc, char *argv[])
+int
+get_args(int argc, char **argv)
 {
     int c;
     double d;
 
-    while ((c = bu_getopt(argc, argv, "a:s:m:d:Ae:r:h?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "a:s:m:d:Ae:r:")) != -1) {
 	switch (c) {
 	    case 'a':
 		op[ numop ] = ADD;
@@ -80,7 +78,7 @@ get_args(int argc, char *argv[])
 		op[ numop ] = MULT;
 		d = atof(bu_optarg);
 		if (ZERO(d)) {
-		    bu_exit(2, "%s: divide by zero!\n", progname);
+		    bu_exit(2, "bwmod: divide by zero!\n");
 		}
 		val[ numop++ ] = 1.0 / d;
 		break;
@@ -96,12 +94,12 @@ get_args(int argc, char *argv[])
 		op[ numop ] = POW;
 		d = atof(bu_optarg);
 		if (ZERO(d)) {
-		    bu_exit(2, "%s: zero root!\n", progname);
+		    bu_exit(2, "bwmod: zero root!\n");
 		}
 		val[ numop++ ] = 1.0 / d;
 		break;
 
-	    default:
+	    default:		/* '?' */
 		return 0;
 	}
     }
@@ -109,15 +107,15 @@ get_args(int argc, char *argv[])
     if (bu_optind >= argc) {
 	if (isatty((int)fileno(stdin)))
 	    return 0;
+	file_name = "-";
     } else {
 	char *ifname;
-	char *file_name = NULL;
 	file_name = argv[bu_optind];
 	ifname = bu_realpath(file_name, NULL);
 	if (freopen(ifname, "r", stdin) == NULL) {
 	    fprintf(stderr,
-		    "%s: cannot open \"%s(canonical %s)\" for reading\n",
-		    progname, file_name, ifname);
+		    "bwmod: cannot open \"%s(canonical %s)\" for reading\n",
+		    file_name, ifname);
 	    bu_free(ifname, "ifname alloc from bu_realpath");
 	    return 0;
 	}
@@ -125,14 +123,13 @@ get_args(int argc, char *argv[])
     }
 
     if (argc > ++bu_optind)
-	fprintf(stderr, "%s: excess argument(s) ignored\n", progname);
+	fprintf(stderr, "bwmod: excess argument(s) ignored\n");
 
     return 1;		/* OK */
 }
 
 
-static void
-mk_trans_tbl(void)
+void mk_trans_tbl(void)
 {
     int i, j;
     double d;
@@ -163,20 +160,18 @@ mk_trans_tbl(void)
 }
 
 
-int
-main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
     short *p, *q;
     int i;
     unsigned int n;
     unsigned long clip_high, clip_low;
-    short iobuf[BUFLEN];		/* input buffer */
 
     if (!(progname=strrchr(*argv, '/')))
 	progname = *argv;
 
     if (!get_args(argc, argv) || isatty(fileno(stdin)) || isatty(fileno(stdout))) {
-	bu_exit(1, "%s", usage);
+	bu_exit(1, "Usage: imod {-a add -s sub -m mult -d div -A(abs) -e exp -r root} [file.s]\n");
     }
 
     mk_trans_tbl();
@@ -184,12 +179,13 @@ main(int argc, char *argv[])
     clip_high = clip_low = 0;
 
     while ((n=fread(iobuf, sizeof(*iobuf), BUFLEN, stdin)) > 0) {
+
 	/* translate */
 	for (p=iobuf, q= &iobuf[n]; p < q; ++p) {
 	    i = *p + 32768;
 	    if (i < 0)
 		i = 0;
-	    else if (i > (int)(sizeof(mapbuf)/sizeof(mapbuf[0]))-1)
+	    if (i > (int)(sizeof(mapbuf)/sizeof(mapbuf[0]))-1)
 		i = (int)(sizeof(mapbuf)/sizeof(mapbuf[0]))-1;
 
 	    if (mapbuf[i] > 32767) {

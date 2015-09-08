@@ -1,7 +1,7 @@
 /*                        M E M S E T . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -27,8 +27,7 @@
 #include "common.h"
 
 /* quell empty-compilation unit warnings */
-const int memset_unused = 0;
-
+static const int unused = 0;
 
 /*
  * defined for the folks that don't seem to have a system memset()

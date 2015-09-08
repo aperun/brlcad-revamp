@@ -1,13 +1,11 @@
 if(BRLCAD_EXTRADOCS)
-  verbose_add_subdirectory(doc docbook)
+  add_subdirectory(docbook)
 else(BRLCAD_EXTRADOCS)
   CMAKEFILES(docbook)
 endif(BRLCAD_EXTRADOCS)
 
-verbose_add_subdirectory(doc html)
-verbose_add_subdirectory(doc legal)
-
-CMAKEFILES(parsers)
+add_subdirectory(html)
+add_subdirectory(legal)
 
 set(documentation_DATA
   IDEAS
@@ -25,11 +23,12 @@ set(documentation_DATA
   anim.txt
   archer_ack.txt
   benchmark.tr
+  bison_to_lemon.txt
   brep.txt
   BRL-CAD.bib
-  code_review.txt
   cvs.txt
   description.txt
+  flex_to_re2c.txt
   ged.tr
   history.txt
   hypot.txt
@@ -220,14 +219,8 @@ ADD_DOC(documentation_mged_old_DATA mged_old)
 configure_file(pad_file.xml.in ${CMAKE_CURRENT_BINARY_DIR}/pad_file.xml @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/pad_file.xml DESTINATION ${DOC_DIR})
 
-CMAKEFILES(
-  README.OSCON-2014
-  STARTERS
-  burst
-  csv_to_comgeom.txt
-  implicit_constraints.txt
-  pad_file.xml.in
-  )
+CMAKEFILES(pad_file.xml.in STARTERS)
+CMAKEFILES(burst)
 
 # Local Variables:
 # tab-width: 8

@@ -1,7 +1,7 @@
 /*                           P K G . H
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef PKG_H
-#define PKG_H
+#ifndef __PKG_H__
+#define __PKG_H__
 
 /* for size_t */
 #include <stddef.h>
@@ -52,7 +52,7 @@ extern "C" {
 struct pkg_conn;
 
 typedef void (*pkg_callback)(struct pkg_conn*, char*);
-typedef void (*pkg_errlog)(const char *msg);
+typedef void (*pkg_errlog)(char *msg);
 
 struct pkg_switch {
     unsigned short pks_type;	/**< @brief Type code */
@@ -125,6 +125,9 @@ PKG_EXPORT extern struct pkg_conn *pkg_open(const char *host, const char *servic
  */
 PKG_EXPORT extern void pkg_close(struct pkg_conn* pc);
 
+/**
+ *
+ */
 PKG_EXPORT extern int pkg_process(struct pkg_conn *);
 
 /**
@@ -329,7 +332,7 @@ PKG_EXPORT extern const char *pkg_version(void);
 }
 #endif
 
-#endif /* PKG_H */
+#endif /* __PKG_H__ */
 
 /** @} */
 /*

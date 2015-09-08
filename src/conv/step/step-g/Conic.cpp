@@ -1,7 +1,7 @@
 /*                 Conic.cpp
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -50,9 +50,7 @@ Conic::Conic(STEPWrapper *sw, int step_id)
 
 Conic::~Conic()
 {
-    // not created through factory must delete here.
-    if (position)
-	delete position;
+    delete position;
 }
 
 const double *
@@ -87,7 +85,6 @@ Conic::Load(STEPWrapper *sw, SDAI_Application_instance *sse)
 
     if (!GeometricRepresentationItem::Load(step, sse)) {
 	std::cout << CLASSNAME << ":Error loading base class ::GeometricRepresentationItem." << std::endl;
-	sw->entity_status[id] = STEP_LOAD_ERROR;
 	return false;
     }
 
@@ -102,9 +99,8 @@ Conic::Load(STEPWrapper *sw, SDAI_Application_instance *sse)
 	    Axis2Placement *aA2P = new Axis2Placement();
 
 	    position = aA2P;
-	    if (!aA2P->Load(step, (SDAI_Application_instance *)select)) {
+	    if (!aA2P->Load(step, select)) {
 		std::cout << CLASSNAME << ":Error loading select Axis2Placement from Conic." << std::endl;
-		sw->entity_status[id] = STEP_LOAD_ERROR;
 		return false;
 	    }
 
@@ -114,8 +110,6 @@ Conic::Load(STEPWrapper *sw, SDAI_Application_instance *sse)
 	    //}
 	}
     }
-
-    sw->entity_status[id] = STEP_LOADED;
 
     return true;
 }

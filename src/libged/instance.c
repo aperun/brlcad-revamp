@@ -1,7 +1,7 @@
 /*                         I N S T A N C E . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -26,8 +26,9 @@
 #include "common.h"
 
 #include <string.h>
+#include "bio.h"
 
-#include "bu/cmd.h"
+#include "cmd.h"
 #include "wdb.h"
 
 #include "./ged_private.h"
@@ -37,7 +38,7 @@ int
 ged_instance(struct ged *gedp, int argc, const char *argv[])
 {
     struct directory *dp;
-    db_op_t oper;
+    char oper;
     static const char *usage = "obj comb [op]";
 
     GED_CHECK_DATABASE_OPEN(gedp, GED_ERROR);
@@ -63,10 +64,12 @@ ged_instance(struct ged *gedp, int argc, const char *argv[])
 
     oper = WMOP_UNION;
     if (argc == 4)
-	oper = db_str2op(argv[3]);
+	oper = argv[3][0];
 
-    if (oper == DB_OP_NULL) {
-	bu_vls_printf(gedp->ged_result_str, "bad operation: %c (0x%x)\n", argv[3][0], argv[3][0]);
+    if (oper != WMOP_UNION &&
+	oper != WMOP_SUBTRACT &&
+	oper != WMOP_INTERSECT) {
+	bu_vls_printf(gedp->ged_result_str, "bad operation: %c\n", oper);
 	return GED_ERROR;
     }
 

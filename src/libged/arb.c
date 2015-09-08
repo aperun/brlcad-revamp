@@ -1,7 +1,7 @@
 /*                         A R B . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -28,8 +28,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include "bio.h"
 
-#include "rt/geom.h"
+#include "rtgeom.h"
 
 #include "./ged_private.h"
 
@@ -41,7 +42,7 @@ ged_arb(struct ged *gedp, int argc, const char *argv[])
     struct rt_db_internal internal;
     struct rt_arb_internal *arb;
     int i, j;
-    double rota, fb_a;
+    double rota, fb;
     vect_t norm1, norm2, norm3;
     static const char *usage = "name rot fb";
 
@@ -72,20 +73,20 @@ ged_arb(struct ged *gedp, int argc, const char *argv[])
     }
 
     /* get fallback angle */
-    if (sscanf(argv[3], "%lf", &fb_a) != 1) {
+    if (sscanf(argv[3], "%lf", &fb) != 1) {
 	bu_vls_printf(gedp->ged_result_str, "%s: bad fallback angle - %s", argv[0], argv[3]);
 	return GED_ERROR;
     }
 
-    rota *= DEG2RAD;
-    fb_a *= DEG2RAD;
+    rota *= bn_degtorad;
+    fb *= bn_degtorad;
 
     BU_ALLOC(arb, struct rt_arb_internal);
     RT_DB_INTERNAL_INIT(&internal);
     internal.idb_major_type = DB5_MAJORTYPE_BRLCAD;
     internal.idb_type = ID_ARB8;
     internal.idb_meth = &OBJ[ID_ARB8];
-    internal.idb_ptr = (void *)arb;
+    internal.idb_ptr = (genptr_t)arb;
     arb->magic = RT_ARB_INTERNAL_MAGIC;
 
     /* FIXME: we should be creating the arb at the center of the
@@ -96,10 +97,10 @@ ged_arb(struct ged *gedp, int argc, const char *argv[])
      */
     VSET(arb->pt[0], 0.0, 0.0, 0.0);
 
-    /* calculate normal vector defined by rot, fb_a */
-    norm1[0] = cos(fb_a) * cos(rota);
-    norm1[1] = cos(fb_a) * sin(rota);
-    norm1[2] = sin(fb_a);
+    /* calculate normal vector defined by rot, fb */
+    norm1[0] = cos(fb) * cos(rota);
+    norm1[1] = cos(fb) * sin(rota);
+    norm1[2] = sin(fb);
 
     /* find two perpendicular vectors which are perpendicular to norm */
     j = 0;
@@ -122,7 +123,7 @@ ged_arb(struct ged *gedp, int argc, const char *argv[])
     for (i = 0; i < 4; i++)
 	VJOIN1(arb->pt[i+4], arb->pt[i], -50.8, norm1);
 
-    GED_DB_DIRADD(gedp, dp, argv[1], RT_DIR_PHONY_ADDR, 0, RT_DIR_SOLID, (void *)&internal.idb_type, GED_ERROR);
+    GED_DB_DIRADD(gedp, dp, argv[1], RT_DIR_PHONY_ADDR, 0, RT_DIR_SOLID, (genptr_t)&internal.idb_type, GED_ERROR);
     GED_DB_PUT_INTERNAL(gedp, dp, &internal, &rt_uniresource, GED_ERROR);
 
     return GED_OK;

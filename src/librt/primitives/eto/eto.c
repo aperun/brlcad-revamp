@@ -1,7 +1,7 @@
 /*                           E T O . C
  * BRL-CAD
  *
- * Copyright (c) 1992-2014 United States Government as represented by
+ * Copyright (c) 1992-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -28,15 +28,15 @@
 #include "common.h"
 
 #include <stddef.h>
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include "bio.h"
 
-#include "bu/cv.h"
 #include "vmath.h"
-#include "rt/db4.h"
+#include "db.h"
 #include "nmg.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
 #include "raytrace.h"
 
 #include "../../librt_private.h"
@@ -151,11 +151,12 @@ const struct bu_structparse rt_eto_parse[] = {
 };
 
 /**
+ * R T _ E T O _ B B O X
+ *
  * Calculate bounding RPP of elliptical torus
  */
 int
-rt_eto_bbox(struct rt_db_internal *ip, point_t *min, point_t *max, const struct bn_tol *UNUSED(tol))
-{
+rt_eto_bbox(struct rt_db_internal *ip, point_t *min, point_t *max, const struct bn_tol *UNUSED(tol)){
     vect_t P, Nu, w1;	/* for RPP calculation */
     fastf_t f, eto_rc;
     struct rt_eto_internal *tip;
@@ -205,6 +206,8 @@ rt_eto_bbox(struct rt_db_internal *ip, point_t *min, point_t *max, const struct 
 
 
 /**
+ * R T _ E T O _ P R E P
+ *
  * Given a pointer to a GED database record, and a transformation
  * matrix, determine if this is a valid eto, and if so, precompute
  * various terms of the formula.
@@ -235,7 +238,7 @@ rt_eto_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip)
 
     /* Solid is OK, compute constant terms now */
     BU_GET(eto, struct eto_specific);
-    stp->st_specific = (void *)eto;
+    stp->st_specific = (genptr_t)eto;
 
     eto->eto_r = tip->eto_r;
     eto->eto_rd = tip->eto_rd;
@@ -285,6 +288,9 @@ rt_eto_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip)
 }
 
 
+/**
+ * R T _ E T O _ P R I N T
+ */
 void
 rt_eto_print(const struct soltab *stp)
 {
@@ -306,6 +312,8 @@ rt_eto_print(const struct soltab *stp)
 
 
 /**
+ * R T _ E T O _ S H O T
+ *
  * Intersect a ray with an eto, where all constant terms have been
  * precomputed by rt_eto_prep().  If an intersection occurs, one or
  * two struct seg(s) will be acquired and filled in.
@@ -453,13 +461,13 @@ rt_eto_shot(struct soltab *stp, struct xray *rp, struct application *ap, struct 
 	    bu_log("eto:  rt_poly_roots() 4!=%d\n", i);
 	    bn_pr_roots(stp->st_name, val, i);
 	} else if (i < 0) {
-	    static int reported = 0;
+	    static int reported=0;
 	    bu_log("The root solver failed to converge on a solution for %s\n", stp->st_dp->d_namep);
 	    if (!reported) {
 		VPRINT("while shooting from:\t", rp->r_pt);
 		VPRINT("while shooting at:\t", rp->r_dir);
 		bu_log("Additional elliptical torus convergence failure details will be suppressed.\n");
-		reported = 1;
+		reported=1;
 	    }
 	}
 	return 0;		/* MISS */
@@ -471,7 +479,7 @@ rt_eto_shot(struct soltab *stp, struct xray *rp, struct application *ap, struct 
      * sufficiently close, then use the real part as one value of 't'
      * for the intersections
      */
-    for (j = 0, i = 0; j < 4; j++) {
+    for (j=0, i=0; j < 4; j++) {
 	if (NEAR_ZERO(val[j].im, 0.0001))
 	    k[i++] = val[j].re;
     }
@@ -551,6 +559,8 @@ rt_eto_shot(struct soltab *stp, struct xray *rp, struct application *ap, struct 
 
 
 /**
+ * R T _ E T O _ N O R M
+ *
  * Compute the normal to the eto, given a point on the eto centered at
  * the origin on the X-Y plane.  The gradient of the eto at that point
  * is in fact the normal vector, which will have to be given unit
@@ -601,6 +611,8 @@ rt_eto_norm(struct hit *hitp, struct soltab *stp, struct xray *rp)
 
 
 /**
+ * R T _ E T O _ C U R V E
+ *
  * Return the curvature of the eto.
  */
 void
@@ -643,14 +655,14 @@ rt_eto_curve(struct curvature *cvp, struct hit *hitp, struct soltab *stp)
 
     /* calculate curvature along ellipse */
     /* k = y'' / (1 + y'^2) ^ 3/2 */
-    rad = 1.0 / sqrt(1.0 - xp*xp/(a*a));
+    rad = 1. / sqrt(1. - xp*xp/(a*a));
     yp1 = -b/(a*a)*xp*rad;
     yp2 = -b/(a*a)*rad*(xp*xp*rad*rad + 1.);
     work = 1 + yp1*yp1;
     k_ell = yp2 / (work*sqrt(work));
 
     /* calculate curvature along radial circle */
-    k_circ = -1.0 / MAGNITUDE(Radius);
+    k_circ = -1. / MAGNITUDE(Radius);
 
     if (fabs(k_ell) < fabs(k_circ)) {
 	/* use 1st deriv for principle dir of curvature */
@@ -666,6 +678,9 @@ rt_eto_curve(struct curvature *cvp, struct hit *hitp, struct soltab *stp)
 }
 
 
+/**
+ * R T _ E T O _ U V
+ */
 void
 rt_eto_uv(struct application *ap, struct soltab *stp, struct hit *hitp, struct uvcoord *uvp)
 {
@@ -697,17 +712,20 @@ rt_eto_uv(struct application *ap, struct soltab *stp, struct hit *hitp, struct u
 
     /* normalize to [0, 2pi] */
     if (theta_u < 0.)
-	theta_u += M_2PI;
+	theta_u += bn_twopi;
     if (theta_v < 0.)
-	theta_v += M_2PI;
+	theta_v += bn_twopi;
 
     /* normalize to [0, 1] */
-    uvp->uv_u = theta_u/M_2PI;
-    uvp->uv_v = theta_v/M_2PI;
+    uvp->uv_u = theta_u/bn_twopi;
+    uvp->uv_v = theta_v/bn_twopi;
     uvp->uv_du = uvp->uv_dv = 0;
 }
 
 
+/**
+ * R T _ E T O _ F R E E
+ */
 void
 rt_eto_free(struct soltab *stp)
 {
@@ -718,7 +736,16 @@ rt_eto_free(struct soltab *stp)
 }
 
 
+int
+rt_eto_class(void)
+{
+    return 0;
+}
+
+
 /**
+ * M A K E _ E L L I P S E 4
+ *
  * Approximate one fourth (1st quadrant) of an ellipse with line
  * segments.  The initial single segment is broken at the point
  * farthest from the ellipse if that point is not already within the
@@ -776,6 +803,8 @@ make_ellipse4(struct rt_pt_node *pts, fastf_t a, fastf_t b, fastf_t dtol, fastf_
 
 
 /**
+ * M A K E _ E L L I P S E
+ *
  * Return pointer an array of points approximating an ellipse with
  * semi-major and semi-minor axes a and b.  The line segments fall
  * within the normal and distance tolerances of ntol and dtol.
@@ -853,7 +882,7 @@ eto_ellipse_points(
     fastf_t avg_radius, circumference;
 
     avg_radius = (MAGNITUDE(ellipse_A) + MAGNITUDE(ellipse_B)) / 2.0;
-    circumference = M_2PI * avg_radius;
+    circumference = bn_twopi * avg_radius;
 
     return circumference / info->point_spacing;
 }
@@ -968,7 +997,7 @@ rt_eto_adaptive_plot(struct rt_db_internal *ip, const struct rt_view_info *info)
 	points_per_ellipse = 6;
     }
 
-    radian_step = M_2PI / num_cross_sections;
+    radian_step = bn_twopi / num_cross_sections;
     radian = 0;
     for (i = 0; i < num_cross_sections; ++i) {
 	ellipse_point_at_radian(center, eto->eto_V, eto_A, eto_B, radian);
@@ -989,6 +1018,8 @@ rt_eto_adaptive_plot(struct rt_db_internal *ip, const struct rt_view_info *info)
 }
 
 /**
+ * R T _ E T O _ P L O T
+ *
  * The ETO has the following input fields:
  *
  * eto_V V from origin to center
@@ -1031,7 +1062,7 @@ rt_eto_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct rt_te
 	ntol = ttol->norm;
     else
 	/* tolerate everything */
-	ntol = M_PI;
+	ntol = bn_pi;
 
     /* (x, y) coords for an ellipse */
     ell = make_ellipse(&npts, a, b, dtol, ntol);
@@ -1044,7 +1075,7 @@ rt_eto_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct rt_te
 
     /* number of segments required in eto circles */
     nells = rt_num_circular_segments(dtol, tip->eto_r);
-    theta = M_2PI / nells;	/* put ellipse every theta rads */
+    theta = bn_twopi / nells;	/* put ellipse every theta rads */
     /* get horizontal and vertical components of C and Rd */
     cv = VDOT(tip->eto_C, Nu);
     ch = sqrt(VDOT(tip->eto_C, tip->eto_C) - cv * cv);
@@ -1106,6 +1137,9 @@ rt_eto_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct rt_te
 }
 
 
+/**
+ * R T _ E T O _ T E S S
+ */
 int
 rt_eto_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, const struct rt_tess_tol *ttol, const struct bn_tol *tol)
 {
@@ -1122,7 +1156,7 @@ rt_eto_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
     struct vertex **vertp[4];
     vect_t Au, Bu, Nu, Cp, Dp, Xu;
     vect_t *norms = NULL;	/* normal vectors for each vertex */
-    int fail = 0;
+    int fail=0;
 
     RT_CK_DB_INTERNAL(ip);
     tip = (struct rt_eto_internal *)ip->idb_ptr;
@@ -1149,7 +1183,7 @@ rt_eto_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
 	ntol = ttol->norm;
     else
 	/* tolerate everything */
-	ntol = M_PI;
+	ntol = bn_pi;
 
     /* (x, y) coords for an ellipse */
     ell = make_ellipse(&npts, a, b, dtol, ntol);
@@ -1162,7 +1196,7 @@ rt_eto_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
 
     /* number of segments required in eto circles */
     nells = rt_num_circular_segments(dtol, tip->eto_r);
-    theta = M_2PI / nells;	/* put ellipse every theta rads */
+    theta = bn_twopi / nells;	/* put ellipse every theta rads */
     /* get horizontal and vertical components of C and Rd */
     cv = VDOT(tip->eto_C, Nu);
     ch = sqrt(VDOT(tip->eto_C, tip->eto_C) - cv * cv);
@@ -1236,7 +1270,7 @@ rt_eto_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
     }
 
     /* Associate face geometry */
-    for (i = 0; i < nfaces; i++) {
+    for (i=0; i < nfaces; i++) {
 	if (nmg_fu_planeeqn(faces[i], tol) < 0) {
 	    fail = (-1);
 	    goto failure;
@@ -1244,8 +1278,8 @@ rt_eto_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
     }
 
     /* associate vertexuse normals */
-    for (i = 0; i < nells; i++) {
-	for (j = 0; j < npts; j++) {
+    for (i=0; i<nells; i++) {
+	for (j=0; j<npts; j++) {
 	    struct vertexuse *vu;
 	    vect_t rev_norm;
 
@@ -1284,6 +1318,8 @@ rt_eto_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
 
 
 /**
+ * R T _ E T O _ I M P O R T
+ *
  * Import a eto from the database format to the internal format.
  * Apply modeling transformations at the same time.
  */
@@ -1351,6 +1387,8 @@ rt_eto_import4(struct rt_db_internal *ip, const struct bu_external *ep, const fa
 
 
 /**
+ * R T _ E T O _ E X P O R T
+ *
  * The name will be added by the caller.
  */
 int
@@ -1371,7 +1409,7 @@ rt_eto_export4(struct bu_external *ep, const struct rt_db_internal *ip, double l
 
     BU_CK_EXTERNAL(ep);
     ep->ext_nbytes = sizeof(union record);
-    ep->ext_buf = (uint8_t *)bu_calloc(1, ep->ext_nbytes, "eto external");
+    ep->ext_buf = (genptr_t)bu_calloc(1, ep->ext_nbytes, "eto external");
     eto = (union record *)ep->ext_buf;
 
     eto->s.s_id = ID_SOLID;
@@ -1389,6 +1427,8 @@ rt_eto_export4(struct bu_external *ep, const struct rt_db_internal *ip, double l
 
 
 /**
+ * R T _ E T O _ I M P O R T 5
+ *
  * Import a eto from the database format to the internal format.
  * Apply modeling transformations at the same time.
  */
@@ -1434,6 +1474,8 @@ rt_eto_import5(struct rt_db_internal *ip, const struct bu_external *ep, const fa
 
 
 /**
+ * R T _ E T O _ E X P O R T 5
+ *
  * The name will be added by the caller.
  */
 int
@@ -1456,7 +1498,7 @@ rt_eto_export5(struct bu_external *ep, const struct rt_db_internal *ip, double l
 
     BU_CK_EXTERNAL(ep);
     ep->ext_nbytes = SIZEOF_NETWORK_DOUBLE * 11;
-    ep->ext_buf = (uint8_t *)bu_malloc(ep->ext_nbytes, "eto external");
+    ep->ext_buf = (genptr_t)bu_malloc(ep->ext_nbytes, "eto external");
 
     /* scale 'em into local buffer */
     VSCALE(&vec[0*3], tip->eto_V, local2mm);
@@ -1473,6 +1515,8 @@ rt_eto_export5(struct bu_external *ep, const struct rt_db_internal *ip, double l
 
 
 /**
+ * R T _ E T O _ D E S C R I B E
+ *
  * Make human-readable formatted presentation of this solid.  First
  * line describes type of solid.  Additional lines are indented one
  * tab, and give parameter values.
@@ -1520,6 +1564,8 @@ rt_eto_describe(struct bu_vls *str, const struct rt_db_internal *ip, int verbose
 
 
 /**
+ * R T _ E T O _ I F R E E
+ *
  * Free the storage associated with the rt_db_internal version of this solid.
  */
 void
@@ -1533,10 +1579,14 @@ rt_eto_ifree(struct rt_db_internal *ip)
     RT_ETO_CK_MAGIC(tip);
 
     bu_free((char *)tip, "eto ifree");
-    ip->idb_ptr = ((void *)0);	/* sanity */
+    ip->idb_ptr = GENPTR_NULL;	/* sanity */
 }
 
 
+/**
+ * R T _ E T O _ P A R A M S
+ *
+ */
 int
 rt_eto_params(struct pc_pc_set *ps, const struct rt_db_internal *ip)
 {
@@ -1547,6 +1597,9 @@ rt_eto_params(struct pc_pc_set *ps, const struct rt_db_internal *ip)
 }
 
 
+/**
+ * R T _ E T O _ V O L U M E
+ */
 void
 rt_eto_volume(fastf_t *vol, const struct rt_db_internal *ip)
 {
@@ -1559,6 +1612,9 @@ rt_eto_volume(fastf_t *vol, const struct rt_db_internal *ip)
 }
 
 
+/**
+ * R T _ E T O _ C E N T R O I D
+ */
 void
 rt_eto_centroid(point_t *cent, const struct rt_db_internal *ip)
 {
@@ -1568,6 +1624,9 @@ rt_eto_centroid(point_t *cent, const struct rt_db_internal *ip)
 }
 
 
+/**
+ * R T _ E T O _ S U R F _ A R E A
+ */
 void
 rt_eto_surf_area(fastf_t *area, const struct rt_db_internal *ip)
 {
@@ -1578,7 +1637,7 @@ rt_eto_surf_area(fastf_t *area, const struct rt_db_internal *ip)
     mag_c = MAGNITUDE(tip->eto_C);
     /* approximation */
     circum = ELL_CIRCUMFERENCE(mag_c, tip->eto_rd);
-    *area = M_2PI * tip->eto_r * circum;
+    *area = 2.0 * M_PI * tip->eto_r * circum;
 }
 
 static int

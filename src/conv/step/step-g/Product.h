@@ -1,7 +1,7 @@
 /*                 Product.h
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef CONV_STEP_STEP_G_PRODUCT_H
-#define CONV_STEP_STEP_G_PRODUCT_H
+#ifndef PRODUCT_H_
+#define PRODUCT_H_
 
 #include "STEPEntity.h"
 
@@ -62,7 +62,7 @@ public:
     static STEPEntity *Create(STEPWrapper *sw, SDAI_Application_instance *sse);
 };
 
-#endif /* CONV_STEP_STEP_G_PRODUCT_H */
+#endif /* PRODUCT_H_ */
 
 /*
  * Local Variables:

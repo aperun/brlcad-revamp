@@ -163,6 +163,7 @@ yuv-pix
 Framebuffer Tools
 =================
 bw-fb
+cat-fb
 cell-fb
 cmap-fb
 ddisp
@@ -200,7 +201,7 @@ gif2fb
 orle-fb
 pix-fb
 pixflip-fb
-plot3-fb
+pl-fb
 polar-fb
 pp-fb
 rle-fb
@@ -273,7 +274,7 @@ pixfilter
 pixhalve
 pixhist
 pixhist3d
-pixhist3d-plot3
+pixhist3d-pl
 pixinfo.sh
 pixinterp2x
 pixmatte
@@ -336,21 +337,22 @@ showtherm
 
 Plotter Tools
 =============
-asc-plot3
-plot3-X
-plot3-asc
-plot3-dm
-plot3-hpgl
-plot3-plot3
-plot3-ps
-plot3-tek
-plot3color
-plot3debug
-plot3getframe
-plot3line2
-plot3rot
-plot3stat
-xyz-plot3
+asc-pl
+pl-X
+pl-asc
+pl-dm
+pl-hpgl
+pl-pl
+pl-ps
+pl-tek
+plcolor
+pldebug
+plgetframe
+plline2
+plrot
+plstat
+txyz-pl
+xyz-pl
 
 Procedural Tools
 ================
@@ -394,7 +396,7 @@ terrain
 tire
 torii
 tube
-vegetation
+vegitation
 wdb_example
 window
 window_frame
@@ -415,4 +417,5 @@ loop
 news2tracker.sh
 query
 tracker.sh
+trimconfig.sh
 ttcp

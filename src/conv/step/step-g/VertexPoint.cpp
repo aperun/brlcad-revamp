@@ -1,7 +1,7 @@
 /*                 VertexPoint.cpp
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -61,11 +61,11 @@ VertexPoint::Load(STEPWrapper *sw, SDAI_Application_instance *sse)
     // load base class attributes
     if (!Vertex::Load(step, sse)) {
 	std::cout << CLASSNAME << ":Error loading base class ::Vertex." << std::endl;
-	goto step_error;
+	return false;
     }
     if (!GeometricRepresentationItem::Load(step, sse)) {
 	std::cout << CLASSNAME << ":Error loading base class ::GeometricRepresentationItem." << std::endl;
-	goto step_error;
+	return false;
     }
 
     // need to do this for local attributes to makes sure we have
@@ -76,17 +76,12 @@ VertexPoint::Load(STEPWrapper *sw, SDAI_Application_instance *sse)
 	SDAI_Application_instance *entity = step->getEntityAttribute(sse, "vertex_geometry");
 	if (entity) {
 	    vertex_geometry = dynamic_cast<Point *>(Factory::CreateObject(sw, entity));
-	}
-	if (!entity || !vertex_geometry) {
+	} else {
 	    std::cout << CLASSNAME << ":Error loading attribute 'vertex_geometry'." << std::endl;
-	    goto step_error;
+	    return false;
 	}
     }
-    sw->entity_status[id] = STEP_LOADED;
     return true;
-step_error:
-    sw->entity_status[id] = STEP_LOAD_ERROR;
-    return false;
 }
 
 void

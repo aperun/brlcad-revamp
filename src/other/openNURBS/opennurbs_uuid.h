@@ -18,9 +18,9 @@
 #define OPENNURBS_UUID_INC_
 
 // ON_UUID is a 16 byte universally unique identifier
-#if defined(UUID_DEFINED) && !defined(ON_COMPILER_GNU)
+#if defined(UUID_DEFINED)
 typedef UUID ON_UUID;
-#elif defined(GUID_DEFINED) && !defined(ON_COMPILER_GNU)
+#elif defined(GUID_DEFINED)
 typedef GUID ON_UUID;
 #else
 

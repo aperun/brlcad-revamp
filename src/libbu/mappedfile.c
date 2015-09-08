@@ -1,7 +1,7 @@
 /*                    M A P P E D F I L E . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -20,7 +20,6 @@
 
 #include "common.h"
 
-#include <limits.h> /* for INT_MAX */
 #include <math.h>
 #include <string.h>
 #ifdef HAVE_SYS_TYPES_H
@@ -37,15 +36,7 @@
 #endif
 #include "bio.h"
 
-#include "bu/debug.h"
-#include "bu/file.h"
-#include "bu/list.h"
-#include "bu/log.h"
-#include "bu/malloc.h"
-#include "bu/mapped_file.h"
-#include "bu/parallel.h"
-#include "bu/str.h"
-#include "bu/vls.h"
+#include "bu.h"
 
 
 /* list of currently open mapped files */
@@ -63,7 +54,7 @@ bu_open_mapped_file(const char *name, const char *appl)
     struct stat sb;
     int fd = -1;	/* unix file descriptor */
     int readval;
-    ssize_t bytes_to_go, nbytes;
+	ssize_t bytes_to_go, nbytes;
 #else
     FILE *fp = (FILE *)NULL;	/* stdio file pointer */
 #endif
@@ -119,14 +110,14 @@ bu_open_mapped_file(const char *name, const char *appl)
 		if ((size_t)sb.st_size != mp->buflen) {
 		    bu_log("bu_open_mapped_file(%s) WARNING: File size changed from %ld to %ld, opening new version.\n", real_path, mp->buflen, sb.st_size);
 		    /* mp doesn't reflect the file any longer.  Invalidate. */
-		    mp->appl = bu_strdup("__STALE__");
+		    mp->appl = "__STALE__";
 		    /* Can't invalidate old copy, it may still be in use. */
 		    break;
 		}
 		if (sb.st_mtime != mp->modtime) {
 		    bu_log("bu_open_mapped_file(%s) WARNING: File modified since last mapped, opening new version.\n", real_path);
 		    /* mp doesn't reflect the file any longer.  Invalidate. */
-		    mp->appl = bu_strdup("__STALE__");
+		    mp->appl = "__STALE__";
 		    /* Can't invalidate old copy, it may still be in use. */
 		    break;
 		}
@@ -325,7 +316,7 @@ fail:
 
     if (UNLIKELY(bu_debug&BU_DEBUG_MAPPED_FILE))
 	bu_log("bu_open_mapped_file(%s, %s) can't open file\n",
-		real_path, appl ? appl: "(NIL)");
+		real_path, appl?appl:"(NIL)");
 
     if (real_path) {
 	bu_free(real_path, "real_path alloc from bu_realpath");
@@ -338,15 +329,15 @@ fail:
 void
 bu_close_mapped_file(struct bu_mapped_file *mp)
 {
-    if (UNLIKELY(!mp)) {
-	bu_log("bu_close_mapped_file() called with null pointer\n");
-	return;
-    }
-
     BU_CK_MAPPED_FILE(mp);
 
     if (UNLIKELY(bu_debug&BU_DEBUG_MAPPED_FILE))
 	bu_pr_mapped_file("close:uses--", mp);
+
+    if (UNLIKELY(!mp)) {
+	bu_log("bu_close_mapped_file() called with null pointer\n");
+	return;
+    }
 
     bu_semaphore_acquire(BU_SEM_MAPPEDFILE);
     --mp->uses;
@@ -357,9 +348,6 @@ bu_close_mapped_file(struct bu_mapped_file *mp)
 void
 bu_pr_mapped_file(const char *title, const struct bu_mapped_file *mp)
 {
-    if (UNLIKELY(!mp))
-	return;
-
     BU_CK_MAPPED_FILE(mp);
 
     bu_log("%p mapped_file %s %p len=%ld mapped=%d, uses=%d %s\n",
@@ -396,7 +384,7 @@ bu_free_mapped_files(int verbose)
 	/* If application pointed mp->apbuf at mp->buf, break that
 	 * association so we don't double-free the buffer.
 	 */
-	if (mp->apbuf == mp->buf)  mp->apbuf = (void *)NULL;
+	if (mp->apbuf == mp->buf)  mp->apbuf = (genptr_t)NULL;
 
 #ifdef HAVE_SYS_MMAN_H
 	if (mp->is_mapped) {
@@ -414,13 +402,13 @@ bu_free_mapped_files(int verbose)
 	{
 	    bu_free(mp->buf, "bu_mapped_file.buf[]");
 	}
-	mp->buf = (void *)NULL;		/* sanity */
-	bu_free((void *)mp->name, "bu_mapped_file.name");
+	mp->buf = (genptr_t)NULL;		/* sanity */
+	bu_free((genptr_t)mp->name, "bu_mapped_file.name");
 
 	if (mp->appl)
-	    bu_free((void *)mp->appl, "bu_mapped_file.appl");
+	    bu_free((genptr_t)mp->appl, "bu_mapped_file.appl");
 
-	bu_free((void *)mp, "struct bu_mapped_file");
+	bu_free((genptr_t)mp, "struct bu_mapped_file");
     }
     bu_semaphore_release(BU_SEM_MAPPEDFILE);
 }

@@ -1,7 +1,7 @@
 /*                 R E G I O N _ E N D _ M C . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -27,15 +27,19 @@
 
 #include "common.h"
 
-#include "bu/parallel.h"
 #include "gcv.h"
+
+/* FIXME: this be a dumb hack to avoid void* conversion */
+struct gcv_data {
+    void (*func)(struct nmgregion *, const struct db_full_path *, int, int, float [3]);
+};
 
 
 /* in region_end.c */
 union tree * _gcv_cleanup(int state, union tree *tp);
 
 union tree *
-gcv_region_end_mc(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, void *client_data)
+gcv_region_end_mc(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, genptr_t client_data)
 {
     union tree *tp = NULL;
     struct model *m = NULL;
@@ -48,14 +52,15 @@ gcv_region_end_mc(struct db_tree_state *tsp, const struct db_full_path *pathp, u
     int NMG_debug_state = 0;
     int count = 0;
 
-    struct gcv_region_end_data *data = (struct gcv_region_end_data *)client_data;
+    void (*write_region)(struct nmgregion *, const struct db_full_path *, int, int, float [3]);
 
     if (!tsp || !pathp || !client_data) {
 	bu_log("INTERNAL ERROR: gcv_region_end_mc missing parameters\n");
 	return TREE_NULL;
     }
 
-    if (!data->write_region) {
+    write_region = ((struct gcv_data *)client_data)->func;
+    if (!write_region) {
 	bu_log("INTERNAL ERROR: gcv_region_end missing conversion callback function\n");
 	return TREE_NULL;
     }
@@ -94,16 +99,14 @@ gcv_region_end_mc(struct db_tree_state *tsp, const struct db_full_path *pathp, u
     r = nmg_mrsv(m);
     s = BU_LIST_FIRST(shell, &r->s_hd);
 
-    if (tsp->ts_rtip == NULL)
+    if(tsp->ts_rtip == NULL)
 	tsp->ts_rtip = rt_new_rti(tsp->ts_dbip);
 
     count += nmg_mc_evaluate (s, tsp->ts_rtip, pathp, tsp->ts_ttol, tsp->ts_tol);
 
     /* empty region? */
-    if (count == 0) {
-	char *str_path = db_path_to_string(pathp);
-	bu_log("Region %s appears to be empty.\n", str_path);
-	bu_free(str_path, "str_path");
+    if(count == 0) {
+	bu_log("Region %s appears to be empty.\n", db_path_to_string(pathp));
 	return TREE_NULL;
     }
 
@@ -139,12 +142,7 @@ gcv_region_end_mc(struct db_tree_state *tsp, const struct db_full_path *pathp, u
     if (empty_model)
 	return _gcv_cleanup(NMG_debug_state, tp);
 
-    if (!BU_SETJUMP) {
-	/* try */
-	/* Write the region out */
-	data->write_region(r, pathp, tsp->ts_regionid, tsp->ts_gmater, tsp->ts_mater.ma_color, data->client_data);
-    } else {
-	/* catch */
+    if (BU_SETJUMP) {
 	/* Error, bail out */
 	char *sofar;
 
@@ -169,6 +167,9 @@ gcv_region_end_mc(struct db_tree_state *tsp, const struct db_full_path *pathp, u
 	nmg_kr(r);
 
 	return _gcv_cleanup(NMG_debug_state, tp);
+    } else {
+	/* Write the region out */
+	write_region(r, pathp, tsp->ts_regionid, tsp->ts_gmater, tsp->ts_mater.ma_color);
 
     } BU_UNSETJUMP; /* Relinquish bomb protection */
 

@@ -1,7 +1,7 @@
 /*                         G - N F F . C
  * BRL-CAD
  *
- * Copyright (c) 2003-2014 United States Government as represented by
+ * Copyright (c) 2003-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -34,16 +34,11 @@
 #include "bio.h"
 
 /* interface headers */
-#include "bu/getopt.h"
-#include "bu/parallel.h"
 #include "vmath.h"
 #include "nmg.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
 #include "raytrace.h"
 
-static const char *usage =
-    "[-v] [-i] [-xX lvl] [-a abs_tess_tol] [-r rel_tess_tol] [-n norm_tess_tol]\n"
-    "[-e error_file ] [-D dist_calc_tol] [-o output.nff] database.g object(s)\n";
 
 static int NMG_debug;			/* saved arg of -X, for longjmp handling */
 static int verbose;
@@ -69,11 +64,6 @@ static point_t model_min;
 
 #define COPY_BUF_SIZE 512
 
-static void
-print_usage(const char *progname)
-{
-    bu_exit(1, "Usage: %s %s", progname, usage);
-}
 
 static void
 nmg_to_nff(struct nmgregion *r, const struct db_full_path *pathp, int UNUSED(region_id), int UNUSED(material_id))
@@ -175,7 +165,7 @@ process_triangulation(struct nmgregion *r, const struct db_full_path *pathp, str
 static union tree *
 process_boolean(union tree *curtree, struct db_tree_state *tsp, const struct db_full_path *pathp)
 {
-    static union tree *ret_tree = TREE_NULL;
+    union tree *ret_tree = TREE_NULL;
 
     /* Begin bomb protection */
     if (!BU_SETJUMP) {
@@ -219,12 +209,14 @@ process_boolean(union tree *curtree, struct db_tree_state *tsp, const struct db_
 
 
 /*
+ * D O _ R E G I O N _ E N D
+ *
  * Called from db_walk_tree().
  *
  * This routine must be prepared to run in parallel.
  */
 union tree *
-do_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, void *UNUSED(client_data))
+do_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, genptr_t UNUSED(client_data))
 {
     union tree *ret_tree;
     struct bu_list vhead;
@@ -344,6 +336,9 @@ do_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union
 }
 
 
+/*
+ * M A I N
+ */
 int
 main(int argc, char *argv[])
 {
@@ -360,6 +355,10 @@ main(int argc, char *argv[])
     int c;
     double percent;
     int i;
+
+    const char usage[] = "\
+Usage: %s [-v] [-i] [-xX lvl] [-a abs_tess_tol] [-r rel_tess_tol] [-n norm_tess_tol]\n\
+[-e error_file ] [-D dist_calc_tol] [-o output.nff] database.g object(s)\n";
 
     bu_setprogname(argv[0]);
     bu_setlinebuf(stderr);
@@ -380,10 +379,12 @@ main(int argc, char *argv[])
 
     /* FIXME: These need to be improved */
     tol.magic = BN_TOL_MAGIC;
-    tol.dist = BN_TOL_DIST;
+    tol.dist = 0.0005;
     tol.dist_sq = tol.dist * tol.dist;
     tol.perp = 1e-6;
     tol.para = 1 - tol.perp;
+
+    rt_init_resource(&rt_uniresource, 0, NULL);
 
     the_model = nmg_mm();
     BU_LIST_INIT(&RTG.rtg_vlfree);	/* for vlist macros */
@@ -427,13 +428,13 @@ main(int argc, char *argv[])
 		inches = 1;
 		break;
 	    default:
-		print_usage(argv[0]);
+		bu_exit(1, usage, argv[0]);
 		break;
 	}
     }
 
     if (bu_optind+1 >= argc)
-	print_usage(argv[0]);
+	bu_exit(1, usage, argv[0]);
 
     if (!output_file)
 	bu_exit(1, "No output file specified!\n");
@@ -450,7 +451,9 @@ main(int argc, char *argv[])
     /* Open error log file */
     if (!error_file) {
 	fpe = stderr;
+#if defined(_WIN32) && !defined(__CYGWIN__)
 	setmode(fileno(fpe), O_BINARY);
+#endif
     } else if ((fpe=fopen(error_file, "wb")) == NULL) {
 	perror(argv[0]);
 	bu_exit(1, "Cannot open output file (%s) for writing\n", error_file);
@@ -485,7 +488,7 @@ main(int argc, char *argv[])
 			0,			/* take all regions */
 			do_region_end,
 			nmg_booltree_leaf_tess,
-			(void *)NULL);	/* in librt/nmg_bool.c */
+			(genptr_t)NULL);	/* in librt/nmg_bool.c */
 
     percent = 0;
     if (regions_tried > 0) {

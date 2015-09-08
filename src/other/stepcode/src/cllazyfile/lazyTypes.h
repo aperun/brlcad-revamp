@@ -80,4 +80,3 @@ typedef std::vector< lazyFileReader * > lazyFileReaderVec_t;
 // NOTE not useful? typedef std::vector< lazyInstance > lazyInstanceVec_t;
 
 #endif //LAZYTYPES_H
-

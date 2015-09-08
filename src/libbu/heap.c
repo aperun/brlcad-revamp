@@ -1,7 +1,7 @@
 /*                          H E A P . C
  * BRL-CAD
  *
- * Copyright (c) 2013-2014 United States Government as represented by
+ * Copyright (c) 2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -20,13 +20,8 @@
 
 #include "common.h"
 
-#include <stdlib.h> /* for getenv, atoi, and atexit */
+#include "bu.h"
 
-#include "bu/debug.h"
-#include "bu/log.h"
-#include "bu/malloc.h"
-#include "bu/parallel.h"
-#include "bu/vls.h"
 
 /**
  * This number specifies the range of byte sizes to support for fast
@@ -94,19 +89,19 @@ static struct cpus per_cpu[MAX_PSW] = {{{{0, 0, 0}}, 0}};
 
 
 bu_heap_func_t
-bu_heap_log(bu_heap_func_t log)
+bu_heap_log(bu_heap_func_t logger)
 {
     static bu_heap_func_t heap_log = (bu_heap_func_t)&bu_log;
 
-    if (log)
-	heap_log = log;
+    if (logger)
+	heap_log = logger;
 
     return heap_log;
 }
 
 
 static void
-heap_print(void)
+heap_print()
 {
     static int printed = 0;
 
@@ -117,7 +112,7 @@ heap_print(void)
     size_t total_pages = 0;
     size_t ncpu = bu_avail_cpus();
 
-    bu_heap_func_t log = bu_heap_log(NULL);
+    bu_heap_func_t logger = bu_heap_log(NULL);
 
     struct bu_vls str = BU_VLS_INIT_ZERO;
 
@@ -128,9 +123,9 @@ heap_print(void)
 	return;
     }
 
-    log("=======================\n"
-	"Memory Heap Information\n"
-	"-----------------------\n", NULL);
+    logger("=======================\n"
+	   "Memory Heap Information\n"
+	   "-----------------------\n", NULL);
 
     for (h=0; h < ncpu; h++) {
 	for (i=0; i < HEAP_BINS; i++) {
@@ -142,7 +137,7 @@ heap_print(void)
 		/* last page is partial */
 		got -= (HEAP_PAGESIZE - per_cpu[h].heap[i].given)/(i+1);
 		bu_vls_sprintf(&str, "%04zu [%02zu] => %zu\n", i, per_cpu[h].heap[i].count, got);
-		log(bu_vls_addr(&str), NULL);
+		logger(bu_vls_addr(&str), NULL);
 		allocs += got;
 	    }
 	    total_pages += per_cpu[h].heap[i].count;
@@ -162,7 +157,7 @@ heap_print(void)
 		   (double)(total_pages * HEAP_PAGESIZE) / (1024.0*1024.0),
 		   allocs,
 		   misses);
-    log(bu_vls_addr(&str), NULL);
+    logger(bu_vls_addr(&str), NULL);
     bu_vls_free(&str);
 }
 

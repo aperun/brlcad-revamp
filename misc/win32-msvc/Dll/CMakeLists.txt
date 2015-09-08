@@ -80,7 +80,6 @@ set(COREINTERFACE_SOURCES
   ../../../../rt^3/src/coreInterface/ParabolicCylinder.cpp
   ../../../../rt^3/src/coreInterface/Paraboloid.cpp
   ../../../../rt^3/src/coreInterface/Particle.cpp
-  ../../../../rt^3/src/coreInterface/Sphere.cpp
   ../../../../rt^3/src/coreInterface/Torus.cpp
   ../../../../rt^3/src/coreInterface/Unknown.cpp
   ../../../../rt^3/src/coreInterface/globals.cpp
@@ -94,16 +93,9 @@ include_directories(
   ${OPENNURBS_INCLUDE_DIR}
   )
 
-if(MSVC)
-  add_definitions(
-    "-DBRLCAD_COREINTERFACE_EXPORT=__declspec(dllexport)"
+add_definitions(
+  "-DBRLCAD_COREINTERFACE_EXPORT=__declspec(dllexport)"
   )
-
-  set(COREINTERFACE_MSVC_LIBRARIES
-    Ws2_32
-    Psapi
-  )
-endif(MSVC)
 
 add_library(brlcad SHARED
   ${BRLCAD_SOURCES}
@@ -125,7 +117,8 @@ target_link_libraries(brlcad
   p2t_static
   zlib-static
   openNURBS-static
-  ${COREINTERFACE_MSVC_LIBRARIES}
+  Ws2_32
+  Psapi
   )
 
 set_property(TARGET brlcad PROPERTY LINK_INTERFACE_LIBRARIES "")

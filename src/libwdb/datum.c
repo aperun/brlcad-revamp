@@ -28,10 +28,10 @@
 #include <math.h>
 #include "bio.h"
 
-#include "bu/malloc.h"
+#include "bu.h"
 #include "vmath.h"
 #include "bn.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
 #include "raytrace.h"
 #include "wdb.h"
 

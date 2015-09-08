@@ -1,7 +1,7 @@
 /*                         Q U E R Y . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -22,6 +22,7 @@
  */
 
 #include "common.h"
+#include "bio.h"
 
 #include <string.h>
 
@@ -31,6 +32,7 @@
 
 #include "tcl.h"
 
+#include "bu.h"
 #include "vmath.h"
 #include "dm.h"
 
@@ -38,7 +40,7 @@ int dm_validXType(char *dpy_string, char *name);
 char *dm_bestXType(char *dpy_string);
 
 int
-#if !defined(DM_WGL) && !defined(DM_RTGL) && !defined(DM_OGL) && !defined(DM_X)
+#if !defined(DM_WGL) && !defined(DM_RTGL) && !defined(DM_OGL) && !defined(DM_X) && !defined(DM_TK)
 dm_validXType(char *UNUSED(dpy_string), char *name)
 #else
 dm_validXType(char *dpy_string, char *name)
@@ -117,17 +119,12 @@ dm_validXType(char *dpy_string, char *name)
   */
 
 char *
-#if !defined(DM_WGL) && !defined(DM_RTGL) && !defined(DM_OGL) && !defined(DM_OSGL) && !defined(DM_X)
+#if !defined(DM_WGL) && !defined(DM_RTGL) && !defined(DM_OGL) && !defined(DM_X) && !defined(DM_TK)
 dm_bestXType(char *UNUSED(dpy_string))
 #else
 dm_bestXType(char *dpy_string)
 #endif
 {
-
-#ifdef DM_OSGL
-    return "osgl";
-#endif
-
 #ifdef DM_WGL
     /* should probably make sure wgl works */
     return "wgl";

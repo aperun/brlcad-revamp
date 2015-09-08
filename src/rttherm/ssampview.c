@@ -1,7 +1,7 @@
 /*                     S S A M P V I E W . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -29,15 +29,13 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include "bio.h"
 
-#include "bu/getopt.h"
-#include "bu/debug.h"
-#include "bu/vls.h"
+#include "bu.h"
 #include "vmath.h"
 #include "bn.h"
 #include "raytrace.h"
 #include "spectrum.h"
-#include "tclcad.h"
 #include "fb.h"
 #include "tcl.h"
 #include "tk.h"
@@ -70,7 +68,7 @@ int nwave = 2;				/* Linked with TCL */
 char *datafile_basename = NULL;
 char spectrum_name[100];
 
-fb *fbp;
+FBIO *fbp;
 
 struct bn_tabdata *data;
 
@@ -103,6 +101,8 @@ void show_color(int off);
 char *first_command = "no_command?";
 
 /*
+ * A S S I G N _ T A B D A T A _ T O _ T C L _ V A R
+ *
  * Assign the given "C" bn_tabdata structure to the named Tcl variable,
  * and add the name of that variable to the Tcl result string.
  */
@@ -271,6 +271,8 @@ getspectval(ClientData UNUSED(cd), Tcl_Interp *interp, int argc, char **argv)
 
 
 /*
+ * G E T S P E C T X Y
+ *
  * Given the x, y coordinates of a pixel in the multi-spectral image,
  * return the spectral data found there in Tcl string form.
  */
@@ -322,7 +324,7 @@ getspectxy(ClientData UNUSED(cd), Tcl_Interp *interp, int argc, char **argv)
 int
 tcl_fb_cursor(ClientData UNUSED(cd), Tcl_Interp *interp, int argc, char **argv)
 {
-    fb *ifp;
+    FBIO *ifp;
     long mode, x, y;
 
     Tcl_ResetResult(interp);
@@ -338,7 +340,7 @@ tcl_fb_cursor(ClientData UNUSED(cd), Tcl_Interp *interp, int argc, char **argv)
 
     ifp = fbp;	/* XXX hack, ignore tcl arg. */
 
-    FB_CK_FB(ifp);
+    FB_CK_FBIO(ifp);
     if (fb_cursor(ifp, mode, x, y) < 0) {
 	Tcl_AppendResult(interp, "fb_cursor got error from library", (char *)NULL);
 	return TCL_ERROR;
@@ -353,7 +355,7 @@ tcl_fb_cursor(ClientData UNUSED(cd), Tcl_Interp *interp, int argc, char **argv)
 int
 tcl_fb_readpixel(ClientData UNUSED(cd), Tcl_Interp *interp, int argc, char **argv)
 {
-    fb *ifp;
+    FBIO *ifp;
     long x, y;
     unsigned char pixel[4];
     struct bu_vls vls = BU_VLS_INIT_ZERO;
@@ -370,7 +372,7 @@ tcl_fb_readpixel(ClientData UNUSED(cd), Tcl_Interp *interp, int argc, char **arg
 
     ifp = fbp;	/* XXX hack, ignore tcl arg. */
 
-    FB_CK_FB(ifp);
+    FB_CK_FBIO(ifp);
     if (fb_read(ifp, x, y, pixel, 1) < 0) {
 	Tcl_AppendResult(interp, "fb_readpixel got error from library", (char *)NULL);
 	return TCL_ERROR;
@@ -561,6 +563,9 @@ get_args(int argc, char **argv)
 }
 
 
+/*
+ * M A I N
+ */
 int
 main(int argc, char **argv)
 {
@@ -575,13 +580,13 @@ main(int argc, char **argv)
 	bu_exit(1, NULL);
     }
 
-    datafile_basename = bu_realpath(argv[bu_optind], NULL);
+    datafile_basename = bu_realpath(argv[bu_optind], NULL);;
     if (BU_STR_EQUAL(datafile_basename, ""))
 	datafile_basename = bu_strdup("ssampview");
 
     first_command = "doit1 42";
 
-    if ((fbp = fb_open(NULL, width, height)) == FB_NULL) {
+    if ((fbp = fb_open(NULL, width, height)) == FBIO_NULL) {
 	bu_free(datafile_basename, "datafile_basename realpath");
 	bu_exit(EXIT_FAILURE, "Unable to open fb\n");
     }
@@ -687,6 +692,8 @@ doit1(ClientData UNUSED(cd), Tcl_Interp *interp, int argc, char **argv)
 }
 
 
+/*
+ */
 void
 find_minmax(void)
 {
@@ -719,6 +726,8 @@ find_minmax(void)
 
 
 /*
+ * R E S C A L E
+ *
  * Create monochrome image from the spectral data, at wavelength 'wav',
  * given current min & max values.
  */
@@ -760,6 +769,8 @@ rescale(int wav)
 
 
 /*
+ * S H O W _ C O L O R
+ *
  * Create color image from spectral curve,
  * given current min & max values, and frequency offset (in nm).
  * Go via CIE XYZ space.

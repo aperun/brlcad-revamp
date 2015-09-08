@@ -1,7 +1,7 @@
 /*                          G R I D . C
  * BRL-CAD
  *
- * Copyright (c) 1998-2014 United States Government as represented by
+ * Copyright (c) 1998-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -26,7 +26,10 @@
 #include "common.h"
 
 #include <math.h>
+#include <stdio.h>
 
+#include "bio.h"
+#include "bu.h"
 #include "vmath.h"
 #include "ged.h"
 
@@ -39,9 +42,9 @@ extern point_t curr_e_axes_pos;  /* from edsol.c */
 
 void draw_grid(void);
 void snap_to_grid(fastf_t *mx, fastf_t *my);
-static void grid_set_dirty_flag(const struct bu_structparse *, const char *, void *, const char *, void *);
-static void set_grid_draw(const struct bu_structparse *, const char *, void *, const char *, void *);
-static void set_grid_res(const struct bu_structparse *, const char *, void *, const char *, void *);
+static void grid_set_dirty_flag(void);
+static void set_grid_draw(void);
+static void set_grid_res(void);
 
 
 struct _grid_state default_grid_state = {
@@ -70,11 +73,7 @@ struct bu_structparse grid_vparse[] = {
 
 
 static void
-grid_set_dirty_flag(const struct bu_structparse *UNUSED(sdp),
-		    const char *UNUSED(name),
-		    void *UNUSED(base),
-		    const char *UNUSED(value),
-		    void *UNUSED(data))
+grid_set_dirty_flag(void)
 {
     struct dm_list *dmlp;
 
@@ -85,11 +84,7 @@ grid_set_dirty_flag(const struct bu_structparse *UNUSED(sdp),
 
 
 static void
-set_grid_draw(const struct bu_structparse *sdp,
-	      const char *name,
-	      void *base,
-	      const char *value,
-	      void *data)
+set_grid_draw(void)
 {
     struct dm_list *dlp;
 
@@ -98,7 +93,7 @@ set_grid_draw(const struct bu_structparse *sdp,
 	return;
     }
 
-    grid_set_dirty_flag(sdp, name, base, value, data);
+    grid_set_dirty_flag();
 
     /* This gets done at most one time. */
     if (grid_auto_size && grid_state->gr_draw) {
@@ -114,15 +109,11 @@ set_grid_draw(const struct bu_structparse *sdp,
 
 
 static void
-set_grid_res(const struct bu_structparse *sdp,
-	     const char *name,
-	     void *base,
-	     const char *value,
-	     void *data)
+set_grid_res(void)
 {
     struct dm_list *dlp;
 
-    grid_set_dirty_flag(sdp, name, base, value, data);
+    grid_set_dirty_flag();
 
     if (grid_auto_size)
 	FOR_ALL_DISPLAYS(dlp, &head_dm_list.l)
@@ -162,15 +153,14 @@ draw_grid(void)
 
     /* sanity - don't draw the grid if it would fill the screen */
     {
-	int width = dm_get_width(dmp);
-	fastf_t pixel_size = 2.0 * sf / (fastf_t)width;
+	fastf_t pixel_size = 2.0 * sf / dmp->dm_width;
 
 	if (grid_state->gr_res_h < pixel_size || grid_state->gr_res_v < pixel_size)
 	    return;
     }
 
     inv_sf = 1.0 / sf;
-    inv_aspect = 1.0 / dm_get_aspect(dmp);
+    inv_aspect = 1.0 / dmp->dm_aspect;
 
     nv_dots = 2.0 * inv_aspect * sf * inv_grid_res_v + (2 * grid_state->gr_res_major_v);
     nh_dots = 2.0 * sf * inv_grid_res_h + (2 * grid_state->gr_res_major_h);
@@ -195,11 +185,11 @@ draw_grid(void)
 	     0.0);
     }
 
-    dm_set_fg(dmp,
+    DM_SET_FGCOLOR(dmp,
 		   color_scheme->cs_grid[0],
 		   color_scheme->cs_grid[1],
 		   color_scheme->cs_grid[2], 1, 1.0);
-    dm_set_line_attr(dmp, 1, 0);		/* solid lines */
+    DM_SET_LINE_ATTR(dmp, 1, 0);		/* solid lines */
 
     /* draw horizontal dots */
     for (i = 0; i < nv_dots; i += grid_state->gr_res_major_v) {
@@ -207,7 +197,7 @@ draw_grid(void)
 
 	for (j = 0; j < nh_dots; ++j) {
 	    fx = (view_grid_start_pt_local[X] + (j * grid_state->gr_res_h)) * inv_sf;
-	    dm_draw_point_2d(dmp, fx, fy * dm_get_aspect(dmp));
+	    DM_DRAW_POINT_2D(dmp, fx, fy * dmp->dm_aspect);
 	}
     }
 
@@ -218,7 +208,7 @@ draw_grid(void)
 
 	    for (j = 0; j < nv_dots; ++j) {
 		fy = (view_grid_start_pt_local[Y] + (j * grid_state->gr_res_v)) * inv_sf;
-		dm_draw_point_2d(dmp, fx, fy * dm_get_aspect(dmp));
+		DM_DRAW_POINT_2D(dmp, fx, fy * dmp->dm_aspect);
 	    }
 	}
     }

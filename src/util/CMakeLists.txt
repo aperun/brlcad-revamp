@@ -5,6 +5,7 @@ set(UTIL_INCLUDE_DIRS
   ${FB_INCLUDE_DIRS}
   ${RT_INCLUDE_DIRS}
   ${SYSV_INCLUDE_DIRS}
+  ${ORLE_INCLUDE_DIRS}
   ${TCLCAD_INCLUDE_DIRS}
   ${WDB_INCLUDE_DIRS}
   )
@@ -18,7 +19,8 @@ set(UTIL_LOCAL_INCLUDE_DIRS
   )
 
 set(UTIL_ALL_INCLUDE_DIRS ${UTIL_INCLUDE_DIRS} ${UTIL_LOCAL_INCLUDE_DIRS})
-BRLCAD_INCLUDE_DIRS(UTIL_ALL_INCLUDE_DIRS)
+BRLCAD_SORT_INCLUDE_DIRS(UTIL_ALL_INCLUDE_DIRS)
+include_directories(${UTIL_ALL_INCLUDE_DIRS})
 
 if(MSVC)
   add_definitions(
@@ -26,6 +28,7 @@ if(MSVC)
     -DIF_WGL
     )
 endif(MSVC)
+
 
 if(BRLCAD_ENABLE_X11)
   BRLCAD_ADDEXEC(plot3-X plot3-X.c "libdm;libbu")
@@ -79,34 +82,14 @@ BRLCAD_ADDEXEC(double-asc double-asc.c "libfb;libbu")
 BRLCAD_ADDEXEC(dpix-pix dpix-pix.c libbu)
 BRLCAD_ADDEXEC(dsp_add dsp_add.c libbu)
 
-#=====================================================
-# TCLAP testing
-#=====================================================
 # a test copy for tclap/auto-man-page proof of concept:
-BRLCAD_ADDEXEC(dsp_add_t dsp_add_t.cpp libbu NO_INSTALL)
+BRLCAD_ADDEXEC(dsp_add_t dsp_add_t.cpp libbu NOINSTALL)
 
-# tmp def for testing C wrapper for TCLAP
-BRLCAD_ADDEXEC(dsp_add4 "dsp_add4.c;bu_arg_parse.cpp" libbu NO_INSTALL)
-
-# a test file for the entire TCLAP wrapper interface
-#BRLCAD_ADDEXEC(test_bu_arg_parse "test_bu_arg_parse.c;bu_arg_parse.cpp" libbu NO_INSTALL)
-# ignore it for now
-CMAKEFILES(test_bu_arg_parse.c)
-
-# LIBBU advance option handling test
-BRLCAD_ADDEXEC(dsp_add_opt dsp_add_opt.c libbu NO_INSTALL)
-
-# a new admin file
-BRLCAD_ADDEXEC(admin-db "admin-db.cpp;bu_arg_parse.cpp" "libbu;librt" NO_INSTALL)
-
-# tmp header to stand-in for bu.h (ignore it)
-CMAKEFILES(bu_arg_parse.h)
-# permanent private header for TCLAP customizations (ignore it)
-CMAKEFILES(bu_arg_parse_private.h)
-#=====================================================
-# end TCLAP testing
-#=====================================================
-
+# Not fixing these for Windows - they're on their way out (deprecated)
+if(NOT WIN32)
+  BRLCAD_ADDEXEC(dunncolor "dunncolor.c;dunncomm.c" libbu)
+  BRLCAD_ADDEXEC(dunnsnap "dunnsnap.c;dunncomm.c" "libfb;libbu")
+endif(NOT WIN32)
 BRLCAD_ADDEXEC(fix_polysolids fix_polysolids.c "librt;libbu")
 BRLCAD_ADDEXEC(gencolor gencolor.c libbu)
 BRLCAD_ADDEXEC(hex hex.c libbu)
@@ -115,9 +98,11 @@ BRLCAD_ADDEXEC(loop loop.c libbu)
 BRLCAD_ADDEXEC(lowp lowp.c libbu)
 BRLCAD_ADDEXEC(mac-pix mac-pix.c libbu)
 BRLCAD_ADDEXEC(random random.c "libbn;libbu")
+BRLCAD_ADDEXEC(orle-pix orle-pix.c "libfb;liborle;libbu")
 BRLCAD_ADDEXEC(pix-alias pix-alias.c libbu)
 BRLCAD_ADDEXEC(pix-bw pix-bw.c "libbu;libicv")
 BRLCAD_ADDEXEC(pix-bw3 pix-bw3.c libbu)
+BRLCAD_ADDEXEC(pix-orle pix-orle.c "libfb;liborle;libbu")
 BRLCAD_ADDEXEC(pix-png pix-png.c "libfb;libbu;${PNG_LIBRARY}")
 BRLCAD_ADDEXEC(pix-ppm pix-ppm.c "libfb;libbu")
 BRLCAD_ADDEXEC(pix-ps pix-ps.c libbu)
@@ -134,7 +119,6 @@ BRLCAD_ADDEXEC(pixbustup pixbustup.c libbu)
 BRLCAD_ADDEXEC(pixclump pixclump.c "libbn;libbu")
 BRLCAD_ADDEXEC(pixcolors pixcolors.c libbu)
 BRLCAD_ADDEXEC(pixcount pixcount.c libbu)
-BRLCAD_ADDEXEC(pixcrop pixcrop.c libbu)
 BRLCAD_ADDEXEC(pixcut pixcut.c "libfb;libbu")
 BRLCAD_ADDEXEC(pixdiff pixdiff.c libbu)
 BRLCAD_ADDEXEC(pixdsplit pixdsplit.c libbu)

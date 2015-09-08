@@ -5,25 +5,16 @@
 # environments
 set(CMAKE_C_FLAGS "")
 
-set(MGED_INCLUDE_DIRS ${MGED_INCLUDE_DIRS}
+include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${TCL_INCLUDE_DIRS}
   )
-BRLCAD_INCLUDE_DIRS(MGED_INCLUDE_DIRS)
 
 YACC_TARGET(MGEDPointsParser points_parse.y
   ${CMAKE_CURRENT_BINARY_DIR}/points_parse.c)
-
-if(ENABLE_POSIX_COMPLIANCE)
-  # need something special here for fileno:
-  LEX_TARGET(MGEDPointsScanner points_scan.l
-    ${CMAKE_CURRENT_BINARY_DIR}/points_scan.c COMPILE_FLAGS "-l -D_POSIX_C_SOURCE=200112L")
-else()
-  LEX_TARGET(MGEDPointsScanner points_scan.l
-    ${CMAKE_CURRENT_BINARY_DIR}/points_scan.c COMPILE_FLAGS "-l")
-endif()
-
+LEX_TARGET(MGEDPointsScanner points_scan.l
+  ${CMAKE_CURRENT_BINARY_DIR}/points_scan.c COMPILE_FLAGS "-l")
 ADD_LEX_YACC_DEPENDENCY(MGEDPointsScanner MGEDPointsParser)
 
 set(MGED_POINTS_SRCS

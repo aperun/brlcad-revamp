@@ -1,7 +1,7 @@
 /*                      I F _ S T A C K . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -17,7 +17,7 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup libfb */
+/** @addtogroup if */
 /** @{ */
 /** @file if_stack.c
  *
@@ -32,28 +32,25 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "bu/log.h"
-#include "bu/str.h"
-#include "fb_private.h"
 #include "fb.h"
 
 
 /* List of interface struct pointers, one per dev */
 #define MAXIF 32
 struct stkinfo {
-    fb *if_list[MAXIF];
+    FBIO *if_list[MAXIF];
 };
 #define SI(ptr) ((struct stkinfo *)((ptr)->u1.p))
 #define SIL(ptr) ((ptr)->u1.p)		/* left hand side version */
 
 HIDDEN int
-stk_open(fb *ifp, const char *file, int width, int height)
+stk_open(FBIO *ifp, const char *file, int width, int height)
 {
     int i;
     const char *cp;
     char devbuf[80];
 
-    FB_CK_FB(ifp);
+    FB_CK_FBIO(ifp);
 
     /* Check for /dev/stack */
     if (bu_strncmp(file, ifp->if_name, strlen("/dev/stack")) != 0) {
@@ -82,7 +79,7 @@ stk_open(fb *ifp, const char *file, int width, int height)
     i = 0;
     while (i < MAXIF && *cp != '\0') {
 	register char *dp;
-	register fb *fbp;
+	register FBIO *fbp;
 
 	while (*cp != '\0' && (*cp == ' ' || *cp == '\t' || *cp == ';'))
 	    cp++;	/* skip blanks and separators */
@@ -92,8 +89,8 @@ stk_open(fb *ifp, const char *file, int width, int height)
 	while (*cp != '\0' && *cp != ';')
 	    *dp++ = *cp++;
 	*dp = '\0';
-	if ((fbp = fb_open(devbuf, width, height)) != FB_NULL) {
-	    FB_CK_FB(fbp);
+	if ((fbp = fb_open(devbuf, width, height)) != FBIO_NULL) {
+	    FB_CK_FBIO(fbp);
 	    /* Track the minimum of all the actual sizes */
 	    if (fbp->if_width < ifp->if_width)
 		ifp->if_width = fbp->if_width;
@@ -112,53 +109,15 @@ stk_open(fb *ifp, const char *file, int width, int height)
 	return -1;
 }
 
-HIDDEN struct fb_platform_specific *
-stk_get_fbps(uint32_t UNUSED(magic))
-{
-        return NULL;
-}
-
-
-HIDDEN void
-stk_put_fbps(struct fb_platform_specific *UNUSED(fbps))
-{
-        return;
-}
 
 HIDDEN int
-stk_open_existing(fb *UNUSED(ifp), int UNUSED(width), int UNUSED(height), struct fb_platform_specific *UNUSED(fb_p))
+stk_close(FBIO *ifp)
 {
-        return 0;
-}
+    register FBIO **ip = SI(ifp)->if_list;
 
-
-HIDDEN int
-stk_close_existing(fb *UNUSED(ifp))
-{
-        return 0;
-}
-
-HIDDEN int
-stk_configure_window(fb *UNUSED(ifp), int UNUSED(width), int UNUSED(height))
-{
-        return 0;
-}
-
-HIDDEN int
-stk_refresh(fb *UNUSED(ifp), int UNUSED(x), int UNUSED(y), int UNUSED(w), int UNUSED(h))
-{
-        return 0;
-}
-
-
-HIDDEN int
-stk_close(fb *ifp)
-{
-    register fb **ip = SI(ifp)->if_list;
-
-    FB_CK_FB(ifp);
-    while (*ip != (fb *)NULL) {
-	FB_CK_FB((*ip));
+    FB_CK_FBIO(ifp);
+    while (*ip != (FBIO *)NULL) {
+	FB_CK_FBIO((*ip));
 	fb_close((*ip));
 	ip++;
     }
@@ -168,11 +127,11 @@ stk_close(fb *ifp)
 
 
 HIDDEN int
-stk_clear(fb *ifp, unsigned char *pp)
+stk_clear(FBIO *ifp, unsigned char *pp)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    while (*ip != (fb *)NULL) {
+    while (*ip != (FBIO *)NULL) {
 	fb_clear((*ip), pp);
 	ip++;
     }
@@ -182,11 +141,11 @@ stk_clear(fb *ifp, unsigned char *pp)
 
 
 HIDDEN ssize_t
-stk_read(fb *ifp, int x, int y, unsigned char *pixelp, size_t count)
+stk_read(FBIO *ifp, int x, int y, unsigned char *pixelp, size_t count)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    if (*ip != (fb *)NULL) {
+    if (*ip != (FBIO *)NULL) {
 	fb_read((*ip), x, y, pixelp, count);
     }
 
@@ -195,11 +154,11 @@ stk_read(fb *ifp, int x, int y, unsigned char *pixelp, size_t count)
 
 
 HIDDEN ssize_t
-stk_write(fb *ifp, int x, int y, const unsigned char *pixelp, size_t count)
+stk_write(FBIO *ifp, int x, int y, const unsigned char *pixelp, size_t count)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    while (*ip != (fb *)NULL) {
+    while (*ip != (FBIO *)NULL) {
 	fb_write((*ip), x, y, pixelp, count);
 	ip++;
     }
@@ -209,14 +168,16 @@ stk_write(fb *ifp, int x, int y, const unsigned char *pixelp, size_t count)
 
 
 /*
+ * S T K _ R E A D R E C T
+ *
  * Read only from the first source on the stack.
  */
 HIDDEN int
-stk_readrect(fb *ifp, int xmin, int ymin, int width, int height, unsigned char *pp)
+stk_readrect(FBIO *ifp, int xmin, int ymin, int width, int height, unsigned char *pp)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    if (*ip != (fb *)NULL) {
+    if (*ip != (FBIO *)NULL) {
 	(void)fb_readrect((*ip), xmin, ymin, width, height, pp);
     }
 
@@ -225,14 +186,16 @@ stk_readrect(fb *ifp, int xmin, int ymin, int width, int height, unsigned char *
 
 
 /*
+ * S T K _ W R I T E R E C T
+ *
  * Write to all destinations on the stack
  */
 HIDDEN int
-stk_writerect(fb *ifp, int xmin, int ymin, int width, int height, const unsigned char *pp)
+stk_writerect(FBIO *ifp, int xmin, int ymin, int width, int height, const unsigned char *pp)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    while (*ip != (fb *)NULL) {
+    while (*ip != (FBIO *)NULL) {
 	(void)fb_writerect((*ip), xmin, ymin, width, height, pp);
 	ip++;
     }
@@ -242,14 +205,16 @@ stk_writerect(fb *ifp, int xmin, int ymin, int width, int height, const unsigned
 
 
 /*
+ * S T K _ B W R E A D R E C T
+ *
  * Read only from the first source on the stack.
  */
 HIDDEN int
-stk_bwreadrect(fb *ifp, int xmin, int ymin, int width, int height, unsigned char *pp)
+stk_bwreadrect(FBIO *ifp, int xmin, int ymin, int width, int height, unsigned char *pp)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    if (*ip != (fb *)NULL) {
+    if (*ip != (FBIO *)NULL) {
 	(void)fb_bwreadrect((*ip), xmin, ymin, width, height, pp);
     }
 
@@ -258,14 +223,16 @@ stk_bwreadrect(fb *ifp, int xmin, int ymin, int width, int height, unsigned char
 
 
 /*
+ * S T K _ B W W R I T E R E C T
+ *
  * Write to all destinations on the stack
  */
 HIDDEN int
-stk_bwwriterect(fb *ifp, int xmin, int ymin, int width, int height, const unsigned char *pp)
+stk_bwwriterect(FBIO *ifp, int xmin, int ymin, int width, int height, const unsigned char *pp)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    while (*ip != (fb *)NULL) {
+    while (*ip != (FBIO *)NULL) {
 	(void)fb_bwwriterect((*ip), xmin, ymin, width, height, pp);
 	ip++;
     }
@@ -275,11 +242,11 @@ stk_bwwriterect(fb *ifp, int xmin, int ymin, int width, int height, const unsign
 
 
 HIDDEN int
-stk_rmap(fb *ifp, ColorMap *cmp)
+stk_rmap(FBIO *ifp, ColorMap *cmp)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    if (*ip != (fb *)NULL) {
+    if (*ip != (FBIO *)NULL) {
 	fb_rmap((*ip), cmp);
     }
 
@@ -288,11 +255,11 @@ stk_rmap(fb *ifp, ColorMap *cmp)
 
 
 HIDDEN int
-stk_wmap(fb *ifp, const ColorMap *cmp)
+stk_wmap(FBIO *ifp, const ColorMap *cmp)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    while (*ip != (fb *)NULL) {
+    while (*ip != (FBIO *)NULL) {
 	fb_wmap((*ip), cmp);
 	ip++;
     }
@@ -302,11 +269,11 @@ stk_wmap(fb *ifp, const ColorMap *cmp)
 
 
 HIDDEN int
-stk_view(fb *ifp, int xcenter, int ycenter, int xzoom, int yzoom)
+stk_view(FBIO *ifp, int xcenter, int ycenter, int xzoom, int yzoom)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    while (*ip != (fb *)NULL) {
+    while (*ip != (FBIO *)NULL) {
 	fb_view((*ip), xcenter, ycenter, xzoom, yzoom);
 	ip++;
     }
@@ -316,11 +283,11 @@ stk_view(fb *ifp, int xcenter, int ycenter, int xzoom, int yzoom)
 
 
 HIDDEN int
-stk_getview(fb *ifp, int *xcenter, int *ycenter, int *xzoom, int *yzoom)
+stk_getview(FBIO *ifp, int *xcenter, int *ycenter, int *xzoom, int *yzoom)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    if (*ip != (fb *)NULL) {
+    if (*ip != (FBIO *)NULL) {
 	fb_getview((*ip), xcenter, ycenter, xzoom, yzoom);
     }
 
@@ -329,11 +296,11 @@ stk_getview(fb *ifp, int *xcenter, int *ycenter, int *xzoom, int *yzoom)
 
 
 HIDDEN int
-stk_setcursor(fb *ifp, const unsigned char *bits, int xbits, int ybits, int xorig, int yorig)
+stk_setcursor(FBIO *ifp, const unsigned char *bits, int xbits, int ybits, int xorig, int yorig)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    while (*ip != (fb *)NULL) {
+    while (*ip != (FBIO *)NULL) {
 	fb_setcursor((*ip), bits, xbits, ybits, xorig, yorig);
 	ip++;
     }
@@ -343,11 +310,11 @@ stk_setcursor(fb *ifp, const unsigned char *bits, int xbits, int ybits, int xori
 
 
 HIDDEN int
-stk_cursor(fb *ifp, int mode, int x, int y)
+stk_cursor(FBIO *ifp, int mode, int x, int y)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    while (*ip != (fb *)NULL) {
+    while (*ip != (FBIO *)NULL) {
 	fb_cursor((*ip), mode, x, y);
 	ip++;
     }
@@ -357,11 +324,11 @@ stk_cursor(fb *ifp, int mode, int x, int y)
 
 
 HIDDEN int
-stk_getcursor(fb *ifp, int *mode, int *x, int *y)
+stk_getcursor(FBIO *ifp, int *mode, int *x, int *y)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    if (*ip != (fb *)NULL) {
+    if (*ip != (FBIO *)NULL) {
 	fb_getcursor((*ip), mode, x, y);
     }
 
@@ -370,11 +337,11 @@ stk_getcursor(fb *ifp, int *mode, int *x, int *y)
 
 
 HIDDEN int
-stk_poll(fb *ifp)
+stk_poll(FBIO *ifp)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    while (*ip != (fb *)NULL) {
+    while (*ip != (FBIO *)NULL) {
 	fb_poll((*ip));
 	ip++;
     }
@@ -384,11 +351,11 @@ stk_poll(fb *ifp)
 
 
 HIDDEN int
-stk_flush(fb *ifp)
+stk_flush(FBIO *ifp)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    while (*ip != (fb *)NULL) {
+    while (*ip != (FBIO *)NULL) {
 	fb_flush((*ip));
 	ip++;
     }
@@ -398,11 +365,11 @@ stk_flush(fb *ifp)
 
 
 HIDDEN int
-stk_free(fb *ifp)
+stk_free(FBIO *ifp)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
 
-    while (*ip != (fb *)NULL) {
+    while (*ip != (FBIO *)NULL) {
 	fb_free((*ip));
 	ip++;
     }
@@ -412,16 +379,16 @@ stk_free(fb *ifp)
 
 
 HIDDEN int
-stk_help(fb *ifp)
+stk_help(FBIO *ifp)
 {
-    register fb **ip = SI(ifp)->if_list;
+    register FBIO **ip = SI(ifp)->if_list;
     int i;
 
     fb_log("Device: /dev/stack\n");
     fb_log("Usage: /dev/stack device_one; device_two; ...\n");
 
     i = 0;
-    while (*ip != (fb *)NULL) {
+    while (*ip != (FBIO *)NULL) {
 	fb_log("=== Current stack device #%d ===\n", i++);
 	fb_help((*ip));
 	ip++;
@@ -432,14 +399,9 @@ stk_help(fb *ifp)
 
 
 /* This is the ONLY thing that we normally "export" */
-fb stk_interface =  {
+FBIO stk_interface =  {
     0,
-    FB_STK_MAGIC,
     stk_open,		/* device_open */
-    stk_open_existing,	/* device_open */
-    stk_close_existing,
-    stk_get_fbps,
-    stk_put_fbps,
     stk_close,		/* device_close */
     stk_clear,		/* device_clear */
     stk_read,		/* buffer_read */
@@ -455,8 +417,6 @@ fb stk_interface =  {
     stk_writerect,		/* write rectangle */
     stk_bwreadrect,		/* read bw rectangle */
     stk_bwwriterect,	/* write bw rectangle */
-    stk_configure_window,
-    stk_refresh,
     stk_poll,		/* handle events */
     stk_flush,		/* flush output */
     stk_free,		/* free resources */
@@ -480,7 +440,6 @@ fb stk_interface =  {
     0L,			/* page_curpos */
     0L,			/* page_pixels */
     0,			/* debug */
-    0,			/* refresh rate */
     {0}, /* u1 */
     {0}, /* u2 */
     {0}, /* u3 */

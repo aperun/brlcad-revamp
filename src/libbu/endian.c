@@ -1,7 +1,7 @@
 /*                        E N D I A N . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -20,11 +20,11 @@
 
 #include "common.h"
 
-#include "bu/endian.h"
+#include "bu.h"
 
 
-bu_endian_t
-bu_byteorder(void)
+inline bu_endian_t
+bu_byteorder()
 {
     const union bob {
 	unsigned long i;

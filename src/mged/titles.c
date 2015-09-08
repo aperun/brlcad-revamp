@@ -1,7 +1,7 @@
 /*                        T I T L E S . C
  * BRL-CAD
  *
- * Copyright (c) 1985-2014 United States Government as represented by
+ * Copyright (c) 1985-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -25,9 +25,10 @@
 
 #include <math.h>
 #include <string.h>
+#include "bio.h"
 
+#include "bu.h"
 #include "vmath.h"
-#include "bu/units.h"
 #include "bn.h"
 #include "ged.h"
 
@@ -58,6 +59,8 @@ extern mat_t perspective_mat;  /* defined in dozoom.c */
 extern struct rt_db_internal es_int;
 
 /*
+ * C R E A T E _ T E X T _ O V E R L A Y
+ *
  * Prepare the numerical display of the currently edited solid/object.
  */
 void
@@ -70,7 +73,7 @@ create_text_overlay(struct bu_vls *vp)
     /*
      * Set up for character output.  For the best generality, we
      * don't assume that the display can process a CRLF sequence,
-     * so each line is written with a separate call to dm_draw_string_2d().
+     * so each line is written with a separate call to DM_DRAW_STRING_2D().
      */
 
     /* print solid info at top of screen
@@ -164,12 +167,14 @@ create_text_overlay(struct bu_vls *vp)
 
 
 /*
+ * S C R E E N _ V L S
+ *
  * Output a vls string to the display manager,
  * as a text overlay on the graphics area (ugh).
  *
  * Set up for character output.  For the best generality, we
  * don't assume that the display can process a CRLF sequence,
- * so each line is written with a separate call to dm_draw_string_2d().
+ * so each line is written with a separate call to DM_DRAW_STRING_2D().
  */
 void
 screen_vls(
@@ -184,7 +189,7 @@ screen_vls(
     BU_CK_VLS(vp);
     y = ybase;
 
-    dm_set_fg(dmp,
+    DM_SET_FGCOLOR(dmp,
 		   color_scheme->cs_edit_info[0],
 		   color_scheme->cs_edit_info[1],
 		   color_scheme->cs_edit_info[2], 1, 1.0);
@@ -195,7 +200,7 @@ screen_vls(
 
 	*end = '\0';
 
-	dm_draw_string_2d(dmp, start,
+	DM_DRAW_STRING_2D(dmp, start,
 			  GED2PM1(xbase), GED2PM1(y), 0, 0);
 	start = end+1;
 	y += TEXT0_DY;
@@ -204,6 +209,8 @@ screen_vls(
 
 
 /*
+ * D O T I T L E S
+ *
  * Produce titles, etc., on the screen.
  * NOTE that this routine depends on being called AFTER dozoom();
  */
@@ -251,11 +258,9 @@ dotitles(struct bu_vls *overlay_vls)
 	RT_CK_FULL_PATH(dbfp);
 
 	for (i = 0; i < (size_t)ipathpos; i++) {
-	    if ((size_t)i < (size_t)dbfp->fp_len) {
-		dp = DB_FULL_PATH_GET(dbfp, i);
-		if (dp && dp->d_namep) {
-		    bu_vls_printf(&path_lhs, "/%s", dp->d_namep);
-		}
+	    dp = DB_FULL_PATH_GET(dbfp, i);
+	    if (dp && dp->d_namep) {
+		bu_vls_printf(&path_lhs, "/%s", dp->d_namep);
 	    }
 	}
 	for (; i < dbfp->fp_len; i++) {
@@ -332,7 +337,7 @@ dotitles(struct bu_vls *overlay_vls)
     Tcl_SetVar(INTERP, bu_vls_addr(&curr_dm_list->dml_ang_name),
 	       bu_vls_addr(&vls), TCL_GLOBAL_ONLY);
 
-    dm_set_line_attr(dmp, mged_variables->mv_linewidth, 0);
+    DM_SET_LINE_ATTR(dmp, mged_variables->mv_linewidth, 0);
 
     /* Label the vertices of the edited solid */
     if (es_edflag >= 0 || (STATE == ST_O_EDIT && illump->s_Eflag == 0)) {
@@ -352,19 +357,19 @@ dotitles(struct bu_vls *overlay_vls)
 
 	label_edited_solid(&num_lines, lines,  pl, 8+1, xform, &es_int);
 
-	dm_set_fg(dmp,
+	DM_SET_FGCOLOR(dmp,
 		       color_scheme->cs_geo_label[0],
 		       color_scheme->cs_geo_label[1],
 		       color_scheme->cs_geo_label[2], 1, 1.0);
 	for (i=0; i<(size_t)num_lines; i++)
-	    dm_draw_line_2d(dmp,
+	    DM_DRAW_LINE_2D(dmp,
 			    GED2PM1(((int)(lines[i*2][X]*GED_MAX))),
-			    GED2PM1(((int)(lines[i*2][Y]*GED_MAX)) * dm_get_aspect(dmp)),
+			    GED2PM1(((int)(lines[i*2][Y]*GED_MAX)) * dmp->dm_aspect),
 			    GED2PM1(((int)(lines[i*2+1][X]*GED_MAX))),
-			    GED2PM1(((int)(lines[i*2+1][Y]*GED_MAX)) * dm_get_aspect(dmp)));
+			    GED2PM1(((int)(lines[i*2+1][Y]*GED_MAX)) * dmp->dm_aspect));
 	for (i=0; i<8+1; i++) {
 	    if (pl[i].str[0] == '\0') break;
-	    dm_draw_string_2d(dmp, pl[i].str,
+	    DM_DRAW_STRING_2D(dmp, pl[i].str,
 			      GED2PM1(((int)(pl[i].pt[X]*GED_MAX))+15),
 			      GED2PM1(((int)(pl[i].pt[Y]*GED_MAX))+15), 0, 1);
 	}
@@ -372,26 +377,26 @@ dotitles(struct bu_vls *overlay_vls)
 
     if (mged_variables->mv_faceplate) {
 	/* Line across the bottom, above two bottom status lines */
-	dm_set_fg(dmp,
+	DM_SET_FGCOLOR(dmp,
 		       color_scheme->cs_other_line[0],
 		       color_scheme->cs_other_line[1],
 		       color_scheme->cs_other_line[2], 1, 1.0);
-	dm_draw_line_2d(dmp,
+	DM_DRAW_LINE_2D(dmp,
 			GED2PM1(XMIN), GED2PM1(TITLE_YBASE-TEXT1_DY),
 			GED2PM1(XMAX), GED2PM1(TITLE_YBASE-TEXT1_DY));
 
 	if (mged_variables->mv_orig_gui) {
 	    /* Enclose window in decorative box.  Mostly for alignment. */
-	    dm_draw_line_2d(dmp,
+	    DM_DRAW_LINE_2D(dmp,
 			    GED2PM1(XMIN), GED2PM1(YMIN),
 			    GED2PM1(XMAX), GED2PM1(YMIN));
-	    dm_draw_line_2d(dmp,
+	    DM_DRAW_LINE_2D(dmp,
 			    GED2PM1(XMAX), GED2PM1(YMIN),
 			    GED2PM1(XMAX), GED2PM1(YMAX));
-	    dm_draw_line_2d(dmp,
+	    DM_DRAW_LINE_2D(dmp,
 			    GED2PM1(XMAX), GED2PM1(YMAX),
 			    GED2PM1(XMIN), GED2PM1(YMAX));
-	    dm_draw_line_2d(dmp,
+	    DM_DRAW_LINE_2D(dmp,
 			    GED2PM1(XMIN), GED2PM1(YMAX),
 			    GED2PM1(XMIN), GED2PM1(YMIN));
 
@@ -401,11 +406,11 @@ dotitles(struct bu_vls *overlay_vls)
 	    x = MENUX;
 
 	    /* Display state and local unit in upper left corner, boxed */
-	    dm_set_fg(dmp,
+	    DM_SET_FGCOLOR(dmp,
 			   color_scheme->cs_state_text1[0],
 			   color_scheme->cs_state_text1[1],
 			   color_scheme->cs_state_text1[2], 1, 1.0);
-	    dm_draw_string_2d(dmp, state_str[STATE],
+	    DM_DRAW_STRING_2D(dmp, state_str[STATE],
 			      GED2PM1(MENUX), GED2PM1(MENUY - MENU_DY), 1, 0);
 	} else {
 	    scroll_ybot = SCROLLY;
@@ -420,19 +425,19 @@ dotitles(struct bu_vls *overlay_vls)
 	    (STATE==ST_O_PATH || STATE==ST_O_PICK || STATE==ST_S_PICK)) {
 	    for (i=0; i < illump->s_fullpath.fp_len; i++) {
 		if (i == (size_t)ipathpos  &&  STATE == ST_O_PATH) {
-		    dm_set_fg(dmp,
+		    DM_SET_FGCOLOR(dmp,
 				   color_scheme->cs_state_text1[0],
 				   color_scheme->cs_state_text1[1],
 				   color_scheme->cs_state_text1[2], 1, 1.0);
-		    dm_draw_string_2d(dmp, "[MATRIX]",
+		    DM_DRAW_STRING_2D(dmp, "[MATRIX]",
 				      GED2PM1(x), GED2PM1(y), 0, 0);
 		    y += MENU_DY;
 		}
-		dm_set_fg(dmp,
+		DM_SET_FGCOLOR(dmp,
 			       color_scheme->cs_state_text2[0],
 			       color_scheme->cs_state_text2[1],
 			       color_scheme->cs_state_text2[2], 1, 1.0);
-		dm_draw_string_2d(dmp,
+		DM_DRAW_STRING_2D(dmp,
 				  DB_FULL_PATH_GET(&illump->s_fullpath, i)->d_namep,
 				  GED2PM1(x), GED2PM1(y), 0, 0);
 		y += MENU_DY;
@@ -440,11 +445,11 @@ dotitles(struct bu_vls *overlay_vls)
 	}
 
 	if (mged_variables->mv_orig_gui) {
-	    dm_set_fg(dmp,
+	    DM_SET_FGCOLOR(dmp,
 			   color_scheme->cs_other_line[0],
 			   color_scheme->cs_other_line[1],
 			   color_scheme->cs_other_line[2], 1, 1.0);
-	    dm_draw_line_2d(dmp,
+	    DM_DRAW_LINE_2D(dmp,
 			    GED2PM1(MENUXLIM), GED2PM1(y),
 			    GED2PM1(MENUXLIM), GED2PM1(YMAX));	/* vert. */
 	    /*
@@ -458,26 +463,26 @@ dotitles(struct bu_vls *overlay_vls)
 		MAT4X3PNT(temp, view_state->vs_model2objview, es_keypoint);
 		xloc = (int)(temp[X]*GED_MAX);
 		yloc = (int)(temp[Y]*GED_MAX);
-		dm_set_fg(dmp,
+		DM_SET_FGCOLOR(dmp,
 			       color_scheme->cs_edit_info[0],
 			       color_scheme->cs_edit_info[1],
 			       color_scheme->cs_edit_info[2], 1, 1.0);
-		dm_draw_line_2d(dmp,
+		DM_DRAW_LINE_2D(dmp,
 				GED2PM1(xloc-TEXT0_DY), GED2PM1(yloc+TEXT0_DY),
 				GED2PM1(xloc+TEXT0_DY), GED2PM1(yloc-TEXT0_DY));
-		dm_draw_line_2d(dmp,
+		DM_DRAW_LINE_2D(dmp,
 				GED2PM1(xloc-TEXT0_DY), GED2PM1(yloc-TEXT0_DY),
 				GED2PM1(xloc+TEXT0_DY), GED2PM1(yloc+TEXT0_DY));
-		dm_draw_line_2d(dmp,
+		DM_DRAW_LINE_2D(dmp,
 				GED2PM1(xloc+TEXT0_DY), GED2PM1(yloc+TEXT0_DY),
 				GED2PM1(xloc-TEXT0_DY), GED2PM1(yloc+TEXT0_DY));
-		dm_draw_line_2d(dmp,
+		DM_DRAW_LINE_2D(dmp,
 				GED2PM1(xloc+TEXT0_DY), GED2PM1(yloc-TEXT0_DY),
 				GED2PM1(xloc-TEXT0_DY), GED2PM1(yloc-TEXT0_DY));
-		dm_draw_line_2d(dmp,
+		DM_DRAW_LINE_2D(dmp,
 				GED2PM1(xloc+TEXT0_DY), GED2PM1(yloc+TEXT0_DY),
 				GED2PM1(xloc+TEXT0_DY), GED2PM1(yloc-TEXT0_DY));
-		dm_draw_line_2d(dmp,
+		DM_DRAW_LINE_2D(dmp,
 				GED2PM1(xloc-TEXT0_DY), GED2PM1(yloc+TEXT0_DY),
 				GED2PM1(xloc-TEXT0_DY), GED2PM1(yloc-TEXT0_DY));
 	    }
@@ -502,11 +507,11 @@ dotitles(struct bu_vls *overlay_vls)
 		      size, bu_units_string(dbip->dbi_local2base));
 	bu_vls_printf(&vls, "az=%3.2f el=%3.2f tw=%3.2f ang=(%s, %s, %s)", V3ARGS(view_state->vs_gvp->gv_aet),
 		      ang_x, ang_y, ang_z);
-	dm_set_fg(dmp,
+	DM_SET_FGCOLOR(dmp,
 		       color_scheme->cs_status_text1[0],
 		       color_scheme->cs_status_text1[1],
 		       color_scheme->cs_status_text1[2], 1, 1.0);
-	dm_draw_string_2d(dmp, bu_vls_addr(&vls),
+	DM_DRAW_STRING_2D(dmp, bu_vls_addr(&vls),
 			  GED2PM1(TITLE_XBASE), GED2PM1(TITLE_YBASE), 1, 0);
     } /* if faceplate !0 */
 
@@ -535,11 +540,11 @@ dotitles(struct bu_vls *overlay_vls)
 		      adc_state->adc_pos_grid[X] * f, adc_state->adc_pos_grid[Y] * f,
 		      adc_state->adc_pos_view[X] * f, adc_state->adc_pos_view[Y] * f);
 	if (mged_variables->mv_faceplate) {
-	    dm_set_fg(dmp,
+	    DM_SET_FGCOLOR(dmp,
 			   color_scheme->cs_status_text2[0],
 			   color_scheme->cs_status_text2[1],
 			   color_scheme->cs_status_text2[2], 1, 1.0);
-	    dm_draw_string_2d(dmp, bu_vls_addr(&vls),
+	    DM_DRAW_STRING_2D(dmp, bu_vls_addr(&vls),
 			      GED2PM1(TITLE_XBASE), GED2PM1(TITLE_YBASE + TEXT1_DY), 1, 0);
 	}
 	Tcl_SetVar(INTERP, bu_vls_addr(&curr_dm_list->dml_adc_name),
@@ -560,11 +565,11 @@ dotitles(struct bu_vls *overlay_vls)
 		      es_keypoint[Y] * base2local,
 		      es_keypoint[Z] * base2local);
 	if (mged_variables->mv_faceplate && ss_line_not_drawn) {
-	    dm_set_fg(dmp,
+	    DM_SET_FGCOLOR(dmp,
 			   color_scheme->cs_status_text2[0],
 			   color_scheme->cs_status_text2[1],
 			   color_scheme->cs_status_text2[2], 1, 1.0);
-	    dm_draw_string_2d(dmp, bu_vls_addr(&kp_vls),
+	    DM_DRAW_STRING_2D(dmp, bu_vls_addr(&kp_vls),
 			      GED2PM1(TITLE_XBASE), GED2PM1(TITLE_YBASE + TEXT1_DY), 1, 0);
 	    ss_line_not_drawn = 0;
 	}
@@ -593,11 +598,11 @@ dotitles(struct bu_vls *overlay_vls)
 		bu_vls_printf(&vls, "/%s",
 			      DB_FULL_PATH_GET(&illump->s_fullpath, i)->d_namep);
 	    }
-	    dm_set_fg(dmp,
+	    DM_SET_FGCOLOR(dmp,
 			   color_scheme->cs_status_text2[0],
 			   color_scheme->cs_status_text2[1],
 			   color_scheme->cs_status_text2[2], 1, 1.0);
-	    dm_draw_string_2d(dmp, bu_vls_addr(&vls),
+	    DM_DRAW_STRING_2D(dmp, bu_vls_addr(&vls),
 			      GED2PM1(TITLE_XBASE), GED2PM1(TITLE_YBASE + TEXT1_DY), 1, 0);
 
 	    ss_line_not_drawn = 0;
@@ -607,11 +612,11 @@ dotitles(struct bu_vls *overlay_vls)
     bu_vls_trunc(&vls, 0);
     bu_vls_printf(&vls, "%.2f fps", 1/frametime);
     if (mged_variables->mv_faceplate && ss_line_not_drawn) {
-	dm_set_fg(dmp,
+	DM_SET_FGCOLOR(dmp,
 		       color_scheme->cs_status_text2[0],
 		       color_scheme->cs_status_text2[1],
 		       color_scheme->cs_status_text2[2], 1, 1.0);
-	dm_draw_string_2d(dmp, bu_vls_addr(&vls),
+	DM_DRAW_STRING_2D(dmp, bu_vls_addr(&vls),
 			  GED2PM1(TITLE_XBASE), GED2PM1(TITLE_YBASE + TEXT1_DY), 1, 0);
     }
     Tcl_SetVar(INTERP, bu_vls_addr(&curr_dm_list->dml_fps_name),

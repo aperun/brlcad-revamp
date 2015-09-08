@@ -78,8 +78,8 @@
  * HAVE_DIRECT_H, HAVE_DIR_H, HAVE_NDIR_H, HAVE_SYS_DIR_H and
  * HAVE_SYS_NDIR_H according to the files found.
  */
-#ifndef LIBBU_UCE_DIRENT_H
-#define LIBBU_UCE_DIRENT_H
+#ifndef DIRENT_H
+#define DIRENT_H
 #define DIRENT_H_INCLUDED
 
 /* find out platform */
@@ -149,7 +149,7 @@
 # include <sys/ndir.h>
 # define NAMLEN(dp) ((int)((dp)->d_namlen))
 
-#elif defined(HAVE_DIRECT_H) && !defined(_MSC_VER)
+#elif defined(HAVE_DIRECT_H)
 # include <direct.h>
 # define NAMLEN(dp) ((int)((dp)->d_namlen))
 
@@ -168,9 +168,6 @@
 #elif defined(MSDOS) || defined(WIN32)
 
   /* figure out type of underlying directory interface to be used */
-# if defined(HAVE_DIRECT_H)
-# include <direct.h>
-# endif
 # if defined(WIN32)
 #   define DIRENT_WIN32_INTERFACE
 # elif defined(MSDOS)
@@ -675,4 +672,4 @@ _setdirname (struct DIR *dirp) {
 #endif
 
 
-#endif /*LIBBU_UCE_DIRENT_H*/
+#endif /*DIRENT_H*/

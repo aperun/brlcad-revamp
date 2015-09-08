@@ -1,7 +1,7 @@
 /*                   P O I N T S _ S C A N . L
  * BRL-CAD
  *
- * Copyright (c) 2005-2014 United States Government as represented by
+ * Copyright (c) 2005-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -26,7 +26,7 @@
 /*                   P O I N T S _ S C A N . L
  * BRL-CAD
  *
- * Copyright (c) 2005-2014 United States Government as represented by
+ * Copyright (c) 2005-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -60,8 +60,7 @@
 #endif
 
 #include "vmath.h"
-#include "bu/log.h"
-#include "bu/str.h"
+#include "bu.h"
 
 /* increase token limits of at&t and mk2 lex */
 #undef YYLMAX

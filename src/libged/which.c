@@ -1,7 +1,7 @@
 /*                         W H I C H . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -26,8 +26,9 @@
 #include "common.h"
 
 #include <string.h>
+#include "bio.h"
 
-#include "bu/cmd.h"
+#include "cmd.h"
 
 #include "./ged_private.h"
 
@@ -176,9 +177,9 @@ ged_which(struct ged *gedp, int argc, const char *argv[])
 
 	while (BU_LIST_WHILE(inp, _ged_id_names, &itnp->headName.l)) {
 	    if (sflag)
-		bu_vls_printf(gedp->ged_result_str, " %s", bu_vls_addr(&inp->name));
+		bu_vls_printf(gedp->ged_result_str, " %V", &inp->name);
 	    else
-		bu_vls_printf(gedp->ged_result_str, "   %s\n", bu_vls_addr(&inp->name));
+		bu_vls_printf(gedp->ged_result_str, "   %V\n", &inp->name);
 
 	    BU_LIST_DEQUEUE(&inp->l);
 	    bu_vls_free(&inp->name);

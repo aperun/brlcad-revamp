@@ -1,7 +1,7 @@
 /*                          P I P E . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -34,7 +34,6 @@
 #include <string.h>
 #include "bio.h"
 
-#include "bu/getopt.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "wdb.h"
@@ -74,7 +73,7 @@ struct points
 };
 
 
-double radius, wall, pi, unit_conversion_factor;
+double radius, wall, pi, k;
 struct points *root;
 char name[16];
 float delta=10.0;		/* 10mm excess in ARB sizing for cutting tubes */
@@ -135,7 +134,7 @@ Readpoints(void)
 	ptr->next = NULL;
 	ptr->prev = prev;
 	prev = ptr;
-	VSET(ptr->p, unit_conversion_factor*x, unit_conversion_factor*y, unit_conversion_factor*z);
+	VSET(ptr->p, k*x, k*y, k*z);
 	ptr->tube[0] = '\0';
 	ptr->tubflu[0] = '\0';
 	ptr->elbow[0] = '\0';
@@ -614,11 +613,11 @@ Groups(void)
 int
 main(int argc, char **argv)
 {
-    int done = 0;
+    int done;
     char units[16], fname[80];
     int optc;
 
-    while ((optc = bu_getopt(argc, argv, "tsmnch?")) != -1) {
+    while ((optc = bu_getopt(argc, argv, "tsmnc")) != -1) {
 	/* Set joint type and cable option */
 	switch (optc) {
 	    case 't':
@@ -636,9 +635,11 @@ main(int argc, char **argv)
 	    case 'c':
 		cable = 1;
 		break;
-	    default:
+	    case '?':
+		fprintf(stderr, "Illegal option %c\n", optc);
 		Usage();
 		return 1;
+		break;
 
 	}
     }
@@ -648,15 +649,14 @@ main(int argc, char **argv)
 	Usage();
 	fprintf(stderr, "Options t, s, m, n are mutually exclusive\n");
 	return 1;
+    } else if ((torus + sphere + mitre + nothing) == 0) {
+	torus = 1;		/* default */
     }
 
     if ((argc - bu_optind) != 2) {
 	Usage();
 	return 1;
     }
-
-    if ((torus + sphere + mitre + nothing) == 0)
-	torus = 1;		/* default */
 
     bu_strlcpy(name, argv[bu_optind++], sizeof(name)); /* Base name for objects */
 
@@ -669,49 +669,42 @@ main(int argc, char **argv)
     }
 
     MAT_IDN(identity);	/* Identity matrix for all objects */
-    pi = M_PI;	/* PI */
+    pi = atan2(0.0, -1.0);	/* PI */
 
     printf("FLUID & PIPING V%d.%d 10 Mar 89\n\n", VERSION, RELEASE);
-    printf("Append %s to your target description using 'concat' in mged.\n", argv[bu_optind]);
+    printf("append %s to your target description using 'concat' in mged\n", argv[bu_optind]);
 
-#define MM_TO_CM 10.0
-#define MM_TO_M  1000.0
-#define MM_TO_IN 25.4
-#define MM_TO_FT 304.8
-
-    unit_conversion_factor = 0.0;
-    while (ZERO(unit_conversion_factor)) {
+    k = 0.0;
+    while (ZERO(k)) {
 	printf("UNITS? (ft, in, m, cm, default is millimeters) ");
 	bu_fgets(units, sizeof(units), stdin);
 	switch (units[0]) {
+
 	    case '\0':
-	    case '\n':
-	    case '\r':
-		unit_conversion_factor=1.0;
+		k = 1.0;
 		break;
 
 	    case 'f':
-		unit_conversion_factor=MM_TO_FT;
+		k = 12*25.4;
 		break;
 
 	    case 'i':
-		unit_conversion_factor=MM_TO_IN;
+		k=25.4;
 		break;
 
 	    case 'm':
-		if (units[1] != 'm')
-		    unit_conversion_factor=MM_TO_M;
-		else
-		    unit_conversion_factor=1.0;
+		if (units[1] == '\0') k=1000.0;
+		else k=1.0;
 		break;
 
 	    case 'c':
-		unit_conversion_factor=MM_TO_CM;
+		k=10.0;
 		break;
 
 	    default:
-		printf("\n%s is not a legal choice for units\n", units);
-		printf("Try again\n");
+		k=0.0;
+		printf("\n\t%s is not a legal choice for units\n", units);
+		printf("\tTry again\n");
 		break;
 	}
     }
@@ -726,8 +719,8 @@ main(int argc, char **argv)
 		done = 1;
 	    else {
 		printf(" *** bad input!\n\n");
-		printf("radius must be larger than wall thickness\n");
-		printf("Try again\n");
+		printf("\tradius must be larger than wall thickness\n");
+		printf("\tTry again\n");
 	    }
 	} else {
 	    printf("radius: ");
@@ -739,8 +732,8 @@ main(int argc, char **argv)
     if (radius < SMALL_FASTF)
 	radius = SMALL_FASTF;
 
-    radius=unit_conversion_factor*radius;
-    wall=unit_conversion_factor*wall;
+    radius=k*radius;
+    wall=k*wall;
 
     Readpoints();	/* Read data points */
 
@@ -777,7 +770,7 @@ void
 Usage(void)
 {
     fprintf(stderr, "Usage: pipe [-tsmnc] tag filename\n");
-    fprintf(stderr, "   where 'tag' is the name of the piping run and is used by mged in object names;\n");
+    fprintf(stderr, "   where 'tag' is the name of the piping run\n");
     fprintf(stderr, "   and 'filename' is the .g file (e.g., fuel.g)\n");
     fprintf(stderr, "   -t -> use tori at the bends (default)\n");
     fprintf(stderr, "   -s -> use spheres at the corners\n");

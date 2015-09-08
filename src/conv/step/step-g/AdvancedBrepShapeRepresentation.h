@@ -1,7 +1,7 @@
 /*                 AdvancedBrepShapeRepresentation.h
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -23,8 +23,8 @@
  * structures.
  *
  */
-#ifndef CONV_STEP_STEP_G_ADVANCEDBREPSHAPEREPRESENTATION_H
-#define CONV_STEP_STEP_G_ADVANCEDBREPSHAPEREPRESENTATION_H
+#ifndef ADVANCEDBREPSHAPEREPRESENTATION_H_
+#define ADVANCEDBREPSHAPEREPRESENTATION_H_
 
 #include "common.h"
 
@@ -38,8 +38,6 @@
 /* interface headers */
 #include "ShapeRepresentation.h"
 
-// forward declaration of class
-class Axis2Placement3D;
 
 class AdvancedBrepShapeRepresentation : public ShapeRepresentation
 {
@@ -54,7 +52,6 @@ public:
     AdvancedBrepShapeRepresentation(STEPWrapper *sw, int step_id);
     virtual ~AdvancedBrepShapeRepresentation();
 
-    Axis2Placement3D *GetAxis2Placement3d();
     ON_Brep *GetONBrep();
     virtual bool LoadONBrep(ON_Brep *brep);
 
@@ -69,7 +66,7 @@ public:
 };
 
 
-#endif /* CONV_STEP_STEP_G_ADVANCEDBREPSHAPEREPRESENTATION_H */
+#endif /* ADVANCEDBREPSHAPEREPRESENTATION_H_ */
 
 /*
  * Local Variables:

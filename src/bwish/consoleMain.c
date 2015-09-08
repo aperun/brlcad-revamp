@@ -8,9 +8,8 @@
  */
 
 #include "tcl.h"
+#include "bio.h"
 #include <locale.h>
-
-#include "bu.h"
 
 /*
  * The following #if block allows you to change the AppInit function by
@@ -76,8 +75,6 @@ main(
 	    *p = '/';
 	}
     }
-
-    bu_setprogname(argv[0]);
 
 #ifdef TCL_LOCAL_MAIN_HOOK
     TCL_LOCAL_MAIN_HOOK(&argc, &argv);

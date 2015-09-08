@@ -1,7 +1,7 @@
 /*                    R E G I O N _ E N D . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -25,8 +25,13 @@
 
 #include "common.h"
 
-#include "bu/parallel.h"
 #include "gcv.h"
+
+
+/* FIXME: this be a dumb hack to avoid void* conversion */
+struct gcv_data {
+    void (*func)(struct nmgregion *, const struct db_full_path *, int, int, float [3]);
+};
 
 
 union tree *
@@ -51,7 +56,7 @@ _gcv_cleanup(int state, union tree *tp)
 
 
 union tree *
-gcv_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, void *client_data)
+gcv_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, genptr_t client_data)
 {
     union tree *tp = NULL;
     union tree *ret_tree = NULL;
@@ -63,14 +68,15 @@ gcv_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, unio
     int empty_model = 0;
     int NMG_debug_state = 0;
 
-    struct gcv_region_end_data *data = (struct gcv_region_end_data *)client_data;
+    void (*write_region)(struct nmgregion *, const struct db_full_path *, int, int, float [3]);
 
     if (!tsp || !curtree || !pathp || !client_data) {
 	bu_log("INTERNAL ERROR: gcv_region_end missing parameters\n");
 	return TREE_NULL;
     }
 
-    if (!data->write_region) {
+    write_region = ((struct gcv_data *)client_data)->func;
+    if (!write_region) {
 	bu_log("INTERNAL ERROR: gcv_region_end missing conversion callback function\n");
 	return TREE_NULL;
     }
@@ -102,15 +108,8 @@ gcv_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, unio
      */
     NMG_debug_state = RTG.NMG_debug;
 
-    if (!BU_SETJUMP) {
-	/* try */
-	/* perform boolean evaluation on the NMG, presently modifies
-	 * curtree to an evaluated result and returns it if the evaluation
-	 * is successful.
-	 */
-	ret_tree = nmg_booltree_evaluate(tp, tsp->ts_tol, &rt_uniresource);
-    } else {
-	/* catch */
+    /* Begin bomb protection */
+    if (BU_SETJUMP) {
 	/* Error, bail out */
 	char *sofar;
 
@@ -134,6 +133,14 @@ gcv_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, unio
 	*tsp->ts_m = nmg_mm();
 
 	return _gcv_cleanup(NMG_debug_state, tp);
+    } else {
+
+	/* perform boolean evaluation on the NMG, presently modifies
+	 * curtree to an evaluated result and returns it if the evaluation
+	 * is successful.
+	 */
+	ret_tree = nmg_booltree_evaluate(tp, tsp->ts_tol, &rt_uniresource);
+
     } BU_UNSETJUMP; /* Relinquish bomb protection */
 
     r = (struct nmgregion *)NULL;
@@ -193,7 +200,7 @@ gcv_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, unio
     } else {
 
 	/* Write the region out */
-	data->write_region(r, pathp, tsp->ts_regionid, tsp->ts_gmater, tsp->ts_mater.ma_color, data->client_data);
+	write_region(r, pathp, tsp->ts_regionid, tsp->ts_gmater, tsp->ts_mater.ma_color);
 
     } BU_UNSETJUMP; /* Relinquish bomb protection */
 

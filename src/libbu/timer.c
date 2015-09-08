@@ -1,7 +1,7 @@
 /*                           T I M E R . C
  * BRL-CAD
  *
- * Copyright (c) 2011-2014 United States Government as represented by
+ * Copyright (c) 2011-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  * Copyright (c) Tim Riker
  *
@@ -24,6 +24,9 @@
 #include <time.h>
 #include "bio.h"
 
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
 #ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>
 #endif
@@ -34,8 +37,7 @@
 #  include <sched.h>
 #endif
 
-#include "bu/log.h"
-#include "bu/time.h"
+#include "bu.h"
 
 
 int64_t
@@ -55,13 +57,13 @@ bu_gettime(void)
     LARGE_INTEGER count;
 	static LARGE_INTEGER freq = {0};
 
-    if (freq.QuadPart == 0)
-	if (QueryPerformanceFrequency(&freq) == 0) {
+    if(freq.QuadPart == 0)
+	if(QueryPerformanceFrequency(&freq) == 0) {
 	    bu_log("QueryPerformanceFrequency failed\n");
 	    return -1;
 	}
 
-    if (QueryPerformanceCounter(&count) == 0) {
+    if(QueryPerformanceCounter(&count) == 0) {
 	bu_log("QueryPerformanceCounter failed\n");
 	return -1;
     }

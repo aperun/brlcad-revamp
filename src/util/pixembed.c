@@ -1,7 +1,7 @@
 /*                      P I X E M B E D . C
  * BRL-CAD
  *
- * Copyright (c) 1992-2014 United States Government as represented by
+ * Copyright (c) 1992-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -29,9 +29,7 @@
 #include <stdlib.h>
 #include "bio.h"
 
-#include "bu/getopt.h"
-#include "bu/log.h"
-#include "bu/malloc.h"
+#include "bu.h"
 
 
 unsigned char *obuf;
@@ -48,26 +46,29 @@ size_t yout = 512;
 
 size_t border_inset = 0;	/* Sometimes border pixels are bad */
 
-size_t inbase;
-
 void load_buffer(void), write_buffer(void);
 
 static char usage[] = "\
-Usage: pixembed [-b border_inset] \n\
+Usage: pixembed [-h] [-b border_inset] \n\
 	[-s squareinsize] [-w inwidth] [-n inheight]\n\
 	[-S squareoutsize] [-W outwidth] [-N outheight] [in.pix] > out.pix\n";
 
-char hyphen[] = "-";
-
+/*
+ * G E T _ A R G S
+ */
 int
 get_args(int argc, char **argv)
 {
     int c;
 
-    while ((c = bu_getopt(argc, argv, "b:s:w:n:S:W:N:h?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "b:hs:w:n:S:W:N:")) != -1) {
 	switch (c) {
 	    case 'b':
 		border_inset = atoi(bu_optarg);
+		break;
+	    case 'h':
+		/* high-res */
+		xin = yin = 1024;
 		break;
 	    case 'S':
 		/* square size */
@@ -90,7 +91,7 @@ get_args(int argc, char **argv)
 		yin = atoi(bu_optarg);
 		break;
 
-	    default:		/* 'h' '?' */
+	    default:		/* '?' */
 		return 0;
 	}
     }
@@ -98,7 +99,7 @@ get_args(int argc, char **argv)
     if (bu_optind >= argc) {
 	if (isatty(fileno(stdin)))
 	    return 0;
-	file_name = hyphen;
+	file_name = "-";
 	buffp = stdin;
     } else {
 	file_name = argv[bu_optind];
@@ -117,6 +118,9 @@ get_args(int argc, char **argv)
 }
 
 
+/*
+ * M A I N
+ */
 int
 main(int argc, char **argv)
 {
@@ -143,26 +147,25 @@ main(int argc, char **argv)
 	bu_exit (4, NULL);
     }
 
-    inbase = (xout - xin) / 2;
-
     /* Allocate storage for one output line */
     scanlen = 3*xout;
     obuf = (unsigned char *)bu_malloc(scanlen, "obuf");
 
     /* Pre-fetch the first line (after skipping) */
-    for (i= 0; i<border_inset; i++) load_buffer();
+    for (i= -1; i<border_inset; i++) load_buffer();
 
-    /* Write out duplicates of 1st line */
-    ydup = (yout - yin) / 2 - border_inset;
+    /* Write out duplicates at bottom, including real copy of 1st line */
+    ydup = (yout - yin) / 2 + border_inset + 1;
     for (y = 0; y < ydup; y++) write_buffer();
 
-    for (y = 0; y < yin; y++) {
+    /* Read and write the remaining lines */
+    for (; i < yin-border_inset; i++, y++) {
 	load_buffer();
 	write_buffer();
     }
 
-    /* For the remaining lines, Write out duplicates of last line read */
-    for (y = 0; y < ydup; y++) write_buffer();
+    /* Write out duplicates at the top, until all done */
+    for (; y < yout; y++) write_buffer();
 
     bu_free(obuf, "obuf");
 
@@ -171,6 +174,8 @@ main(int argc, char **argv)
 
 
 /*
+ * L O A D _ B U F F E R
+ *
  * Read one input scanline into the middle of the output scanline,
  * and duplicate the border pixels.
  */
@@ -181,6 +186,9 @@ load_buffer(void)
     unsigned char r, g, b;
     unsigned char *cp;
     size_t i;
+    size_t inbase;
+
+    inbase = (xout - xin) / 2;
 
     ret = fread(obuf + inbase*3, 3, xin, buffp);
     if (ret != xin) {
@@ -212,6 +220,8 @@ load_buffer(void)
 
 
 /*
+ * W R I T E _ B U F F E R
+ *
  * Write the buffer to stdout, with error checking.
  */
 void

@@ -1,7 +1,7 @@
 /*                         B E V . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -28,10 +28,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include "bio.h"
 
-#include "bu/parallel.h"
-#include "bu/getopt.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
 
 #include "./ged_private.h"
 
@@ -41,7 +40,7 @@ static struct model *bev_nmg_model;
 
 
 static union tree *
-bev_facetize_region_end(struct db_tree_state *UNUSED(tsp), const struct db_full_path *pathp, union tree *curtree, void *client_data)
+bev_facetize_region_end(struct db_tree_state *UNUSED(tsp), const struct db_full_path *pathp, union tree *curtree, genptr_t client_data)
 {
     struct bu_list vhead;
     struct ged *gedp = (struct ged *)client_data;
@@ -52,7 +51,7 @@ bev_facetize_region_end(struct db_tree_state *UNUSED(tsp), const struct db_full_
 	char *sofar = db_path_to_string(pathp);
 
 	bu_vls_printf(gedp->ged_result_str, "bev_facetize_region_end() path='%s'\n", sofar);
-	bu_free((void *)sofar, "path string");
+	bu_free((genptr_t)sofar, "path string");
     }
 
     if (curtree->tr_op == OP_NOP) return curtree;
@@ -85,11 +84,11 @@ ged_bev(struct ged *gedp, int argc, const char *argv[])
     int i;
     int c;
     int ncpu;
-    const char *cmdname;
+    char *cmdname;
     char *newname;
     struct rt_db_internal intern;
     struct directory *dp;
-    const char *opstr;
+    char op;
     int failed;
 
     /* static due to longjmp */
@@ -114,7 +113,7 @@ ged_bev(struct ged *gedp, int argc, const char *argv[])
 	return GED_ERROR;
     }
 
-    cmdname = argv[0];
+    cmdname = (char *)argv[0];
 
     /* Establish tolerances */
     gedp->ged_wdbp->wdb_initial_tree_state.ts_ttol = &gedp->ged_wdbp->wdb_ttol;
@@ -165,7 +164,7 @@ ged_bev(struct ged *gedp, int argc, const char *argv[])
     bev_nmg_model = nmg_mm();
     gedp->ged_wdbp->wdb_initial_tree_state.ts_m = &bev_nmg_model;
 
-    opstr = NULL;
+    op = ' ';
     tmp_tree = (union tree *)NULL;
 
     while (argc) {
@@ -175,7 +174,7 @@ ged_bev(struct ged *gedp, int argc, const char *argv[])
 			 0,			/* take all regions */
 			 bev_facetize_region_end,
 			 nmg_booltree_leaf_tess,
-			 (void *)gedp);
+			 (genptr_t)gedp);
 
 	if (i < 0) {
 	    bu_vls_printf(gedp->ged_result_str, "%s: error in db_walk_tree()\n", cmdname);
@@ -186,9 +185,8 @@ ged_bev(struct ged *gedp, int argc, const char *argv[])
 	argc--;
 	argv++;
 
-	if (tmp_tree && opstr) {
+	if (tmp_tree && op != ' ') {
 	    union tree *new_tree;
-	    db_op_t op = db_str2op(opstr);
 
 	    BU_ALLOC(new_tree, union tree);
 	    RT_TREE_INIT(new_tree);
@@ -198,18 +196,19 @@ ged_bev(struct ged *gedp, int argc, const char *argv[])
 	    new_tree->tr_b.tb_right = bev_facetize_tree;
 
 	    switch (op) {
-		case DB_OP_UNION:
+		case 'u':
+		case 'U':
 		    new_tree->tr_op = OP_UNION;
 		    break;
-		case DB_OP_SUBTRACT:
+		case '-':
 		    new_tree->tr_op = OP_SUBTRACT;
 		    break;
-		case DB_OP_INTERSECT:
+		case '+':
 		    new_tree->tr_op = OP_INTERSECT;
 		    break;
 		default: {
 		    bu_vls_printf(gedp->ged_result_str, "%s: Unrecognized operator: (%c)\nAborting\n",
-				  argv[0], opstr[0]);
+				  argv[0], op);
 		    db_free_tree(bev_facetize_tree, &rt_uniresource);
 		    nmg_km(bev_nmg_model);
 		    return GED_ERROR;
@@ -218,18 +217,18 @@ ged_bev(struct ged *gedp, int argc, const char *argv[])
 
 	    tmp_tree = new_tree;
 	    bev_facetize_tree = (union tree *)NULL;
-	} else if (!tmp_tree && !opstr) {
+	} else if (!tmp_tree && op == ' ') {
 	    /* just starting out */
 	    tmp_tree = bev_facetize_tree;
 	    bev_facetize_tree = (union tree *)NULL;
 	}
 
 	if (argc) {
-	    opstr = argv[0];
+	    op = *argv[0];
 	    argc--;
 	    argv++;
 	} else
-	    opstr = NULL;
+	    op = ' ';
 
     }
 
@@ -293,10 +292,10 @@ ged_bev(struct ged *gedp, int argc, const char *argv[])
     intern.idb_major_type = DB5_MAJORTYPE_BRLCAD;
     intern.idb_type = ID_NMG;
     intern.idb_meth = &OBJ[ID_NMG];
-    intern.idb_ptr = (void *)bev_nmg_model;
+    intern.idb_ptr = (genptr_t)bev_nmg_model;
     bev_nmg_model = (struct model *)NULL;
 
-    GED_DB_DIRADD(gedp, dp, newname, RT_DIR_PHONY_ADDR, 0, RT_DIR_SOLID, (void *)&intern.idb_type, GED_ERROR);
+    GED_DB_DIRADD(gedp, dp, newname, RT_DIR_PHONY_ADDR, 0, RT_DIR_SOLID, (genptr_t)&intern.idb_type, GED_ERROR);
     GED_DB_PUT_INTERNAL(gedp, dp, &intern, &rt_uniresource, GED_ERROR);
 
     tmp_tree->tr_d.td_r = (struct nmgregion *)NULL;

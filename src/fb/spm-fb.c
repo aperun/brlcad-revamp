@@ -1,7 +1,7 @@
 /*                        S P M - F B . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -26,14 +26,14 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include "bio.h"
 
-#include "bu/getopt.h"
-#include "bu/log.h"
+#include "bu.h"
 #include "fb.h"
-#include "bn/spm.h"
+#include "spm.h"
 
 
-static fb *fbp;
+static FBIO *fbp;
 
 static char *framebuffer = NULL;
 static int scr_width = 0;
@@ -44,7 +44,7 @@ static int square = 0;
 static int vsize;
 
 static char usage[] = "\
-Usage: spm-fb [-s] [-F framebuffer]\n\
+Usage: spm-fb [-h -s] [-F framebuffer]\n\
 	[-S squarescrsize] [-W scr_width] [-N scr_height]\n\
 	vsize [filename]\n";
 
@@ -54,8 +54,12 @@ get_args(int argc, char **argv)
 {
     int c;
 
-    while ((c = bu_getopt(argc, argv, "F:sS:W:N:h?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "hF:sS:W:N:")) != -1) {
 	switch (c) {
+	    case 'h':
+		/* high-res */
+		scr_height = scr_width = 1024;
+		break;
 	    case 'F':
 		framebuffer = bu_optarg;
 		break;
@@ -72,7 +76,7 @@ get_args(int argc, char **argv)
 		scr_height = atoi(bu_optarg);
 		break;
 
-	    default:		/* '?' 'h' */
+	    default:		/* '?' */
 		return 0;
 	}
     }
@@ -97,6 +101,8 @@ get_args(int argc, char **argv)
 
 
 /*
+ * S P M _ F B
+ *
  * Displays a sphere map on a framebuffer.
  */
 void
@@ -119,6 +125,8 @@ spm_fb(bn_spm_map_t *mapp)
 
 
 /*
+ * S P M _ S Q U A R E
+ *
  * Display a square sphere map on a framebuffer.
  */
 void
@@ -141,6 +149,9 @@ spm_square(bn_spm_map_t *mapp)
 }
 
 
+/*
+ * M A I N
+ */
 int
 main(int argc, char **argv)
 {
@@ -151,13 +162,13 @@ main(int argc, char **argv)
 	bu_exit(1, NULL);
     }
 
-    if ((fbp = fb_open(framebuffer, scr_width, scr_height)) == FB_NULL)
+    if ((fbp = fb_open(framebuffer, scr_width, scr_height)) == FBIO_NULL)
 	bu_exit(12, NULL);
     scr_width = fb_getwidth(fbp);
     scr_height = fb_getheight(fbp);
 
     mp = bn_spm_init(vsize, sizeof(RGBpixel));
-    if (mp == BN_SPM_MAP_NULL || fbp == FB_NULL)
+    if (mp == BN_SPM_MAP_NULL || fbp == FBIO_NULL)
 	bu_exit(1, NULL);
 
     bn_spm_load(mp, file_name);

@@ -11,11 +11,10 @@
 ## Where zlib.h, zconf.h and zlib.lib are
 ZLIB_DIR=..\zlib
 
-## Compiler, linker, librarian and other tools
+## Compiler, linker and lib stuff
 CC=bcc32
 LD=bcc32
 LIB=tlib
-CP=copy
 
 # -3 = 386, -4 = 486, -5 = Pentium etc.
 !ifndef TARGET_CPU
@@ -49,12 +48,6 @@ CFLAGS=-O2 -d -k- -w $(TARGET_CPU) $(CDEBUG)
 
 # -M  generate map file
 LDFLAGS=-L$(ZLIB_DIR) -M $(LDEBUG)
-
-# Pre-built configuration
-# See scripts\pnglibconf.mak for more options
-!ifndef PNGLIBCONF_H_PREBUILT
-PNGLIBCONF_H_PREBUILT = scripts\pnglibconf.h.prebuilt
-!endif
 
 ## Variables
 OBJS = \
@@ -118,8 +111,10 @@ test: pngtest.exe
 
 ## Minor Targets
 
-pnglibconf.h: $(PNGLIBCONF_H_PREBUILT)
-	$(CP) $(PNGLIBCONF_H_PREBUILT) $@
+# see scripts\pnglibconf.mak for how to make this file
+# with different options
+pnglibconf.h: scripts\pnglibconf.h.prebuilt
+	copy scripts\pnglibconf.h.prebuilt $@
 
 png.obj: png.c png.h pngconf.h pnglibconf.h pngpriv.h pngstruct.h pnginfo.h pngdebug.h
 pngerror.obj: pngerror.c png.h pngconf.h pnglibconf.h pngpriv.h pngstruct.h pnginfo.h pngdebug.h

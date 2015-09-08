@@ -1,7 +1,7 @@
 /*                      S H O W S H O T . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -31,12 +31,9 @@
 #include <string.h>
 #include "bio.h"
 
-#include "bu/getopt.h"
-#include "bu/parallel.h"
-#include "bu/log.h"
-#include "bu/str.h"
+#include "bu.h"
 #include "vmath.h"
-#include "rt/db4.h"
+#include "db.h"
 
 
 #define BUF_LEN 128

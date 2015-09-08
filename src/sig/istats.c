@@ -1,7 +1,7 @@
 /*                        I S T A T S . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -22,78 +22,69 @@
  * gather statistics on a set of short integers.
  *
  * Options
- * h (or ?) help
+ * h help
  */
 
 #include "common.h"
 
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
-#include <math.h>
 #include "bio.h"
 
-#include "bu/getopt.h"
-#include "bu/malloc.h"
-#include "bu/log.h"
-#include "bu/file.h"
+#include "bu.h"
 
 
 /*
- * Tell user how to invoke this program, then exit
+ * U S A G E --- tell user how to invoke this program, then exit
  */
-static void
-usage(const char *progname)
+void usage(const char *progname)
 {
     bu_exit(1, "Usage: %s [ file ]\n", progname);
 }
 
-
 /*
- * Parse through command line flags
+ * P A R S E _ A R G S --- Parse through command line flags
  */
-static int
-parse_args(int ac, char **av, const char **progname)
+int parse_args(int ac, char **av, char *progname)
 {
-    const char optstring[] = "h?";
     int c;
 
-    if (!(*progname=strrchr(*av, '/')))
-	*progname = *av;
+    if (!(progname=strrchr(*av, '/')))
+	progname = *av;
 
     /* Turn off bu_getopt's error messages */
     bu_opterr = 0;
 
     /* get all the option flags from the command line */
-    while ((c=bu_getopt(ac, av, optstring)) != -1)
+    while ((c=bu_getopt(ac, av, "h")) != -1)
 	switch (c) {
-	    default: usage(*progname);
-		break;
+	    case '?'	:
+	    case 'h'	:
+	    default		: usage(progname); break;
 	}
 
     return bu_optind;
 }
 
-
-static void
-comp_stats(FILE *fd)
+void comp_stats(FILE *fd)
 {
     short *buffer=(short *)NULL;
-    short min = SHRT_MAX;
-    short max = SHRT_MIN;
-    double doub, stdev;
-    double sum = 0.0;
-    double sum_sq = 0.0;
-    double num = 0.0;
-    int count, i;
+    short min, max;
+    double stdev, sum, sum_sq, num, sqrt(double);
+    int count;
+    int i;
+
 
     buffer = (short *)bu_calloc(10240, sizeof(short), "buffer");
 
+    stdev = sum = sum_sq = count = num = 0.0;
+    min = 32767;
+    max = -32768;
+
     while ((count=fread((void *)buffer, sizeof(short), 10240, fd))) {
 	for (i=0; i < count; ++i) {
-	    doub = (double)buffer[i];
-	    sum += doub;
-	    sum_sq += doub*doub;
+	    sum += (double)buffer[i];
+	    sum_sq += (double)(buffer[i] * buffer[i]);
 	    if (buffer[i] > max) max = buffer[i];
 	    if (buffer[i] < min) min = buffer[i];
 	}
@@ -110,27 +101,28 @@ comp_stats(FILE *fd)
 
 
 /*
+ * M A I N
+ *
  * Call parse_args to handle command line arguments first, then
  * process input.
  */
-int
-main(int ac, char *av[])
+int main(int ac, char *av[])
 {
-    const char *progname = "istats";
+    char *progname = "(noname)";
     int arg_index;
 
     /* parse command flags
      */
-    arg_index = parse_args(ac, av, &progname);
+    arg_index = parse_args(ac, av, progname);
     if (arg_index < ac) {
 	char *ifname = bu_realpath(av[arg_index], NULL);
 	/* open file of shorts */
 	if (freopen(ifname, "r", stdin) == (FILE *)NULL) {
 	    perror(ifname);
-	    bu_free(ifname, "ifname alloc from bu_realpath");
+	    bu_free(ifname,"ifname alloc from bu_realpath");
 	    return -1;
 	}
-	bu_free(ifname, "ifname alloc from bu_realpath");
+	bu_free(ifname,"ifname alloc from bu_realpath");
     } else if (isatty((int)fileno(stdin))) {
 	usage(progname);
     }
@@ -139,7 +131,6 @@ main(int ac, char *av[])
 
     return 0;
 }
-
 
 /*
  * Local Variables:

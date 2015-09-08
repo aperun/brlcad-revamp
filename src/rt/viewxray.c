@@ -1,7 +1,7 @@
 /*                      V I E W X R A Y . C
  * BRL-CAD
  *
- * Copyright (c) 1990-2014 United States Government as represented by
+ * Copyright (c) 1990-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -36,8 +36,6 @@
 
 #include <stdio.h>
 
-#include "bu/parallel.h"
-#include "bu/mime.h"
 #include "vmath.h"
 #include "icv.h"
 #include "raytrace.h"
@@ -52,7 +50,7 @@
 #define	LGT_FLOAT	1
 
 
-extern	fb	*fbp;
+extern	FBIO	*fbp;
 extern	FILE	*outfp;
 extern	fastf_t	viewsize;
 extern	int	lightmodel;
@@ -119,7 +117,7 @@ view_init(struct application *UNUSED(ap), char *UNUSED(file), char *UNUSED(obj),
 	if (outputfile) {
 	    char buf[BUFSIZ];
 	    int format = icv_guess_file_format(outputfile, buf);
-	    if (format != MIME_IMAGE_UNKNOWN) {
+	    if (format != ICV_IMAGE_UNKNOWN) {
 		bu_strlcpy(buf, outputfile, BUFSIZ);
 		bu_strlcat(buf, floatfileext, BUFSIZ);
 		outputfile = floatfilename = bu_strdup(buf);
@@ -174,8 +172,16 @@ view_eol(struct application *ap)
     if ( lightmodel == LGT_BW ) {
 
 	if (bif != NULL) {
+	    if (RTG.rtg_parallel) {
+		bu_semaphore_acquire( BU_SEM_SYSCALL );
+	    }
+	    bu_semaphore_acquire(BU_SEM_SYSCALL);
 	    /* TODO : Add double type data to maintain resolution */
 	    icv_writeline(bif, ap->a_y, scanbuf, ICV_DATA_UCHAR);
+	    bu_semaphore_release(BU_SEM_SYSCALL);
+	    if (RTG.rtg_parallel) {
+		bu_semaphore_release( BU_SEM_SYSCALL );
+	    }
 	} else if ( outfp != NULL ) {
 	    if (RTG.rtg_parallel) {
 		bu_semaphore_acquire( BU_SEM_SYSCALL );
@@ -188,7 +194,7 @@ view_eol(struct application *ap)
 		bu_semaphore_release( BU_SEM_SYSCALL );
 	    }
 	}
-	if ( fbp != FB_NULL ) {
+	if ( fbp != FBIO_NULL ) {
 	    if (RTG.rtg_parallel) {
 		bu_semaphore_acquire( BU_SEM_SYSCALL );
 	    }
@@ -198,7 +204,7 @@ view_eol(struct application *ap)
 	    }
 	}
 
-	if (bif == NULL && fbp == FB_NULL && outfp == NULL)
+	if (bif == NULL && fbp == FBIO_NULL && outfp == NULL)
 	    bu_log("rtxray: strange, no end of line actions taken.\n");
     }
 }

@@ -1,7 +1,7 @@
 /*                 ContextDependentShapeRepresentation.h
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef CONV_STEP_STEP_G_CONTEXTDEPENDENTSHAPEREPRESENTATION_H
-#define CONV_STEP_STEP_G_CONTEXTDEPENDENTSHAPEREPRESENTATION_H
+#ifndef CONTEXT_DEPENDENT_SHAPE_REPRESENTATION_H_
+#define CONTEXT_DEPENDENT_SHAPE_REPRESENTATION_H_
 
 #include "STEPEntity.h"
 
@@ -33,11 +33,9 @@
 
 // forward declaration of class
 class ON_Brep;
-class Axis2Placement3D;
-class ProductDefinition;
-class ProductDefinitionShape;
-class Representation;
 class RepresentationRelationship;
+class ShapeRepresentationRelationship;
+class ProductDefinitionShape;
 
 typedef std::list<RepresentationRelationship *> LIST_OF_REPRESENTATION_RELATIONSHIPS;
 
@@ -55,13 +53,6 @@ public:
     ContextDependentShapeRepresentation();
     virtual ~ContextDependentShapeRepresentation();
     ContextDependentShapeRepresentation(STEPWrapper *sw, int step_id);
-    Representation *GetRepresentationRelationshipRep_1();
-    Representation *GetRepresentationRelationshipRep_2();
-    Axis2Placement3D *GetTransformItem_1();
-    Axis2Placement3D *GetTransformItem_2();
-    ProductDefinition *GetRelatingProductDefinition();
-    ProductDefinition *GetRelatedProductDefinition();
-
     bool Load(STEPWrapper *sw, SDAI_Application_instance *sse);
     virtual bool LoadONBrep(ON_Brep *brep);
     string ClassName();
@@ -74,7 +65,7 @@ public:
     static STEPEntity *Create(STEPWrapper *sw, SDAI_Application_instance *sse);
 };
 
-#endif /* CONV_STEP_STEP_G_CONTEXTDEPENDENTSHAPEREPRESENTATION_H */
+#endif /* CONTEXT_DEPENDENT_SHAPE_REPRESENTATION_H_ */
 
 /*
  * Local Variables:

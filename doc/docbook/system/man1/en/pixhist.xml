@@ -24,10 +24,10 @@
 
 
 <refsect1 xml:id='description'><title>DESCRIPTION</title>
-<para><command>pixhist</command>
+<para><emphasis remap='I'>Pixhist</emphasis>
 displays a histogram of the pixel values of the given
 <citerefentry><refentrytitle>pix</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-format file, or, if no file is specified, will read from standard input.
+format file, or, if no file is specified, will read from standard in.
 The environment
 variable
 <envar>FB_FILE</envar>
@@ -46,7 +46,7 @@ The output is overlaid on whatever is currently on the display.</para>
 
 <para>The
 <option>-v</option>
-flag will output the histogram values on the terminal (standard error).</para>
+flag will also output the histogram values on the terminal.</para>
 </refsect1>
 
 <refsect1 xml:id='see_also'><title>SEE ALSO</title>
@@ -64,7 +64,7 @@ flag will output the histogram values on the terminal (standard error).</para>
 </refsect1>
 
 <refsect1 xml:id='copyright'><title>COPYRIGHT</title>
-<para>This software is Copyright (c) 1989-2014 by the United States
+<para>This software is Copyright (c) 1989-2013 by the United States
 Government as represented by U.S. Army Research Laboratory.</para>
 </refsect1>
 

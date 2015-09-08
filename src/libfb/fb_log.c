@@ -1,7 +1,7 @@
 /*                        F B _ L O G . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -17,7 +17,7 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup libfb */
+/** @addtogroup fb */
 /** @{ */
 /** @file fb_log.c
  *
@@ -35,6 +35,8 @@
 
 
 /*
+ * F B _ L O G
+ *
  * Log a framebuffer library event in the Standard way.
  */
 #if !defined(_WIN32) || defined(__CYGWIN__)

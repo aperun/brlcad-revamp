@@ -1,7 +1,7 @@
 /*                         G - O F F . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -32,19 +32,18 @@
 #include <string.h>
 #include "bio.h"
 
-#include "bu/getopt.h"
-#include "bu/vls.h"
+#include "bu.h"
 #include "vmath.h"
 #include "nmg.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
 #include "raytrace.h"
-#include "bn/plot3.h"
+#include "plot3.h"
 
 
-extern union tree *do_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, void *client_data);
+extern union tree *do_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, genptr_t client_data);
 
 
-static const char *usage = "[-v] [-d] [-xX lvl] [-a abs_tol] [-r rel_tol] [-n norm_tol] [-p prefix] [-P #_of_CPUs] brlcad_db.g object(s)\n";
+static const char usage[] = "Usage: %s [-v] [-d] [-xX lvl] [-a abs_tol] [-r rel_tol] [-n norm_tol] [-p prefix] [-P #_of_CPUs] brlcad_db.g object(s)\n";
 
 static int	NMG_debug;	/* saved arg of -X, for longjmp handling */
 static int	verbose;
@@ -66,12 +65,9 @@ static int	regions_done = 0;
 static void nmg_to_psurf(struct nmgregion *r, FILE *fp_psurf);
 static void jack_faces(struct nmgregion *r, FILE *fp_psurf, int *map);
 
-static void
-print_usage(const char *progname)
-{
-    bu_exit(1, "Usage: %s %s", progname, usage);
-}
-
+/*
+ *			M A I N
+ */
 int
 main(int argc, char **argv)
 {
@@ -100,6 +96,8 @@ main(int argc, char **argv)
     tol.dist_sq = tol.dist * tol.dist;
     tol.perp = 1e-6;
     tol.para = 1 - tol.perp;
+
+    rt_init_resource( &rt_uniresource, 0, NULL );
 
     the_model = nmg_mm();
     BU_LIST_INIT( &RTG.rtg_vlfree );	/* for vlist macros */
@@ -136,12 +134,12 @@ main(int argc, char **argv)
 		NMG_debug = RTG.NMG_debug;
 		break;
 	    default:
-		print_usage(argv[0]);
+		bu_exit(1, usage, argv[0]);
 	}
     }
 
     if (bu_optind+1 >= argc)
-	print_usage(argv[0]);
+	bu_exit(1, usage, argv[0]);
 
     /* Open BRL-CAD database */
     argc -= bu_optind;
@@ -155,7 +153,7 @@ main(int argc, char **argv)
 
     /* Create .fig file name and open it. */
     size = sizeof(prefix) + sizeof(argv[0] + 4);
-    fig_file = (char *)bu_malloc(size, "st");
+    fig_file = bu_malloc(size, "st");
     /* Ignore leading path name. */
     if ((dot = strrchr(argv[0], '/')) != (char *)NULL) {
 	if (prefix)
@@ -185,7 +183,7 @@ main(int argc, char **argv)
 		       0,			/* take all regions */
 		       do_region_end,
 		       nmg_booltree_leaf_tess,
-		       (void *)NULL);	/* in librt/nmg_bool.c */
+		       (genptr_t)NULL);	/* in librt/nmg_bool.c */
 
     fprintf(fp_fig, "\troot=%s_seg.base;\n", bu_vls_addr(&base_seg));
     fprintf(fp_fig, "}\n");
@@ -205,7 +203,7 @@ main(int argc, char **argv)
 static union tree *
 process_boolean(union tree *curtree, struct db_tree_state *tsp, const struct db_full_path *pathp)
 {
-    static union tree *ret_tree = TREE_NULL;
+    union tree *ret_tree = TREE_NULL;
 
     /* Begin bomb protection */
     if ( !BU_SETJUMP ) {
@@ -249,11 +247,13 @@ process_boolean(union tree *curtree, struct db_tree_state *tsp, const struct db_
 
 
 /*
+ *			D O _ R E G I O N _ E N D
+ *
  *  Called from db_walk_tree().
  *
  *  This routine must be prepared to run in parallel.
  */
-union tree *do_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, void *UNUSED(client_data))
+union tree *do_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, genptr_t UNUSED(client_data))
 {
     union tree		*ret_tree;
     struct nmgregion	*r;
@@ -386,6 +386,8 @@ union tree *do_region_end(struct db_tree_state *tsp, const struct db_full_path *
 }
 
 /*
+ *	N M G _ T O _ P S U R F
+ *
  *	Convert an nmg region into Jack format.  This routine makes a
  *	list of unique vertices and writes them to the ascii Jack
  *	data base file.  Then a routine to generate the face vertex
@@ -432,6 +434,8 @@ nmg_to_psurf(struct nmgregion *r, FILE *fp_psurf)
 
 
 /*
+ *	J A C K _ F A C E S
+ *
  *	Continues the conversion of an nmg into Jack format.  Before
  *	this routine is called, a list of unique vertices has been
  *	stored in a heap.  Using this heap and the nmg structure, a

@@ -1,3 +1,5 @@
+<!-- Converted by db4-upgrade version 1.0 -->
+
 <article xmlns="http://docbook.org/ns/docbook" version="5.0">
   <info><title>Crear un camión de juguete</title>
 
@@ -64,10 +66,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_design.pNG" format="png"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_design.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -134,10 +133,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_cab1s.pNG" format="png"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_cab1s.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -240,10 +236,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_cab_cutoff.pNG" format="png"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_cab_cutoff.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -287,10 +280,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_multipane_1stwheel.pNG" format="png"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_multipane_1stwheel.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -364,10 +354,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged15_prim_ed_wheel_well.pNG" format="png"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged15_prim_ed_wheel_well.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -390,10 +377,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_2nd_wheel_wheel_place.pNG" format="png"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_2nd_wheel_wheel_place.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -500,10 +484,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_cab_body.pNG" format="png"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_cab_body.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -532,10 +513,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_wheel_wells_wireframe.pNG" format="png"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_wheel_wells_wireframe.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -641,10 +619,7 @@
 	similar a la siguiente:
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_wheels.pNG" format="png"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged15_truck_wheels.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -699,10 +674,7 @@
 	tener este aspecto:
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged15_cameo_shader.pNG" format="png"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged15_cameo_shader.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -897,9 +869,9 @@
 	  <tgroup cols="2" align="center">
 	    <tbody>
 	      <row>
-		<entry><inlinemediaobject><imageobject role="html"><imagedata fileref="../../lessons/es/images/mged15_truck_default_lighting.png"/></imageobject><imageobject role="fo"><imagedata fileref="../../lessons/es/images/mged15_truck_default_lighting.png"/></imageobject></inlinemediaobject>
+		<entry><inlinemediaobject><imageobject><imagedata fileref="../../lessons/es/images/mged15_truck_default_lighting.png"/></imageobject></inlinemediaobject>
 		</entry>
-		<entry><inlinemediaobject><imageobject role="html"><imagedata fileref="../../lessons/es/images/mged15_truck_ambient_lighting.png"/></imageobject><imageobject role="fo"><imagedata fileref="../../lessons/es/images/mged15_truck_ambient_lighting.png"/></imageobject></inlinemediaobject>
+		<entry><inlinemediaobject><imageobject><imagedata fileref="../../lessons/es/images/mged15_truck_ambient_lighting.png"/></imageobject></inlinemediaobject>
 		</entry>
 	      </row>
 	      <row>

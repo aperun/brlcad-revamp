@@ -1,18 +1,20 @@
-<article xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink"  version="5.0">
+<!-- Converted by db4-upgrade version 1.0 -->
+
+<article xmlns="http://docbook.org/ns/docbook" version="5.0">
   <info><title>Vehicle Tire and Wheel Creation in BRL-CAD</title>
 
     <author><personname><firstname>Clifford</firstname><surname>Yapp</surname></personname></author>
   </info>
 
 
-  <section xml:id="Overview"><info><title>Overview</title></info>
+  <section><info><title>Overview</title></info>
 
     <para>
-      Traditionally, <link xlink:href="http://brlcad.org">BRL-CAD</link> tire models have been created using a
-      single cylinder, a torus intersected with a cylinder, or in some cases additional combinations of these
-      primitives.  While these approximations are often sufficient for analytical purposes the resulting model
-      is typically a poor visual match to the real tire when raytracing.  Creating more complex models to better
-      approximate the tire's shape almost always requires more resources than can be justified.
+      Traditionally, BRL-CAD tire models have been created using a single cylinder, a torus intersected
+      with a cylinder, or in some cases additional combinations of these primitives.  While these approximations
+      are often sufficient for analytical purposes the resulting model is typically a poor visual match
+      to the real tire when raytracing.  Creating more complex models to better approximate the tire's shape
+      almost always requires more resources than can be justified.
     </para>
 
     <para>
@@ -24,7 +26,7 @@
     </para>
 
     <para>
-      By default, a basic steel wheel (a.k.a. "rim") is included in the model.  If this wheel
+      By default, a basic steel wheel (a.k.a "rim") is included in the model.  If this wheel
       does not work for a given modeling purpose, it is quite simple to remove it and substitute
       in a user-defined wheel so long as the dimensions of the user supplied wheel match
       the standard wheel at the key points (radius and width).
@@ -42,7 +44,7 @@
 
   </section>
 
- <section xml:id="Specifying_a_Tire"><info><title>Specifying a Tire with Standard Dimensional Conventions</title></info>
+ <section><info><title>Specifying a Tire with Standard Dimensional Conventions</title></info>
 
 
     <para>
@@ -51,10 +53,7 @@
 
     <informalfigure>
       <mediaobject>
-	<imageobject role="html">
-	  <imagedata align="center" fileref="../../articles/en/images/tire_fig01.png" format="PNG"/>
-	</imageobject>
-	<imageobject role="fo">
+	<imageobject>
 	  <imagedata align="center" fileref="../../articles/en/images/tire_fig01.png" format="PNG"/>
 	</imageobject>
 	<caption>
@@ -173,10 +172,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../articles/en/images/tire_fig02.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../articles/en/images/tire_fig02.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -201,10 +197,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../articles/en/images/tire_fig03.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../articles/en/images/tire_fig03.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -219,7 +212,7 @@
 
  </section>
 
- <section xml:id="Options_for_Tire"><info><title>Options for Tire Tread Modeling</title></info>
+ <section><info><title>Options for Tire Tread Modeling</title></info>
 
 
    <para>
@@ -283,10 +276,7 @@
     <para>
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../articles/en/images/tire_fig04.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../articles/en/images/tire_fig04.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -306,10 +296,7 @@
     <para>
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../articles/en/images/tire_fig05.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../articles/en/images/tire_fig05.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -333,10 +320,7 @@
     <para>
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../articles/en/images/tire_fig06.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../articles/en/images/tire_fig06.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -363,10 +347,7 @@
     <para>
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../articles/en/images/tire_fig07.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../articles/en/images/tire_fig07.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -391,10 +372,7 @@
     <para>
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../articles/en/images/tire_fig08.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../articles/en/images/tire_fig08.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -431,7 +409,7 @@
  </section>
 
 
-  <section xml:id="Setting_Tire_Thickness"><info><title>Setting Tire Thickness</title></info>
+  <section><info><title>Setting Tire Thickness</title></info>
 
     <para>
       Tire thickness is manipulated via the <emphasis>u</emphasis>
@@ -450,10 +428,7 @@
     <para>
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../articles/en/images/tire_fig09.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../articles/en/images/tire_fig09.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -474,10 +449,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../articles/en/images/tire_fig10.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../articles/en/images/tire_fig10.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -503,10 +475,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../articles/en/images/tire_fig11.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../articles/en/images/tire_fig11.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -521,7 +490,7 @@
 
   </section>
 
-  <section xml:id="Changing_the_Rim_width"><info><title>Changing the Rim Width</title></info>
+  <section><info><title>Changing the Rim Width</title></info>
 
     <para>
       The default behavior of <command>tire</command> is to make the rim width (the
@@ -534,10 +503,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../articles/en/images/tire_fig12.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../articles/en/images/tire_fig12.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -551,7 +517,7 @@
 
  </section>
 
-  <section xml:id="Changing_the_Redial"><info><title>Changing the Radial Location of the Maximum Tire Width</title></info>
+  <section><info><title>Changing the Radial Location of the Maximum Tire Width</title></info>
 
     <para>
       When <command>tire</command> accepts a maximum width specification, it internally
@@ -562,10 +528,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../articles/en/images/tire_fig13.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../articles/en/images/tire_fig13.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -584,7 +547,7 @@
  </section>
 
 
-  <section xml:id="Other_Options"><info><title>Other Options</title></info>
+  <section><info><title>Other Options</title></info>
 
     <para>
       The other flags available in <command>tire</command>
@@ -611,7 +574,7 @@
 
   </section>
 
-  <section xml:id="Structure_of_a_Tire"><info><title>Structure of a Tire Model</title></info>
+  <section><info><title>Structure of a Tire Model</title></info>
 
     <para>
       Although it is not visible to the eye in normal raytracing, the
@@ -622,10 +585,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../articles/en/images/tire_fig14.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../articles/en/images/tire_fig14.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -686,7 +646,7 @@ tire/
     </note>
   </section>
 
- <section xml:id="Summary"><info><title>Summary</title></info>
+ <section><info><title>Summary</title></info>
 
     <para>
       <itemizedlist mark="bullet">

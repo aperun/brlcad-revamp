@@ -10,7 +10,6 @@ set(lib_TCLSCRIPTS
 	Dm.tcl
 	Drawable.tcl
 	Ged.tcl
-	GeometryIO.tcl
 	Help.tcl
 	Legend.tcl
 	Mged.tcl
@@ -26,7 +25,6 @@ set(lib_TCLSCRIPTS
 	ViewAxesControl.tcl
 	cursor.tcl
 	apply_mat.tcl
-	gui_conversion.tcl
 	pattern.tcl
 	pattern_gui.tcl
 )

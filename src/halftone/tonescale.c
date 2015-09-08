@@ -1,7 +1,7 @@
 /*                     T O N E S C A L E . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -56,7 +56,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "vmath.h"
 
 #define	DLEVEL	1
 extern int Debug;
@@ -153,7 +152,8 @@ eq_cubic(int x)
     y = ((p->D * (x - p->x) + p->C) * (x - p->x) + p->B)
 	* (x - p->x) + p->A;
 
-    CLAMP(y, 0, 255);
+    if (y<0) y = 0;
+    if (y>255) y = 255;
     return y;
 }
 

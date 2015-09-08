@@ -1,7 +1,7 @@
 /*                         B O T _ D U M P . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -30,24 +30,20 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <ctype.h>
-#include "bnetwork.h"
+#include "bio.h"
+#include "bin.h"
 
-#include "bu/cv.h"
-#include "bu/getopt.h"
-#include "bu/units.h"
 #include "vmath.h"
 #include "nmg.h"
-#include "rt/geom.h"
-
-#include "dm/bview.h"
-
+#include "rtgeom.h"
+#include "bu.h"
 #include "raytrace.h"
 #include "wdb.h"
 
 #include "brlcad_version.h"
 
-#include "raytrace.h"
-
+#include "mater.h"
+#include "solid.h"
 #include "obj.h"
 
 #include "./ged_private.h"
@@ -57,6 +53,13 @@
 
 static char usage[] = "\
 Usage: %s [-b] [-n] [-m directory] [-o file] [-t dxf|obj|sat|stl] [-u units] [bot1 bot2 ...]\n";
+
+enum otype {
+    OTYPE_DXF = 1,
+    OTYPE_OBJ,
+    OTYPE_SAT,
+    OTYPE_STL
+};
 
 
 struct _ged_bot_dump_client_data {
@@ -594,8 +597,8 @@ stl_write_bot_binary(struct rt_bot_internal *bot, int fd, char *UNUSED(name))
 }
 
 
-void
-_ged_bot_dump(struct directory *dp, struct rt_bot_internal *bot, FILE *fp, int fd, const char *file_ext, const char *db_name)
+static void
+bot_dump(struct directory *dp, struct rt_bot_internal *bot, FILE *fp, int fd, const char *file_ext, const char *db_name)
 {
     int ret;
 
@@ -723,7 +726,7 @@ _ged_bot_dump(struct directory *dp, struct rt_bot_internal *bot, FILE *fp, int f
 	    break;
 	}
 	} else {
-	  bu_log("_ged_bot_dump: non-binay file requested but fp is NULL!\n");
+	  bu_log("bot_dump: non-binay file requested but fp is NULL!\n");
 	}
       }
     }
@@ -734,7 +737,7 @@ static union tree *
 bot_dump_leaf(struct db_tree_state *tsp,
 		  const struct db_full_path *pathp,
 		  struct rt_db_internal *ip,
-		  void *client_data)
+		  genptr_t client_data)
 {
     int ret;
     union tree *curtree;
@@ -773,7 +776,7 @@ bot_dump_leaf(struct db_tree_state *tsp,
     }
 
     bot = (struct rt_bot_internal *)intern.idb_ptr;
-    _ged_bot_dump(dp, bot, gbdcdp->fp, gbdcdp->fd, gbdcdp->file_ext, gbdcdp->gedp->ged_wdbp->dbip->dbi_filename);
+    bot_dump(dp, bot, gbdcdp->fp, gbdcdp->fd, gbdcdp->file_ext, gbdcdp->gedp->ged_wdbp->dbip->dbi_filename);
     rt_db_free_internal(&intern);
 
     return curtree;
@@ -850,7 +853,7 @@ ged_bot_dump(struct ged *gedp, int argc, const char *argv[])
     struct rt_db_internal intern;
     struct rt_bot_internal *bot;
     struct directory *dp;
-    char *file_ext = NULL;
+    char *file_ext = '\0';
     FILE *fp = (FILE *)0;
     int fd = -1;
     mat_t mat;
@@ -991,7 +994,7 @@ ged_bot_dump(struct ged *gedp, int argc, const char *argv[])
 	    }
 
 	    bot = (struct rt_bot_internal *)intern.idb_ptr;
-	    _ged_bot_dump(dp, bot, fp, fd, file_ext, gedp->ged_wdbp->dbip->dbi_filename);
+	    bot_dump(dp, bot, fp, fd, file_ext, gedp->ged_wdbp->dbip->dbi_filename);
 	    rt_db_free_internal(&intern);
 
 	} FOR_ALL_DIRECTORY_END;
@@ -1017,7 +1020,7 @@ ged_bot_dump(struct ged *gedp, int argc, const char *argv[])
 			       0,
 			       0,
 			       bot_dump_leaf,
-			       (void *)&gbdcdp);
+			       (genptr_t)&gbdcdp);
 	}
     }
 
@@ -1060,7 +1063,7 @@ ged_bot_dump(struct ged *gedp, int argc, const char *argv[])
 
 
 static void
-write_data_arrows(struct bview_data_arrow_state *gdasp, FILE *fp, int sflag)
+write_data_arrows(struct ged_data_arrow_state *gdasp, FILE *fp, int sflag)
 {
     register int i;
 
@@ -1135,19 +1138,19 @@ write_data_arrows(struct bview_data_arrow_state *gdasp, FILE *fp, int sflag)
 
 
 static void
-write_data_axes(struct bview_data_axes_state *bndasp, FILE *fp, int sflag)
+write_data_axes(struct ged_data_axes_state *gdasp, FILE *fp, int sflag)
 {
     register int i;
 
-    if (bndasp->draw) {
+    if (gdasp->gdas_draw) {
 	fastf_t halfAxesSize;
 	struct _ged_obj_material *gomp;
 
-	halfAxesSize = bndasp->size * 0.5;
+	halfAxesSize = gdasp->gdas_size * 0.5;
 
-	gomp = obj_get_material(bndasp->color[0],
-				    bndasp->color[1],
-				    bndasp->color[2],
+	gomp = obj_get_material(gdasp->gdas_color[0],
+				    gdasp->gdas_color[1],
+				    gdasp->gdas_color[2],
 				    1);
 	fprintf(fp, "usemtl %s\n", bu_vls_addr(&gomp->name));
 
@@ -1156,63 +1159,63 @@ write_data_axes(struct bview_data_axes_state *bndasp, FILE *fp, int sflag)
 	else
 	    fprintf(fp, "g data_axes\n");
 
-	for (i = 0; i < bndasp->num_points; ++i) {
+	for (i = 0; i < gdasp->gdas_num_points; ++i) {
 	    point_t A, B;
 
 	    /* draw X axis with x/y offsets */
 	    VSET(A,
-		 bndasp->points[i][X] - halfAxesSize,
-		 bndasp->points[i][Y],
-		 bndasp->points[i][Z]);
+		 gdasp->gdas_points[i][X] - halfAxesSize,
+		 gdasp->gdas_points[i][Y],
+		 gdasp->gdas_points[i][Z]);
 	    VSET(B,
-		 bndasp->points[i][X] + halfAxesSize,
-		 bndasp->points[i][Y],
-		 bndasp->points[i][Z]);
+		 gdasp->gdas_points[i][X] + halfAxesSize,
+		 gdasp->gdas_points[i][Y],
+		 gdasp->gdas_points[i][Z]);
 
 	    fprintf(fp, "v %f %f %f\n", V3ARGS_SCALE(A));
 	    fprintf(fp, "v %f %f %f\n", V3ARGS_SCALE(B));
 
 	    /* draw Y axis with x/y offsets */
 	    VSET(A,
-		 bndasp->points[i][X],
-		 bndasp->points[i][Y] - halfAxesSize,
-		 bndasp->points[i][Z]);
+		 gdasp->gdas_points[i][X],
+		 gdasp->gdas_points[i][Y] - halfAxesSize,
+		 gdasp->gdas_points[i][Z]);
 	    VSET(B,
-		 bndasp->points[i][X],
-		 bndasp->points[i][Y] + halfAxesSize,
-		 bndasp->points[i][Z]);
+		 gdasp->gdas_points[i][X],
+		 gdasp->gdas_points[i][Y] + halfAxesSize,
+		 gdasp->gdas_points[i][Z]);
 
 	    fprintf(fp, "v %f %f %f\n", V3ARGS_SCALE(A));
 	    fprintf(fp, "v %f %f %f\n", V3ARGS_SCALE(B));
 
 	    /* draw Z axis with x/y offsets */
 	    VSET(A,
-		 bndasp->points[i][X],
-		 bndasp->points[i][Y],
-		 bndasp->points[i][Z] - halfAxesSize);
+		 gdasp->gdas_points[i][X],
+		 gdasp->gdas_points[i][Y],
+		 gdasp->gdas_points[i][Z] - halfAxesSize);
 	    VSET(B,
-		 bndasp->points[i][X],
-		 bndasp->points[i][Y],
-		 bndasp->points[i][Z] + halfAxesSize);
+		 gdasp->gdas_points[i][X],
+		 gdasp->gdas_points[i][Y],
+		 gdasp->gdas_points[i][Z] + halfAxesSize);
 
 	    fprintf(fp, "v %f %f %f\n", V3ARGS_SCALE(A));
 	    fprintf(fp, "v %f %f %f\n", V3ARGS_SCALE(B));
 	}
 
-	for (i = 0; i < bndasp->num_points; ++i) {
+	for (i = 0; i < gdasp->gdas_num_points; ++i) {
 	    fprintf(fp, "l %d %d\n", (i*6)+v_offset, (i*6)+v_offset+1);
 	    fprintf(fp, "l %d %d\n", (i*6)+v_offset+2, (i*6)+v_offset+3);
 	    fprintf(fp, "l %d %d\n", (i*6)+v_offset+4, (i*6)+v_offset+5);
 	}
 
 
-	v_offset += (bndasp->num_points*6);
+	v_offset += (gdasp->gdas_num_points*6);
     }
 }
 
 
 static void
-write_data_lines(struct bview_data_line_state *gdlsp, FILE *fp, int sflag)
+write_data_lines(struct ged_data_line_state *gdlsp, FILE *fp, int sflag)
 {
     register int i;
 
@@ -1289,7 +1292,7 @@ data_dump(struct ged *gedp, FILE *fp)
 		bu_vls_printf(&filepath, "%s/%s_data.obj", output_directory, cp);
 
 		if ((data_fp=fopen(bu_vls_addr(&filepath), "wb+")) == NULL) {
-		    bu_vls_printf(gedp->ged_result_str, "data_dump: failed to open %s\n", bu_vls_addr(&filepath));
+		    bu_vls_printf(gedp->ged_result_str, "data_dump: failed to open %V\n", &filepath);
 		    bu_vls_free(&filepath);
 		    return GED_ERROR;
 		}
@@ -1320,9 +1323,11 @@ int
 ged_dbot_dump(struct ged *gedp, int argc, const char *argv[])
 {
     int ret;
-    char *file_ext = NULL;
+    char *file_ext = '\0';
     FILE *fp = (FILE *)0;
     int fd = -1;
+    mat_t mat;
+    struct ged_display_list *gdlp;
     const char *cmd_name;
 
     GED_CHECK_DATABASE_OPEN(gedp, GED_ERROR);
@@ -1445,10 +1450,10 @@ ged_dbot_dump(struct ged *gedp, int argc, const char *argv[])
 		    bu_vls_trunc(&obj_materials_file, 0);
 		    bu_vls_printf(&obj_materials_file, "%s.mtl", cp);
 
-		    bu_vls_printf(&filepath, "%s/%s", output_directory, bu_vls_addr(&obj_materials_file));
+		    bu_vls_printf(&filepath, "%s/%V", output_directory, &obj_materials_file);
 
 		    if ((obj_materials_fp=fopen(bu_vls_addr(&filepath), "wb+")) == NULL) {
-			bu_vls_printf(gedp->ged_result_str, "%s: failed to open %s\n", cmd_name, bu_vls_addr(&filepath));
+			bu_vls_printf(gedp->ged_result_str, "%s: failed to open %V\n", cmd_name, &filepath);
 			bu_vls_free(&obj_materials_file);
 			bu_vls_free(&filepath);
 			return GED_ERROR;
@@ -1486,7 +1491,7 @@ ged_dbot_dump(struct ged *gedp, int argc, const char *argv[])
 	BU_LIST_INIT(&HeadObjMaterials);
 
 	if ((obj_materials_fp=fopen(bu_vls_addr(&obj_materials_file), "wb+")) == NULL) {
-	    bu_vls_printf(gedp->ged_result_str, "%s: failed to open %s\n", cmd_name, bu_vls_addr(&obj_materials_file));
+	    bu_vls_printf(gedp->ged_result_str, "%s: failed to open %V\n", cmd_name, &obj_materials_file);
 	    bu_vls_free(&obj_materials_file);
 	    fclose(fp);
 	    return GED_ERROR;
@@ -1497,7 +1502,45 @@ ged_dbot_dump(struct ged *gedp, int argc, const char *argv[])
 	fprintf(fp, "mtllib %s\n", bu_vls_addr(&obj_materials_file));
     }
 
-    dl_botdump(gedp->ged_gdp->gd_headDisplay, gedp->ged_wdbp->dbip, fp, fd, file_ext, output_type, &curr_obj_red, &curr_obj_green, &curr_obj_blue, &curr_obj_alpha);
+    MAT_IDN(mat);
+
+    for (BU_LIST_FOR(gdlp, ged_display_list, gedp->ged_gdp->gd_headDisplay)) {
+	struct solid *sp;
+
+	FOR_ALL_SOLIDS(sp, &gdlp->gdl_headSolid) {
+	    struct directory *dp;
+	    struct rt_db_internal intern;
+	    struct rt_bot_internal *bot;
+
+	    dp = sp->s_fullpath.fp_names[sp->s_fullpath.fp_len-1];
+
+	    /* get the internal form */
+	    ret=rt_db_get_internal(&intern, dp, gedp->ged_wdbp->dbip, mat, &rt_uniresource);
+
+	    if (ret < 0) {
+		bu_log("%s: rt_get_internal failure %d on %s\n", cmd_name, ret, dp->d_namep);
+		continue;
+	    }
+
+	    if (ret != ID_BOT) {
+		bu_log("%s: %s is not a bot (ignored)\n", cmd_name, dp->d_namep);
+		rt_db_free_internal(&intern);
+		continue;
+	    }
+
+	    /* Write out object color */
+	    if (output_type == OTYPE_OBJ) {
+		curr_obj_red = sp->s_color[0];
+		curr_obj_green = sp->s_color[1];
+		curr_obj_blue = sp->s_color[2];
+		curr_obj_alpha = sp->s_transparency;
+	    }
+
+	    bot = (struct rt_bot_internal *)intern.idb_ptr;
+	    bot_dump(dp, bot, fp, fd, file_ext, gedp->ged_wdbp->dbip->dbi_filename);
+	    rt_db_free_internal(&intern);
+	}
+    }
 
     data_dump(gedp, fp);
 

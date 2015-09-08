@@ -1,7 +1,7 @@
 /*                   P I X S A T U R A T E . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -32,12 +32,12 @@
 
 #include "common.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
-#include "bu/log.h"
-#include "bu/str.h"
-#include "bio.h"
+#include "bu.h"
+
 
 #define RINTLUM (79)
 #define GINTLUM (156)
@@ -45,11 +45,6 @@
 
 char buf[3*16*1024];
 
-void
-printusage ()
-{
-	bu_exit(1, "Usage: pixsaturate saturation < infile.pix > outfile.pix\n");
-}
 
 int
 main(int argc, char **argv)
@@ -63,17 +58,8 @@ main(int argc, char **argv)
     unsigned char *cp;
     size_t ret;
 
-    if (argc != 2)
-	printusage ();
-    if ( BU_STR_EQUAL(argv[1], "-h") || BU_STR_EQUAL(argv[1], "-?") )
-	printusage ();
-    if (argv[1][0] == '-') {
-    	fprintf(stderr,"pixsaturate: no options except -h or -?\n");
-	printusage ();
-    }
-    if ( isatty(fileno(stdin)) || isatty(fileno(stdout)) ) {
-    	fprintf(stderr,"pixsaturate: need pipes for stdin and stdout\n");
-	printusage ();
+    if (argc != 2) {
+	bu_exit(1, "Usage: pixsaturate saturation\n");
     }
     sat = atof(argv[1]);
 

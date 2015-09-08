@@ -1,7 +1,7 @@
 /*                 LocalUnits.h
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef CONV_STEP_STEP_G_LOCALUNITS_H
-#define CONV_STEP_STEP_G_LOCALUNITS_H
+#ifndef LOCALUNITS_H_
+#define LOCALUNITS_H_
 
 class LocalUnits
 {
@@ -36,7 +36,7 @@ public:
     virtual ~LocalUnits();
 };
 
-#endif /* CONV_STEP_STEP_G_LOCALUNITS_H */
+#endif /* LOCALUNITS_H_ */
 
 /*
  * Local Variables:

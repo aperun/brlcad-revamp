@@ -1,7 +1,7 @@
 /*                     B A C K T R A C E . C
  * BRL-CAD
  *
- * Copyright (c) 2007-2014 United States Government as represented by
+ * Copyright (c) 2007-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -23,6 +23,7 @@
 /* system headers */
 #include <signal.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
@@ -38,16 +39,12 @@
 #ifdef HAVE_PROCESS_H
 #  include <process.h>
 #endif
-#include "bsocket.h"
+#include "bselect.h"
 #include "bio.h"
 
 /* common headers */
-#include "bu/debug.h"
-#include "bu/file.h"
-#include "bu/log.h"
-#include "bu/malloc.h"
-#include "bu/parallel.h"
-#include "bu/str.h"
+#include "bu.h"
+
 
 /* strict c99 doesn't declare kill() (but POSIX does) */
 #if defined(HAVE_KILL) && !defined(HAVE_DECL_KILL)
@@ -174,15 +171,11 @@ backtrace(char * const *args, int fd)
 	perror("write [set backtrace past-main on] failed");
     } else if (write(input[1], "bt full\n", 8) != 8) {
 	perror("write [bt full] failed");
-    } else if (write(input[1], "thread apply all bt full\n", 25) != 25) {
-	perror("write [thread apply all bt full] failed");
     }
-
-    /* Can add additional gdb commands above here.  Output will
-     * contain everything up to the "Detaching from process" statement
-     * from the quit command below.
+    /* can add additional gdb commands here.  output will contain
+     * everything up to the "Detaching from process" statement from
+     * quit.
      */
-
     if (write(input[1], "quit\n", 5) != 5) {
 	perror("write [quit] failed");
     }
@@ -360,8 +353,8 @@ bu_backtrace(FILE *fp)
     }
     fflush(fp);
 
-    /* Could probably do something better than this to avoid hanging
-     * indefinitely. Keeps the trace clean, though, and allows for a
+    /* could probably do something better than this to avoid hanging
+     * indefinitely.  keeps the trace clean, though, and allows for a
      * debugger to be attached interactively if needed.
      */
     interrupt_wait = 0;

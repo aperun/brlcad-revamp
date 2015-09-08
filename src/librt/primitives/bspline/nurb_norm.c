@@ -1,7 +1,7 @@
 /*                     N U R B _ N O R M . C
  * BRL-CAD
  *
- * Copyright (c) 1991-2014 United States Government as represented by
+ * Copyright (c) 1991-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -29,11 +29,12 @@
 
 #include "common.h"
 
+#include <stdio.h>
 #include "bio.h"
 
 #include "vmath.h"
 #include "raytrace.h"
-#include "rt/nurb.h"
+#include "nurb.h"
 
 
 /**

@@ -52,8 +52,7 @@
 
 int  main (int argc, char *argv[]);
 void usage ();
-BOOL png2pnm (FILE *png_file, FILE *pnm_file, FILE *alpha_file, BOOL raw,
-   BOOL alpha);
+BOOL png2pnm (FILE *png_file, FILE *pnm_file, FILE *alpha_file, BOOL raw, BOOL alpha);
 
 /*
  *  main
@@ -86,8 +85,7 @@ int main(int argc, char *argv[])
           if ((fp_al = fopen (argv[argi], "wb")) == NULL)
           {
             fprintf (stderr, "PNM2PNG\n");
-            fprintf (stderr, "Error:  can not create alpha-channel file %s\n",
-               argv[argi]);
+            fprintf (stderr, "Error:  can not create alpha-channel file %s\n", argv[argi]);
             exit (1);
           }
           break;
@@ -178,11 +176,9 @@ void usage()
   fprintf (stderr, "Usage:  png2pnm [options] <file>.png [<file>.pnm]\n");
   fprintf (stderr, "   or:  ... | png2pnm [options]\n");
   fprintf (stderr, "Options:\n");
-  fprintf (stderr,
-     "   -r[aw]   write pnm-file in binary format (P4/P5/P6) (default)\n");
+  fprintf (stderr, "   -r[aw]   write pnm-file in binary format (P4/P5/P6) (default)\n");
   fprintf (stderr, "   -n[oraw] write pnm-file in ascii format (P1/P2/P3)\n");
-  fprintf (stderr,
-     "   -a[lpha] <file>.pgm write PNG alpha channel as pgm-file\n");
+  fprintf (stderr, "   -a[lpha] <file>.pgm write PNG alpha channel as pgm-file\n");
   fprintf (stderr, "   -h | -?  print this help-information\n");
 }
 
@@ -190,8 +186,7 @@ void usage()
  *  png2pnm
  */
 
-BOOL png2pnm (FILE *png_file, FILE *pnm_file, FILE *alpha_file,
-    volatile BOOL raw, BOOL alpha)
+BOOL png2pnm (FILE *png_file, FILE *pnm_file, FILE *alpha_file, BOOL raw, BOOL alpha)
 {
   png_struct    *png_ptr = NULL;
   png_info        *info_ptr = NULL;
@@ -223,7 +218,7 @@ BOOL png2pnm (FILE *png_file, FILE *pnm_file, FILE *alpha_file,
 
   /* create png and info structures */
 
-  png_ptr = png_create_read_struct (png_get_libpng_ver(NULL),
+  png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING,
     NULL, NULL, NULL);
   if (!png_ptr)
     return FALSE;   /* out of memory */
@@ -320,14 +315,12 @@ BOOL png2pnm (FILE *png_file, FILE *pnm_file, FILE *alpha_file,
   /* row_bytes is the width x number of channels x (bit-depth / 8) */
   row_bytes = png_get_rowbytes (png_ptr, info_ptr);
 
-  if ((png_pixels = (png_byte *)
-     malloc (row_bytes * height * sizeof (png_byte))) == NULL) {
+  if ((png_pixels = (png_byte *) malloc (row_bytes * height * sizeof (png_byte))) == NULL) {
     png_destroy_read_struct (&png_ptr, &info_ptr, NULL);
     return FALSE;
   }
 
-  if ((row_pointers = (png_byte **)
-     malloc (height * sizeof (png_bytep))) == NULL)
+  if ((row_pointers = (png_byte **) malloc (height * sizeof (png_bytep))) == NULL)
   {
     png_destroy_read_struct (&png_ptr, &info_ptr, NULL);
     free (png_pixels);
@@ -336,7 +329,7 @@ BOOL png2pnm (FILE *png_file, FILE *pnm_file, FILE *alpha_file,
   }
 
   /* set the individual row_pointers to point at the correct offsets */
-  for (i = 0; i < ((int) height); i++)
+  for (i = 0; i < (height); i++)
     row_pointers[i] = png_pixels + i * row_bytes;
 
   /* now we can go ahead and just read the whole image */
@@ -379,9 +372,9 @@ BOOL png2pnm (FILE *png_file, FILE *pnm_file, FILE *alpha_file,
   /* write data to PNM file */
   pix_ptr = png_pixels;
 
-  for (row = 0; row < (int) height; row++)
+  for (row = 0; row < height; row++)
   {
-    for (col = 0; col < (int) width; col++)
+    for (col = 0; col < width; col++)
     {
       for (i = 0; i < (channels - alpha_present); i++)
       {

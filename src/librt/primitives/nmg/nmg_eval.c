@@ -1,7 +1,7 @@
 /*                      N M G _ E V A L . C
  * BRL-CAD
  *
- * Copyright (c) 1990-2014 United States Government as represented by
+ * Copyright (c) 1990-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -30,6 +30,7 @@
 #include "common.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include "bio.h"
 
@@ -80,6 +81,8 @@ static const char *nmg_class_names[] = {
 
 
 /**
+ * N M G _ C K _ L U _ O R I E N T A T I O N
+ *
  * Make sure that the lu and fu orientation flags are consistent with
  * the geometric arrangement of the vertices and the faceuse normal.
  */
@@ -105,8 +108,8 @@ nmg_ck_lu_orientation(struct loopuse *lu, const struct bn_tol *tolp)
 
 
     if (dot < 0.0) {
-	bu_log("nmg_ck_lu_orientation() lu=%p, dot=%g, fu_orient=%s, lu_orient=%s\n",
-	       (void *)lu, dot,
+	bu_log("nmg_ck_lu_orientation() lu=x%x, dot=%g, fu_orient=%s, lu_orient=%s\n", lu,
+	       dot,
 	       nmg_orientation(fu->orientation),
 	       nmg_orientation(lu->orientation)
 	    );
@@ -116,14 +119,16 @@ nmg_ck_lu_orientation(struct loopuse *lu, const struct bn_tol *tolp)
 
 
 /**
+ * N M G _ C L A S S _ N A M E
+ *
  * Convert an NMG_CLASS_xxx token into a string name.
  */
 const char *
-nmg_class_name(int nmg_class)
+nmg_class_name(int class)
 {
-    if (nmg_class == NMG_CLASS_Unknown) return "Unknown";
-    if (nmg_class < 0 || nmg_class > NMG_CLASS_BAD) nmg_class = NMG_CLASS_BAD;
-    return nmg_class_names[nmg_class];
+    if (class == NMG_CLASS_Unknown) return "Unknown";
+    if (class < 0 || class > NMG_CLASS_BAD) class = NMG_CLASS_BAD;
+    return nmg_class_names[class];
 }
 
 
@@ -177,6 +182,8 @@ static const int intersect_actions[8] = {
 
 
 /**
+ * N M G _ E V A L U A T E _ B O O L E A N
+ *
  * Evaluate a boolean operation on the two shells "A" and "B", of the
  * form "answer = A op B".  As input, each element (loop-in-face, wire
  * loop, wire edge, vertex) in both A and B has been classified as
@@ -196,8 +203,8 @@ nmg_evaluate_boolean(struct shell *sA, struct shell *sB, int op, char **classlis
     BN_CK_TOL(tol);
 
     if (RTG.NMG_debug & DEBUG_BOOLEVAL) {
-	bu_log("nmg_evaluate_boolean(sA=%p, sB=%p, op=%d) START\n",
-	       (void *)sA, (void *)sB, op);
+	bu_log("nmg_evaluate_boolean(sA=x%x, sB=x%x, op=%d) START\n",
+	       sA, sB, op);
     }
 
     switch (op) {
@@ -230,8 +237,8 @@ nmg_evaluate_boolean(struct shell *sA, struct shell *sB, int op, char **classlis
     nmg_eval_shell(sB, &bool_state);
 
     if (RTG.NMG_debug & DEBUG_BOOLEVAL) {
-	bu_log("nmg_evaluate_boolean(sA=%p, sB=%p, op=%d), evaluations done\n",
-	       (void *)sA, (void *)sB, op);
+	bu_log("nmg_evaluate_boolean(sA=x%x, sB=x%x, op=%d), evaluations done\n",
+	       sA, sB, op);
     }
     /* Write sA and sB into separate files, if wanted? */
 
@@ -260,6 +267,8 @@ static int nmg_eval_count = 0;	/* debug -- plot file numbering */
 
 
 /**
+ * N M G _ E V A L _ A C T I O N
+ *
  * Given a pointer to some NMG data structure, search the 4
  * classification lists to determine its classification.  (XXX In the
  * future, this should be done with one big array).  Then, return the
@@ -269,7 +278,7 @@ HIDDEN int
 nmg_eval_action(uint32_t *ptr, register struct nmg_bool_state *bs)
 {
     register int ret;
-    register int nmg_class;
+    register int class;
     int index;
 
     BN_CK_TOL(bs->bs_tol);
@@ -277,64 +286,64 @@ nmg_eval_action(uint32_t *ptr, register struct nmg_bool_state *bs)
     index = nmg_index_of_struct(ptr);
     if (bs->bs_isA) {
 	if (NMG_INDEX_VALUE(bs->bs_classtab[NMG_CLASS_AinB], index)) {
-	    nmg_class = NMG_CLASS_AinB;
+	    class = NMG_CLASS_AinB;
 	    ret = bs->bs_actions[NMG_CLASS_AinB];
 	    goto out;
 	}
 	if (NMG_INDEX_VALUE(bs->bs_classtab[NMG_CLASS_AonBshared], index)) {
-	    nmg_class = NMG_CLASS_AonBshared;
+	    class = NMG_CLASS_AonBshared;
 	    ret = bs->bs_actions[NMG_CLASS_AonBshared];
 	    goto out;
 	}
 	if (NMG_INDEX_VALUE(bs->bs_classtab[NMG_CLASS_AonBanti], index)) {
-	    nmg_class = NMG_CLASS_AonBanti;
+	    class = NMG_CLASS_AonBanti;
 	    ret = bs->bs_actions[NMG_CLASS_AonBanti];
 	    goto out;
 	}
 	if (NMG_INDEX_VALUE(bs->bs_classtab[NMG_CLASS_AoutB], index)) {
-	    nmg_class = NMG_CLASS_AoutB;
+	    class = NMG_CLASS_AoutB;
 	    ret = bs->bs_actions[NMG_CLASS_AoutB];
 	    goto out;
 	}
-	bu_log("nmg_eval_action(ptr=%p) %s has no A classification, retaining\n",
-	       (void *)ptr, bu_identify_magic(*((uint32_t *)ptr)));
-	nmg_class = NMG_CLASS_BAD;
+	bu_log("nmg_eval_action(ptr=x%x) %s has no A classification, retaining\n",
+	       ptr, bu_identify_magic(*((uint32_t *)ptr)));
+	class = NMG_CLASS_BAD;
 	ret = BACTION_RETAIN;
 	goto out;
     }
 
     /* is B */
     if (NMG_INDEX_VALUE(bs->bs_classtab[NMG_CLASS_BinA], index)) {
-	nmg_class = NMG_CLASS_BinA;
+	class = NMG_CLASS_BinA;
 	ret = bs->bs_actions[NMG_CLASS_BinA];
 	goto out;
     }
     if (NMG_INDEX_VALUE(bs->bs_classtab[NMG_CLASS_BonAshared], index)) {
-	nmg_class = NMG_CLASS_BonAshared;
+	class = NMG_CLASS_BonAshared;
 	ret = bs->bs_actions[NMG_CLASS_BonAshared];
 	goto out;
     }
     if (NMG_INDEX_VALUE(bs->bs_classtab[NMG_CLASS_BonAanti], index)) {
-	nmg_class = NMG_CLASS_BonAanti;
+	class = NMG_CLASS_BonAanti;
 	ret = bs->bs_actions[NMG_CLASS_BonAanti];
 	goto out;
     }
     if (NMG_INDEX_VALUE(bs->bs_classtab[NMG_CLASS_BoutA], index)) {
-	nmg_class = NMG_CLASS_BoutA;
+	class = NMG_CLASS_BoutA;
 	ret = bs->bs_actions[NMG_CLASS_BoutA];
 	goto out;
     }
-    bu_log("nmg_eval_action(ptr=%p) %s has no B classification, retaining\n",
-	   (void *)ptr, bu_identify_magic(*((uint32_t *)ptr)));
-    nmg_class = NMG_CLASS_BAD;
+    bu_log("nmg_eval_action(ptr=x%x) %s has no B classification, retaining\n",
+	   ptr, bu_identify_magic(*((uint32_t *)ptr)));
+    class = NMG_CLASS_BAD;
     ret = BACTION_RETAIN;
 out:
     if (RTG.NMG_debug & DEBUG_BOOLEVAL) {
-	bu_log("nmg_eval_action(ptr=%p) index=%d %s %s %s %s\n",
-	       (void *)ptr, index,
+	bu_log("nmg_eval_action(ptr=x%x) index=%d %s %s %s %s\n",
+	       ptr, index,
 	       bs->bs_isA ? "A" : "B",
 	       bu_identify_magic(*((uint32_t *)ptr)),
-	       nmg_class_name(nmg_class),
+	       nmg_class_name(class),
 	       nmg_baction_names[ret]);
     }
     return ret;
@@ -342,6 +351,8 @@ out:
 
 
 /**
+ * N M G _ E V A L _ S H E L L
+ *
  * Make a life-and-death decision on every element of a shell.
  * Descend the "great chain of being" from the face to loop to edge to
  * vertex, saving or demoting along the way.
@@ -418,8 +429,8 @@ nmg_eval_shell(register struct shell *s, struct nmg_bool_state *bs)
 	}
 
 	if (RTG.NMG_debug & DEBUG_BOOLEVAL)
-	    bu_log("faceuse %p loops retained=%d\n",
-		   (void *)fu, loops_retained);
+	    bu_log("faceuse x%x loops retained=%d\n",
+		   fu, loops_retained);
 	if (RTG.NMG_debug & DEBUG_VERIFY)
 	    nmg_vshell(&s->r_p->s_hd, s->r_p);
 
@@ -432,7 +443,7 @@ nmg_eval_shell(register struct shell *s, struct nmg_bool_state *bs)
 	    if (loops_retained) bu_bomb("nmg_eval_shell() empty faceuse with retained loops?\n");
 	    /* faceuse is empty, face & mate die */
 	    if (RTG.NMG_debug & DEBUG_BOOLEVAL)
-		bu_log("faceuse %p empty, kill\n", (void *)fu);
+		bu_log("faceuse x%x empty, kill\n", fu);
 	    nmg_kfu(fu);	/* kill face & mate, dequeue from shell */
 	    if (RTG.NMG_debug & DEBUG_VERIFY)
 		nmg_vshell(&s->r_p->s_hd, s->r_p);
@@ -585,6 +596,8 @@ nmg_eval_shell(register struct shell *s, struct nmg_bool_state *bs)
 
 
 /**
+ * N M G _ E V A L _ P L O T
+ *
  * Called from nmg_eval_shell
  *
  * Located here because definition of nmg_bool_state is local to this
@@ -631,16 +644,13 @@ nmg_eval_plot(struct nmg_bool_state *bs, int num)
 	/* Cause animation of boolean operation as it proceeds! */
 	if (nmg_vlblock_anim_upcall) {
 	    /* if requested, delay 1/4 second */
-	    /* need to cast nmg_vlblock_anim_upcall pointer for actual use as a function */
-	    void (*cfp)(struct bn_vlblock *, int, int);
-	    cfp = (void (*)(struct bn_vlblock *, int, int))nmg_vlblock_anim_upcall;
-	    cfp(vbp,
-		(RTG.NMG_debug&DEBUG_PL_SLOW) ? 250000 : 0,
-		0);
+	    (*nmg_vlblock_anim_upcall)(vbp,
+				       (RTG.NMG_debug&DEBUG_PL_SLOW) ? 250000 : 0,
+				       0);
 	} else {
 	    bu_log("null nmg_vlblock_anim_upcall, no animation\n");
 	}
-	bn_vlblock_free(vbp);
+	rt_vlblock_free(vbp);
     }
 }
 

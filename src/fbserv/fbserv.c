@@ -1,7 +1,7 @@
 /*                        F B S E R V . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -76,16 +76,13 @@
 #ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>		/* For struct timeval */
 #endif
-#include "bsocket.h"
-#include "bnetwork.h"
+#include "bselect.h"
 #include "bio.h"
+#include "bin.h"
 
-#include "../libfb/fb_private.h" /* for _fb_disk_enable */
-#include "bu/getopt.h"
-#include "bu/log.h"
-#include "vmath.h"
 #include "fb.h"
 #include "pkg.h"
+#include "bu.h"
 #include "fbmsg.h"
 
 
@@ -112,7 +109,7 @@ int	verbose = 0;
 
 /* from server.c */
 extern const struct pkg_switch fb_server_pkg_switch[];
-extern fb	*fb_server_fbp;
+extern FBIO	*fb_server_fbp;
 extern fd_set	*fb_server_select_list;
 extern int	*fb_server_max_fd;
 extern int	fb_server_got_fb_free;       /* !0 => we have received an fb_free */
@@ -127,7 +124,7 @@ Usage: fbserv port_num\n\
    or  fbserv [-v] [-{sS} squaresize]\n\
 	  [-{wW} width] [-{nN} height] -p port_num -F frame_buffer\n\
 	  (for a single-frame-buffer server)\n\
-          (if '-p' and '-F' are both omitted, port_num and frame_buffer\n\
+          (can omit -p and -F, in which case port_num and frame_buffer\n\
            must appear in that order)\n\
 ";
 
@@ -181,6 +178,8 @@ get_args(int argc, char **argv)
 }
 
 /*
+ *			I S _ S O C K E T
+ *
  * Determine if a file descriptor corresponds to an open socket.
  * Used to detect when we are started from INETD which gives us an
  * open socket connection on fd 0.
@@ -202,7 +201,7 @@ static void
 sigalarm(int UNUSED(code))
 {
     printf("alarm %s\n", fb_server_fbp ? "FBP" : "NULL");
-    if ( fb_server_fbp != FB_NULL ) {
+    if ( fb_server_fbp != FBIO_NULL ) {
 	fb_poll(fb_server_fbp);
     }
 #ifdef SIGALRM
@@ -248,6 +247,9 @@ setup_socket(int fd)
 }
 
 
+/*
+ *			N E W _ C L I E N T
+ */
 void
 new_client(struct pkg_conn *pcp)
 {
@@ -261,7 +263,7 @@ new_client(struct pkg_conn *pcp)
 	/* Found an available slot */
 	clients[i] = pcp;
 	FD_SET(pcp->pkc_fd, &select_list);
-	V_MAX(max_fd, pcp->pkc_fd);
+	if ( pcp->pkc_fd > max_fd )  max_fd = pcp->pkc_fd;
 	setup_socket( pcp->pkc_fd );
 	return;
     }
@@ -269,15 +271,15 @@ new_client(struct pkg_conn *pcp)
     pkg_close(pcp);
 }
 
+/*
+ *			D R O P _ C L I E N T
+ */
 void
 drop_client(int sub)
 {
-    int fd;
+    int fd = clients[sub]->pkc_fd;
 
-    if ( clients[sub] == PKC_NULL )
-	return;
-
-    fd = clients[sub]->pkc_fd;
+    if ( clients[sub] == PKC_NULL )  return;
 
     FD_CLR( fd, &select_list );
     pkg_close( clients[sub] );
@@ -286,13 +288,15 @@ drop_client(int sub)
 
 
 /*
+ *			C O M M _ E R R O R
+ *
  *  Communication error.  An error occurred on the PKG link.
  *  It may be local, or it may be between us and the client we are serving.
  *  We send a copy to syslog or stderr.
  *  Don't send one down the wire, this can cause loops.
  */
 static void
-comm_error(const char *str)
+comm_error(char *str)
 {
 #if defined(HAVE_SYSLOG_H)
     if ( use_syslog ) {
@@ -309,6 +313,8 @@ comm_error(const char *str)
 }
 
 /*
+ *			M A I N _ L O O P
+ *
  *  Loop forever handling clients as they come and go.
  *  Access to the framebuffer may be interleaved, if the user
  *  wants it that way.
@@ -320,21 +326,20 @@ main_loop(void)
     int	ncloses = 0;
 
     while ( !fb_server_got_fb_free ) {
-	long refresh_rate = 60000000; /* old default */
 	fd_set infds;
 	struct timeval tv;
 	int	i;
 
-	if (fb_server_fbp) {
-	    if (fb_poll_rate(fb_server_fbp) > 0)
-		refresh_rate = fb_poll_rate(fb_server_fbp);
-	}
-
 	infds = select_list;	/* struct copy */
 
+#ifdef _WIN32
 	tv.tv_sec = 0L;
-	tv.tv_usec = refresh_rate;
-	if ((select( max_fd+1, &infds, (fd_set *)0, (fd_set *)0, (struct timeval *)&tv ) == 0)) {
+	tv.tv_usec = 250L;
+#else
+	tv.tv_sec = 60L;
+	tv.tv_usec = 0L;
+#endif
+	if ((select( max_fd+1, &infds, (fd_set *)0, (fd_set *)0, (void *)&tv ) == 0)) {
 	    /* Process fb events while waiting for client */
 	    /*printf("select timeout waiting for client\n");*/
 	    if (fb_server_fbp) {
@@ -345,7 +350,7 @@ main_loop(void)
 	    continue;
 	}
 	/* Handle any events from the framebuffer */
-	if (fb_is_set_fd(fb_server_fbp, &infds)) {
+	if (fb_server_fbp && fb_server_fbp->if_selfd > 0 && FD_ISSET(fb_server_fbp->if_selfd, &infds)) {
 	    fb_poll(fb_server_fbp);
 	}
 
@@ -398,6 +403,9 @@ init_syslog(void)
 }
 
 
+/*
+ *			M A I N
+ */
 int
 main(int argc, char **argv)
 {
@@ -449,9 +457,12 @@ main(int argc, char **argv)
 	fb_server_retain_on_close = 1;	/* don't ever close the frame buffer */
 
 	/* open a frame buffer */
-	if ( (fb_server_fbp = fb_open(framebuffer, width, height)) == FB_NULL )
+	if ( (fb_server_fbp = fb_open(framebuffer, width, height)) == FBIO_NULL )
 	    bu_exit(1, NULL);
-	max_fd = fb_set_fd(fb_server_fbp, &select_list);
+	if ( fb_server_fbp->if_selfd > 0 )  {
+	    FD_SET(fb_server_fbp->if_selfd, &select_list);
+	    max_fd = fb_server_fbp->if_selfd;
+	}
 
 	/* check/default port */
 	if ( port_set ) {
@@ -466,7 +477,8 @@ main(int argc, char **argv)
 	if ( (netfd = pkg_permserver(portname, 0, 0, comm_error)) < 0 )
 	    bu_exit(-1, NULL);
 	FD_SET(netfd, &select_list);
-	V_MAX(max_fd, netfd);
+	if (netfd > max_fd)
+	    max_fd = netfd;
 
 	main_loop();
 	return 0;
@@ -534,6 +546,8 @@ main(int argc, char **argv)
 
 #ifndef _WIN32
 /*
+ *			F B _ L O G
+ *
  *  Handles error or log messages from the frame buffer library.
  *  We route these back to all clients in an ERROR packet.  Note that
  *  this is a replacement for the default fb_log function in libfb

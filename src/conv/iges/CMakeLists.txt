@@ -48,6 +48,7 @@ set(iges-g_SRCS
   extrudcon.c
   extrude.c
   findp.c
+  freetree.c
   get_att.c
   get_cnurb_curve.c
   get_edge_list.c
@@ -62,8 +63,10 @@ set(iges-g_SRCS
   make_nurb_face.c
   makedir.c
   makegroup.c
+  makemembers.c
   matmult.c
   orient_loops.c
+  planar_nurb.c
   read_att.c
   read_edge_list.c
   read_vertex_list.c
@@ -117,6 +120,7 @@ set(iges_ignore_files
   n_iges.cpp
   n_iges.hpp
   n_main.cpp
+  treecheck.c
   wing128.igs
   woodie.igs
   )

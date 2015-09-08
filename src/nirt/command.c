@@ -1,7 +1,7 @@
 /*                       C O M M A N D . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -30,8 +30,6 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "bu/str.h"
-#include "bu/units.h"
 #include "vmath.h"
 #include "raytrace.h"
 
@@ -85,6 +83,33 @@ bot_minpieces(char *buffer, com_table *UNUSED(ctp), struct rt_i *UNUSED(rtip))
 }
 
 void
+bot_mintie(char *buffer, com_table *UNUSED(ctp), struct rt_i *UNUSED(rtip))
+{
+    long new_lvalue;
+    int i=0;
+
+    while (isspace((int)*(buffer+i)))
+	++i;
+    if (*(buffer+i) == '\0') {
+	/* display current rt_bot_mintie */
+	bu_log("rt_bot_mintie = %zu\n", rt_bot_mintie);
+	return;
+    }
+
+    new_lvalue = atol(buffer);
+
+    if (new_lvalue < 0) {
+	bu_log("Error: rt_bot_mintie cannot be less than 0\n");
+	return;
+    }
+
+    if ((size_t)new_lvalue != rt_bot_mintie) {
+	rt_bot_mintie = (size_t)new_lvalue;
+	need_prep = 1;
+    }
+}
+
+void
 az_el(char *buffer, com_table *ctp, struct rt_i *UNUSED(rtip))
 {
     extern int str_dbl();  /* function to convert string to double */
@@ -126,8 +151,6 @@ az_el(char *buffer, com_table *ctp, struct rt_i *UNUSED(rtip))
 	return;
     }
     i += rc;
-    while (isspace((int)*(buffer+i)))
-	++i;
     if (*(buffer+i) != '\0') {
 	/* check for garbage at the end of the line */
 	com_usage(ctp);
@@ -185,8 +208,6 @@ grid_coor(char *buffer, com_table *ctp, struct rt_i *UNUSED(rtip))
 	return;
     }
     i += rc;
-    while (isspace((int)*(buffer+i)))
-	++i;
     if (*(buffer+i) != '\0') {
 	/* check for garbage at the end of the line */
 	com_usage(ctp);
@@ -238,8 +259,6 @@ target_coor(char *buffer, com_table *ctp, struct rt_i *UNUSED(rtip))
 	return;
     }
     i += rc;
-    while (isspace((int)*(buffer+i)))
-	++i;
     if (*(buffer+i) != '\0') {
 	/* check for garbage at the end of the line */
 	com_usage(ctp);
@@ -289,8 +308,6 @@ dir_vect(char *buffer, com_table *ctp, struct rt_i *UNUSED(rtip))
 	return;
     }
     i += rc;
-    while (isspace((int)*(buffer+i)))
-	++i;
     if (*(buffer+i) != '\0') {
 	/* check for garbage at the end of the line */
 	com_usage(ctp);

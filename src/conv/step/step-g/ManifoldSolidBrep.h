@@ -1,7 +1,7 @@
 /*                 ManifoldSolidBrep.h
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef CONV_STEP_STEP_G_MANIFOLDSOLIDBREP_H
-#define CONV_STEP_STEP_G_MANIFOLDSOLIDBREP_H
+#ifndef MANIFOLDSOLIDBREP_H_
+#define MANIFOLDSOLIDBREP_H_
 
 #include "SolidModel.h"
 
@@ -55,7 +55,7 @@ public:
     static STEPEntity *Create(STEPWrapper *sw, SDAI_Application_instance *sse);
 };
 
-#endif /* CONV_STEP_STEP_G_MANIFOLDSOLIDBREP_H */
+#endif /* MANIFOLDSOLIDBREP_H_ */
 
 /*
  * Local Variables:

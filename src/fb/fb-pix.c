@@ -1,7 +1,7 @@
 /*                        F B - P I X . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -28,11 +28,16 @@
 
 #include <stdlib.h>
 #include <sys/stat.h>
+#include "bio.h"
 
-#include "bu/getopt.h"
-#include "bu/file.h"
-#include "bu/log.h"
-#include "vmath.h"
+#ifdef HAVE_WINSOCK_H
+#  include <winsock.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
+
+#include "bu.h"
 #include "fb.h"
 
 #include "pkg.h"
@@ -109,7 +114,7 @@ get_args(int argc, char **argv)
 int
 main(int argc, char **argv)
 {
-    fb *fbp;
+    FBIO *fbp;
     int y;
 
     unsigned char *scanline;	/* 1 scanline pixel buffer */
@@ -128,7 +133,9 @@ Usage: fb-pix [-i -c] [-F framebuffer]\n\
 	bu_exit(1, NULL);
     }
 
+#if defined(_WIN32) && !defined(__CYGWIN__)
     setmode(fileno(stdout), O_BINARY);
+#endif
 
     scanpix = screen_width;
     scanbytes = scanpix * sizeof(RGBpixel);
@@ -142,8 +149,10 @@ Usage: fb-pix [-i -c] [-F framebuffer]\n\
 	bu_exit(12, NULL);
     }
 
-    V_MIN(screen_height, fb_getheight(fbp));
-    V_MIN(screen_width, fb_getwidth(fbp));
+    if (screen_height > fb_getheight(fbp))
+	screen_height = fb_getheight(fbp);
+    if (screen_width > fb_getwidth(fbp))
+	screen_width = fb_getwidth(fbp);
 
     if (crunch) {
 	if (fb_rmap(fbp, &cmap) == -1) {

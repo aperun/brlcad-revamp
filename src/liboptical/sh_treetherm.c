@@ -1,7 +1,7 @@
 /*                  S H _ T R E E T H E R M . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -32,7 +32,7 @@
 #include "vmath.h"
 #include "raytrace.h"
 #include "optical.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
 
 
 #define tthrm_MAGIC 0x7468726d	/* 'thrm' */
@@ -143,10 +143,10 @@ struct bu_structparse tthrm_parse[] = {
 };
 
 
-HIDDEN int tthrm_setup(register struct region *rp, struct bu_vls *matparm, void **dpp, const struct mfuncs *mfp, struct rt_i *rtip);
-HIDDEN int tthrm_render(struct application *ap, const struct partition *pp, struct shadework *swp, void *dp);
-HIDDEN void tthrm_print(register struct region *rp, void *dp);
-HIDDEN void tthrm_free(void *cp);
+HIDDEN int tthrm_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *mfp, struct rt_i *rtip);
+HIDDEN int tthrm_render(struct application *ap, const struct partition *pp, struct shadework *swp, genptr_t dp);
+HIDDEN void tthrm_print(register struct region *rp, genptr_t dp);
+HIDDEN void tthrm_free(genptr_t cp);
 
 /* The "mfuncs" structure defines the external interface to the shader.
  * Note that more than one shader "name" can be associated with a given
@@ -211,13 +211,14 @@ build_tree(struct bu_list *br, struct region *rp)
 }
 
 
-/*
+/* T R E E T H E R M _ S E T U P
+ *
  * This routine is called (at prep time)
  * once for each region which uses this shader.
  * Any shader-specific initialization should be done here.
  */
 HIDDEN int
-tthrm_setup(register struct region *rp, struct bu_vls *matparm, void **dpp, const struct mfuncs *UNUSED(mfp), struct rt_i *rtip)
+tthrm_setup(register struct region *rp, struct bu_vls *matparm, genptr_t *dpp, const struct mfuncs *UNUSED(mfp), struct rt_i *rtip)
 
 
 /* pointer to reg_udata in *rp */
@@ -263,7 +264,7 @@ tthrm_setup(register struct region *rp, struct bu_vls *matparm, void **dpp, cons
     if (rdebug&RDEBUG_SHADE)
 	bu_log("Parsing: (%s)\n", bu_vls_addr(matparm));
 
-    if (bu_struct_parse(matparm, tthrm_parse, (char *)tthrm_sp, NULL) < 0) {
+    if (bu_struct_parse(matparm, tthrm_parse, (char *)tthrm_sp) < 0) {
 	bu_bomb(__FILE__);
     }
     if (tthrm_sp->tt_name[0] == '\0') {
@@ -277,7 +278,7 @@ tthrm_setup(register struct region *rp, struct bu_vls *matparm, void **dpp, cons
 	bu_log("Error mapping \"%s\"\n",  tthrm_sp->tt_name);
 	bu_bomb("shader tthrm: can't get thermal data");
     }
-    tt_data = (char *)tt_file->buf;
+    tt_data = tt_file->buf;
 
 
     if (rdebug&RDEBUG_SHADE)
@@ -456,8 +457,11 @@ tthrm_setup(register struct region *rp, struct bu_vls *matparm, void **dpp, cons
 }
 
 
+/*
+ * T R E E T H E R M _ P R I N T
+ */
 HIDDEN void
-tthrm_print(register struct region *UNUSED(rp), void *dp)
+tthrm_print(register struct region *UNUSED(rp), genptr_t dp)
 {
     struct tthrm_specific *tthrm_sp = (struct tthrm_specific *)dp;
 
@@ -466,8 +470,11 @@ tthrm_print(register struct region *UNUSED(rp), void *dp)
 }
 
 
+/*
+ * T R E E T H E R M _ F R E E
+ */
 HIDDEN void
-tthrm_free(void *cp)
+tthrm_free(genptr_t cp)
 {
     struct tthrm_specific *tthrm_sp = (struct tthrm_specific *)cp;
 
@@ -520,12 +527,14 @@ get_solid_number(const struct partition *pp)
 
 
 /*
+ * T R E E T H E R M _ R E N D E R
+ *
  * This is called (from viewshade() in shade.c) once for each hit point
  * to be shaded.  The purpose here is to fill in values in the shadework
  * structure.
  */
 int
-tthrm_render(struct application *ap, const struct partition *pp, struct shadework *swp, void *dp)
+tthrm_render(struct application *ap, const struct partition *pp, struct shadework *swp, genptr_t dp)
 
 
 /* defined in material.h */

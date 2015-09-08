@@ -1,7 +1,7 @@
 /*                         S H P - G . C
  * BRL-CAD
  *
- * Copyright (c) 2009-2014 United States Government as represented by
+ * Copyright (c) 2009-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -28,10 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "bu/getopt.h"
-#include "bu/log.h"
-#include "bu/malloc.h"
-#include "bu/vls.h"
+#include "bu.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "wdb.h"
@@ -90,23 +87,23 @@ make_shape(struct rt_wdb *fd, int verbose, int debug, size_t idx, size_t num, po
     skt.curve.count = num;
     /* FIXME: investigate allocation */
     skt.curve.reverse = (int *)bu_calloc(skt.curve.count, sizeof(int), "sketch: reverse");
-    skt.curve.segment = (void **)bu_calloc(skt.curve.count, sizeof(void *), "segs");
+    skt.curve.segment = (genptr_t *)bu_calloc(skt.curve.count, sizeof(genptr_t), "segs");
 
     /* Insert all line segments except the last one */
     for (i = 0; i < num-1; i++) {
 	BU_ALLOC(lsg, struct line_seg);
 	lsg->magic = CURVE_LSEG_MAGIC;
-	lsg->start = (int)i;
-	lsg->end = (int)i + 1;
-	skt.curve.segment[i] = (void *)lsg;
+	lsg->start = i;
+	lsg->end = i + 1;
+	skt.curve.segment[i] = (genptr_t)lsg;
     }
 
     /* Connect the last connected vertex to the first vertex */
     BU_ALLOC(lsg, struct line_seg);
     lsg->magic = CURVE_LSEG_MAGIC;
-    lsg->start = (int)num - 1;
+    lsg->start = num - 1;
     lsg->end = 0;
-    skt.curve.segment[num - 1] = (void *)lsg;
+    skt.curve.segment[num - 1] = (genptr_t)lsg;
 
     /* write out sketch shape */
     bu_vls_sprintf(&str_sketch, "shape-%zu.sketch", idx);
@@ -201,14 +198,17 @@ main(int argc, char *argv[])
     }
 
     if (opt_verbose) {
-	bu_log("Reading from [%s]\n", bu_vls_addr(&vls_in));
-	bu_log("Writing to [%s]\n\n", bu_vls_addr(&vls_out));
+	bu_log("Reading from [%V]\n", &vls_in);
+	bu_log("Writing to [%V]\n\n", &vls_out);
     }
+
+    /* initialize single threaded resource */
+    rt_init_resource(&rt_uniresource, 0, NULL);
 
     /* open the input */
     shapefile = SHPOpen(bu_vls_addr(&vls_in), "rb");
     if (!shapefile) {
-	bu_log("ERROR: Unable to open shapefile [%s]\n", bu_vls_addr(&vls_in));
+	bu_log("ERROR: Unable to open shapefile [%V]\n", &vls_in);
 	bu_vls_free(&vls_in);
 	bu_vls_free(&vls_out);
 	bu_exit(4, NULL);    }
@@ -227,7 +227,7 @@ main(int argc, char *argv[])
 
     /* open the .g for writing */
     if ((fd_out = wdb_fopen(bu_vls_addr(&vls_out))) == NULL) {
-	bu_log("ERROR: Unable to open shapefile [%s]\n", bu_vls_addr(&vls_out));
+	bu_log("ERROR: Unable to open shapefile [%V]\n", &vls_out);
 	bu_vls_free(&vls_in);
 	bu_vls_free(&vls_out);
 	perror(argv0);
@@ -240,7 +240,7 @@ main(int argc, char *argv[])
 	int shp_part;
 	size_t j;
 
-	object = SHPReadObject(shapefile, (int)i);
+	object = SHPReadObject(shapefile, i);
 	if (!object) {
 	    if (opt_debug)
 		bu_log("Shape %zu of %zu is missing, skipping.\n", i+1, (size_t)shp_num_entities);
@@ -282,7 +282,7 @@ main(int argc, char *argv[])
 	}
 
 	num_verts = 0;
-	verts = (point2d_t *)bu_calloc((size_t)object->nVertices, sizeof(point2d_t), "alloc point array");
+	verts = bu_calloc((size_t)object->nVertices, sizeof(point2d_t), "alloc point array");
 
 	for (j = 0, shp_part = 1; j < (size_t)object->nVertices; j++) {
 	    if (shp_part < object->nParts

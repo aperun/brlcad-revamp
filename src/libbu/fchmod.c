@@ -1,7 +1,7 @@
 /*                        F C H M O D . C
  * BRL-CAD
  *
- * Copyright (c) 2007-2014 United States Government as represented by
+ * Copyright (c) 2007-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -36,13 +36,11 @@
 #  include <strsafe.h>
 #endif
 
-#include "bu/file.h"
-#include "bu/str.h"
+#include "bu.h"
+
 
 #ifdef HAVE_FCHMOD
-/* extern int fchmod(int, mode_t); */
-/* use correct fchmod decl: */
-#  include <sys/stat.h>
+extern int fchmod(int, mode_t);
 #else
 
 /* Presumably Windows, pulled from MSDN sample code */
@@ -117,12 +115,12 @@ GetFileNameFromHandle(HANDLE hFile, char filepath[])
 	CloseHandle(hFileMap);
     }
     if (sizeof(TCHAR) == sizeof(wchar_t)) {
-	wcstombs(filename, (const wchar_t *)pszFilename, MAXPATHLEN);
+	wcstombs(filename, pszFilename, MAXPATHLEN);
 	bu_strlcpy(filepath, filename, MAXPATHLEN);
     } else {
 	bu_strlcpy(filepath, pszFilename, MAXPATHLEN);
     }
-    return (bSuccess);
+    return(bSuccess);
 }
 #endif
 
@@ -147,14 +145,7 @@ bu_fchmod(int fd,
 	char filepath[MAXPATHLEN+1];
 	HANDLE h = (HANDLE)_get_osfhandle(fd);
 	GetFileNameFromHandle(h, filepath);
-
-    /* quell flawfinder because this is a necessary evil unless/until
-     * someone rewrites this to use SetNamedSecurityInfo() based on
-     * unix-style permissions/mode settings.
-     */
-#  define CHMOD ch ## mod
-
-	return CHMOD(filepath, pmode);
+	return chmod(filepath, pmode);
     }
 #endif
 }

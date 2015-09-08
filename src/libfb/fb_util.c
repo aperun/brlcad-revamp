@@ -1,7 +1,7 @@
 /*                       F B _ U T I L . C
  * BRL-CAD
  *
- * Copyright (c) 1990-2014 United States Government as represented by
+ * Copyright (c) 1990-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -17,7 +17,7 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup libfb */
+/** @addtogroup fb */
 /** @{ */
 /** @file fb_util.c
  *
@@ -31,18 +31,19 @@
 
 #include <stdio.h>
 
-#include "fb_private.h"
 #include "fb.h"
 
 
 /*
+ * F B _ S I M _ V I E W
+ *
  * A routine to simulate the effect of fb_view() by simply
- * storing this information into the fb structure.
+ * storing this information into the FBIO structure.
  */
 int
-fb_sim_view(fb *ifp, int xcenter, int ycenter, int xzoom, int yzoom)
+fb_sim_view(FBIO *ifp, int xcenter, int ycenter, int xzoom, int yzoom)
 {
-    FB_CK_FB(ifp);
+    FB_CK_FBIO(ifp);
 
     ifp->if_xcenter = xcenter;
     ifp->if_ycenter = ycenter;
@@ -54,13 +55,15 @@ fb_sim_view(fb *ifp, int xcenter, int ycenter, int xzoom, int yzoom)
 
 
 /*
+ * F B _ S I M _ G E T V I E W
+ *
  * A routine to simulate the effect of fb_getview() by simply
- * reading this information from the fb structure.
+ * reading this information from the FBIO structure.
  */
 int
-fb_sim_getview(fb *ifp, int *xcenter, int *ycenter, int *xzoom, int *yzoom)
+fb_sim_getview(FBIO *ifp, int *xcenter, int *ycenter, int *xzoom, int *yzoom)
 {
-    FB_CK_FB(ifp);
+    FB_CK_FBIO(ifp);
 
     *xcenter = ifp->if_xcenter;
     *ycenter = ifp->if_ycenter;
@@ -72,13 +75,15 @@ fb_sim_getview(fb *ifp, int *xcenter, int *ycenter, int *xzoom, int *yzoom)
 
 
 /*
+ * F B _ S I M _ C U R S O R
+ *
  * A routine to simulate the effect of fb_cursor() by simply
- * storing this information into the fb structure.
+ * storing this information into the FBIO structure.
  */
 int
-fb_sim_cursor(fb *ifp, int mode, int x, int y)
+fb_sim_cursor(FBIO *ifp, int mode, int x, int y)
 {
-    FB_CK_FB(ifp);
+    FB_CK_FBIO(ifp);
 
     ifp->if_cursmode = mode;
     ifp->if_xcurs = x;
@@ -89,13 +94,15 @@ fb_sim_cursor(fb *ifp, int mode, int x, int y)
 
 
 /*
+ * F B _ S I M _ G E T C U R S O R
+ *
  * A routine to simulate the effect of fb_getcursor() by simply
- * reading this information from the fb structure.
+ * reading this information from the FBIO structure.
  */
 int
-fb_sim_getcursor(fb *ifp, int *mode, int *x, int *y)
+fb_sim_getcursor(FBIO *ifp, int *mode, int *x, int *y)
 {
-    FB_CK_FB(ifp);
+    FB_CK_FBIO(ifp);
 
     *mode = ifp->if_cursmode;
     *x = ifp->if_xcurs;
@@ -108,10 +115,10 @@ fb_sim_getcursor(fb *ifp, int *mode, int *x, int *y)
 /* Backward Compatibility Routines */
 
 int
-fb_reset(fb *ifp)
+fb_reset(FBIO *ifp)
 {
     if (ifp) {
-	FB_CK_FB(ifp);
+	FB_CK_FBIO(ifp);
     }
 
     return 0;
@@ -119,10 +126,10 @@ fb_reset(fb *ifp)
 
 
 int
-fb_viewport(fb *ifp, int UNUSED(left), int UNUSED(top), int UNUSED(right), int UNUSED(bottom))
+fb_viewport(FBIO *ifp, int UNUSED(left), int UNUSED(top), int UNUSED(right), int UNUSED(bottom))
 {
     if (ifp) {
-	FB_CK_FB(ifp);
+	FB_CK_FBIO(ifp);
     }
 
     return 0;
@@ -130,13 +137,13 @@ fb_viewport(fb *ifp, int UNUSED(left), int UNUSED(top), int UNUSED(right), int U
 
 
 int
-fb_window(fb *ifp, int x, int y)
+fb_window(FBIO *ifp, int x, int y)
 {
     int xcenter, ycenter;
     int xzoom, yzoom;
 
     if (ifp) {
-      FB_CK_FB(ifp);
+      FB_CK_FBIO(ifp);
       fb_getview(ifp, &xcenter, &ycenter, &xzoom, &yzoom);
       xcenter = x;
       ycenter = y;
@@ -148,13 +155,13 @@ fb_window(fb *ifp, int x, int y)
 
 
 int
-fb_zoom(fb *ifp, int x, int y)
+fb_zoom(FBIO *ifp, int x, int y)
 {
     int xcenter, ycenter;
     int xzoom, yzoom;
 
     if (ifp) {
-      FB_CK_FB(ifp);
+      FB_CK_FBIO(ifp);
 
       fb_getview(ifp, &xcenter, &ycenter, &xzoom, &yzoom);
       xzoom = x;
@@ -167,10 +174,10 @@ fb_zoom(fb *ifp, int x, int y)
 
 
 int
-fb_scursor(fb *ifp, int UNUSED(mode), int UNUSED(x), int UNUSED(y))
+fb_scursor(FBIO *ifp, int UNUSED(mode), int UNUSED(x), int UNUSED(y))
 {
     if (ifp) {
-	FB_CK_FB(ifp);
+	FB_CK_FBIO(ifp);
     }
 
     /* We could actually implement this but it

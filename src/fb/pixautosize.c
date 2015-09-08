@@ -1,7 +1,7 @@
 /*                   P I X A U T O S I Z E . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -30,9 +30,10 @@
 #include "common.h"
 
 #include <stdlib.h>
+#include "bio.h"
 
+#include "bu.h"
 #include "vmath.h"
-#include "bu/getopt.h"
 #include "bn.h"
 #include "fb.h"
 
@@ -53,7 +54,7 @@ get_args(int argc, char **argv)
 {
     int c;
 
-    while ((c = bu_getopt(argc, argv, "b:f:l:h?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "b:f:l:")) != -1) {
 	switch (c) {
 	    case 'b':
 		bytes_per_sample = atoi(bu_optarg);
@@ -64,7 +65,7 @@ get_args(int argc, char **argv)
 	    case 'l':
 		file_length = atoi(bu_optarg);
 		break;
-	    default:		/* '?' 'h' */
+	    default:		/* '?' */
 		return 0;
 	}
     }

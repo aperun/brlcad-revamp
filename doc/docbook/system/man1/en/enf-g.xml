@@ -21,7 +21,6 @@
     <arg choice='opt'>-i <replaceable>starting_ident_number</replaceable></arg>
     <arg choice='opt'>-l <replaceable>name_length_limit</replaceable></arg>
     <arg choice='opt'>-n <replaceable>part_number_to_name_mapping</replaceable></arg>
-    <arg choice='opt'>-v </arg>
     <arg choice='plain'><replaceable>input_enf_facet_file</replaceable></arg>
     <arg choice='plain'><replaceable>database.g</replaceable></arg>
 </cmdsynopsis>
@@ -29,7 +28,7 @@
 
 
 <refsect1 xml:id='description'><title>DESCRIPTION</title>
-<para><command>enf-g</command>
+<para><emphasis remap='I'>enf-g</emphasis>
 converts the specified
 <emphasis remap='I'>input_enf_facet_file</emphasis>
 to a BRL-CAD
@@ -48,16 +47,14 @@ that limit. If a
 <emphasis remap='I'>part_number_to_name_mapping</emphasis>
 file is provided, then that file will be read and used to convert part numbers in the
 <emphasis remap='I'>input_enf_facet_file</emphasis>
-to the corresponding names in the mapping, and is expected to consist of a series
+to the corresponding names in the mapping. This file is expected to consist of a series
 of lines of text with each line having a part number and a legal BRL-CAD object name separated
-by a tab.
-(<emphasis remap='I'>-v</emphasis> option is provided for verbose mode.)
-</para>
+by a tab.</para>
 </refsect1>
 
 <refsect1 xml:id='example'><title>EXAMPLE</title>
 <synopsis>
-$ enf-g <emphasis remap='I'>sample.enf sample.g</emphasis>
+$ <emphasis remap='I'>enf-g sample.enf sample.g</emphasis>
 </synopsis>
 </refsect1>
 
@@ -72,7 +69,7 @@ $ enf-g <emphasis remap='I'>sample.enf sample.g</emphasis>
 </refsect1>
 
 <refsect1 xml:id='copyright'><title>COPYRIGHT</title>
-<para>This software is Copyright (c) 2001-2014 by the United States
+<para>This software is Copyright (c) 2001-2013 by the United States
 Government as represented by U.S. Army Research Laboratory.</para>
 </refsect1>
 

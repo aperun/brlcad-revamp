@@ -1,7 +1,7 @@
 /*                       P I X S T A T . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -35,13 +35,12 @@
 
 #include "common.h"
 
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 #include <math.h>
 #include "bio.h"
 
-#include "bu/log.h"
-#include "bu/str.h"
+#include "bu.h"
 
 
 #define IBUFSIZE 3*1024		/* Max read size in rgb pixels */
@@ -50,7 +49,7 @@ unsigned char buf[IBUFSIZE];	/* Input buffer */
 int verbose = 0;
 
 /* our statistics pool */
-struct rgb {
+struct {
     long bin[256];
     int max, min, mode, median;
     double mean, var, skew;
@@ -80,7 +79,7 @@ main(int argc, char **argv)
 {
     int i, n, num;
     double d;
-    long num_pixels = 0L ;
+    long num_pixels;
     unsigned char *bp;
     FILE *fp;
 
@@ -107,8 +106,9 @@ main(int argc, char **argv)
     }
 
     /*
-     * Build the histogram. (num_pixels initialized to 0)
+     * Build the histogram.
      */
+    num_pixels = 0;
     while ((n = fread(&buf[0], sizeof(*buf), IBUFSIZE, fp)) > 0) {
 	num = n/3;
 	num_pixels += num;

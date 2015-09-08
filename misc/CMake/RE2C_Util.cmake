@@ -33,7 +33,7 @@
 #  ====================================================================
 #
 #=============================================================================
-# Copyright (c) 2010-2014 United States Government as represented by
+# Copyright (c) 2010-2013 United States Government as represented by
 #                the U.S. Army Research Laboratory.
 # Copyright 2009 Kitware, Inc.
 # Copyright 2006 Tristan Carel
@@ -114,12 +114,12 @@ macro(ADD_RE2C_LEMON_DEPENDENCY RE2CTarget LemonTarget)
     message(SEND_ERROR "RE2C target `${RE2CTarget}' does not exists.")
   endif()
 
-  if(NOT LEMON_${LemonTarget}_HDR)
+  if(NOT LEMON_${LemonTarget}_OUTPUT_HEADER)
     message(SEND_ERROR "Lemon target `${LemonTarget}' does not exists.")
   endif()
 
   set_source_files_properties(${RE2C_${RE2CTarget}_OUTPUTS}
-    PROPERTIES OBJECT_DEPENDS ${LEMON_${LemonTarget}_HDR})
+    PROPERTIES OBJECT_DEPENDS ${LEMON_${LemonTarget}_OUTPUT_HEADER})
 endmacro(ADD_RE2C_LEMON_DEPENDENCY)
 #============================================================
 

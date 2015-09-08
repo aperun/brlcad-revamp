@@ -34,13 +34,13 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "bnetwork.h"
+#include "bin.h"
 
-#include "bu/cv.h"
+#include "bu.h"
 #include "vmath.h"
 #include "nmg.h"
-#include "rt/db5.h"
-#include "rt/geom.h"
+#include "db5.h"
+#include "rtgeom.h"
 #include "raytrace.h"
 
 /* local interface header */

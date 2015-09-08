@@ -119,4 +119,3 @@ inline void AdvancingFront::set_search(Node* node)
 }
 
 #endif
-

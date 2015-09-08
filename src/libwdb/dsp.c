@@ -1,7 +1,7 @@
 /*                            D S P . C
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -25,12 +25,13 @@
 
 #include "bio.h"
 
+#include "bu.h"
 #include "vmath.h"
 #include "bn.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
 #include "raytrace.h"
 #include "wdb.h"
-#include "rt/db4.h"
+#include "db.h"
 
 int
 mk_dsp(struct rt_wdb *fp, const char *name, const char *file, size_t xdim, size_t ydim, const matp_t mat)
@@ -51,7 +52,7 @@ mk_dsp(struct rt_wdb *fp, const char *name, const char *file, size_t xdim, size_
     dsp->dsp_ycnt = ydim;
     MAT_COPY(dsp->dsp_stom, mat);
 
-    return wdb_export(fp, name, (void *)dsp, ID_DSP, mk_conv2mm);
+    return wdb_export(fp, name, (genptr_t)dsp, ID_DSP, mk_conv2mm);
 }
 
 

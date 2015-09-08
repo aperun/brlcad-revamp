@@ -1,7 +1,7 @@
 /*                         L S . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -27,10 +27,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "bio.h"
 
-#include "bu/cmd.h"
-#include "bu/getopt.h"
-#include "bu/sort.h"
+#include "cmd.h"
 
 #include "./ged_private.h"
 
@@ -40,6 +39,8 @@
 
 
 /**
+ * G E D _ G E T S P A C E
+ *
  * This routine walks through the directory entry list and mallocs
  * enough space for pointers to hold the number of entries specified
  * by the argument if > 0.
@@ -61,11 +62,13 @@ _ged_getspace(struct db_i *dbip,
 
 
 /**
+ * _ G E D _ C M P D I R N A M E
+ *
  * Given two pointers to pointers to directory entries, do a string
  * compare on the respective names and return that value.
  */
 static int
-cmpdirname(const void *a, const void *b, void *UNUSED(arg))
+cmpdirname(const genptr_t a, const genptr_t b)
 {
     struct directory **dp1, **dp2;
 
@@ -76,6 +79,8 @@ cmpdirname(const void *a, const void *b, void *UNUSED(arg))
 
 
 /**
+ * _ G E D _ V L S _ C O L _ P R 4 V
+ *
  * Given a pointer to a list of pointers to names and the number of
  * names in that list, sort and print that list in column order over
  * four columns.
@@ -92,9 +97,9 @@ _ged_vls_col_pr4v(struct bu_vls *vls,
     size_t cwidth;	/* column width */
     size_t numcol;	/* number of columns */
 
-    bu_sort((void *)list_of_names,
+    qsort((genptr_t)list_of_names,
 	  (unsigned)num_in_list, (unsigned)sizeof(struct directory *),
-	  cmpdirname, NULL);
+	  (int (*)(const void *, const void *))cmpdirname);
 
     /*
      * Traverse the list of names, find the longest name and set the
@@ -183,9 +188,9 @@ vls_long_dpp(struct ged *gedp,
     size_t max_type_len = 0;
     struct directory *dp;
 
-    bu_sort((void *)list_of_names,
+    qsort((genptr_t)list_of_names,
 	  (unsigned)num_in_list, (unsigned)sizeof(struct directory *),
-	  cmpdirname, NULL);
+	  (int (*)(const void *, const void *))cmpdirname);
 
     for (i = 0; i < num_in_list; i++) {
 	size_t len;
@@ -287,6 +292,8 @@ vls_long_dpp(struct ged *gedp,
 
 
 /**
+ * G E D _ V L S _ L I N E _ D P P
+ *
  * Given a pointer to a list of pointers to names and the number of names
  * in that list, sort and print that list on the same line.
  */
@@ -303,9 +310,9 @@ vls_line_dpp(struct ged *gedp,
     int isComb, isRegion;
     int isSolid;
 
-    bu_sort((void *)list_of_names,
+    qsort((genptr_t)list_of_names,
 	  (unsigned)num_in_list, (unsigned)sizeof(struct directory *),
-	  cmpdirname, NULL);
+	  (int (*)(const void *, const void *))cmpdirname);
 
     /*
      * i - tracks the list item
@@ -331,7 +338,6 @@ vls_line_dpp(struct ged *gedp,
 	    (rflag && isRegion) ||
 	    (sflag && isSolid)) {
 	    bu_vls_printf(gedp->ged_result_str,  "%s ", list_of_names[i]->d_namep);
-	    _ged_results_add(gedp->ged_results, list_of_names[i]->d_namep);
 	}
     }
 }
@@ -365,7 +371,6 @@ ged_ls(struct ged *gedp, int argc, const char *argv[])
 
     /* initialize result */
     bu_vls_trunc(gedp->ged_result_str, 0);
-    ged_results_clear(gedp->ged_results);
 
     bu_optind = 1;	/* re-init bu_getopt() */
     while ((c = bu_getopt(argc, (char * const *)argv, "acrslopqA")) != -1) {
@@ -397,7 +402,6 @@ ged_ls(struct ged *gedp, int argc, const char *argv[])
 		break;
 	    default:
 		bu_vls_printf(gedp->ged_result_str, "Unrecognized option - %c", c);
-		_ged_results_add(gedp->ged_results, bu_vls_addr(gedp->ged_result_str));
 		return GED_ERROR;
 	}
     }
@@ -416,7 +420,6 @@ ged_ls(struct ged *gedp, int argc, const char *argv[])
 	    /* should be even number of name/value pairs */
 	    bu_log("ls -A option expects even number of 'name value' pairs\n");
 	    bu_vls_printf(gedp->ged_result_str, "Usage: %s %s", argv[0], usage);
-	    _ged_results_add(gedp->ged_results, bu_vls_addr(gedp->ged_result_str));
 	    return TCL_ERROR;
 	}
 
@@ -490,12 +493,10 @@ ged_ls(struct ged *gedp, int argc, const char *argv[])
 	vls_long_dpp(gedp, dirp0, (int)(dirp - dirp0), aflag, cflag, rflag, sflag);
     else if (aflag || cflag || rflag || sflag)
 	vls_line_dpp(gedp, dirp0, (int)(dirp - dirp0), aflag, cflag, rflag, sflag);
-    else {
+    else
 	_ged_vls_col_pr4v(gedp->ged_result_str, dirp0, (int)(dirp - dirp0), 0);
-	_ged_results_add(gedp->ged_results, bu_vls_addr(gedp->ged_result_str));
-    }
 
-    bu_free((void *)dirp0, "_ged_getspace dp[]");
+    bu_free((genptr_t)dirp0, "_ged_getspace dp[]");
 
     return GED_OK;
 }

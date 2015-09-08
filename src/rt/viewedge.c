@@ -1,7 +1,7 @@
 /*                      V I E W E D G E . C
  * BRL-CAD
  *
- * Copyright (c) 2001-2014 United States Government as represented by
+ * Copyright (c) 2001-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -92,10 +92,7 @@
 #include "vmath.h"
 #include "raytrace.h"
 #include "fb.h"
-#include "bu/parse.h"
-#include "bu/parallel.h"
-#include "bu/log.h"
-#include "bu/vls.h"
+#include "bu.h"
 #include "icv.h"
 
 #include "./rtuif.h"
@@ -112,7 +109,7 @@
 #endif
 
 
-extern fb *fbp;	/* Framebuffer handle */
+extern FBIO *fbp;	/* Framebuffer handle */
 extern fastf_t viewsize;
 extern int lightmodel;
 extern size_t width, height;
@@ -284,52 +281,15 @@ usage(const char *argv0)
     bu_log(" -w # -n #	Grid size width (w) and height (n) in pixels\n");
     bu_log(" -a # -e #	Azimuth (a) and elevation (e) in degrees\n");
     bu_log(" -V #		View (pixel) aspect ratio (width/height)\n");
-    bu_log(" -p #		Perspective angle, degrees side to side (0 <= # < 180)\n");
+    bu_log(" -p #		Perspective angle, degrees side to side\n");
     bu_log(" -P #		Set number of processors\n");
-    bu_log(" -T # or -T #,# or -T #/#\n");
-    bu_log("		Tolerance: distance or distance,angular or distance/angular\n");
-    bu_log(" -l #		Set lighting model rendering style (default is 0)\n");
+    bu_log(" -T #/#		Tolerance: distance/angular\n");
+    bu_log(" -l #		Set lighting model rendering style\n");
     bu_log(" -U #		Use air if # is greater than 0\n");
     bu_log(" -x #		librt debug flags\n");
     bu_log(" -N #		NMG debug flags\n");
     bu_log(" -X #		rt debug flags\n");
-    bu_log(" -. #		Select factor in NUgrid algorithm (default is 1.5)\n");
-    bu_log(" -, #		Selection of which space partitioning algorithm to use\n");
-    bu_log(" -@ #		Set limit to each dimension of the nugrid\n");
-    bu_log(" -b \"# #\"	Specify X and Y pixel coordinates (need quotes) for single ray to be fired, for debugging\n");
     bu_log(" -c		Auxiliary commands (see man page)\n");
-    bu_log(" -d #		Set flag for reporting of pixel distances\n");
-    bu_log(" -f #		Set expected playback rate in frames-per-second (default is 30)\n");
-    bu_log(" -g #		Set grid cell width, in millimeters\n");
-    bu_log(" -m density,r,g,b\n");
-    bu_log("		Provide parameters for an exponential shading (default r,g,b is 0.8,0.9,0.99)\n");
-    bu_log(" -i		Enable incremental mode processing\n");
-    bu_log(" -j xmin,xmax,ymin,ymax\n");
-    bu_log("		Enable processing of sub-rectangle\n");
-    bu_log(" -k xdir,ydir,zdir,dist\n");
-    bu_log("		Enable use of a cutting plane\n");
-    bu_log(" -l #		Select lighting model (default is 0)\n");
-    bu_log(" -t		Reverse the order of grid traversal (default is not to do that)\n");
-    bu_log(" -u units	Specify the units (or use \"model\" for the local model's units)\n");
-    bu_log(" -v #		Set the verbosity bit vector flags\n");
-    bu_log(" -A #		Set the ambient light intensity\n");
-    bu_log(" -B		Turn on the \"benchmark\" flag (default is off)\n");
-    bu_log(" -C #/#/#	Set the background color to the RGB value #/#/#\n");
-    bu_log(" -D #		Specify the starting frame number (ending frame number is specified via -K #)\n");
-    bu_log(" -E #           Set the distance from eye point to center of the model RPP (default is sqrt(2))\n");
-    bu_log(" -F framebuffer	Cause output to be sent to the indicated framebuffer\n");
-    bu_log(" -G #		Set grid cell height, in millimeters\n");
-    bu_log(" -H #		Set number of extra rays to fire\n");
-    bu_log(" -I		Turn on interactive mode\n");
-    bu_log(" -J #		Set a bit vector for \"jitter\"\n");
-    bu_log(" -K #		Specify the ending frame number (starting frame number is specified via -D #)\n");
-    bu_log(" -O model.pix	Output .pix format file, double precision format\n");
-    bu_log(" -Q x,y		Select pixel ray for query with debugging; compute other pixels without debugging\n");
-    bu_log(" -S		Enable stereo viewing (off by default)\n");
-    bu_log(" -W		Set background image color to white (default is black)\n");
-    bu_log(" -! #		Turn on the libbu(3) library debugging flags\n");
-    bu_log(" -+ t		Specify that output is NOT binary (default is that it is); -+ is otherwise not\n");
-    bu_log("		implemented\n");
 }
 
 
@@ -354,14 +314,8 @@ static int occlusion_miss(struct application *ap)
 
 static int occludes(struct application *ap, struct cell *here)
 {
-    int cpu;
+    int cpu = ap->a_resource->re_cpu;
     int oc_hit = 0;
-
-    if (ap->a_resource->re_cpu > 0)
-	cpu = ap->a_resource->re_cpu - 1;
-    else
-	cpu = ap->a_resource->re_cpu;
-
     /*
      * Test the hit distance on the second geometry.  If the second
      * geometry is closer, do not color pixel
@@ -396,6 +350,9 @@ static int occludes(struct application *ap, struct cell *here)
 }
 
 
+/**
+ * R A Y H I T
+ */
 int rayhit(struct application *ap, register struct partition *pt,
 	   struct seg *segp)
 {
@@ -404,6 +361,9 @@ int rayhit(struct application *ap, register struct partition *pt,
 }
 
 
+/**
+ * R A Y M I S S
+ */
 int raymiss(struct application *ap)
 {
     handle_main_ray(ap, NULL, NULL);
@@ -473,19 +433,18 @@ view_init(struct application *ap, char *file, char *UNUSED(obj), int minus_o, in
      */
     if (bu_vls_strlen(&occlusion_objects) != 0) {
 	struct db_i *dbip;
-	size_t nObjs;
-	int split_argc;
+	int nObjs;
 	const char **objs;
-	size_t i;
+	int i;
 
 	bu_log("rtedge: loading occlusion geometry from %s.\n", file);
 
-	if (bu_argv_from_tcl_list(bu_vls_addr(&occlusion_objects), &split_argc, &objs) == TCL_ERROR) {
+	if (Tcl_SplitList(NULL, bu_vls_addr(&occlusion_objects), &nObjs,
+			  &objs) == TCL_ERROR) {
 	    bu_log("rtedge: occlusion list = %s\n",
 		   bu_vls_addr(&occlusion_objects));
 	    bu_exit(EXIT_FAILURE, "rtedge: could not parse occlusion objects list.\n");
 	}
-	nObjs = split_argc;
 
 	for (i=0; i<nObjs; ++i) {
 	    bu_log("rtedge: occlusion object %d = %s\n", i, objs[i]);
@@ -508,9 +467,9 @@ view_init(struct application *ap, char *file, char *UNUSED(obj), int minus_o, in
 
 	occlusion_rtip = rt_new_rti(dbip); /* clones dbip */
 
-	memset(occlusion_resources, 0, sizeof(occlusion_resources));
 	for (i=0; i < MAX_PSW; i++) {
 	    rt_init_resource(&occlusion_resources[i], i, occlusion_rtip);
+	    bn_rand_init(occlusion_resources[i].re_randptr, i);
 	}
 
 	db_close(dbip);			 /* releases original dbip */
@@ -520,8 +479,6 @@ view_init(struct application *ap, char *file, char *UNUSED(obj), int minus_o, in
 		bu_log("rtedge: gettree failed for %s\n", objs[i]);
 	    else
 		bu_log("rtedge: got tree for object %d = %s\n", i, objs[i]);
-
-	bu_free((char *)objs, "free occlusion objs array");
 
 	bu_log("rtedge: occlusion rt_gettrees done.\n");
 
@@ -534,8 +491,8 @@ view_init(struct application *ap, char *file, char *UNUSED(obj), int minus_o, in
 	 * geometry. Need one per cpu, the upper half does the per-
 	 * thread allocation in worker, but that's off limits.
 	 */
-	occlusion_apps = (struct application **)bu_calloc(npsw, sizeof(struct application *),
-							  "occlusion application structure array");
+	occlusion_apps = bu_calloc(npsw, sizeof(struct application *),
+				   "occlusion application structure array");
 	for (i=0; i<npsw; ++i) {
 	    BU_ALLOC(occlusion_apps[i], struct application);
 	    RT_APPLICATION_INIT(occlusion_apps[i]);
@@ -578,16 +535,16 @@ view_init(struct application *ap, char *file, char *UNUSED(obj), int minus_o, in
      * foreground and background colors.
      */
     if (!default_background) {
-	int tmp;
-	tmp = fgcolor[RED];
+	color tmp;
+	tmp[RED] = fgcolor[RED];
+	tmp[GRN] = fgcolor[GRN];
+	tmp[BLU] = fgcolor[BLU];
 	fgcolor[RED] = bgcolor[RED];
-	bgcolor[RED] = tmp;
-	tmp = fgcolor[GRN];
 	fgcolor[GRN] = bgcolor[GRN];
-	bgcolor[GRN] = tmp;
-	tmp = fgcolor[BLU];
 	fgcolor[BLU] = bgcolor[BLU];
-	bgcolor[BLU] = tmp;
+	bgcolor[RED] = tmp[RED];
+	bgcolor[GRN] = tmp[GRN];
+	bgcolor[BLU] = tmp[BLU];
     }
 
     if (minus_o && (overlay || blend)) {
@@ -622,7 +579,7 @@ view_init(struct application *ap, char *file, char *UNUSED(obj), int minus_o, in
 void
 view_2init(struct application *UNUSED(ap), char *UNUSED(framename))
 {
-    size_t i;
+    int i;
 
     /*
      * Per_processor_chuck specifies the number of pixels rendered per
@@ -702,13 +659,8 @@ void view_pixel(struct application *UNUSED(ap))
 void
 view_eol(struct application *ap)
 {
-    int cpu;
+    int cpu = ap->a_resource->re_cpu;
     int i;
-
-    if (ap->a_resource->re_cpu > 0)
-	cpu = ap->a_resource->re_cpu - 1;
-    else
-	cpu = ap->a_resource->re_cpu;
 
     if (overlay) {
 	/*
@@ -725,6 +677,7 @@ view_eol(struct application *ap)
 		bu_semaphore_release(BU_SEM_SYSCALL);
 	    }
 	}
+	return;
     } else if (blend) {
 	/*
 	 * Blend mode.
@@ -848,9 +801,10 @@ view_eol(struct application *ap)
 	bu_semaphore_acquire(BU_SEM_SYSCALL);
 	fb_write(fbp, 0, ap->a_y, blendline[cpu], per_processor_chunk);
 	bu_semaphore_release(BU_SEM_SYSCALL);
+	return;
     } /* end blend */
 
-    else if (fbp != FB_NULL) {
+    if (fbp != FBIO_NULL) {
 	/*
 	 * Simple whole scanline write to a framebuffer.
 	 */
@@ -858,16 +812,16 @@ view_eol(struct application *ap)
 	fb_write(fbp, 0, ap->a_y, scanline[cpu], per_processor_chunk);
 	bu_semaphore_release(BU_SEM_SYSCALL);
     }
-
-    else if (bif != NULL) {
+    if (outputfile != NULL) {
 	/*
-	 * Write to an icv_image_t.
+	 * Write to a file.
 	 */
+	bu_semaphore_acquire(BU_SEM_SYSCALL);
 	/* TODO : Add double type data to maintain resolution */
 	icv_writeline(bif, ap->a_y, scanline[cpu],  ICV_DATA_UCHAR);
+	bu_semaphore_release(BU_SEM_SYSCALL);
     }
-
-    else
+    if (fbp == FBIO_NULL && outputfile == NULL)
 	bu_log("rtedge: strange, no end of line actions taken.\n");
 
     return;
@@ -896,6 +850,9 @@ void view_end(struct application *UNUSED(ap))
 }
 
 
+/**
+ * R A Y H I T 2
+ */
 int rayhit2(struct application *ap, register struct partition *pt, struct seg *UNUSED(segp))
 {
     struct partition *pp = pt->pt_forw;
@@ -915,6 +872,9 @@ int rayhit2(struct application *ap, register struct partition *pt, struct seg *U
 }
 
 
+/**
+ * R A Y M I S S 2
+ */
 static int
 raymiss2(register struct application *ap)
 {
@@ -996,7 +956,7 @@ get_intensity(double *intensity, struct application *ap, const struct cell *UNUS
     aaap.a_logoverlap = ap->a_logoverlap;
 
     /* Above Left */
-    aaap.a_uptr = (void *)AL;
+    aaap.a_uptr = (genptr_t)AL;
     VADD2(aaap.a_ray.r_pt, ap->a_ray.r_pt, dy3);
     VSUB2(aaap.a_ray.r_pt, aaap.a_ray.r_pt, dx);
     VMOVE(aaap.a_ray.r_dir, ap->a_ray.r_dir);
@@ -1007,7 +967,7 @@ get_intensity(double *intensity, struct application *ap, const struct cell *UNUS
 #endif
 
     /* Above Right */
-    aaap.a_uptr = (void *)AR;
+    aaap.a_uptr = (genptr_t)AR;
     VADD2(aaap.a_ray.r_pt, ap->a_ray.r_pt, dy3);
     VADD2(aaap.a_ray.r_pt, aaap.a_ray.r_pt, dx);
     VMOVE(aaap.a_ray.r_dir, ap->a_ray.r_dir);
@@ -1018,7 +978,7 @@ get_intensity(double *intensity, struct application *ap, const struct cell *UNUS
 #endif
 
     /* Top Left */
-    aaap.a_uptr = (void *)TL;
+    aaap.a_uptr = (genptr_t)TL;
     VADD2(aaap.a_ray.r_pt, ap->a_ray.r_pt, dy);
     VSUB2(aaap.a_ray.r_pt, aaap.a_ray.r_pt, dx3);
     VMOVE(aaap.a_ray.r_dir, ap->a_ray.r_dir);
@@ -1029,7 +989,7 @@ get_intensity(double *intensity, struct application *ap, const struct cell *UNUS
 #endif
 
     /* Upper Left */
-    aaap.a_uptr = (void *)UL;
+    aaap.a_uptr = (genptr_t)UL;
     VADD2(aaap.a_ray.r_pt, ap->a_ray.r_pt, dy);
     VSUB2(aaap.a_ray.r_pt, aaap.a_ray.r_pt, dx);
     VMOVE(aaap.a_ray.r_dir, ap->a_ray.r_dir);
@@ -1040,7 +1000,7 @@ get_intensity(double *intensity, struct application *ap, const struct cell *UNUS
 #endif
 
     /* Upper Right */
-    aaap.a_uptr = (void *)UR;
+    aaap.a_uptr = (genptr_t)UR;
     VADD2(aaap.a_ray.r_pt, ap->a_ray.r_pt, dy);
     VADD2(aaap.a_ray.r_pt, aaap.a_ray.r_pt, dx);
     VMOVE(aaap.a_ray.r_dir, ap->a_ray.r_dir);
@@ -1051,7 +1011,7 @@ get_intensity(double *intensity, struct application *ap, const struct cell *UNUS
 #endif
 
     /* Top Right */
-    aaap.a_uptr = (void *)TR;
+    aaap.a_uptr = (genptr_t)TR;
     VADD2(aaap.a_ray.r_pt, ap->a_ray.r_pt, dy);
     VADD2(aaap.a_ray.r_pt, aaap.a_ray.r_pt, dx3);
     VMOVE(aaap.a_ray.r_dir, ap->a_ray.r_dir);
@@ -1062,7 +1022,7 @@ get_intensity(double *intensity, struct application *ap, const struct cell *UNUS
 #endif
 
     /* Bottom Left */
-    aaap.a_uptr = (void *)BL;
+    aaap.a_uptr = (genptr_t)BL;
     VSUB2(aaap.a_ray.r_pt, ap->a_ray.r_pt, dy);
     VSUB2(aaap.a_ray.r_pt, aaap.a_ray.r_pt, dx3);
     VMOVE(aaap.a_ray.r_dir, ap->a_ray.r_dir);
@@ -1073,7 +1033,7 @@ get_intensity(double *intensity, struct application *ap, const struct cell *UNUS
 #endif
 
     /* Lower Left */
-    aaap.a_uptr = (void *)LL;
+    aaap.a_uptr = (genptr_t)LL;
     VSUB2(aaap.a_ray.r_pt, ap->a_ray.r_pt, dy);
     VSUB2(aaap.a_ray.r_pt, aaap.a_ray.r_pt, dx);
     VMOVE(aaap.a_ray.r_dir, ap->a_ray.r_dir);
@@ -1084,7 +1044,7 @@ get_intensity(double *intensity, struct application *ap, const struct cell *UNUS
 #endif
 
     /* Lower Right */
-    aaap.a_uptr = (void *)LR;
+    aaap.a_uptr = (genptr_t)LR;
     VSUB2(aaap.a_ray.r_pt, ap->a_ray.r_pt, dy);
     VADD2(aaap.a_ray.r_pt, aaap.a_ray.r_pt, dx);
     VMOVE(aaap.a_ray.r_dir, ap->a_ray.r_dir);
@@ -1095,7 +1055,7 @@ get_intensity(double *intensity, struct application *ap, const struct cell *UNUS
 #endif
 
     /* Bottom Right */
-    aaap.a_uptr = (void *)BR;
+    aaap.a_uptr = (genptr_t)BR;
     VSUB2(aaap.a_ray.r_pt, ap->a_ray.r_pt, dy);
     VADD2(aaap.a_ray.r_pt, aaap.a_ray.r_pt, dx3);
     VMOVE(aaap.a_ray.r_dir, ap->a_ray.r_dir);
@@ -1106,7 +1066,7 @@ get_intensity(double *intensity, struct application *ap, const struct cell *UNUS
 #endif
 
     /* Debajo Left */
-    aaap.a_uptr = (void *)DL;
+    aaap.a_uptr = (genptr_t)DL;
     VSUB2(aaap.a_ray.r_pt, ap->a_ray.r_pt, dy3);
     VSUB2(aaap.a_ray.r_pt, aaap.a_ray.r_pt, dx);
     VMOVE(aaap.a_ray.r_dir, ap->a_ray.r_dir);
@@ -1117,7 +1077,7 @@ get_intensity(double *intensity, struct application *ap, const struct cell *UNUS
 #endif
 
     /* Debajo Right */
-    aaap.a_uptr = (void *)DR;
+    aaap.a_uptr = (genptr_t)DR;
     VSUB2(aaap.a_ray.r_pt, ap->a_ray.r_pt, dy3);
     VADD2(aaap.a_ray.r_pt, aaap.a_ray.r_pt, dx);
     VMOVE(aaap.a_ray.r_dir, ap->a_ray.r_dir);
@@ -1242,6 +1202,10 @@ is_edge(double *intensity, struct application *ap, const struct cell *here,
 }
 
 
+/**
+ * H A N D L E _ M A I N _ R A Y
+ *
+ */
 int
 handle_main_ray(struct application *ap, register struct partition *PartHeadp,
 		struct seg *segp)
@@ -1270,10 +1234,7 @@ handle_main_ray(struct application *ap, register struct partition *PartHeadp,
     memset(&below, 0, sizeof(struct cell));
     memset(&left, 0, sizeof(struct cell));
 
-    if (ap->a_resource->re_cpu > 0)
-	cpu = ap->a_resource->re_cpu - 1;
-    else
-	cpu = ap->a_resource->re_cpu;
+    cpu = ap->a_resource->re_cpu;
 
     if (PartHeadp == NULL || segp == NULL) {
 	/* The main shotline missed.  pack the application struct
@@ -1314,7 +1275,7 @@ handle_main_ray(struct application *ap, register struct partition *PartHeadp,
 
     VSUB2(a2.a_ray.r_pt, ap->a_ray.r_pt, dy_model); /* below */
     VMOVE(a2.a_ray.r_dir, ap->a_ray.r_dir);
-    a2.a_uptr = (void *)&below;
+    a2.a_uptr = (genptr_t)&below;
     rt_shootray(&a2);
 
     if (ap->a_x == 0) {
@@ -1326,7 +1287,7 @@ handle_main_ray(struct application *ap, register struct partition *PartHeadp,
 	 */
 	VSUB2(a2.a_ray.r_pt, ap->a_ray.r_pt, dx_model); /* left */
 	VMOVE(a2.a_ray.r_dir, ap->a_ray.r_dir);
-	a2.a_uptr = (void *)&left;
+	a2.a_uptr = (genptr_t)&left;
 	rt_shootray(&a2);
     } else {
 	left.c_ishit = saved[cpu]->c_ishit;
@@ -1341,12 +1302,12 @@ handle_main_ray(struct application *ap, register struct partition *PartHeadp,
     if (both_sides) {
 	VADD2(a2.a_ray.r_pt, ap->a_ray.r_pt, dy_model); /* above */
 	VMOVE(a2.a_ray.r_dir, ap->a_ray.r_dir);
-	a2.a_uptr = (void *)&above;
+	a2.a_uptr = (genptr_t)&above;
 	rt_shootray(&a2);
 
 	VADD2(a2.a_ray.r_pt, ap->a_ray.r_pt, dx_model); /* right */
 	VMOVE(a2.a_ray.r_dir, ap->a_ray.r_dir);
-	a2.a_uptr = (void *)&right;
+	a2.a_uptr = (genptr_t)&right;
 	rt_shootray(&a2);
     }
 

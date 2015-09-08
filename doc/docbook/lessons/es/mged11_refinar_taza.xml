@@ -1,3 +1,5 @@
+<!-- Converted by db4-upgrade version 1.0 -->
+
 <article xmlns="http://docbook.org/ns/docbook" version="5.0">
   <info><title>Refinando el modelo de la taza</title>
 
@@ -123,10 +125,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged11_mug_raytraced_norim.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged11_mug_raytraced_norim.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -215,10 +214,7 @@
 	siguiente imagen:
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/es/images/mged11_mug_raytraced_rim.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/es/images/mged11_mug_raytraced_rim.png" format="PNG"/>
 	  </imageobject>
 	  <caption>

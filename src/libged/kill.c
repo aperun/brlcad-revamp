@@ -1,7 +1,7 @@
 /*                         K I L L . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -26,9 +26,9 @@
 #include "common.h"
 
 #include <string.h>
+#include "bio.h"
 
-#include "bu/cmd.h"
-#include "bu/getopt.h"
+#include "cmd.h"
 
 #include "./ged_private.h"
 
@@ -61,7 +61,7 @@ ged_kill(struct ged *gedp, int argc, const char *argv[])
 
     bu_optind = 1;
     while ((c = bu_getopt(argc, (char * const *)argv, "fn")) != -1) {
-	switch (c) {
+	switch(c) {
 	    case 'f':
 		force = 1;
 		break;
@@ -107,7 +107,7 @@ ged_kill(struct ged *gedp, int argc, const char *argv[])
 	    if (is_phony)
 		continue;
 
-	    _dl_eraseAllNamesFromDisplay(gedp->ged_gdp->gd_headDisplay, gedp->ged_wdbp->dbip, gedp->ged_free_vlist_callback, argv[i], 0, gedp->freesolid);
+	    _ged_eraseAllNamesFromDisplay(gedp, argv[i], 0);
 
 	    if (db_delete(gedp->ged_wdbp->dbip, dp) != 0 || db_dirdelete(gedp->ged_wdbp->dbip, dp) != 0) {
 		/* Abort kill processing on first error */

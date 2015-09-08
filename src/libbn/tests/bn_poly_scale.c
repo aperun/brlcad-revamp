@@ -1,7 +1,7 @@
 /*              T E S T _ B N _ P O L Y _ S C A L E . C
  * BRL-CAD
  *
- * Copyright (c) 2013-2014 United States Government as represented by
+ * Copyright (c) 2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -30,6 +30,7 @@
 #include "bu.h"
 #include "vmath.h"
 #include "bn.h"
+#include "magic.h"
 
 
 /* holds three polynomials to be used in test. */
@@ -91,10 +92,10 @@ poly_init(void)
 
 
 /* compares the values of the array and returns 0. */
-size_t
-check_results(fastf_t a[], fastf_t b[], size_t n)
+int
+check_results(fastf_t a[], fastf_t b[], int n)
 {
-    size_t i;
+    int i;
 
     for (i = 0; i < n; i++) {
 	if (!EQUAL(a[i], b[i]))
@@ -109,7 +110,7 @@ check_results(fastf_t a[], fastf_t b[], size_t n)
 int
 test_bn_poly_scale(void)
 {
-    size_t val, val1, val2;
+    int val, val1, val2;
 
     bn_poly_scale(&input[0], 0);
     bn_poly_scale(&input[1], 2000);
@@ -120,9 +121,9 @@ test_bn_poly_scale(void)
     val2 = check_results(input[2].cf, output[2].cf, output[2].dgr + 1);
 
     if (val == 0 && val1 == 0 && val2 == 0)
-	return 0;
+	return val;
 
-    return 1;
+    return -1;
 }
 
 
@@ -130,17 +131,16 @@ int
 main(void)
 {
     int ret;
-
     poly_init();
 
     ret = test_bn_poly_scale();
 
-    if (ret != 0) {
-	return EXIT_FAILURE;
+    if (ret == 0) {
+	bu_log("\nFunction computes correctly\n");
+	return EXIT_SUCCESS;
     }
 
-    bu_log("\nFunction computes correctly\n");
-    return EXIT_SUCCESS;
+    return EXIT_FAILURE;
 }
 
 

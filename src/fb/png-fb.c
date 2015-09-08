@@ -1,7 +1,7 @@
 /*                        P N G - F B . C
  * BRL-CAD
  *
- * Copyright (c) 1998-2014 United States Government as represented by
+ * Copyright (c) 1998-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -29,11 +29,10 @@
 #include <stdlib.h>
 #include <zlib.h>
 #include <png.h>
+#include "bio.h"
+#include "bin.h"
 
-#include "bu/getopt.h"
-#include "bu/log.h"
-#include "bu/malloc.h"
-#include "vmath.h"
+#include "bu.h"
 #include "fb.h"
 #include "pkg.h"
 
@@ -68,8 +67,9 @@ static double def_screen_gamma=1.0;	/* Don't add more gamma, by default */
  */
 
 static char usage[] = "\
-Usage: png-fb [-H -i -c -v -z -1] [-m #lines] [-F framebuffer]\n\
+Usage: png-fb [-H -h -i -c -v -z -1] [-m #lines] [-F framebuffer]\n\
 	[-g screen_gamma]\n\
+	[-s squarefilesize] [-w file_width] [-n file_height]\n\
 	[-x file_xoff] [-y file_yoff] [-X scr_xoff] [-Y scr_yoff]\n\
 	[-S squarescrsize] [-W scr_width] [-N scr_height] [file.png]\n";
 
@@ -78,7 +78,7 @@ get_args(int argc, char **argv)
 {
     int c;
 
-    while ((c = bu_getopt(argc, argv, "1m:g:HicvzF:x:y:X:Y:S:W:N:h?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "1m:g:HhicvzF:s:x:y:X:Y:S:W:N:")) != -1) {
 	switch (c) {
 	    case '1':
 		one_line_only = 1;
@@ -91,6 +91,10 @@ get_args(int argc, char **argv)
 		break;
 	    case 'H':
 		header_only = 1;
+		break;
+	    case 'h':
+		/* high-res */
+		scr_height = scr_width = 1024;
 		break;
 	    case 'i':
 		inverse = 1;
@@ -129,7 +133,7 @@ get_args(int argc, char **argv)
 		scr_height = atoi(bu_optarg);
 		break;
 
-	    default:		/* '?''h' */
+	    default:		/* '?' */
 		return 0;
 	}
     }
@@ -162,7 +166,7 @@ int
 main(int argc, char **argv)
 {
     int y;
-    fb *fbp;
+    FBIO *fbp;
     int i;
     int xout, yout, m, xstart;
     png_structp png_p;
@@ -320,7 +324,8 @@ main(int argc, char **argv)
 
     if (xout < 0)
 	bu_exit(0, NULL);			/* off screen */
-    V_MIN(xout, (file_width-file_xoff));
+    if (xout > (file_width-file_xoff))
+	xout = (file_width-file_xoff);
     scanpix = xout;				/* # pixels on scanline */
 
     if (inverse)
@@ -329,7 +334,8 @@ main(int argc, char **argv)
     yout = scr_height - scr_yoff;
     if (yout < 0)
 	bu_exit(0, NULL);			/* off screen */
-    V_MIN(yout, (file_height-file_yoff));
+    if (yout > (file_height-file_yoff))
+	yout = (file_height-file_yoff);
 
     /* Only in the simplest case use multi-line writes */
     if (!one_line_only && multiple_lines > 0 && !inverse && !zoom &&
@@ -347,8 +353,8 @@ main(int argc, char **argv)
 	/* Zoom in, and center the display.  Use square zoom. */
 	int newzoom;
 	newzoom = scr_width/xout;
-	V_MIN(newzoom, scr_height/yout);
-
+	if (scr_height/yout < newzoom)
+	    newzoom = scr_height/yout;
 	if (inverse) {
 	    fb_view(fbp,
 		    scr_xoff+xout/2, scr_height-1-(scr_yoff+yout/2),

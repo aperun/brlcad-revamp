@@ -1,7 +1,7 @@
 /*                         B U R S T . H
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -22,12 +22,13 @@
  *
  */
 
-#ifndef BURST_BURST_H
-#define BURST_BURST_H
+#ifndef __BURST_H__
+#define __BURST_H__
 
 #include "common.h"
 
-/* for void **/
+/* for genptr_t */
+#include "bu.h"
 #include "vmath.h"
 
 
@@ -160,6 +161,8 @@
 #define C_MAIN		0
 #define C_CRIT		1
 
+#define TWO_PI		(2.0 * M_PI)
+
 #define COS_TOL		0.01
 #define LOS_TOL		0.1
 #define VEC_TOL		0.001
@@ -214,7 +217,7 @@ struct pt_queue
 
 #define PT_Q_NULL (Pt_Queue *) 0
 
-#endif  /* BURST_BURST_H */
+#endif  /* __BURST_H__ */
 
 /*
  * Local Variables:

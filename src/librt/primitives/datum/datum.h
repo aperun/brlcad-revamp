@@ -28,7 +28,7 @@
 
 #include "common.h"
 
-#include "rt/geom.h"
+#include "rtgeom.h"
 
 
 /* ray tracing form of solid, including precomputed terms */

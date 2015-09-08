@@ -1,7 +1,7 @@
 /*                          M E N U . C
  * BRL-CAD
  *
- * Copyright (c) 1985-2014 United States Government as represented by
+ * Copyright (c) 1985-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -25,6 +25,9 @@
 
 #include "tcl.h"
 
+#include <stdio.h>
+#include "bio.h"
+#include "bu.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "./mged.h"
@@ -88,6 +91,8 @@ cmd_mmenu_get(ClientData UNUSED(clientData), Tcl_Interp *interp, int argc, const
 
 
 /*
+ * M M E N U _ I N I T
+ *
  * Clear global data
  */
 void
@@ -99,6 +104,10 @@ mmenu_init(void)
     menu_state->ms_menus[MENU_GEN] = MENU_NULL;
 }
 
+
+/*
+ * M M E N U _ S E T
+ */
 
 void
 mmenu_set(int index, struct menu_item *value)
@@ -112,7 +121,7 @@ mmenu_set(int index, struct menu_item *value)
 
     Tcl_DStringInit(&ds_menu);
 
-    bu_vls_printf(&menu_string, "mmenu_set %s %d ", bu_vls_addr(&curr_cmd_list->cl_name), index);
+    bu_vls_printf(&menu_string, "mmenu_set %V %d ", &curr_cmd_list->cl_name, index);
 
     (void)Tcl_Eval(INTERP, bu_vls_addr(&menu_string));
 
@@ -156,30 +165,30 @@ mged_highlight_menu_item(struct menu_item *mptr, int y)
     switch (mptr->menu_arg) {
 	case BV_RATE_TOGGLE:
 	    if (mged_variables->mv_rateknobs) {
-		dm_set_fg(dmp,
+		DM_SET_FGCOLOR(dmp,
 			       color_scheme->cs_menu_text1[0],
 			       color_scheme->cs_menu_text1[1],
 			       color_scheme->cs_menu_text1[2], 1, 1.0);
-		dm_draw_string_2d(dmp, "Rate",
+		DM_DRAW_STRING_2D(dmp, "Rate",
 				  GED2PM1(MENUX), GED2PM1(y-15), 0, 0);
-		dm_set_fg(dmp,
+		DM_SET_FGCOLOR(dmp,
 			       color_scheme->cs_menu_text2[0],
 			       color_scheme->cs_menu_text2[1],
 			       color_scheme->cs_menu_text2[2], 1, 1.0);
-		dm_draw_string_2d(dmp, "/Abs",
+		DM_DRAW_STRING_2D(dmp, "/Abs",
 				  GED2PM1(MENUX+4*40), GED2PM1(y-15), 0, 0);
 	    } else {
-		dm_set_fg(dmp,
+		DM_SET_FGCOLOR(dmp,
 			       color_scheme->cs_menu_text2[0],
 			       color_scheme->cs_menu_text2[1],
 			       color_scheme->cs_menu_text2[2], 1, 1.0);
-		dm_draw_string_2d(dmp, "Rate/",
+		DM_DRAW_STRING_2D(dmp, "Rate/",
 				  GED2PM1(MENUX), GED2PM1(y-15), 0, 0);
-		dm_set_fg(dmp,
+		DM_SET_FGCOLOR(dmp,
 			       color_scheme->cs_menu_text1[0],
 			       color_scheme->cs_menu_text1[1],
 			       color_scheme->cs_menu_text1[2], 1, 1.0);
-		dm_draw_string_2d(dmp, "Abs",
+		DM_DRAW_STRING_2D(dmp, "Abs",
 				  GED2PM1(MENUX+5*40), GED2PM1(y-15), 0, 0);
 	    }
 	    break;
@@ -190,6 +199,8 @@ mged_highlight_menu_item(struct menu_item *mptr, int y)
 
 
 /*
+ * M M E N U _ D I S P L A Y
+ *
  * Draw one or more menus onto the display.
  * If "menu_state->ms_flag" is non-zero, then the last selected
  * menu item will be indicated with an arrow.
@@ -203,14 +214,14 @@ mmenu_display(int y_top)
     int y = y_top;
 
     menu_state->ms_top = y - MENU_DY / 2;
-    dm_set_fg(dmp,
+    DM_SET_FGCOLOR(dmp,
 		   color_scheme->cs_menu_line[0],
 		   color_scheme->cs_menu_line[1],
 		   color_scheme->cs_menu_line[2], 1, 1.0);
 
-    dm_set_line_attr(dmp, mged_variables->mv_linewidth, 0);
+    DM_SET_LINE_ATTR(dmp, mged_variables->mv_linewidth, 0);
 
-    dm_draw_line_2d(dmp,
+    DM_DRAW_LINE_2D(dmp,
 		    GED2PM1(MENUXLIM), GED2PM1(menu_state->ms_top),
 		    GED2PM1(XMIN), GED2PM1(menu_state->ms_top));
 
@@ -224,32 +235,32 @@ mmenu_display(int y_top)
 		mged_highlight_menu_item(mptr, y);
 	    else {
 		if (mptr == *m)
-		    dm_set_fg(dmp,
+		    DM_SET_FGCOLOR(dmp,
 				   color_scheme->cs_menu_title[0],
 				   color_scheme->cs_menu_title[1],
 				   color_scheme->cs_menu_title[2], 1, 1.0);
 		else
-		    dm_set_fg(dmp,
+		    DM_SET_FGCOLOR(dmp,
 				   color_scheme->cs_menu_text2[0],
 				   color_scheme->cs_menu_text2[1],
 				   color_scheme->cs_menu_text2[2], 1, 1.0);
-		dm_draw_string_2d(dmp, mptr->menu_string,
+		DM_DRAW_STRING_2D(dmp, mptr->menu_string,
 				  GED2PM1(MENUX), GED2PM1(y-15), 0, 0);
 	    }
-	    dm_set_fg(dmp,
+	    DM_SET_FGCOLOR(dmp,
 			   color_scheme->cs_menu_line[0],
 			   color_scheme->cs_menu_line[1],
 			   color_scheme->cs_menu_line[2], 1, 1.0);
-	    dm_draw_line_2d(dmp,
+	    DM_DRAW_LINE_2D(dmp,
 			    GED2PM1(MENUXLIM), GED2PM1(y+(MENU_DY/2)),
 			    GED2PM1(XMIN), GED2PM1(y+(MENU_DY/2)));
 	    if (menu_state->ms_cur_item == item && menu_state->ms_cur_menu == menu && menu_state->ms_flag) {
 		/* prefix item selected with "==>" */
-		dm_set_fg(dmp,
+		DM_SET_FGCOLOR(dmp,
 			       color_scheme->cs_menu_arrow[0],
 			       color_scheme->cs_menu_arrow[1],
 			       color_scheme->cs_menu_arrow[2], 1, 1.0);
-		dm_draw_string_2d(dmp, "==>",
+		DM_DRAW_STRING_2D(dmp, "==>",
 				  GED2PM1(XMIN), GED2PM1(y-15), 0, 0);
 	    }
 	}
@@ -258,20 +269,22 @@ mmenu_display(int y_top)
     if (y == y_top)
 	return;	/* no active menus */
 
-    dm_set_fg(dmp,
+    DM_SET_FGCOLOR(dmp,
 		   color_scheme->cs_menu_line[0],
 		   color_scheme->cs_menu_line[1],
 		   color_scheme->cs_menu_line[2], 1, 1.0);
 
-    dm_set_line_attr(dmp, mged_variables->mv_linewidth, 0);
+    DM_SET_LINE_ATTR(dmp, mged_variables->mv_linewidth, 0);
 
-    dm_draw_line_2d(dmp,
+    DM_DRAW_LINE_2D(dmp,
 		    GED2PM1(MENUXLIM), GED2PM1(menu_state->ms_top-1),
 		    GED2PM1(MENUXLIM), GED2PM1(y-(MENU_DY/2)));
 }
 
 
 /*
+ * M M E N U _ S E L E C T
+ *
  * Called with Y coordinate of pen in menu area.
  *
  * Returns:

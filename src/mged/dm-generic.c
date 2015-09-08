@@ -1,7 +1,7 @@
 /*                    D M - G E N E R I C . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -26,6 +26,7 @@
 #include "common.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include <ctype.h>
 #include <string.h>
@@ -34,15 +35,16 @@
 #  include <sys/types.h>
 #endif
 
+#include "bio.h"
 #include "tcl.h"
 #ifdef HAVE_TK
 #  include "tk.h"
 #endif
+#include "dm_xvars.h"
 
-#include "dm/dm_xvars.h"
-
+#include "bu.h"
 #include "vmath.h"
-#include "raytrace.h"
+#include "mater.h"
 #include "ged.h"
 
 #include "./mged.h"
@@ -106,14 +108,8 @@ common_dm(int argc, const char *argv[])
 	if (rubber_band->rb_active) {
 	    rubber_band->rb_active = 0;
 
-	    if (mged_variables->mv_mouse_behavior == 'p') {
-		/* need dummy values for func signature--they are unused in the func */
-		const struct bu_structparse *sdp = 0;
-		const char name[] = "name";
-		void *base = 0;
-		const char value[] = "value";
-		rb_set_dirty_flag(sdp, name, base, value, NULL);
-	    }
+	    if (mged_variables->mv_mouse_behavior == 'p')
+		rb_set_dirty_flag();
 	    else if (mged_variables->mv_mouse_behavior == 'r')
 		rt_rect_area();
 	    else if (mged_variables->mv_mouse_behavior == 'z')
@@ -177,7 +173,7 @@ common_dm(int argc, const char *argv[])
 
 	    MAT4X3PNT(model_pt, view_state->vs_gvp->gv_view2model, view_pt);
 	    VSCALE(model_pt, model_pt, base2local);
-	    if (dm_get_zclip(dmp))
+	    if (dmp->dm_zclip)
 		bu_vls_printf(&vls, "qray_nirt %lf %lf %lf",
 			      model_pt[X], model_pt[Y], model_pt[Z]);
 	    else
@@ -196,14 +192,7 @@ common_dm(int argc, const char *argv[])
 	    rubber_band->rb_width = 0.0;
 	    rubber_band->rb_height = 0.0;
 	    rect_view2image();
-	    {
-		/* need dummy values for func signature--they are unused in the func */
-		const struct bu_structparse *sdp = 0;
-		const char name[] = "name";
-		void *base = 0;
-		const char value[] = "value";
-		rb_set_dirty_flag(sdp, name, base, value, NULL);
-	    }
+	    rb_set_dirty_flag();
 	} else if (mged_variables->mv_mouse_behavior == 's' && !stolen) {
 	    bu_vls_printf(&vls, "mouse_solid_edit_select %d %d", x, y);
 	} else if (mged_variables->mv_mouse_behavior == 'm' && !stolen) {
@@ -539,7 +528,7 @@ common_dm(int argc, const char *argv[])
 
 	/* get the window size */
 	if (argc == 1) {
-	    bu_vls_printf(&vls, "%d %d", dm_get_width(dmp), dm_get_height(dmp));
+	    bu_vls_printf(&vls, "%d %d", dmp->dm_width, dmp->dm_height);
 	    Tcl_AppendResult(INTERP, bu_vls_addr(&vls), (char *)NULL);
 	    bu_vls_free(&vls);
 
@@ -551,8 +540,9 @@ common_dm(int argc, const char *argv[])
 	    width = atoi(argv[1]);
 	    height = atoi(argv[2]);
 
-	    dm_set_width(dmp, width);
-	    dm_set_height(dmp, height);
+	    dmp->dm_width = width;
+	    dmp->dm_height = height;
+
 	    return TCL_OK;
 	}
 
@@ -560,23 +550,19 @@ common_dm(int argc, const char *argv[])
 	return TCL_ERROR;
     }
 
-#if defined(DM_X) || defined(DM_TK) || defined(DM_OGL) || defined(DM_WGL) || defined(DM_OSGL)
+#if defined(DM_X) || defined(DM_TK) || defined(DM_OGL) || defined(DM_WGL)
     if (BU_STR_EQUAL(argv[0], "getx")) {
 	if (argc == 1) {
 	    struct bu_vls tmp_vls = BU_VLS_INIT_ZERO;
 
 	    /* Bare set command, print out current settings */
-	    if(dm_get_xvars(dmp) != NULL) {
-		bu_vls_struct_print2(&tmp_vls, "dm internal X variables", dm_xvars_vparse,
-			(const char *)dm_get_xvars(dmp));
-		Tcl_AppendResult(INTERP, bu_vls_addr(&tmp_vls), (char *)NULL);
-	    }
+	    bu_vls_struct_print2(&tmp_vls, "dm internal X variables", dm_xvars_vparse,
+				 (const char *)dmp->dm_vars.pub_vars);
+	    Tcl_AppendResult(INTERP, bu_vls_addr(&tmp_vls), (char *)NULL);
 	    bu_vls_free(&tmp_vls);
 	} else if (argc == 2) {
-	    if(dm_get_xvars(dmp) != NULL) {
-		bu_vls_struct_item_named(&vls, dm_xvars_vparse, argv[1], (const char *)dm_get_xvars(dmp), COMMA);
-		Tcl_AppendResult(INTERP, bu_vls_addr(&vls), (char *)NULL);
-	    }
+	    bu_vls_struct_item_named(&vls, dm_xvars_vparse, argv[1], (const char *)dmp->dm_vars.pub_vars, COMMA);
+	    Tcl_AppendResult(INTERP, bu_vls_addr(&vls), (char *)NULL);
 	    bu_vls_free(&vls);
 	}
 
@@ -597,10 +583,11 @@ common_dm(int argc, const char *argv[])
 
 	/* return background color of current display manager */
 	if (argc == 1) {
-	    if (dm_get_bg(dmp)) {
-		bu_vls_printf(&vls, "%d %d %d", dm_get_bg(dmp)[0], dm_get_bg(dmp)[1], dm_get_bg(dmp)[2]);
-		Tcl_AppendResult(INTERP, bu_vls_addr(&vls), (char *)NULL);
-	    }
+	    bu_vls_printf(&vls, "%d %d %d",
+			  dmp->dm_bg[0],
+			  dmp->dm_bg[1],
+			  dmp->dm_bg[2]);
+	    Tcl_AppendResult(INTERP, bu_vls_addr(&vls), (char *)NULL);
 	    bu_vls_free(&vls);
 
 	    return TCL_OK;
@@ -617,120 +604,14 @@ common_dm(int argc, const char *argv[])
 	}
 
 	dirty = 1;
-	(void)dm_make_current(dmp);
-	return dm_set_bg(dmp, r, g, b);
+	(void)DM_MAKE_CURRENT(dmp);
+	return DM_SET_BGCOLOR(dmp, r, g, b);
     }
 
     Tcl_AppendResult(INTERP, "dm: bad command - ", argv[0], "\n", (char *)NULL);
     return TCL_ERROR;
 }
 
-/* common sp_hook functions */
-
-void
-view_state_flag_hook(const struct bu_structparse *UNUSED(sdp),
-		const char *UNUSED(name),
-		void *UNUSED(base),
-		const char *UNUSED(value),
-                void *data)
-{
-    struct mged_view_hook_state *hs = (struct mged_view_hook_state *)data;
-    if (hs->vs)
-	hs->vs->vs_flag = 1;
-}
-
-void
-dirty_hook(const struct bu_structparse *UNUSED(sdp),
-	const char *UNUSED(name),
-	void *UNUSED(base),
-	const char *UNUSED(value),
-	void *data)
-{
-    struct mged_view_hook_state *hs = (struct mged_view_hook_state *)data;
-    *(hs->dirty_global) = 1;
-}
-
-void
-zclip_hook(const struct bu_structparse *sdp,
-	const char *name,
-	void *base,
-	const char *value,
-	void *data)
-{
-    struct mged_view_hook_state *hs = (struct mged_view_hook_state *)data;
-    hs->vs->vs_gvp->gv_zclip = dm_get_zclip(hs->hs_dmp);
-    dirty_hook(sdp, name, base, value, data);
-}
-
-void *
-set_hook_data(struct mged_view_hook_state *hs) {
-    hs->hs_dmp = dmp;
-    hs->vs = view_state;
-    hs->dirty_global = &(dirty);
-    return (void *)hs;
-}
-
-struct bu_structparse_map vparse_map[] = {
-    {"depthcue",	view_state_flag_hook      },
-    {"zclip",		zclip_hook		  },
-    {"zbuffer",		view_state_flag_hook      },
-    {"lighting",	view_state_flag_hook      },
-    {"transparency",	view_state_flag_hook      },
-    {"fastfog",		view_state_flag_hook      },
-    {"density",		dirty_hook  		  },
-    {"bound",		dirty_hook  		  },
-    {"useBound",	dirty_hook  	  	  },
-    {(char *)0,		BU_STRUCTPARSE_FUNC_NULL  }
-};
-
-int
-dm_commands(int argc,
-       const char *argv[])
-{
-    struct dm_hook_data mged_dm_hook;
-    if (BU_STR_EQUAL(argv[0], "set")) {
-	struct bu_vls vls = BU_VLS_INIT_ZERO;
-
-	if (argc < 2) {
-	    struct bu_vls report_str = BU_VLS_INIT_ZERO;
-	    if (dm_get_dm_name(dmp) && dm_get_vparse(dmp)) {
-		bu_vls_sprintf(&report_str, "Display Manager (type %s) internal variables", dm_get_dm_name(dmp));
-		/* Bare set command, print out current settings */
-		bu_vls_struct_print2(&vls, bu_vls_addr(&report_str), dm_get_vparse(dmp), (const char *)dm_get_mvars(dmp));
-	    }
-	    bu_vls_free(&report_str);
-	} else if (argc == 2) {
-	    /* TODO - need to add hook func support to this func, since the one in the libdm structparse isn't enough by itself */
-	    if (dm_get_mvars(dmp) && dm_get_vparse(dmp)) {
-		bu_vls_struct_item_named(&vls, dm_get_vparse(dmp), argv[1], (const char *)dm_get_mvars(dmp), COMMA);
-	    }
-	} else {
-	    struct bu_vls tmp_vls = BU_VLS_INIT_ZERO;
-	    int ret;
-	    struct mged_view_hook_state global_hs;
-	    void *data = set_hook_data(&global_hs);
-
-	    ret = dm_set_hook(vparse_map, argv[1], data, &mged_dm_hook);
-
-	    bu_vls_printf(&tmp_vls, "%s=\"", argv[1]);
-	    bu_vls_from_argv(&tmp_vls, argc-2, (const char **)argv+2);
-	    bu_vls_putc(&tmp_vls, '\"');
-	    ret = bu_struct_parse(&tmp_vls, dm_get_vparse(dmp), (char *)dm_get_mvars(dmp), (void *)(&mged_dm_hook));
-	    bu_vls_free(&tmp_vls);
-	    if (ret < 0) {
-	      bu_vls_free(&vls);
-	      return TCL_ERROR;
-	    }
-	}
-
-	Tcl_AppendResult(INTERP, bu_vls_addr(&vls), (char *)NULL);
-	bu_vls_free(&vls);
-
-	return TCL_OK;
-    }
-
-    return common_dm(argc, argv);
-}
 
 /*
  * Local Variables:

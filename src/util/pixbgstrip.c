@@ -1,7 +1,7 @@
 /*                    P I X B G S T R I P . C
  * BRL-CAD
  *
- * Copyright (c) 1991-2014 United States Government as represented by
+ * Copyright (c) 1991-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -26,11 +26,10 @@
 #include "common.h"
 
 #include <stdlib.h>
+#include "bio.h"
 
+#include "bu.h"
 #include "vmath.h"
-#include "bu/getopt.h"
-#include "bu/log.h"
-#include "bu/malloc.h"
 #include "bn.h"
 #include "fb.h"
 
@@ -46,11 +45,11 @@ static int autosize = 0;		/* !0 to autosize input */
 
 static size_t file_width = 512L;	/* default input width */
 
-static int thresh = 0;
+static int thresh = 1;
 static int bg_x_offset = 0;
 
 static char usage[] = "\
-Usage: pixbgstrip [-a] [-t thresh] [-x x_off_for_bg_pixel]\n\
+Usage: pixbgstrip [-a -h] [-t thresh] [-x x_off for bg pixel]\n\
 	[-s squarefilesize] [-w file_width] [-n file_height]\n\
 	[file.pix]\n";
 
@@ -59,10 +58,15 @@ get_args(int argc, char **argv)
 {
     int c;
 
-    while ((c = bu_getopt(argc, argv, "as:w:n:t:x:h?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "ahs:w:n:t:x:")) != -1) {
 	switch (c) {
 	    case 'a':
 		autosize = 1;
+		break;
+	    case 'h':
+		/* high-res */
+		file_width = 1024L;
+		autosize = 0;
 		break;
 	    case 's':
 		/* square file size */
@@ -83,7 +87,7 @@ get_args(int argc, char **argv)
 		bg_x_offset = atoi(bu_optarg);
 		break;
 
-	    default:		/* '?' , 'h' */
+	    default:		/* '?' */
 		return 0;
 	}
     }

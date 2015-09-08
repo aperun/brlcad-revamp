@@ -1,7 +1,7 @@
 /*                         T R A C K . C
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -26,15 +26,17 @@
 #include "common.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <signal.h>
 #include <math.h>
 #include <string.h>
 
+#include "bio.h"
 #include "vmath.h"
 #include "raytrace.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
 #include "wdb.h"
-#include "rt/db4.h"
+#include "db.h"
 
 #include "./mged.h"
 #include "./mged_dm.h"
@@ -60,9 +62,10 @@ void top(fastf_t *vec1, fastf_t *vec2, fastf_t *t);
 void crregion(char *region, char *op, int *members, int number, char *solidname, int maxlen);
 void itoa(int n, char *s, int w);
 
-
 /*
- * adds track given "wheel" info
+ *
+ * F _ A M T R A C K () :	adds track given "wheel" info
+ *
  */
 int
 f_amtrack(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[])
@@ -250,7 +253,7 @@ f_amtrack(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv[
 	edit_result = TCL_ERROR;
 	goto end;
     }
-    if (tr[1] - tr[0] < SMALL_FASTF) {
+    if (tr[0] > tr[1] - SMALL_FASTF) {
 	Tcl_AppendResult(interp, "MIN > MAX .... will switch\n", (char *)NULL);
 	tr[1] = tr[0];
 	tr[0] = tr[2];
@@ -597,7 +600,7 @@ wrobj(char name[], int flags)
 		for (i=1; i<8; i++)
 		    VADD2(arb->pt[i], &sol.s_values[i*3], arb->pt[0]);
 
-		intern.idb_ptr = (void *)arb;
+		intern.idb_ptr = (genptr_t)arb;
 		intern.idb_major_type = DB5_MAJORTYPE_BRLCAD;
 		intern.idb_type = ID_ARB8;
 		intern.idb_meth = &OBJ[ID_ARB8];
@@ -618,7 +621,7 @@ wrobj(char name[], int flags)
 		VMOVE(tgc->c, &sol.s_values[12]);
 		VMOVE(tgc->d, &sol.s_values[15]);
 
-		intern.idb_ptr = (void *)tgc;
+		intern.idb_ptr = (genptr_t)tgc;
 		intern.idb_major_type = DB5_MAJORTYPE_BRLCAD;
 		intern.idb_type = ID_TGC;
 		intern.idb_meth = &OBJ[ID_TGC];
@@ -629,7 +632,7 @@ wrobj(char name[], int flags)
 	    return -1;
     }
 
-    if ((tdp = db_diradd(dbip, name, -1L, 0, flags, (void *)&intern.idb_type)) == RT_DIR_NULL) {
+    if ((tdp = db_diradd(dbip, name, -1L, 0, flags, (genptr_t)&intern.idb_type)) == RT_DIR_NULL) {
 	rt_db_free_internal(&intern);
 	Tcl_AppendResult(INTERP, "Cannot add '", name, "' to directory, aborting\n", (char *)NULL);
 	return -1;
@@ -894,7 +897,7 @@ crregion(char *region, char *op, int *members, int number, char *solidname, int 
 }
 
 
-/*
+/*	==== I T O A ()
  * convert integer to ascii wd format
  */
 void

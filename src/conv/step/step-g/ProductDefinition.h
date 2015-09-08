@@ -1,7 +1,7 @@
 /*                 ProductDefinition.h
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef CONV_STEP_STEP_G_PRODUCTDEFINITION_H
-#define CONV_STEP_STEP_G_PRODUCTDEFINITION_H
+#ifndef PRODUCT_DEFINITION_H_
+#define PRODUCT_DEFINITION_H_
 
 #include "STEPEntity.h"
 
@@ -57,15 +57,13 @@ public:
     string ClassName();
     string Ident();
     string Description();
-    string GetProductName();
-    int GetProductId();
     virtual void Print(int level);
 
     //static methods
     static STEPEntity *Create(STEPWrapper *sw, SDAI_Application_instance *sse);
 };
 
-#endif /* CONV_STEP_STEP_G_PRODUCTDEFINITION_H */
+#endif /* PRODUCT_DEFINITION_H_ */
 
 /*
  * Local Variables:

@@ -1,3 +1,5 @@
+<!-- Converted by db4-upgrade version 1.0 -->
+
 <refentry xmlns="http://docbook.org/ns/docbook" version="5.0" xml:id="rtarea1">
   <refmeta>
       <refentrytitle>RTAREA
@@ -25,7 +27,7 @@
   <refsection xml:id="description"><title>DESCRIPTION</title>
 
     <para>
-      The <command>rtarea</command> command calculates the exposed, presented and centers of
+      The <emphasis remap="I">rtarea</emphasis> command calculates the exposed, presented and centers of
       surface areas of specified geometry objects from a particular view.  The summary
       output includes details for individual regions, assemblies (combinations that contain
       regions), and summarized totals.
@@ -42,9 +44,9 @@
 |        |       |      |
 |        |       |      |
 |--------|-------|      |
-         |              |
-         |              |
-         |--------------|
+	 |              |
+	 |              |
+	 |--------------|
       </screen>
 
       The exposed area of the Front Cube corresponds to the total area of the sheet, since it is not
@@ -57,9 +59,9 @@
 |        |**************|
 |        |**************|
 |--------|**************|
-         |**************|
-         |**************|
-         |--------------|
+	 |**************|
+	 |**************|
+	 |--------------|
       </screen>
 
 
@@ -73,9 +75,9 @@
 |********|       |      |
 |********|       |      |
 |--------|-------|      |
-         |              |
-         |              |
-         |--------------|
+	 |              |
+	 |              |
+	 |--------------|
       </screen>
 
 
@@ -89,9 +91,9 @@
 |***********************|
 |***********************|
 |--------|**************|
-         |**************|
-         |**************|
-         |--------------|
+	 |**************|
+	 |**************|
+	 |--------------|
       </screen>
 
 
@@ -109,9 +111,9 @@
 |        |**************|
 |        |**************|
 |--------|**************|
-         |**************|
-         |**************|
-         |--------------|
+	 |**************|
+	 |**************|
+	 |--------------|
       </screen>
 
 
@@ -124,9 +126,9 @@
 |****************|      |
 |****************|      |
 |--------|-------|      |
-         |              |
-         |              |
-         |--------------|
+	 |              |
+	 |              |
+	 |--------------|
       </screen>
 
 
@@ -142,9 +144,9 @@
 |***********************|
 |***********************|
 |--------|**************|
-         |**************|
-         |**************|
-         |--------------|
+	 |**************|
+	 |**************|
+	 |--------------|
       </screen>
 
 
@@ -267,7 +269,7 @@
   <refsection xml:id="see_also"><title>SEE ALSO</title>
 
     <para>
-    <citerefentry><refentrytitle>mged</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>rt</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>pix-fb</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>librt</refentrytitle><manvolnum>3</manvolnum></citerefentry>, <citerefentry><refentrytitle>pix</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+    <citerefentry><refentrytitle>mged</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>rt</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>pix-fb</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>librt</refentrytitle><manvolnum>3</manvolnum></citerefentry>, <citerefentry><refentrytitle>pix</refentrytitle><manvolnum>5</manvolnum></citerefentry>.
     </para>
   </refsection>
 
@@ -281,8 +283,8 @@
   <refsection xml:id="copyright"><title>COPYRIGHT</title>
 
     <para>
-      This software is Copyright (c) 1987-2014 United States
-      Government as represented by the U.S. Army Research Laboratory.
+      This software is Copyright (c) 1987-2013 United States Government as represented by the
+      U.S. Army Research Laboratory. All rights reserved.
     </para>
   </refsection>
 

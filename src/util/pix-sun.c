@@ -1,7 +1,7 @@
 /*                       P I X - S U N . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -32,14 +32,13 @@
 #include <string.h>
 #include "bio.h"
 
-#include "bu/getopt.h"
-#include "bu/log.h"
+#include "bu.h"
+
 
 /* declarations to support use of bu_getopt() system call */
-char options[] = "s:w:n:dh?";
+char *options = "hs:w:n:d";
 char optflags[sizeof(options)];
-char noname[] = "(noname)";
-char *progname = noname;
+char *progname = "(noname)";
 int dither = 0;
 
 #define MAPSIZE 256   /* Number of unique color values in Sun Colormap */
@@ -205,7 +204,7 @@ double *end_table = &table[10];
 
 
 /*
- * convert stdin pix file to stdout rasterfile
+ * D O I T --- convert stdin pix file to stdout rasterfile
  */
 void
 doit(void)
@@ -302,13 +301,15 @@ void
 usage(void)
 {
 
-    fprintf(stderr, "Usage: %s [-s squaresize] [-w width] [-n height] [-d]", progname);
-    fprintf(stderr, " < BRLpixfile > rasterfile\n");
+    fprintf(stderr, "Usage: %s [-s squaresize] [-w width] [-n height] [ -d ]\n", progname);
+    fprintf(stderr, "\t< BRLpixfile > rasterfile\n");
     bu_exit (1, NULL);
 }
 
 
 /*
+ * M A I N
+ *
  * Perform miscellaneous tasks such as argument parsing and
  * I/O setup and then call "doit" to perform the task at hand
  */

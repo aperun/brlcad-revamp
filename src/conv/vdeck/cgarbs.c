@@ -1,7 +1,7 @@
 /*                        C G A R B S . C
  * BRL-CAD
  *
- * Copyright (c) 1990-2014 United States Government as represented by
+ * Copyright (c) 1990-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -35,12 +35,14 @@
 #include <math.h>
 #include "vmath.h"
 #include "raytrace.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
 
 #define YES	1
 #define NO	0
 
 /*
+ *			C G A R B S
+ *
  *  Determines COMGEOM arb type of a general arb.
  *
  *  Returns -
@@ -138,6 +140,8 @@ cgarbs(int *cgtype,
 }
 
 /*
+ *			A R B _ M V
+ *
  *  Permute the points as directed.
  */
 static void
@@ -165,6 +169,8 @@ arb_mv(point_t pts[8],
 }
 
 /*
+ *			R E D O A R B
+ *
  *  Rearranges arbs to be GIFT compatible
  *  The input in "gp" is not modified.
  *  The first "numvec" entries of "pts" are the GIFT format of arb "cgtype".

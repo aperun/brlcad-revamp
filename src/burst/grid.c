@@ -1,7 +1,7 @@
 /*                          G R I D . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -30,17 +30,26 @@
 #include <fcntl.h>
 #include <math.h>
 
+#include "bu.h"
 #include "vmath.h"
 #include "bn.h"
 #include "raytrace.h"
 #include "fb.h"
-#include "bn/plot3.h"
+#include "plot3.h"
 
 #include "./ascii.h"
 #include "./extern.h"
 
 #define DEBUG_GRID	0
 #define DEBUG_SHOT	1
+#ifndef	EPSILON
+#  define EPSILON	0.000001
+#endif
+#define FABS(a)		((a) > 0 ? (a) : -(a))
+#define AproxEq(a, b, e)	(FABS((a)-(b)) < (e))
+#define AproxEqVec(A, B, e) (AproxEq((A)[X], (B)[X], (e)) && \
+			     AproxEq((A)[Y], (B)[Y], (e)) &&	\
+			     AproxEq((A)[Z], (B)[Z], (e)))
 
 /* local communication with multitasking process */
 static int currshot;	/* current shot index */
@@ -57,21 +66,21 @@ static struct application ag;	/* global application structure (zeroed out) */
 
 /* functions local to this module */
 static int doBursts();
-static int burstPoint(struct application *, fastf_t *, fastf_t *);
+static int burstPoint();
 static int burstRay();
 static int gridShot();
-static int f_BurstHit(struct application *x, struct partition *, struct seg *);
-static int f_BurstMiss(struct application *ap);
-static int f_HushOverlap(struct application *ap, struct partition *, struct region *, struct region *, struct partition *);
-static int f_Overlap(struct application *, struct partition *, struct region *, struct region *, struct partition *);
-static int f_ShotHit(struct application *, struct partition *, struct seg *);
-static int f_ShotMiss(struct application *);
-static int getRayOrigin(struct application *);
-static int readBurst(fastf_t *);
-static int readShot(fastf_t *);
-static void lgtModel(struct application *, struct partition *, struct hit *, struct xray *, fastf_t surfnorm[3]);
+static int f_BurstHit();
+static int f_BurstMiss();
+static int f_HushOverlap();
+static int f_Overlap();
+static int f_ShotHit();
+static int f_ShotMiss();
+static int getRayOrigin();
+static int readBurst();
+static int readShot();
+static void lgtModel();
 static void view_end();
-static void view_pix(struct application *);
+static void view_pix();
 
 /*
   void colorPartition(struct region *regp, int type)
@@ -272,6 +281,8 @@ f_BurstHit(struct application *ap, struct partition *pt_headp, struct seg *UNUSE
 
   Do not report diagnostics about individual overlaps, but keep count
   of significant ones (at least as thick as OVERLAP_TOL).
+  Some of this code is from librt/bool.c:rt_defoverlap() for
+  consistency of which region is picked.
 
   Returns -
   0	to eliminate partition with overlap entirely
@@ -280,14 +291,28 @@ f_BurstHit(struct application *ap, struct partition *pt_headp, struct seg *UNUSE
 */
 /*ARGSUSED*/
 static int
-f_HushOverlap(struct application *ap, struct partition *pp, struct region *reg1, struct region *reg2, struct partition *pheadp)
+f_HushOverlap(struct application *UNUSED(ap), struct partition *pp, struct region *reg1, struct region *reg2, struct partition *pheadp)
 {
     fastf_t depth;
     depth = pp->pt_outhit->hit_dist - pp->pt_inhit->hit_dist;
     if (depth >= OVERLAP_TOL)
 	noverlaps++;
 
-    return rt_defoverlap(ap, pp, reg1, reg2, pheadp);
+    /* Apply heuristics as to which region should claim partition. */
+    if (reg1->reg_aircode != 0)
+	/* reg1 was air, replace with reg2 */
+	return 2;
+    if (pp->pt_back != pheadp) {
+	/* Repeat a prev region, if that is a choice */
+	if (pp->pt_back->pt_regionp == reg1)
+	    return 1;
+	if (pp->pt_back->pt_regionp == reg2)
+	    return 2;
+    }
+    /* To provide some consistency from ray to ray, use lowest bit # */
+    if (reg1->reg_bit < reg2->reg_bit)
+	return 1;
+    return 2;
 }
 
 
@@ -298,6 +323,8 @@ f_HushOverlap(struct application *ap, struct partition *pp, struct region *reg1,
 
   Do report diagnostics and keep count of individual overlaps
   that are at least as thick as OVERLAP_TOL.
+  Some of this code is from librt/bool.c:rt_defoverlap() for
+  consistency of which region is picked.
 
   Returns -
   0	to eliminate partition with overlap entirely
@@ -330,7 +357,21 @@ f_Overlap(struct application *ap, struct partition *pp, struct region *reg1, str
 	    );
     }
 
-    return rt_defoverlap(ap, pp, reg1, reg2, pheadp);
+    /* Apply heuristics as to which region should claim partition. */
+    if (reg1->reg_aircode != 0)
+	/* reg1 was air, replace with reg2 */
+	return 2;
+    if (pp->pt_back != pheadp) {
+	/* Repeat a prev region, if that is a choice */
+	if (pp->pt_back->pt_regionp == reg1)
+	    return 1;
+	if (pp->pt_back->pt_regionp == reg2)
+	    return 2;
+    }
+    /* To provide some consistency from ray to ray, use lowest bit # */
+    if (reg1->reg_bit < reg2->reg_bit)
+	return 1;
+    return 2;
 }
 
 
@@ -528,7 +569,7 @@ f_ShotHit(struct application *ap, struct partition *pt_headp, struct seg *UNUSED
 		    if (bp == PT_NULL && ! reqburstair
 			&&	findIdents(regp->reg_regionid,
 					   &armorids)) {
-			/* Bursting on armor/void (ouch). */
+			/* Bursting on armor/void (ouchh). */
 			bp = pp;
 			VMOVE(burstnorm, exitnorm);
 		    }
@@ -686,7 +727,7 @@ chkEntryNorm(struct partition *pp, struct xray *rayp, fastf_t normvec[3], char *
     totalct++;
     /* Dot product of ray direction with normal *should* be negative. */
     f = VDOT(rayp->r_dir, normvec);
-    if (ZERO(f)) {
+    if (NEAR_ZERO(f, EPSILON)) {
 #ifdef DEBUG
 	brst_log("chkEntryNorm: near 90 degree obliquity.\n");
 	brst_log("\tPnt %g, %g, %g\n\tDir %g, %g, %g\n\tNorm %g, %g, %g.\n",
@@ -732,7 +773,7 @@ chkExitNorm(struct partition *pp, struct xray *rayp, fastf_t normvec[3], char *p
     totalct++;
     /* Dot product of ray direction with normal *should* be positive. */
     f = VDOT(rayp->r_dir, normvec);
-    if (ZERO(f)) {
+    if (NEAR_ZERO(f, EPSILON)) {
 #ifdef DEBUG
 	brst_log("chkExitNorm: near 90 degree obliquity.\n");
 	brst_log("\tPnt %g, %g, %g\n\tDir %g, %g, %g\n\tNorm %g, %g, %g.\n",
@@ -918,7 +959,7 @@ getRayOrigin(struct application *ap)
 }
 
 
-/*
+/*	c o n s _ V e c t o r ()
 	Construct a direction vector out of azimuth and elevation angles
 	in radians, allocating storage for it and returning its address.
 */
@@ -1437,11 +1478,11 @@ spallInit()
     }
 
     /* Compute sampling cone of rays which are equally spaced. */
-    theta = M_2PI * (1.0 - cos(conehfangle)); /* solid angle */
+    theta = TWO_PI * (1.0 - cos(conehfangle)); /* solid angle */
     delta = sqrt(theta/nspallrays); /* angular ray delta */
     n = conehfangle / delta;
     phiinc = conehfangle / n;
-    philast = conehfangle + VUNITIZE_TOL;
+    philast = conehfangle + EPSILON;
     /* Crank through spall cone generation once to count actual number
        generated.
     */
@@ -1449,10 +1490,10 @@ spallInit()
 	fastf_t	sinphi = sin(phi);
 	fastf_t	gammaval, gammainc, gammalast;
 	int m;
-	sinphi = fabs(sinphi);
-	m = (M_2PI * sinphi)/delta + 1;
-	gammainc = M_2PI / m;
-	gammalast = M_2PI-gammainc + VUNITIZE_TOL;
+	sinphi = FABS(sinphi);
+	m = (TWO_PI * sinphi)/delta + 1;
+	gammainc = TWO_PI / m;
+	gammalast = TWO_PI-gammainc+EPSILON;
 	for (gammaval = 0.0; gammaval <= gammalast; gammaval += gammainc)
 	    spallct++;
     }
@@ -1523,8 +1564,8 @@ spallVec(fastf_t *dvec, fastf_t *s_rdir, fastf_t phi, fastf_t gammaval)
     fastf_t			fvec[3];
     fastf_t			evec[3];
 
-    if (VNEAR_EQUAL(dvec, zaxis, VEC_TOL)
-	||	VNEAR_EQUAL(dvec, negzaxis, VEC_TOL)
+    if (AproxEqVec(dvec, zaxis, VEC_TOL)
+	||	AproxEqVec(dvec, negzaxis, VEC_TOL)
 	) {
 	VMOVE(evec, xaxis);
     } else {
@@ -1563,10 +1604,10 @@ burstRay()
 	if (done)
 	    break;
 	sinphi = sin(phi);
-	sinphi = fabs(sinphi);
-	m = (M_2PI * sinphi)/delta + 1;
-	gammainc = M_2PI / m;
-	gammalast = M_2PI - gammainc + VUNITIZE_TOL;
+	sinphi = FABS(sinphi);
+	m = (TWO_PI * sinphi)/delta + 1;
+	gammainc = TWO_PI / m;
+	gammalast = TWO_PI - gammainc + EPSILON;
 	for (gammaval = 0.0; gammaval <= gammalast; gammaval += gammainc) {
 	    int	ncrit;
 	    spallVec(a_burst.a_ray.r_dir, a_spall.a_ray.r_dir,
@@ -1616,6 +1657,7 @@ abort_RT(int UNUSED(sig))
 }
 
 
+/*	v i e w _ p i x () */
 static void
 view_pix(struct application *ap)
 {
@@ -1629,6 +1671,7 @@ view_pix(struct application *ap)
 }
 
 
+/*	v i e w _ e n d () */
 static void
 view_end()
 {

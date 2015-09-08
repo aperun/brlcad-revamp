@@ -1,7 +1,7 @@
 /*                         T O L . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -26,8 +26,9 @@
 #include "common.h"
 
 #include <string.h>
+#include "bio.h"
 
-#include "bu/cmd.h"
+#include "cmd.h"
 
 #include "./ged_private.h"
 
@@ -66,14 +67,14 @@ ged_tol(struct ged *gedp, int argc, const char *argv[])
 	    int deg, min;
 	    double sec;
 
-	    sec = gedp->ged_wdbp->wdb_ttol.norm * RAD2DEG;
+	    sec = gedp->ged_wdbp->wdb_ttol.norm * bn_radtodeg;
 	    deg = (int)(sec);
 	    sec = (sec - (double)deg) * 60;
 	    min = (int)(sec);
 	    sec = (sec - (double)min) * 60;
 
 	    bu_vls_printf(gedp->ged_result_str, "\tnorm %g degrees (%d deg %d min %g sec)\n",
-			  gedp->ged_wdbp->wdb_ttol.norm * RAD2DEG, deg, min, sec);
+			  gedp->ged_wdbp->wdb_ttol.norm * bn_radtodeg, deg, min, sec);
 	} else {
 	    bu_vls_printf(gedp->ged_result_str, "\tnorm None\n");
 	}
@@ -82,7 +83,7 @@ ged_tol(struct ged *gedp, int argc, const char *argv[])
 	bu_vls_printf(gedp->ged_result_str,
 		      "\tdistance = %g mm\n\tperpendicularity = %g (cosine of %g degrees)",
 		      gedp->ged_wdbp->wdb_tol.dist, gedp->ged_wdbp->wdb_tol.perp,
-		      acos(gedp->ged_wdbp->wdb_tol.perp)*RAD2DEG);
+		      acos(gedp->ged_wdbp->wdb_tol.perp)*bn_radtodeg);
 
 	return GED_OK;
     }
@@ -176,7 +177,7 @@ ged_tol(struct ged *gedp, int argc, const char *argv[])
 		    return GED_ERROR;
 		}
 		/* Note that a value of 0.0 or 360.0 will disable this tol */
-		gedp->ged_wdbp->wdb_ttol.norm = f * DEG2RAD;
+		gedp->ged_wdbp->wdb_ttol.norm = f * bn_degtorad;
 		break;
 	    case 'd':
 		/* Calculational distance tolerance */

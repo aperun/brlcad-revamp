@@ -1,7 +1,7 @@
 /*                           D - U . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -34,17 +34,16 @@
 #include <string.h>
 #include "bio.h"
 
-#include "bu/log.h"
-#include "bu/str.h"
+#include "bu.h"
 #include "vmath.h"
 
 
-int
-main(int argc, char *argv[])
-{
-    double ibuf[512];
-    unsigned short obuf[512];
+double ibuf[512];
+unsigned short obuf[512];
 
+
+int main(int argc, char **argv)
+{
     int i, num;
     double scale = 1.0;
     double value;

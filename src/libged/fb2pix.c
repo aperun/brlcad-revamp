@@ -1,7 +1,7 @@
 /*                        F B 2 P I X . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -28,8 +28,16 @@
 
 #include <stdlib.h>
 #include <sys/stat.h>
+#include "bio.h"
 
-#include "bu/getopt.h"
+#ifdef HAVE_WINSOCK_H
+#  include <winsock.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
+
+#include "bu.h"
 #include "fb.h"
 #include "fbserv_obj.h"
 
@@ -52,10 +60,14 @@ get_args(int argc, char **argv)
     int c;
 
     bu_optind = 1;
-    while ((c = bu_getopt(argc, argv, "ciF:s:w:n:h?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "chiF:s:w:n:")) != -1) {
 	switch (c) {
 	    case 'c':
 		crunch = 1;
+		break;
+	    case 'h':
+		/* high-res */
+		screen_height = screen_width = 1024;
 		break;
 	    case 'i':
 		inverse = 1;
@@ -71,7 +83,7 @@ get_args(int argc, char **argv)
 		screen_height = atoi(bu_optarg);
 		break;
 
-	    default:		/* 'h' '?' */
+	    default:		/* '?' */
 		return 0;
 	}
     }
@@ -127,7 +139,9 @@ ged_fb2pix(struct ged *gedp, int argc, const char *argv[])
 	return GED_HELP;
     }
 
+#if defined(_WIN32) && !defined(__CYGWIN__)
     setmode(fileno(stdout), O_BINARY);
+#endif
 
     ret = fb_write_fp(gedp->ged_fbsp->fbs_fbp, outfp,
 		      screen_width, screen_height,

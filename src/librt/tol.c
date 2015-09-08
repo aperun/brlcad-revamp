@@ -1,7 +1,7 @@
 /*                           T O L . C
  * BRL-CAD
  *
- * Copyright (c) 2011-2014 United States Government as represented by
+ * Copyright (c) 2011-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -18,11 +18,8 @@
  * information.
  */
 
-#include "common.h"
-#include "bu/magic.h"
-#include "bu/malloc.h"
-#include "bn/tol.h"
-#include "rt/tol.h"
+#include "tol.h"
+
 
 struct bn_tol *
 rt_tol_default(struct bn_tol *tol)

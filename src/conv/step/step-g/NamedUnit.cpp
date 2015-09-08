@@ -1,7 +1,7 @@
 /*                 NamedUnit.cpp
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -51,7 +51,10 @@ NamedUnit::NamedUnit(STEPWrapper *sw, int step_id)
 
 NamedUnit::~NamedUnit()
 {
-    dimensions = NULL;
+    if (dimensions != NULL) {
+	delete dimensions;
+	dimensions = NULL;
+    }
 }
 
 bool
@@ -64,7 +67,6 @@ NamedUnit::Load(STEPWrapper *sw, SDAI_Application_instance *sse)
     // load base class attributes
     if (!Unit::Load(step, sse)) {
 	std::cout << CLASSNAME << ":Error loading base class ::Unit." << std::endl;
-	sw->entity_status[id] = STEP_LOAD_ERROR;
 	return false;
     }
 
@@ -76,12 +78,13 @@ NamedUnit::Load(STEPWrapper *sw, SDAI_Application_instance *sse)
 	SDAI_Application_instance *se = step->getEntityAttribute(sse, "dimensions");
 	if (se != NULL) {
 	    if (dimensions == NULL) {
-		dimensions = dynamic_cast<DimensionalExponents *>(Factory::CreateObject(sw, (SDAI_Application_instance *)se));
+		dimensions = new DimensionalExponents();
+	    }
+	    if (!dimensions->Load(step, se)) {
+		return false;
 	    }
 	}
     }
-
-    sw->entity_status[id] = STEP_LOADED;
 
     return true;
 }

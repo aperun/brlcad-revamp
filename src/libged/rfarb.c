@@ -1,7 +1,7 @@
 /*                         R F A R B . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -28,8 +28,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include "bio.h"
 
-#include "rt/geom.h"
+#include "rtgeom.h"
 #include "./ged_private.h"
 
 
@@ -95,8 +96,8 @@ ged_rfarb(struct ged *gedp, int argc, const char *argv[])
 	return GED_ERROR;
     }
 
-    rota *= DEG2RAD;
-    fba *= DEG2RAD;
+    rota *= bn_degtorad;
+    fba *= bn_degtorad;
 
     /* calculate plane defined by these angles */
     norm[0] = cos(fba) * cos(rota);
@@ -225,7 +226,7 @@ ged_rfarb(struct ged *gedp, int argc, const char *argv[])
 	VJOIN1(aip->pt[i+4], aip->pt[i], thick, norm);
     }
 
-    dp = db_diradd(gedp->ged_wdbp->dbip, argv[1], RT_DIR_PHONY_ADDR, 0, RT_DIR_SOLID, (void *)&internal.idb_type);
+    dp = db_diradd(gedp->ged_wdbp->dbip, argv[1], RT_DIR_PHONY_ADDR, 0, RT_DIR_SOLID, (genptr_t)&internal.idb_type);
     if (dp == RT_DIR_NULL) {
 	bu_vls_printf(gedp->ged_result_str, "%s: Cannot add %s to the directory\n", argv[0], argv[1]);
 	return GED_ERROR;

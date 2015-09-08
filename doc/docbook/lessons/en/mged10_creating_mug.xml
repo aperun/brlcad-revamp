@@ -1,3 +1,5 @@
+<!-- Converted by db4-upgrade version 1.0 -->
+
 <article xmlns="http://docbook.org/ns/docbook" version="5.0">
   <info><title>Creating a Mug</title>
 
@@ -336,10 +338,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/en/images/mged10_mug_wireframe.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/en/images/mged10_mug_wireframe.png" format="PNG"/>
 	  </imageobject>
 	  <caption>

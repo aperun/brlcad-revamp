@@ -129,7 +129,6 @@ set(docbook_lessons_ES_IMAGES
 ADD_DOC(docbook_lessons_ES_IMAGES html/lessons/es/images)
 
 DOCBOOK_TO_HTML(lesson_ES docbook_lessons_ES html/lessons/es docbook_lessons_ES_IMAGES_cp)
-DOCBOOK_TO_PHP(lesson_ES docbook_lessons_ES html/lessons/es docbook_lessons_ES_IMAGES_cp)
 DOCBOOK_TO_PDF(lesson_ES docbook_lessons_ES pdf/lessons/es docbook_lessons_ES_IMAGES_cp)
 
 # Local Variables:

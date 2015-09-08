@@ -32,7 +32,7 @@
 #include "common.h"
 
 /* quell empty-compilation unit warnings */
-const int strchr_unused = 0;
+static const int unused = 0;
 
 /*
  * defined for folks that don't have a system strchr()

@@ -1,7 +1,7 @@
 /*                         G E T _ C O M B . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include "bio.h"
 
 #include "./ged_private.h"
 
@@ -130,13 +131,13 @@ ged_get_comb(struct ged *gedp, int argc, const char *argv[])
 
 	    switch (rt_tree_array[i].tl_op) {
 		case OP_UNION:
-		    op = DB_OP_UNION;
+		    op = 'u';
 		    break;
 		case OP_INTERSECT:
-		    op = DB_OP_INTERSECT;
+		    op = '+';
 		    break;
 		case OP_SUBTRACT:
-		    op = DB_OP_SUBTRACT;
+		    op = '-';
 		    break;
 		default:
 		    bu_vls_printf(gedp->ged_result_str, "\nIllegal op code in tree\n");

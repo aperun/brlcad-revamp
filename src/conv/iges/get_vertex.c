@@ -1,7 +1,7 @@
 /*                    G E T _ V E R T E X . C
  * BRL-CAD
  *
- * Copyright (c) 1993-2014 United States Government as represented by
+ * Copyright (c) 1993-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -53,7 +53,9 @@ Get_vertex(struct iges_edge_use *edge_use)
 
 
 int
-Put_vertex(struct vertex *v, struct iges_edge_use *edge)
+Put_vertex(v, edge)
+    struct vertex *v;
+    struct iges_edge_use *edge;
 {
     struct iges_edge_list *e_list;
     struct iges_edge_list *el;
@@ -86,8 +88,7 @@ Put_vertex(struct vertex *v, struct iges_edge_use *edge)
 	return 0;
 
     if (v_list->i_verts[vert_index].v) {
-	bu_log("vertex already assigned %p, trying to assign %p\n",
-	       (void *)v_list->i_verts[vert_index].v, (void *)v);
+	bu_log("vertex already assigned %p, trying to assign %p\n", v_list->i_verts[vert_index].v, v);
 	bu_exit(1, "Multiple vertex assignments\n");
     }
 
@@ -97,7 +98,8 @@ Put_vertex(struct vertex *v, struct iges_edge_use *edge)
 
 
 struct iges_edge *
-Get_edge(struct iges_edge_use *e_use)
+Get_edge(e_use)
+    struct iges_edge_use *e_use;
 {
     struct iges_edge_list *e_list;
 
@@ -109,7 +111,8 @@ Get_edge(struct iges_edge_use *e_use)
 
 
 struct vertex *
-Get_edge_start_vertex(struct iges_edge *edge)
+Get_edge_start_vertex(edge)
+    struct iges_edge *edge;
 {
     struct iges_vertex_list *v_list;
 
@@ -121,7 +124,8 @@ Get_edge_start_vertex(struct iges_edge *edge)
 
 
 struct vertex *
-Get_edge_end_vertex(struct iges_edge *edge)
+Get_edge_end_vertex(edge)
+    struct iges_edge *edge;
 {
     struct iges_vertex_list *v_list;
 

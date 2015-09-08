@@ -1,7 +1,7 @@
 /*                        D M _ U T I L . C
  * BRL-CAD
  *
- * Copyright (c) 1988-2014 United States Government as represented by
+ * Copyright (c) 1988-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -20,18 +20,15 @@
 /** @file libdm/dm_util.c
  */
 
+#include "bu.h"
 #include "bn.h"
 #include "dm.h"
 
-#include "./dm_private.h"
-
-#  ifdef HAVE_GL_GL_H
-#    include <GL/gl.h>
-#  endif
+#include "./dm_util.h"
 
 #if defined(DM_OGL) || defined(DM_WGL) || defined(DM_RTGL)
 int
-drawLine3D(struct dm_internal *dmp, point_t pt1, point_t pt2, const char *log_bu, float *wireColor)
+drawLine3D(struct dm *dmp, point_t pt1, point_t pt2, char *log_bu, float *wireColor)
 {
     static float black[4] = {0.0, 0.0, 0.0, 0.0};
     GLdouble pt[3];
@@ -77,7 +74,7 @@ drawLine3D(struct dm_internal *dmp, point_t pt1, point_t pt2, const char *log_bu
 }
 
 int
-drawLines3D(struct dm_internal *dmp, int npoints, point_t *points, int lflag, const char *log_bu, float *wireColor)
+drawLines3D(struct dm *dmp, int npoints, point_t *points, int sflag, char *log_bu, float *wireColor)
 {
     register int i;
     static float black[4] = {0.0, 0.0, 0.0, 0.0};
@@ -102,7 +99,7 @@ drawLines3D(struct dm_internal *dmp, int npoints, point_t *points, int lflag, co
 	bu_log("%g %g %g %g\n", pmat[3], pmat[7], pmat[11], pmat[15]);
     }
 
-    if (npoints < 2 || (!lflag && npoints%2))
+    if (npoints < 2 || (!sflag && npoints%2))
 	return TCL_OK;
 
     if (dmp->dm_light) {
@@ -115,8 +112,8 @@ drawLines3D(struct dm_internal *dmp, int npoints, point_t *points, int lflag, co
 	    glDisable(GL_BLEND);
     }
 
-    if (lflag)
-	glBegin(GL_LINE_LOOP);
+    if (sflag)
+	glBegin(GL_LINE_STRIP);
     else
 	glBegin(GL_LINES);
 
@@ -132,7 +129,7 @@ drawLines3D(struct dm_internal *dmp, int npoints, point_t *points, int lflag, co
 }
 
 int
-drawLine2D(struct dm_internal *dmp, fastf_t X1, fastf_t Y1, fastf_t X2, fastf_t Y2, const char *log_bu)
+drawLine2D(struct dm *dmp, fastf_t X1, fastf_t Y1, fastf_t X2, fastf_t Y2, char *log_bu)
 {
     if (dmp->dm_debugLevel)
 	bu_log(log_bu);
@@ -164,7 +161,7 @@ drawLine2D(struct dm_internal *dmp, fastf_t X1, fastf_t Y1, fastf_t X2, fastf_t 
 #endif
 
 int
-draw_Line3D(struct dm_internal *dmp, point_t pt1, point_t pt2)
+draw_Line3D(struct dm *dmp, point_t pt1, point_t pt2)
 {
     if (!dmp)
 	return TCL_ERROR;

@@ -1,7 +1,7 @@
 /*                         G - X 3 D . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -39,10 +39,9 @@
 
 /* interface headers */
 #include "vmath.h"
-#include "bu/getopt.h"
-#include "bu/units.h"
 #include "nmg.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
+#include "bu.h"
 #include "raytrace.h"
 #include "wdb.h"
 
@@ -103,12 +102,10 @@ struct bu_structparse vrml_mat_parse[]={
     {"",    0, (char *)0,	0,			BU_STRUCTPARSE_FUNC_NULL, NULL, NULL }
 };
 
-extern union tree *do_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, void *client_data);
-extern union tree *nmg_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, void *client_data);
+extern union tree *do_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, genptr_t client_data);
+extern union tree *nmg_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, genptr_t client_data);
 
-static const char *usage =
-    "[-v] [-xX lvl] [-d tolerance_distance] [-a abs_tol] [-r rel_tol] [-n norm_tol] [-P #_of_cpus] [-o out_file] [-u units] brlcad_db.g object(s)\n"
-    "(units default to mm)\n";
+static const char usage[] = "Usage: %s [-v] [-xX lvl] [-d tolerance_distance (mm) ] [-a abs_tol (mm)] [-r rel_tol] [-n norm_tol] [-o out_file] [-u units] brlcad_db.g object(s)\n";
 
 static char	*tok_sep = " \t";
 static int	NMG_debug;		/* saved arg of -X, for longjmp handling */
@@ -121,7 +118,7 @@ static struct rt_tess_tol	ttol;
 static struct bn_tol		tol;
 static struct model		*the_model;
 
-static	char*	units="mm";
+static	char*	units=NULL;
 static fastf_t	scale_factor=1.0;
 
 static struct db_tree_state	tree_state;	/* includes tol & model */
@@ -129,11 +126,6 @@ static struct db_tree_state	tree_state;	/* includes tol & model */
 static int	regions_tried = 0;
 static int	regions_converted = 0;
 
-static void
-print_usage(const char *progname)
-{
-    bu_exit(1, "Usage: %s %s", progname, usage);
-}
 
 /*
  * Replace all occurrences of "old" with "new" in str.
@@ -167,7 +159,7 @@ clean_pmp( struct plate_mode *pmp )
 	if ( pmp->bots[i] ) {
 	    struct rt_db_internal intern;
 
-	    intern.idb_ptr = (void *) pmp->bots[i];
+	    intern.idb_ptr = (genptr_t) pmp->bots[i];
 	    intern.idb_major_type = DB5_MAJORTYPE_BRLCAD;
 	    intern.idb_type = ID_BOT;
 	    intern.idb_meth = &OBJ[ID_BOT];
@@ -213,7 +205,7 @@ dup_bot( struct rt_bot_internal *bot_in )
 }
 
 static int
-select_lights(struct db_tree_state *UNUSED(tsp), const struct db_full_path *pathp, const struct rt_comb_internal *UNUSED(combp), void *UNUSED(client_data))
+select_lights(struct db_tree_state *UNUSED(tsp), const struct db_full_path *pathp, const struct rt_comb_internal *UNUSED(combp), genptr_t UNUSED(client_data))
 {
     struct directory *dp;
     struct rt_db_internal intern;
@@ -256,7 +248,7 @@ select_lights(struct db_tree_state *UNUSED(tsp), const struct db_full_path *path
 }
 
 static int
-select_non_lights(struct db_tree_state *tsp, const struct db_full_path *pathp, const struct rt_comb_internal *combp, void *client_data)
+select_non_lights(struct db_tree_state *tsp, const struct db_full_path *pathp, const struct rt_comb_internal *combp, genptr_t client_data)
 {
     int ret;
 
@@ -268,7 +260,7 @@ select_non_lights(struct db_tree_state *tsp, const struct db_full_path *pathp, c
 }
 
 union tree *
-leaf_tess(struct db_tree_state *tsp, const struct db_full_path *pathp, struct rt_db_internal *ip, void *client_data)
+leaf_tess(struct db_tree_state *tsp, const struct db_full_path *pathp, struct rt_db_internal *ip, genptr_t client_data)
 {
     struct rt_bot_internal *bot;
     struct plate_mode *pmp = (struct plate_mode *)client_data;
@@ -356,6 +348,9 @@ writeX3dEnd(FILE *fp_out) {
     fprintf(fp_out, "</X3D>\n");
 }
 
+/*
+ *			M A I N
+ */
 int
 main(int argc, char **argv)
 {
@@ -380,7 +375,7 @@ main(int argc, char **argv)
 
     /* FIXME: These need to be improved */
     tol.magic = BN_TOL_MAGIC;
-    tol.dist = BN_TOL_DIST;
+    tol.dist = 0.0005;
     tol.dist_sq = tol.dist * tol.dist;
     tol.perp = 1e-6;
     tol.para = 1 - tol.perp;
@@ -391,11 +386,13 @@ main(int argc, char **argv)
 	nmg_eue_dist = 2.0;
     }
 
+    rt_init_resource( &rt_uniresource, 0, NULL );
+
     BU_LIST_INIT( &RTG.rtg_vlfree );	/* for vlist macros */
 
     BARRIER_CHECK;
     /* Get command line arguments. */
-    while ((c = bu_getopt(argc, argv, "d:a:n:o:r:vx:P:X:u:h?")) != -1) {
+    while ((c = bu_getopt(argc, argv, "d:a:n:o:r:vx:P:X:u:")) != -1) {
 	switch (c) {
 	    case 'a':		/* Absolute tolerance. */
 		ttol.abs = atof(bu_optarg);
@@ -406,7 +403,7 @@ main(int argc, char **argv)
 		tol.dist_sq = tol.dist * tol.dist;
 		break;
 	    case 'n':		/* Surface normal tolerance. */
-		ttol.norm = atof(bu_optarg)*DEG2RAD;
+		ttol.norm = atof(bu_optarg)*bn_pi/180.0;
 		ttol.rel = 0.0;
 		break;
 	    case 'o':		/* Output file name */
@@ -432,16 +429,23 @@ main(int argc, char **argv)
 		units = bu_strdup( bu_optarg );
 		scale_factor = bu_units_conversion( units );
 		if ( ZERO(scale_factor) )
+		{
 		    bu_exit(1, "Unrecognized units (%s)\n", units );
+		}
 		scale_factor = 1.0 / scale_factor;
 		break;
 	    default:
-		print_usage(argv[0]);
+		bu_exit(1, usage, argv[0]);
+		break;
 	}
     }
 
-    if (bu_optind+1 >= argc)
-	print_usage(argv[0]);
+    if (bu_optind+1 >= argc) {
+	bu_exit(1, usage, argv[0]);
+    }
+
+    if ( !units )
+	units = "mm";
 
     /* Open BRL-CAD database */
     if ((dbip = db_open( argv[bu_optind], DB_OPEN_READONLY)) == DBI_NULL)
@@ -449,12 +453,15 @@ main(int argc, char **argv)
 	perror(argv[0]);
 	bu_exit(1, "Cannot open geometry database file %s\n", argv[bu_optind] );
     }
-    if ( db_dirbuild( dbip ) )
+    if ( db_dirbuild( dbip ) ) {
 	bu_exit(1, "db_dirbuild() failed!\n" );
+    }
 
     if (out_file == NULL) {
 	outfp = stdout;
+#if defined(_WIN32) && !defined(__CYGWIN__)
 	setmode(fileno(outfp), O_BINARY);
+#endif
     } else {
 	if ((outfp = fopen( out_file, "wb")) == NULL)
 	{
@@ -495,7 +502,7 @@ main(int argc, char **argv)
 			   select_lights,
 			   do_region_end,
 			   leaf_tess,
-			   (void *)&pm);	/* in librt/nmg_bool.c */
+			   (genptr_t)&pm);	/* in librt/nmg_bool.c */
 
 
     }
@@ -508,7 +515,7 @@ main(int argc, char **argv)
 		       select_non_lights,
 		       do_region_end,
 		       leaf_tess,
-		       (void *)&pm);	/* in librt/nmg_bool.c */
+		       (genptr_t)&pm);	/* in librt/nmg_bool.c */
 
     BARRIER_CHECK;
     /* Release dynamic storage */
@@ -535,7 +542,6 @@ process_non_light(struct model *m) {
     static struct faceuse *next_fu;
     static struct loopuse *lu;
     static struct nmgregion *reg;
-    static int shell_is_dead;
 
     /* triangulate any faceuses with holes */
     for ( BU_LIST_FOR( reg, nmgregion, &m->r_hd ) )
@@ -549,7 +555,7 @@ process_non_light(struct model *m) {
 	    fu = BU_LIST_FIRST( faceuse, &s->fu_hd );
 	    while ( BU_LIST_NOT_HEAD( &fu->l, &s->fu_hd ) )
 	    {
-		shell_is_dead=0;
+		int shell_is_dead=0;
 
 		NMG_CK_FACEUSE( fu );
 
@@ -697,7 +703,7 @@ nmg_2_vrml(FILE *fp, const struct db_full_path *pathp, struct model *m, struct m
     mat.tx_n = -1;
 
     bu_vls_strcpy( &vls, &mater->ma_shader[strlen(mat.shader)] );
-    (void)bu_struct_parse( &vls, vrml_mat_parse, (char *)&mat, NULL);
+    (void)bu_struct_parse( &vls, vrml_mat_parse, (char *)&mat );
 
     if ( bu_strncmp( "light", mat.shader, 5 ) == 0 )
     {
@@ -713,7 +719,8 @@ nmg_2_vrml(FILE *fp, const struct db_full_path *pathp, struct model *m, struct m
 	{
 	    if ( mat.shininess < 0 )
 		mat.shininess = 10;
-	    V_MAX(mat.transparency, 0.0);
+	    if ( mat.transparency < 0.0 )
+		mat.transparency = 0.0;
 
 	    fprintf( fp, "\t\t\t<Material diffuseColor=\"%g %g %g\" shininess=\"%g\" transparency=\"%g\" specularColor=\"%g %g %g\"/>\n", r, g, b, 1.0-exp(-(double)mat.shininess/20.0), mat.transparency, 1.0, 1.0, 1.0);
 	}
@@ -931,12 +938,14 @@ bot2vrml( struct plate_mode *pmp, const struct db_full_path *pathp, int region_i
 }
 
 /*
+ *			D O _ R E G I O N _ E N D
+ *
  *  Called from db_walk_tree().
  *
  *  This routine must be prepared to run in parallel.
  */
 union tree *
-do_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, void *client_data)
+do_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, genptr_t client_data)
 {
     struct plate_mode *pmp = (struct plate_mode *)client_data;
     char *name;
@@ -975,7 +984,7 @@ do_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union
 static union tree *
 process_boolean(union tree *curtree, struct db_tree_state *tsp, const struct db_full_path *pathp)
 {
-    static union tree *ret_tree = TREE_NULL;
+    union tree *ret_tree = TREE_NULL;
 
     /* Begin bomb protection */
     if ( !BU_SETJUMP ) {
@@ -1018,7 +1027,7 @@ process_boolean(union tree *curtree, struct db_tree_state *tsp, const struct db_
 
 
 union tree *
-nmg_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, void *UNUSED(client_data))
+nmg_region_end(struct db_tree_state *tsp, const struct db_full_path *pathp, union tree *curtree, genptr_t UNUSED(client_data))
 {
     struct nmgregion	*r;
     struct bu_list		vhead;

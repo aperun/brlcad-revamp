@@ -1,7 +1,7 @@
 /*                        S T R D U P . C
  * BRL-CAD
  *
- * Copyright (c) 1985-2014 United States Government as represented by
+ * Copyright (c) 1985-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -29,8 +29,7 @@
 #include "common.h"
 
 /* quell empty-compilation unit warnings */
-const int strdup_unused = 0;
-
+static const int unused = 0;
 
 #ifndef HAVE_STRDUP
 #include "sysv.h"
@@ -41,6 +40,8 @@ const int strdup_unused = 0;
 
 
 /*
+ *			S T R D U P
+ *
  * Given a string, allocate enough memory to hold it using malloc(),
  * duplicate the strings, returns a pointer to the new string.
  */

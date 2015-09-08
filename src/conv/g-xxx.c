@@ -1,7 +1,7 @@
 /*                         G - X X X . C
  * BRL-CAD
  *
- * Copyright (c) 1993-2014 United States Government as represented by
+ * Copyright (c) 1993-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -36,9 +36,9 @@
 
 /* interface headers */
 #include "vmath.h"
-#include "bu/getopt.h"
 #include "nmg.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
+#include "bu.h"
 #include "raytrace.h"
 #include "wdb.h"
 
@@ -49,7 +49,7 @@
  * functions for your application use as a client_data pointer.
  */
 struct user_data {
-    long int data;
+    int data;
     struct bn_tol tol;
 };
 
@@ -63,8 +63,11 @@ describe_tree(union tree *tree,
 {
     struct bu_vls left = BU_VLS_INIT_ZERO;
     struct bu_vls right = BU_VLS_INIT_ZERO;
-    const char op_xor='^';
-    char op='\0';
+    char *unionn=" u ";
+    char *sub=" - ";
+    char *inter=" + ";
+    char *xor=" ^ ";
+    char *op=NULL;
 
     BU_CK_VLS(str);
 
@@ -88,22 +91,22 @@ describe_tree(union tree *tree,
 	    bu_vls_strcat(str,  tree->tr_l.tl_name);
 	    break;
 	case OP_UNION:		/* union operator node */
-	    op = DB_OP_UNION;
+	    op = unionn;
 	    goto binary;
 	case OP_INTERSECT:	/* intersection operator node */
-	    op = DB_OP_INTERSECT;
+	    op = inter;
 	    goto binary;
 	case OP_SUBTRACT:	/* subtraction operator node */
-	    op = DB_OP_SUBTRACT;
+	    op = sub;
 	    goto binary;
 	case OP_XOR:		/* exclusive "or" operator node */
-	    op = op_xor;
+	    op = xor;
 	binary:				/* common for all binary nodes */
 	    describe_tree(tree->tr_b.tb_left, &left);
 	    describe_tree(tree->tr_b.tb_right, &right);
 	    bu_vls_putc(str, '(');
 	    bu_vls_vlscatzap(str, &left);
-	    bu_vls_printf(str, " %c ", op);
+	    bu_vls_strcat(str, op);
 	    bu_vls_vlscatzap(str, &right);
 	    bu_vls_putc(str, ')');
 	    break;
@@ -132,6 +135,8 @@ describe_tree(union tree *tree,
 
 
 /**
+ *      R E G I O N _ S T A R T
+ *
  * @brief This routine is called when a region is first encountered in the
  * hierarchy when processing a tree
  *
@@ -143,7 +148,7 @@ int
 region_start(struct db_tree_state *tsp,
 	     const struct db_full_path *pathp,
 	     const struct rt_comb_internal *combp,
-	     void *client_data)
+	     genptr_t client_data)
 {
     char *name;
     struct directory *dp;
@@ -178,14 +183,17 @@ region_start(struct db_tree_state *tsp,
 
 
 /**
+ *      R E G I O N _ E N D
+ *
+ *
  * @brief This is called when all sub-elements of a region have been processed by leaf_func.
  *
- * @param tsp     tree state
- * @param pathp   db path
- * @param curtree current tree
+ *      @param tsp
+ *      @param pathp
+ *      @param curtree
  *
- * @return TREE_NULL if data in curtree was "stolen", otherwise db_walk_tree will
- * clean up the data in the union tree * that is returned
+ *      @return TREE_NULL if data in curtree was "stolen", otherwise db_walk_tree will
+ *      clean up the data in the union tree * that is returned
  *
  * If it wants to retain the data in curtree it can by returning TREE_NULL.  Otherwise
  * db_walk_tree will clean up the data in the union tree * that is returned.
@@ -195,7 +203,7 @@ union tree *
 region_end (struct db_tree_state *tsp,
 	    const struct db_full_path *pathp,
 	    union tree *curtree,
-	    void *UNUSED(client_data))
+	    genptr_t UNUSED(client_data))
 {
     char *name;
 
@@ -215,7 +223,7 @@ union tree *
 primitive_func(struct db_tree_state *tsp,
 	       const struct db_full_path *pathp,
 	       struct rt_db_internal *ip,
-	       void *UNUSED(client_data))
+	       genptr_t UNUSED(client_data))
 {
     struct directory *dp;
     char *name;
@@ -354,17 +362,12 @@ primitive_func(struct db_tree_state *tsp,
     return (union tree *) NULL;
 }
 
-static void
-print_usage(const char *progname)
-{
-    const char *usage = "[-xX lvl] [-a abs_tol] [-r rel_tol] [-n norm_tol] "
-	"[-o out_file] brlcad_db.g object(s)\n";
-    bu_exit(1, "Usage: %s %s", progname, usage);
-}
 
 int
 main(int argc, char *argv[])
 {
+    static const char usage[] = "Usage: %s [-xX lvl] [-a abs_tol] [-r rel_tol] [-n norm_tol] [-o out_file] brlcad_db.g object(s)\n";
+
     struct user_data your_data = {0, BN_TOL_INIT_ZERO};
 
     int i;
@@ -381,7 +384,7 @@ main(int argc, char *argv[])
      * mostly used by NMG routines
      */
     your_data.tol.magic = BN_TOL_MAGIC;
-    your_data.tol.dist = BN_TOL_DIST;
+    your_data.tol.dist = 0.0005;
     your_data.tol.dist_sq = your_data.tol.dist * your_data.tol.dist;
     your_data.tol.perp = 1e-6;
     your_data.tol.para = 1 - your_data.tol.perp;
@@ -406,13 +409,13 @@ main(int argc, char *argv[])
 		bu_log("\n");
 		break;
 	    default:
-		print_usage(argv[0]);
+		bu_exit(1, usage, argv[0]);
 		break;
 	}
     }
 
     if (bu_optind+1 >= argc) {
-	print_usage(argv[0]);
+	bu_exit(1, usage, argv[0]);
     }
 
     /* Open BRL-CAD database */
@@ -431,7 +434,7 @@ main(int argc, char *argv[])
      */
     for (i=bu_optind; i<argc; i++) {
 	db_walk_tree(rtip->rti_dbip, argc - i, (const char **)&argv[i], 1 /* bu_avail_cpus() */,
-		     &init_state, region_start, region_end, primitive_func, (void *) &your_data);
+		     &init_state, region_start, region_end, primitive_func, (genptr_t) &your_data);
     }
 
     return 0;

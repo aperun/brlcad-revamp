@@ -1,7 +1,7 @@
 /*                         B E S E T . C
  * BRL-CAD
  *
- * Copyright (c) 2007-2014 United States Government as represented by
+ * Copyright (c) 2007-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -27,18 +27,17 @@
 
 #include <stdlib.h>
 #include <errno.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
 #include <math.h>
 #include "bio.h"
 
-#include "bu/getopt.h"
-#include "bu/sort.h"
-#include "bu/log.h"
+#include "bu.h"
 #include "vmath.h"
 #include "raytrace.h"
-#include "bn/plot3.h"
+#include "plot3.h"
 #include "wdb.h"
 
 #include "fitness.h"
@@ -53,7 +52,7 @@ void usage() {
 
 
 /* fitness of a given object compared to source */
-static int cmp_ind(const void *p1, const void *p2, void *UNUSED(arg))
+static int cmp_ind(const void *p1, const void *p2)
 {
     if (((struct individual *)p2)->fitness > ((struct individual *)p1)->fitness)
 	return -1;
@@ -169,7 +168,7 @@ int main(int argc, char *argv[]) {
 	    total_fitness += FITNESS;
 	}
 	/* sort population - used for keeping top N and dropping bottom M */
-	bu_sort((void *)pop.parent, pop.size, sizeof(struct individual), cmp_ind, NULL);
+	qsort(pop.parent, pop.size, sizeof(struct individual), cmp_ind);
 
 	/* remove lower M of individuals */
 	for (i = 0; i < opts.kill_lower; i++) {

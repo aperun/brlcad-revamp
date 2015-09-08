@@ -1,3 +1,5 @@
+<!-- Converted by db4-upgrade version 1.0 -->
+
 <article xmlns="http://docbook.org/ns/docbook" version="5.0">
   <info><title>Aprender técnicas de modelado y estructuras</title>
 
@@ -44,10 +46,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_new_design.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_new_design.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -167,10 +166,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_default_components_props.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_default_components_props.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -368,10 +364,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_with_mater_props.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_with_mater_props.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -449,10 +442,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_wireframe_circ_board.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_wireframe_circ_board.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -613,10 +603,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_transparent.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_transparent.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -730,10 +717,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_cut_wireframe.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_cut_wireframe.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -753,10 +737,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_cut_raytrace.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_cut_raytrace.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -808,10 +789,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_cutaways.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_cutaways.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -841,10 +819,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_structure_1.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_structure_1.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -863,10 +838,7 @@
       </para>
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_structure_2.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_structure_2.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -891,10 +863,7 @@
       </para>
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_structure_3.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_structure_3.png" format="PNG"/>
 	  </imageobject>
 	  <caption>
@@ -994,10 +963,7 @@
 
       <informalfigure>
 	<mediaobject>
-	  <imageobject role="html">
-	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_casecut_raytrace.png" format="PNG"/>
-	  </imageobject>
-	  <imageobject role="fo">
+	  <imageobject>
 	    <imagedata align="center" fileref="../../lessons/en/images/mged16_radio_casecut_raytrace.png" format="PNG"/>
 	  </imageobject>
 	  <caption>

@@ -202,15 +202,7 @@ int cflags;
 							(NC-1)*sizeof(cat_t));
 	if (g == NULL)
 		return(REG_ESPACE);
-	{
-	  /* Patched for CERT Vulnerability Note VU#695940, Feb 2015. */
-	  size_t new_ssize = len/(size_t)2*(size_t)3 + (size_t)1; /* ugh */
-	  if (new_ssize < len || new_ssize > LONG_MAX / sizeof(sop)) {
-	    free((char *) g);
-	    return REG_INVARG;
-	  }
-	  p->ssize = new_ssize;
-	}
+	p->ssize = (sopno)(len/(size_t)2*(size_t)3 + (size_t)1);	/* ugh */
 	p->strip = (sop *)malloc(p->ssize * sizeof(sop));
 	p->slen = 0;
 	if (p->strip == NULL) {

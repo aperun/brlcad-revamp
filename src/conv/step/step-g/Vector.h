@@ -1,7 +1,7 @@
 /*                 Vector.h
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef CONV_STEP_STEP_G_VECTOR_H
-#define CONV_STEP_STEP_G_VECTOR_H
+#ifndef VECTOR_H_
+#define VECTOR_H_
 
 #include "GeometricRepresentationItem.h"
 
@@ -54,7 +54,7 @@ public:
     static STEPEntity *Create(STEPWrapper *sw, SDAI_Application_instance *sse);
 };
 
-#endif /* CONV_STEP_STEP_G_VECTOR_H */
+#endif /* VECTOR_H_ */
 
 /*
  * Local Variables:

@@ -1,7 +1,7 @@
 /*                           U L P . C
  * BRL-CAD
  *
- * Copyright (c) 2010-2014 United States Government as represented by
+ * Copyright (c) 2010-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -42,12 +42,14 @@
 
 #include <math.h>
 #include <limits.h>
-#include <float.h>
+#ifdef HAVE_FLOAT_H
+#  include <float.h>
+#endif
 
 /* #define HAVE_IEEE754 1 */
 
 double
-bn_epsilon(void)
+bn_epsilon()
 {
 #if defined(DBL_EPSILON)
     return DBL_EPSILON;
@@ -67,7 +69,7 @@ bn_epsilon(void)
 
 
 float
-bn_epsilonf(void)
+bn_epsilonf()
 {
 #if defined(FLT_EPSILON)
     return FLT_EPSILON;
@@ -87,7 +89,7 @@ bn_epsilonf(void)
 
 
 double
-bn_dbl_min(void)
+bn_dbl_min()
 {
     long long val = (1LL<<52);
     return *(double *)&val;
@@ -95,7 +97,7 @@ bn_dbl_min(void)
 
 
 double
-bn_dbl_max(void)
+bn_dbl_max()
 {
 #if defined(DBL_MAX)
 	return DBL_MAX;
@@ -110,7 +112,7 @@ bn_dbl_max(void)
 
 
 double
-bn_flt_min(void)
+bn_flt_min()
 {
     long val = (1LL<<23);
     return *(float *)&val;
@@ -118,7 +120,7 @@ bn_flt_min(void)
 
 
 double
-bn_flt_max(void)
+bn_flt_max()
 {
 #if defined(FLT_MAX)
 	return FLT_MAX;
@@ -133,28 +135,28 @@ bn_flt_max(void)
 
 
 double
-bn_flt_min_sqrt(void)
+bn_flt_min_sqrt()
 {
     return sqrt(bn_flt_min());
 }
 
 
 double
-bn_flt_max_sqrt(void)
+bn_flt_max_sqrt()
 {
     return sqrt(bn_flt_max());
 }
 
 
 double
-bn_dbl_min_sqrt(void)
+bn_dbl_min_sqrt()
 {
     return sqrt(bn_dbl_min());
 }
 
 
 double
-bn_dbl_max_sqrt(void)
+bn_dbl_max_sqrt()
 {
     return sqrt(bn_dbl_max());
 }

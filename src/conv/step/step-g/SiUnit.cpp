@@ -1,7 +1,7 @@
 /*                 SiUnit.cpp
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -188,7 +188,6 @@ SiUnit::Load(STEPWrapper *sw, SDAI_Application_instance *sse)
     // load base class attributes
     if (!NamedUnit::Load(step, sse)) {
 	std::cout << CLASSNAME << ":Error loading base class ::Unit." << std::endl;
-	sw->entity_status[id] = STEP_LOAD_ERROR;
 	return false;
     }
 
@@ -197,12 +196,14 @@ SiUnit::Load(STEPWrapper *sw, SDAI_Application_instance *sse)
     sse = step->getEntity(sse, ENTITYNAME);
 
     prefix = (Si_prefix)step->getEnumAttribute(sse, "prefix");
-    V_MIN(prefix, Si_prefix_unset);
+    if (prefix > Si_prefix_unset) {
+	prefix = Si_prefix_unset;
+    }
 
     name = (Si_unit_name)step->getEnumAttribute(sse, "name");
-    V_MIN(name, Si_unit_name_unset);
-
-    sw->entity_status[id] = STEP_LOADED;
+    if (name > Si_unit_name_unset) {
+	name = Si_unit_name_unset;
+    }
 
     return true;
 }

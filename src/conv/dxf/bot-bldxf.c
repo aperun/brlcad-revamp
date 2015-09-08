@@ -1,7 +1,7 @@
 /*                     B O T - B L D X F . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -30,10 +30,9 @@
 #include <string.h>
 
 #include "vmath.h"
-#include "bu/getopt.h"
-#include "bu/log.h"
 #include "nmg.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
+#include "bu.h"
 #include "raytrace.h"
 #include "wdb.h"
 
@@ -51,9 +50,10 @@ char *progname = "(noname)";
 long debug = 0;
 int verbose = 0;
 
-
-void
-usage(char *s)
+/*
+ *	U S A G E --- tell user how to invoke this program, then exit
+ */
+void usage(char *s)
 {
     if (s) (void)fputs(s, stderr);
 
@@ -63,8 +63,10 @@ usage(char *s)
 }
 
 
-int
-parse_args(int ac, char *av[])
+/*
+ *	P A R S E _ A R G S --- Parse through command line flags
+ */
+int parse_args(int ac, char *av[])
 {
     int  c;
 
@@ -391,7 +393,7 @@ void write_dxf(struct rt_bot_internal *bot, char *name)
 
 
 int
-r_start(struct db_tree_state *UNUSED(tsp), const struct db_full_path * pathp, const struct rt_comb_internal *UNUSED(combp), void *client_data)
+r_start(struct db_tree_state *UNUSED(tsp), const struct db_full_path * pathp, const struct rt_comb_internal *UNUSED(combp), genptr_t client_data)
 {
     if (debug&DEBUG_NAMES) {
 	size_t i;
@@ -411,7 +413,7 @@ r_start(struct db_tree_state *UNUSED(tsp), const struct db_full_path * pathp, co
 
 
 union tree *
-r_end(struct db_tree_state *UNUSED(tsp), const struct db_full_path * pathp, union tree * curtree, void *client_data)
+r_end(struct db_tree_state *UNUSED(tsp), const struct db_full_path * pathp, union tree * curtree, genptr_t client_data)
 {
     if (debug&DEBUG_NAMES) {
 	size_t i;
@@ -446,7 +448,7 @@ void add_bots(struct rt_bot_internal *bot_dest,
 
     /* allocate space for extra vertices */
     bot_dest->vertices =
-	(fastf_t *)bu_realloc(bot_dest->vertices, i * sz, "new vertices");
+	bu_realloc(bot_dest->vertices, i * sz, "new vertices");
 
     /* copy new vertices */
     memcpy(&bot_dest->vertices[bot_dest->num_vertices],
@@ -456,7 +458,7 @@ void add_bots(struct rt_bot_internal *bot_dest,
     /* allocate space for new faces */
     i = bot_dest->num_faces + bot_src->num_faces;
     sz = sizeof(int) * 3;
-    bot_dest->faces = (int *)bu_realloc(bot_dest->faces, i * sz, "new faces");
+    bot_dest->faces = bu_realloc(bot_dest->faces, i * sz, "new faces");
 
     /* copy new faces, making sure that we update the vertex indices to
      * point to their new locations
@@ -476,7 +478,7 @@ void add_bots(struct rt_bot_internal *bot_dest,
 
 
 union tree *
-l_func(struct db_tree_state *UNUSED(tsp), const struct db_full_path * pathp, struct rt_db_internal * ip, void *client_data)
+l_func(struct db_tree_state *UNUSED(tsp), const struct db_full_path * pathp, struct rt_db_internal * ip, genptr_t client_data)
 {
     struct rt_bot_internal *bot;
 
@@ -500,7 +502,7 @@ l_func(struct db_tree_state *UNUSED(tsp), const struct db_full_path * pathp, str
     if (debug&DEBUG_NAMES)
 	bu_log("\n");
 
-    bot = (struct rt_bot_internal *)ip->idb_ptr;
+    bot = ip->idb_ptr;
     RT_BOT_CK_MAGIC(bot);
 
     add_bots((struct rt_bot_internal *)client_data, bot);
@@ -509,6 +511,8 @@ l_func(struct db_tree_state *UNUSED(tsp), const struct db_full_path * pathp, str
 
 
 /*
+ *	M A I N
+ *
  *	Call parse_args to handle command line arguments first, then
  *	process input.
  */

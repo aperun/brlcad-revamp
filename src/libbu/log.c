@@ -1,7 +1,7 @@
 /*                           L O G . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -26,8 +26,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include "bu/log.h"
-#include "bu/parallel.h"
+#include "bu.h"
 
 
 /**
@@ -42,7 +41,7 @@ static struct bu_hook_list log_hook_list = {
 	&log_hook_list.l
     },
     NULL,
-    ((void *)0)
+    GENPTR_NULL
 };
 
 static int log_first_time = 1;
@@ -66,20 +65,20 @@ bu_log_indent_vls(struct bu_vls *v)
 
 
 void
-bu_log_add_hook(bu_hook_t func, void *clientdata)
+bu_log_add_hook(bu_hook_t func, genptr_t clientdata)
 {
     bu_hook_add(&log_hook_list, func, clientdata);
 }
 
 
 void
-bu_log_delete_hook(bu_hook_t func, void *clientdata)
+bu_log_delete_hook(bu_hook_t func, genptr_t clientdata)
 {
     bu_hook_delete(&log_hook_list, func, clientdata);
 }
 
 HIDDEN void
-log_call_hooks(void *buf)
+log_call_hooks(genptr_t buf)
 {
 
     log_hooks_called = 1;
@@ -198,7 +197,7 @@ bu_log(const char *fmt, ...)
     va_end(ap);
 
     if (BU_LIST_IS_EMPTY(&(log_hook_list.l)) || log_hooks_called) {
-	size_t ret = 0;
+	int ret = EOF;
 	size_t len;
 
 	if (UNLIKELY(log_first_time)) {
@@ -219,7 +218,7 @@ bu_log(const char *fmt, ...)
 	    bu_semaphore_release(BU_SEM_SYSCALL);
 	}
 
-	if (UNLIKELY(ret == 0 && stdout)) {
+	if (UNLIKELY(!ret && stdout)) {
 	    /* if stderr fails, try stdout instead */
 	    bu_semaphore_acquire(BU_SEM_SYSCALL);
 	    ret = fwrite(bu_vls_addr(&output), len, 1, stdout);
@@ -227,7 +226,7 @@ bu_log(const char *fmt, ...)
 	    bu_semaphore_release(BU_SEM_SYSCALL);
 	}
 
-	if (UNLIKELY(ret == 0)) {
+	if (UNLIKELY(ret != 1)) {
 	    bu_semaphore_acquire(BU_SEM_SYSCALL);
 	    perror("fwrite failed");
 	    bu_semaphore_release(BU_SEM_SYSCALL);
@@ -261,7 +260,7 @@ bu_flog(FILE *fp, const char *fmt, ...)
     }
 
     if (BU_LIST_IS_EMPTY(&(log_hook_list.l)) || log_hooks_called) {
-	size_t ret;
+	int ret;
 	size_t len;
 
 	len = bu_vls_strlen(&output);

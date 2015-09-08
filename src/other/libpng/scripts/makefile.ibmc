@@ -21,16 +21,11 @@ ZLIBLIB = ../zlib
 CC = icc
 LD = ilink
 AR = ilib
-CP = copy
 RM = del
 
 CPPFLAGS = -I$(ZLIBINC)
 CFLAGS = -Mc -O2 -W3
 LDFLAGS =
-
-# Pre-built configuration
-# See scripts/pnglibconf.mak for more options
-PNGLIBCONF_H_PREBUILT = scripts/pnglibconf.h.prebuilt
 
 # File extensions
 O=.obj
@@ -50,8 +45,9 @@ LIBS = libpng$(A) $(ZLIBLIB)/zlib$(A)
 
 all: libpng$(A) pngtest$(E)
 
-pnglibconf.h: $(PNGLIBCONF_H_PREBUILT)
-	$(CP) $(PNGLIBCONF_H_PREBUILT) $@
+# see scripts/pnglibconf.mak for more options
+pnglibconf.h: scripts/pnglibconf.h.prebuilt
+	cp scripts/pnglibconf.h.prebuilt $@
 
 libpng$(A): $(OBJS)
 	$(AR) -out:$@ $(OBJS)

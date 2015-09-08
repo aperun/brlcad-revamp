@@ -1,7 +1,7 @@
 /*                          S M O D . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -34,11 +34,11 @@
 #include <math.h>
 #include "bio.h"
 
-#include "bu/getopt.h"
-#include "bu/log.h"
-#include "bu/malloc.h"
-#include "bu/file.h"
+#include "bu.h"
 #include "vmath.h"
+
+
+char *progname = "smod";
 
 
 #define ADD 1
@@ -47,23 +47,19 @@
 #define POW 4
 #define BUFLEN 65536
 
+int numop = 0;		/* number of operations */
+int op[256];		/* operations */
+double val[256];		/* arguments to operations */
+short mapbuf[BUFLEN];		/* translation buffer/lookup table */
+unsigned char clip_h[BUFLEN];	/* map of values which clip high */
+unsigned char clip_l[BUFLEN];	/* map of values which clip low */
 
 static const char usage[] = "Usage: smod [-a add | -s sub | -m mult | -d div | -A | -e exp | -r root] [file.s]\n";
-static const char *progname = "smod";
 
-static int numop = 0;		/* number of operations */
-static int op[256];		/* operations */
-static double val[256];		/* arguments to operations */
-static short mapbuf[BUFLEN];		/* translation buffer/lookup table */
-static unsigned char clip_h[BUFLEN];	/* map of values which clip high */
-static unsigned char clip_l[BUFLEN];	/* map of values which clip low */
-
-
-static int
+int
 get_args(int argc, char *argv[])
 {
     char *file_name;
-    char hyphen[] = "-";
     int c;
     double d;
 
@@ -106,15 +102,15 @@ get_args(int argc, char *argv[])
 		val[ numop++ ] = 1.0 / d;
 		break;
 
-	    default:
-		return 0;
+	    default:		/* '?' */
+		bu_exit(1, "%s", usage);
 	}
     }
 
     if (bu_optind >= argc) {
 	if (isatty((int)fileno(stdin)))
 	    return 0;
-	file_name = hyphen;
+	file_name = "-";
     } else {
 	char *ifname;
 	file_name = argv[bu_optind];
@@ -136,8 +132,8 @@ get_args(int argc, char *argv[])
 }
 
 
-static void
-mk_trans_tbl(void)
+void
+mk_trans_tbl()
 {
     int i, j, k;
     double d;
@@ -178,6 +174,7 @@ main(int argc, char *argv[])
 {
     unsigned int j, n;
     unsigned long clip_high, clip_low;
+    char *strrchr();
     short iobuf[BUFLEN];		/* input buffer */
 
     if (!(progname=strrchr(*argv, '/')))

@@ -1,7 +1,7 @@
 /*                   N U R B _ I N T E R P . C
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -29,12 +29,13 @@
 
 #include "common.h"
 
+#include <stdio.h>
 #include <string.h>
 #include "bio.h"
 
 #include "vmath.h"
 #include "raytrace.h"
-#include "rt/nurb.h"
+#include "nurb.h"
 
 
 void
@@ -74,6 +75,8 @@ rt_nurb_interp_mat(fastf_t *imat, struct knot_vector *knots, fastf_t *nodes, int
 
 
 /**
+ * R T _ N U R B _ C I N T E R P
+ *
  * main routine for interpolation of curves
  */
 void
@@ -134,6 +137,8 @@ rt_nurb_cinterp(struct edge_g_cnurb *crv, int order, const fastf_t *data, int n)
 
 
 /**
+ * R T _ N U R B _ S I N T E R P
+ *
  * Interpolate the 2-D grid of data values and fit a B-spline surface
  * to it.
  *

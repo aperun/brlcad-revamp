@@ -475,32 +475,33 @@ buf_append(struct Buf *buf, const void *ptr, int n_elem)
 }
 
 /* --- */
-/* input buffering support
- * note that these routines assume buf->elt_size == sizeof(char)
- */
+/* input buffering support */
 
 /* get pointer to the start of the first element */
-static char*
-bufferFirstElt(struct Buf *buf)
+static void*
+buf_first_elt(struct Buf *buf)
 {
-    return (char*)buf->elts;
+    return buf->elts;
 }
 
 /* get pointer to the start of the last element */
-static char*
-bufferLastElt(struct Buf *buf)
+static void*
+buf_last_elt(struct Buf *buf)
 {
+    size_t first = (size_t)buf_first_elt(buf);
+
     if (buf->nelts < 1) {
 	return NULL;
     }
-    return bufferFirstElt(buf) + buf->nelts - 1;
+
+    return (void*)(first + buf->elt_size * (buf->nelts - 1));
 }
 
 static void
-bufferAppendChar(struct Buf *buf, char c)
+buf_append_char(struct Buf *buf, char c)
 {
     char *cp = &c;
-    buf_append(buf, cp, 1);
+    buf_append(buf, cp, sizeof(char) / buf->elt_size);
 }
 
 /* Copy up to n input characters to the end of scanner buffer. If EOF is
@@ -533,14 +534,14 @@ bufferAppend(perplex_t scanner, size_t n)
 	    scanner->atEOI = 1;
 	    break;
 	}
-	bufferAppendChar(buf, c);
+	buf_append_char(buf, c);
     }
 
     /* (scanner->null - eltSize) should be the last input element,
      * we put a literal null after this element for debugging
      */
-    bufferAppendChar(buf, '\0');
-    scanner->null = bufferLastElt(buf);
+    buf_append_char(buf, '\0');
+    scanner->null = (char*)buf_last_elt(buf);
 
     /* update markers in case append caused buffer to be reallocated */
     bufStart = (char*)buf->elts;
@@ -576,7 +577,7 @@ bufferFill(perplex_t scanner, size_t n)
 	marker = (void*)scanner->marker;
 	null = (void*)scanner->null;
 
-	bufFirst = bufferFirstElt(buf);
+	bufFirst = buf_first_elt(buf);
 
 	/* Find first buffer element still in use by scanner. Will be
 	 * tokenStart unless backtracking marker is in use.
@@ -660,12 +661,12 @@ perplexStringScanner(char *firstChar, size_t numChars)
 
     /* copy string to buffer */
     for (i = 0; i < numChars; i++) {
-	bufferAppendChar(buf, firstChar[i]);
+    buf_append_char(buf, firstChar[i]);
     }
-    bufferAppendChar(buf, '\0');
+    buf_append_char(buf, '\0');
 
-    scanner->marker = scanner->cursor = bufferFirstElt(buf);
-    scanner->null = bufferLastElt(buf);
+    scanner->marker = scanner->cursor = (char*)buf_first_elt(buf);
+    scanner->null = (char*)buf_last_elt(buf);
     scanner->atEOI = 1;
 
     return scanner;
@@ -680,9 +681,9 @@ perplexFileScanner(FILE *input)
     scanner->inFile = input;
 
     initBuffer(scanner);
-    bufferAppendChar(scanner->buffer, '\0');
+    buf_append_char(scanner->buffer, '\0');
 
-    bufFirst = bufferFirstElt(scanner->buffer);
+    bufFirst = (char*)buf_first_elt(scanner->buffer);
     scanner->null = scanner->marker = scanner->cursor = bufFirst;
 
     return scanner;
@@ -726,17 +727,17 @@ perplexUnput(perplex_t scanner, char c)
     buf = scanner->buffer;
 
     /* save marker offsets */
-    bufStart = bufferFirstElt(buf);
+    bufStart = (char*)buf_first_elt(buf);
     cursorOffset = (size_t)(scanner->cursor - bufStart);
     markerOffset = (size_t)(scanner->marker - bufStart);
     tokenStartOffset = (size_t)(scanner->tokenStart - bufStart);
 
     /* append character to create room for shift */
-    bufferAppendChar(buf, '\0');
-    scanner->null = bufferLastElt(buf);
+    buf_append_char(buf, '\0');
+    scanner->null = (char*)buf_last_elt(buf);
 
     /* update markers in case append caused buffer to be reallocated */
-    bufStart = bufferFirstElt(buf);
+    bufStart = (char*)buf_first_elt(buf);
     scanner->cursor = bufStart + cursorOffset;
     scanner->marker = bufStart + markerOffset;
     scanner->tokenStart = bufStart + tokenStartOffset;

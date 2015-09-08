@@ -1,7 +1,7 @@
 /*                 Surface.cpp
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -47,8 +47,7 @@ Surface::Surface(STEPWrapper *sw, int step_id)
 
 Surface::~Surface()
 {
-    if (trim_curve_3d_bbox)
-	delete trim_curve_3d_bbox;
+    delete trim_curve_3d_bbox;
 }
 
 bool
@@ -59,10 +58,8 @@ Surface::Load(STEPWrapper *sw, SDAI_Application_instance *sse)
 
     if (!GeometricRepresentationItem::Load(step, sse)) {
 	std::cout << CLASSNAME << ":Error loading base class ::GeometricRepresentationItem." << std::endl;
-	sw->entity_status[id] = STEP_LOAD_ERROR;
 	return false;
     }
-    sw->entity_status[id] = STEP_LOADED;
     return true;
 }
 

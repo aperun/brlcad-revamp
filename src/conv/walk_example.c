@@ -1,7 +1,7 @@
 /*                     W A L K _ E X A M P L E . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -39,11 +39,9 @@
 #include <string.h>
 
 #include "vmath.h"
-#include "bu/getopt.h"
-#include "bu/path.h"
-#include "bu/str.h"
 #include "nmg.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
+#include "bu.h"
 #include "raytrace.h"
 #include "wdb.h"
 
@@ -61,9 +59,11 @@ long debug = 0;
 int verbose = 0;
 
 /**
+ *	U S A G E
  *	@brief tell user how to invoke this program, then exit
  *      @param name the name of the running program (argv[0])
  *	@param str a pointer to a null-terminated character string
+ *	@return never returns
  */
 void usage(const char *name, const char *str)
 {
@@ -75,6 +75,7 @@ void usage(const char *name, const char *str)
 
 
 /** @if no
+ *	P A R S E _ A R G S
  * @endif
  *	@brief Parse command line flags.
  *
@@ -88,7 +89,7 @@ int parse_args(int ac, char *av[])
 {
     int  c;
     char *strrchr();
-    char *tmp_basename = (char *)bu_calloc(strlen(av[0]), sizeof(char), "parse_args");;
+    char *tmp_basename = NULL;
 
     /* Turn off bu_getopt's error messages */
     bu_opterr = 0;
@@ -102,17 +103,20 @@ int parse_args(int ac, char *av[])
 	    case '?':
 	    case 'h':
 	    default:
-		bu_basename(tmp_basename, av[0]);
+		tmp_basename = bu_basename(av[0]);
 		usage(tmp_basename, "Bad or help flag specified\n");
+		bu_free(tmp_basename, "tmp_basename free");
 		break;
 	}
     }
-    bu_free(tmp_basename, "tmp_basename free");
+
     return bu_optind;
 }
 
 
 /**
+ *	R E G I O N _ S T A R T
+ *
  * @brief This routine is called when a region is first encountered in the
  * hierarchy when processing a tree
  *
@@ -122,7 +126,7 @@ int
 region_start(struct db_tree_state *UNUSED(tsp),
 	     const struct db_full_path *pathp,
 	     const struct rt_comb_internal *UNUSED(combp),
-	     void *UNUSED(client_data))
+	     genptr_t UNUSED(client_data))
 {
     if (debug&DEBUG_NAMES) {
 	char *name = db_path_to_string(pathp);
@@ -134,13 +138,16 @@ region_start(struct db_tree_state *UNUSED(tsp),
 
 
 /**
+ *	R E G I O N _ E N D
+ *
+ *
  * @brief This is called when all sub-elements of a region have been processed by leaf_func.
  *
- * @param pathp   db path
- * @param curtree current tree
+ *	@param pathp
+ *	@param curtree
  *
- * @return TREE_NULL if data in curtree was "stolen", otherwise db_walk_tree will
- * clean up the data in the union tree * that is returned
+ *	@return TREE_NULL if data in curtree was "stolen", otherwise db_walk_tree will
+ *	clean up the data in the union tree * that is returned
  *
  * If it wants to retain the data in curtree it can by returning TREE_NULL.  Otherwise
  * db_walk_tree will clean up the data in the union tree * that is returned.
@@ -150,7 +157,7 @@ union tree *
 region_end(struct db_tree_state *UNUSED(tsp),
 	   const struct db_full_path * pathp,
 	   union tree *curtree,
-	   void *UNUSED(client_data))
+	   genptr_t UNUSED(client_data))
 {
     if (debug&DEBUG_NAMES) {
 	char *name = db_path_to_string(pathp);
@@ -163,6 +170,8 @@ region_end(struct db_tree_state *UNUSED(tsp),
 
 
 /**
+ *	L E A F _ F U N C
+ *
  *	@brief Function to process a leaf node.
  *
  *     	This is actually invoked from db_recurse() from db_walk_subtree().
@@ -174,7 +183,7 @@ union tree *
 leaf_func (struct db_tree_state *UNUSED(tsp),
 	   const struct db_full_path *pathp,
 	   struct rt_db_internal *internp,
-	   void *UNUSED(client_data))
+	   genptr_t UNUSED(client_data))
 {
     /* the rt_db_internal structure is used to manage the payload of
      * "internal" or "in memory" representation of geometry as opposed
@@ -225,12 +234,14 @@ leaf_func (struct db_tree_state *UNUSED(tsp),
 
 
 /**
+ *	M A I N
+ *
  *	Call parse_args to handle command line arguments first, then
  *	process input.
  */
 int main(int ac, char *av[])
 {
-    /**
+    /** @struct rt_i
      * This structure contains some global state information for librt
      */
     struct rt_i *rtip;
@@ -238,7 +249,7 @@ int main(int ac, char *av[])
     struct db_tree_state init_state; /* state table for the hierarchy walker */
     char idbuf[1024] = {0};		/* Database title */
     int arg_count;
-    char *tmp_basename = (char *)bu_calloc(strlen(av[0]), sizeof(char), "walk_example tmp_basename");
+    char *tmp_basename;
 
     /** @struct user_data
      * This is an example structure.
@@ -252,10 +263,10 @@ int main(int ac, char *av[])
     arg_count = parse_args(ac, av);
 
     if ((ac - arg_count) < 1) {
-	bu_basename(tmp_basename, av[0]);
+	tmp_basename = bu_basename(av[0]);
 	usage(tmp_basename, "bad argument count");
+	bu_free(tmp_basename, "tmp_basename free");
     }
-    bu_free(tmp_basename, "tmp_basename free");
 
     /*
      *  Build an index of what's in the database.
@@ -279,7 +290,7 @@ int main(int ac, char *av[])
 		 region_start,
 		 region_end,
 		 leaf_func,
-		 (void *)&user_data);
+		 (genptr_t)&user_data);
 
     /* at this point you can do things with the geometry you have obtained */
 

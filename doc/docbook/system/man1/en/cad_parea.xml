@@ -24,7 +24,7 @@
 
 
 <refsect1 xml:id='description'><title>DESCRIPTION</title>
-<para><command>cad_parea</command>
+<para><emphasis remap='I'>cad_parea</emphasis>
 reads from
 <emphasis remap='I'>input</emphasis>
 (standard input if not given)
@@ -56,9 +56,9 @@ traced in both directions.</para>
 
 <refsect1 xml:id='example'><title>EXAMPLE</title>
   <blockquote remap='RS'>
-<para>$ cad_parea
+<para>$ <emphasis remap='I'>cad_parea
 <!-- .br -->
-# <emphasis remap='I'>comment</emphasis>
+# comment
 <!-- .br -->
 1 0
 <!-- .br -->
@@ -80,7 +80,6 @@ traced in both directions.</para>
 <!-- .br -->
 1 1
 <!-- .br -->
-<emphasis remap='I'>
 ^D</emphasis>
 <!-- .br -->
 4
@@ -88,17 +87,17 @@ traced in both directions.</para>
 </refsect1>
 
 <refsect1 xml:id='see_also'><title>SEE ALSO</title>
-<para><citerefentry><refentrytitle>cad_boundp</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>
+<para><citerefentry><refentrytitle>cad_boundp</refentrytitle><manvolnum>1</manvolnum></citerefentry>.</para>
 </refsect1>
 
 <refsect1 xml:id='diagnostics'><title>DIAGNOSTICS</title>
 <para>Improperly formatted input
 produces an error message
 and terminates
-<command>cad_parea</command>
+<emphasis remap='I'>cad_parea</emphasis>
 with non-zero exit status.</para>
 
-<para><command>cad_parea</command>
+<para><emphasis remap='I'>cad_parea</emphasis>
 outputs "0"
 for the area
 of a degenerate polygon.</para>
@@ -110,7 +109,7 @@ of a degenerate polygon.</para>
 </refsect1>
 
 <refsect1 xml:id='copyright'><title>COPYRIGHT</title>
-<para>This software is Copyright (c) 1991-2014 by the United States
+<para>This software is Copyright (c) 1991-2013 by the United States
 Government as represented by U.S. Army Research Laboratory.</para>
 
 </refsect1>

@@ -1,7 +1,7 @@
 /*                     V E R T _ T R E E . C
  * BRL-CAD
  *
- * Copyright (c) 2002-2014 United States Government as represented by
+ * Copyright (c) 2002-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -39,10 +39,7 @@
 #include <ctype.h>
 #include <errno.h>
 
-#include "vmath.h"
-#include "bu/malloc.h"
-#include "bu/log.h"
-#include "bn/vert_tree.h"
+#include "bn.h"
 
 
 /**
@@ -61,12 +58,12 @@ union vert_tree {
     char type;		/* type - leaf or node */
     struct vert_leaf {
 	char type;
-	size_t index;	/* index into the array */
+	int index;	/* index into the array */
     } vleaf;
     struct vert_node {
 	char type;
 	double cut_val; /* cutting value */
-	size_t coord;	/* cutting coordinate */
+	int coord;	/* cutting coordinate */
 	union vert_tree *higher, *lower;	/* subtrees */
     } vnode;
 };
@@ -77,7 +74,7 @@ union vert_tree {
 
 
 struct vert_root *
-create_vert_tree(void)
+create_vert_tree()
 {
     struct vert_root *tree;
 
@@ -93,7 +90,7 @@ create_vert_tree(void)
 }
 
 struct vert_root *
-create_vert_tree_w_norms(void)
+create_vert_tree_w_norms()
 {
     struct vert_root *tree;
 
@@ -108,9 +105,9 @@ create_vert_tree_w_norms(void)
     return tree;
 }
 
-
-/**
- * static recursion routine used by "clean_vert_tree"
+/**		C L E A N _ V E R T_ T R E E _ R E C U R S E
+ *@brief
+ *	static recursion routine used by "clean_vert_tree"
  */
 static void
 clean_vert_tree_recurse( union vert_tree *ptr )
@@ -136,8 +133,9 @@ clean_vert_tree( struct vert_root *tree_root )
     tree_root->curr_vert = 0;
 }
 
-/**
- * static recursive routine used by "free_vert_tree"
+/**		F R E E _ V E R T_ T R E E_ R E C U R S E
+ *@brief
+ *	Static recursive routine used by "free_vert_tree"
  */
 static void
 free_vert_tree_recurse( union vert_tree *ptr )
@@ -177,7 +175,7 @@ free_vert_tree( struct vert_root *vert_root )
     vert_root->max_vert = 0;
 }
 
-size_t
+int
 Add_vert( double x, double y, double z, struct vert_root *vert_root, fastf_t local_tol_sq )
 {
     union vert_tree *ptr, *prev=NULL, *new_leaf, *new_node;
@@ -203,7 +201,7 @@ Add_vert( double x, double y, double z, struct vert_root *vert_root, fastf_t loc
 		ptr = ptr->vnode.lower;
 	    }
 	} else {
-	    size_t ij;
+	    int ij;
 
 	    ij = ptr->vleaf.index*3;
 	    diff[0] = fabs( vertex[0] - vert_root->the_array[ij] );
@@ -253,7 +251,7 @@ Add_vert( double x, double y, double z, struct vert_root *vert_root, fastf_t loc
 	new_node->vnode.cut_val = (vertex[new_node->vnode.coord] +
 				   vert_root->the_array[ptr->vleaf.index * 3 + new_node->vnode.coord]) * 0.5;
 
-	/* set the node "lower" and "higher" pointers */
+	/* set the node "lower" nad "higher" pointers */
 	if ( vertex[new_node->vnode.coord] >=
 	     vert_root->the_array[ptr->vleaf.index * 3 + new_node->vnode.coord] ) {
 	    new_node->vnode.higher = new_leaf;
@@ -296,7 +294,7 @@ Add_vert( double x, double y, double z, struct vert_root *vert_root, fastf_t loc
     return new_leaf->vleaf.index;
 }
 
-size_t
+int
 Add_vert_and_norm( double x, double y, double z, double nx, double ny, double nz, struct vert_root *vert_root, fastf_t local_tol_sq )
 {
     union vert_tree *ptr, *prev=NULL, *new_leaf, *new_node;
@@ -316,7 +314,7 @@ Add_vert_and_norm( double x, double y, double z, double nx, double ny, double nz
     /* look for this vertex and normal already in the list */
     ptr = vert_root->the_tree;
     while ( ptr ) {
-	size_t i;
+	int i;
 
 	if ( ptr->type == VERT_NODE ) {
 	    prev = ptr;
@@ -326,7 +324,7 @@ Add_vert_and_norm( double x, double y, double z, double nx, double ny, double nz
 		ptr = ptr->vnode.lower;
 	    }
 	} else {
-	    size_t ij;
+	    int ij;
 
 	    ij = ptr->vleaf.index*6;
 	    for ( i=0; i<6; i++ ) {
@@ -364,7 +362,7 @@ Add_vert_and_norm( double x, double y, double z, double nx, double ny, double nz
 	vert_root->the_tree = new_leaf;
     } else if ( ptr && ptr->type == VERT_LEAF ) {
 	fastf_t max;
-	size_t i;
+	int i;
 
 	/* search above ended at a leaf, need to add a node above this leaf and the new leaf */
 	BU_ALLOC(new_node, union vert_tree);
@@ -389,7 +387,7 @@ Add_vert_and_norm( double x, double y, double z, double nx, double ny, double nz
 	new_node->vnode.cut_val = (vertex[new_node->vnode.coord] +
 				   vert_root->the_array[ptr->vleaf.index * 3 + new_node->vnode.coord]) * 0.5;
 
-	/* set the node "lower" and "higher" pointers */
+	/* set the node "lower" nad "higher" pointers */
 	if ( vertex[new_node->vnode.coord] >=
 	     vert_root->the_array[ptr->vleaf.index * 3 + new_node->vnode.coord] ) {
 	    new_node->vnode.higher = new_leaf;

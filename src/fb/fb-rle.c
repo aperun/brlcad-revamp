@@ -1,7 +1,7 @@
 /*                        F B - R L E . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -28,11 +28,13 @@
 #include "common.h"
 
 #include <time.h>
+#include "bio.h"
 
-#include "bu/getopt.h"
-#include "bu/file.h"
-#include "bu/log.h"
-#include "bu/str.h"
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
+
+#include "bu.h"
 #include "fb.h"
 #include "rle.h"
 
@@ -79,6 +81,9 @@ If omitted, the .rle file is written to stdout\n";
 extern void cmap_crunch(RGBpixel (*scan_buf), int pixel_ct, ColorMap *colormap);
 
 
+/*
+ * G E T _ A R G S
+ */
 static int
 get_args(int argc, char **argv)
 {
@@ -154,10 +159,13 @@ get_args(int argc, char **argv)
 }
 
 
+/*
+ * M A I N
+ */
 int
 main(int argc, char **argv)
 {
-    fb *fbp;
+    FBIO *fbp;
     unsigned char *scan_buf;
     int y;
     int cm_save_needed;
@@ -174,7 +182,7 @@ main(int argc, char **argv)
     if (screen_height == 0 && file_height > 0)
 	screen_height = file_height;
 
-    if ((fbp = fb_open(framebuffer, screen_width, screen_height)) == FB_NULL)
+    if ((fbp = fb_open(framebuffer, screen_width, screen_height)) == FBIO_NULL)
 	bu_exit(12, NULL);
 
     /* Honor original screen size desires, if set, unless they shrank */
@@ -254,7 +262,7 @@ main(int argc, char **argv)
 
     /* Add comments to the header file, since we have one */
     if (framebuffer == (char *)0)
-	framebuffer = fb_get_name(fbp);
+	framebuffer = fbp->if_name;
     snprintf(comment, COMMENT_SIZE, "encoded_from=%s", framebuffer);
     rle_putcom(bu_strdup(comment), &outrle);
     now = time(0);

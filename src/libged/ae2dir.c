@@ -1,7 +1,7 @@
 /*                         A E 2 D I R . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include "bio.h"
 
 #include "./ged_private.h"
 
@@ -70,8 +71,8 @@ ged_ae2dir(struct ged *gedp, int argc, const char *argv[])
 	return GED_ERROR;
     }
 
-    az *= DEG2RAD;
-    el *= DEG2RAD;
+    az *= bn_degtorad;
+    el *= bn_degtorad;
     V3DIR_FROM_AZEL(dir, az, el);
 
     if (iflag)

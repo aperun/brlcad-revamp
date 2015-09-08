@@ -1,7 +1,7 @@
 /*                   F B _ P A G E D _ I O . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -17,7 +17,7 @@
  * License along with this file; see the file named COPYING for more
  * information.
  */
-/** @addtogroup libfb */
+/** @addtogroup fb */
 /** @{ */
 /** @file fb_paged_io.c
  *
@@ -31,9 +31,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "bu/color.h"
-#include "bu/log.h"
-#include "fb_private.h"
 #include "fb.h"
 
 
@@ -47,7 +44,7 @@
 
 
 static int
-_fb_pgout(register fb *ifp)
+_fb_pgout(register FBIO *ifp)
 {
     size_t scans, first_scan;
 
@@ -72,7 +69,7 @@ _fb_pgout(register fb *ifp)
 
 
 static int
-_fb_pgin(register fb *ifp, int pageno)
+_fb_pgin(register FBIO *ifp, int pageno)
 {
     size_t scans, first_scan;
 
@@ -99,7 +96,7 @@ _fb_pgin(register fb *ifp, int pageno)
 
 
 static int
-_fb_pgflush(register fb *ifp)
+_fb_pgflush(register FBIO *ifp)
 {
     if (ifp->if_debug & FB_DEBUG_BIO) {
 	fb_log("_fb_pgflush(%p)\n", (void *)ifp);
@@ -116,11 +113,13 @@ _fb_pgflush(register fb *ifp)
 
 
 /**
+ * F B _ I O I N I T
+ *
  * This initialization routine must be called before any buffered I/O
  * routines in this file are used.
  */
 int
-fb_ioinit(register fb *ifp)
+fb_ioinit(register FBIO *ifp)
 {
     if (ifp->if_debug & FB_DEBUG_BIO) {
 	fb_log("fb_ioinit(%p)\n", (void *)ifp);
@@ -146,7 +145,7 @@ fb_ioinit(register fb *ifp)
 
 
 int
-fb_seek(register fb *ifp, int x, int y)
+fb_seek(register FBIO *ifp, int x, int y)
 {
     long pixelnum;
     long pagepixel;
@@ -178,14 +177,14 @@ fb_seek(register fb *ifp, int x, int y)
 
 
 int
-fb_tell(register fb *ifp, int *xp, int *yp)
+fb_tell(register FBIO *ifp, int *xp, int *yp)
 {
     *yp = (int) (ifp->if_pixcur / ifp->if_width);
     *xp = (int) (ifp->if_pixcur % ifp->if_width);
 
     if (ifp->if_debug & FB_DEBUG_BIO) {
-	fb_log("fb_tell(%p, %p, %p) => (%4d, %4d)\n",
-	       (void *)ifp, (void *)xp, (void *)yp, *xp, *yp);
+	fb_log("fb_tell(%p, 0x%x, 0x%x) => (%4d, %4d)\n",
+	       (void *)ifp, xp, yp, *xp, *yp);
     }
 
     return 0;
@@ -193,7 +192,7 @@ fb_tell(register fb *ifp, int *xp, int *yp)
 
 
 int
-fb_wpixel(register fb *ifp, unsigned char *pixelp)
+fb_wpixel(register FBIO *ifp, unsigned char *pixelp)
 {
     if (ifp->if_pno == -1)
 	if (_fb_pgin(ifp, ifp->if_pixcur / ifp->if_ppixels) <= -1)
@@ -213,7 +212,7 @@ fb_wpixel(register fb *ifp, unsigned char *pixelp)
 
 
 int
-fb_rpixel(register fb *ifp, unsigned char *pixelp)
+fb_rpixel(register FBIO *ifp, unsigned char *pixelp)
 {
     if (ifp->if_pno == -1)
 	if (_fb_pgin(ifp, ifp->if_pixcur / ifp->if_ppixels) <= -1)
@@ -233,7 +232,7 @@ fb_rpixel(register fb *ifp, unsigned char *pixelp)
 
 
 int
-fb_flush(register fb *ifp)
+fb_flush(register FBIO *ifp)
 {
     _fb_pgflush(ifp);
 

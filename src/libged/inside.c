@@ -1,7 +1,7 @@
 /*                        I N S I D E . C
  * BRL-CAD
  *
- * Copyright (c) 2008-2014 United States Government as represented by
+ * Copyright (c) 2008-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -29,14 +29,15 @@
 #include <ctype.h>
 #include <math.h>
 #include <string.h>
+#include "bio.h"
 
-
+#include "bu.h"
 #include "vmath.h"
 #include "bn.h"
 #include "nmg.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
 #include "raytrace.h"
-#include "rt/db4.h"
+#include "db.h"
 
 #include "./ged_private.h"
 
@@ -358,7 +359,7 @@ arbin(struct ged *gedp,
 	ip->idb_major_type = DB5_MAJORTYPE_BRLCAD;
 	ip->idb_type = ID_BOT;
 	ip->idb_meth = &OBJ[ID_BOT];
-	ip->idb_ptr = (void *)bot;
+	ip->idb_ptr = (genptr_t)bot;
     }
 
     return GED_OK;
@@ -911,7 +912,7 @@ ged_inside_internal(struct ged *gedp, struct rt_db_internal *ip, int argc, const
 	int uvec[8], svec[11];
 	struct bu_vls error_msg = BU_VLS_INIT_ZERO;
 
-	if (rt_arb_get_cgtype(&cgtype, (struct rt_arb_internal *)ip->idb_ptr, &gedp->ged_wdbp->wdb_tol, uvec, svec) == 0) {
+	if (rt_arb_get_cgtype(&cgtype, ip->idb_ptr, &gedp->ged_wdbp->wdb_tol, uvec, svec) == 0) {
 	    bu_vls_printf(gedp->ged_result_str, "%s: BAD ARB\n", o_name);
 	    return GED_ERROR;
 	}
@@ -919,7 +920,7 @@ ged_inside_internal(struct ged *gedp, struct rt_db_internal *ip, int argc, const
 	/* must find new plane equations to account for
 	 * any editing in the es_mat matrix or path to this solid.
 	 */
-	if (rt_arb_calc_planes(&error_msg, (struct rt_arb_internal *)ip->idb_ptr, cgtype, planes, &gedp->ged_wdbp->wdb_tol) < 0) {
+	if (rt_arb_calc_planes(&error_msg, ip->idb_ptr, cgtype, planes, &gedp->ged_wdbp->wdb_tol) < 0) {
 	    bu_vls_printf(gedp->ged_result_str, "%s\nrt_arb_calc_planes(%s): failed\n", bu_vls_addr(&error_msg), o_name);
 	    bu_vls_free(&error_msg);
 	    return GED_ERROR;
@@ -1138,7 +1139,7 @@ ged_inside_internal(struct ged *gedp, struct rt_db_internal *ip, int argc, const
     }
 
     /* Add to in-core directory */
-    dp = db_diradd(gedp->ged_wdbp->dbip, newname, RT_DIR_PHONY_ADDR, 0, RT_DIR_SOLID, (void *)&ip->idb_type);
+    dp = db_diradd(gedp->ged_wdbp->dbip, newname, RT_DIR_PHONY_ADDR, 0, RT_DIR_SOLID, (genptr_t)&ip->idb_type);
     if (dp == RT_DIR_NULL) {
 	bu_vls_printf(gedp->ged_result_str, "%s: Database alloc error, aborting\n", argv[0]);
 	return GED_ERROR;

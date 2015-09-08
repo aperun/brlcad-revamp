@@ -61,4 +61,3 @@ const namedLazyInstance lazyP21DataSectionReader::nextInstance() {
     }
     return i;
 }
-

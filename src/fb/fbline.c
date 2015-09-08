@@ -1,7 +1,7 @@
 /*                        F B L I N E . C
  * BRL-CAD
  *
- * Copyright (c) 1988-2014 United States Government as represented by
+ * Copyright (c) 1988-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -30,11 +30,9 @@
 
 #include <stdlib.h>
 #include <ctype.h>
+#include "bio.h"
 
-#include "bu/color.h"
-#include "bu/log.h"
-#include "bu/getopt.h"
-#include "vmath.h"
+#include "bu.h"
 #include "fb.h"
 #include "pkg.h"
 
@@ -49,7 +47,7 @@ struct stroke {
     struct coords pixel;	/* starting scan, nib */
     short xsign;		/* 0 or +1 */
     short ysign;		/* -1, 0, or +1 */
-    int ymajor; 		/* true if Y is major dir. */
+    int ymajor; 		/* true iff Y is major dir. */
 #undef major
 #undef minor
     short major;		/* major dir delta (nonneg) */
@@ -59,7 +57,7 @@ struct stroke {
 }; /* rasterization descriptor */
 
 static char *framebuffer = NULL;
-fb *fbp;			/* Current framebuffer */
+FBIO *fbp;			/* Current framebuffer */
 
 static int screen_width = 512;	/* default input width */
 static int screen_height = 512;	/* default input height */
@@ -77,18 +75,25 @@ Usage: fbline [-c ] [-F framebuffer]\n\
 
 
 /*
+ * E D G E L I M I T
+ *
  * Limit generated positions to edges of screen
  * Really should clip to screen, instead.
  */
 void
 edgelimit(struct coords *ppos)
 {
-    V_MIN(ppos->x, screen_width-1);
-    V_MIN(ppos->y, screen_height-1);
+    if (ppos->x >= screen_width)
+	ppos->x = screen_width -1;
+
+    if (ppos->y >= screen_height)
+	ppos->y = screen_height -1;
 }
 
 
 /*
+ * R A S T E R
+ *
  * Raster - rasterize stroke.
  *
  * Method:
@@ -130,6 +135,8 @@ Raster(struct stroke *vp)
 
 
 /*
+ * B U I L D S T R
+ *
  * set up DDA parameters
  */
 void
@@ -171,6 +178,9 @@ BuildStr(struct coords *pt1, struct coords *pt2)
 }
 
 
+/*
+ * G E T_ A R G S
+ */
 int
 get_args(int argc, char **argv)
 {
@@ -225,6 +235,9 @@ get_args(int argc, char **argv)
 }
 
 
+/*
+ * M A I N
+ */
 int
 main(int argc, char **argv)
 {

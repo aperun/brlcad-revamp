@@ -1,7 +1,7 @@
 /*                          D 2 - C . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -26,13 +26,15 @@
 #include "common.h"
 
 #include <string.h>
-#include "bio.h"
+#include <stdio.h>
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
 
-#include "bu/log.h"
-#include "bu/str.h"
+#include "bu.h"
 
 
-static void
+void
 open_file(FILE **fp, char *name)
 {
     /* check for special names */

@@ -1,7 +1,7 @@
 /*                           E P A . C
  * BRL-CAD
  *
- * Copyright (c) 1990-2014 United States Government as represented by
+ * Copyright (c) 1990-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -147,15 +147,15 @@
 #include "common.h"
 
 #include <stddef.h>
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include "bio.h"
 
-#include "bu/cv.h"
 #include "vmath.h"
-#include "rt/db4.h"
+#include "db.h"
 #include "nmg.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
 #include "raytrace.h"
 
 #include "../../librt_private.h"
@@ -185,6 +185,8 @@ const struct bu_structparse rt_epa_parse[] = {
 };
 
 /**
+ * R T _ E P A _ B B O X
+ *
  * Create a bounding RPP for an epa
  */
 int
@@ -237,6 +239,8 @@ rt_epa_bbox(struct rt_db_internal *ip, point_t *min, point_t *max, const struct 
 
 
 /**
+ * R T _ E P A _ P R E P
+ *
  * Given a pointer to a GED database record, and a transformation
  * matrix, determine if this is a valid EPA, and if so, precompute
  * various terms of the formula.
@@ -283,7 +287,7 @@ rt_epa_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip)
     stp->st_meth = &OBJ[ID_EPA];
 
     BU_GET(epa, struct epa_specific);
-    stp->st_specific = (void *)epa;
+    stp->st_specific = (genptr_t)epa;
 
     epa->epa_h = mag_h;
     epa->epa_inv_r1sq = 1 / (r1 * r1);
@@ -329,6 +333,9 @@ rt_epa_prep(struct soltab *stp, struct rt_db_internal *ip, struct rt_i *rtip)
 }
 
 
+/**
+ * R T _ E P A _ P R I N T
+ */
 void
 rt_epa_print(const struct soltab *stp)
 {
@@ -350,6 +357,8 @@ rt_epa_print(const struct soltab *stp)
 
 
 /**
+ * R T _ E P A _ S H O T
+ *
  * Intersect a ray with a epa.  If an intersection occurs, a struct
  * seg will be acquired and filled in.
  *
@@ -472,6 +481,8 @@ rt_epa_shot(struct soltab *stp, struct xray *rp, struct application *ap, struct 
 
 
 /**
+ * R T _ E P A _ N O R M
+ *
  * Given ONE ray distance, return the normal and entry/exit point.
  */
 void
@@ -507,6 +518,8 @@ rt_epa_norm(struct hit *hitp, struct soltab *stp, struct xray *rp)
 
 
 /**
+ * R T _ E P A _ C U R V E
+ *
  * Return the curvature of the epa.
  */
 void
@@ -558,6 +571,8 @@ rt_epa_curve(struct curvature *cvp, struct hit *hitp, struct soltab *stp)
 
 
 /**
+ * R T _ E P A _ U V
+ *
  * For a hit on the surface of an epa, return the (u, v) coordinates
  * of the hit point, 0 <= u, v <= 1.
  *
@@ -590,14 +605,14 @@ rt_epa_uv(struct application *ap, struct soltab *stp, struct hit *hitp, struct u
 		uvp->uv_u = 0;
 	    } else {
 		len = sqrt(pprime[X]*pprime[X] + pprime[Y]*pprime[Y]);
-		uvp->uv_u = acos(pprime[X]/len) * M_1_2PI;
+		uvp->uv_u = acos(pprime[X]/len) * bn_inv2pi;
 	    }
 	    uvp->uv_v = -pprime[Z];
 	    break;
 	case EPA_NORM_TOP:
 	    /* top plate, polar coords */
 	    len = sqrt(pprime[X]*pprime[X] + pprime[Y]*pprime[Y]);
-	    uvp->uv_u = acos(pprime[X]/len) * M_1_2PI;
+	    uvp->uv_u = acos(pprime[X]/len) * bn_inv2pi;
 	    uvp->uv_v = 1.0 - len;
 	    break;
     }
@@ -610,6 +625,9 @@ rt_epa_uv(struct application *ap, struct soltab *stp, struct hit *hitp, struct u
 }
 
 
+/**
+ * R T _ E P A _ F R E E
+ */
 void
 rt_epa_free(struct soltab *stp)
 {
@@ -617,6 +635,16 @@ rt_epa_free(struct soltab *stp)
 	(struct epa_specific *)stp->st_specific;
 
     BU_PUT(epa, struct epa_specific);
+}
+
+
+/**
+ * R T _ E P A _ C L A S S
+ */
+int
+rt_epa_class(void)
+{
+    return 0;
 }
 
 
@@ -788,7 +816,7 @@ epa_ellipse_points(
     fastf_t avg_radius, avg_circumference;
 
     avg_radius = (epa->epa_r1 + epa->epa_r2) / 2.0;
-    avg_circumference = M_2PI * avg_radius;
+    avg_circumference = bn_twopi * avg_radius;
 
     return avg_circumference / info->point_spacing;
 }
@@ -874,6 +902,9 @@ rt_epa_adaptive_plot(struct rt_db_internal *ip, const struct rt_view_info *info)
     return 0;
 }
 
+/**
+ * R T _ E P A _ P L O T
+ */
 int
 rt_epa_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct rt_tess_tol *ttol, const struct bn_tol *UNUSED(tol), const struct rt_view_info *UNUSED(info))
 {
@@ -921,7 +952,7 @@ rt_epa_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct rt_te
 	ntol = ttol->norm;
     else
 	/* tolerate everything */
-	ntol = M_PI;
+	ntol = bn_pi;
 
     /*
      * build epa from 2 parabolas
@@ -1014,7 +1045,7 @@ rt_epa_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct rt_te
     /* make ellipses at each z level */
     i = 0;
     nseg = 0;
-    theta_prev = M_2PI;
+    theta_prev = bn_twopi;
     pos_a = pts_a->next;	/* skip over apex of epa */
     pos_b = pts_b->next;
     while (pos_a) {
@@ -1025,7 +1056,7 @@ rt_epa_plot(struct bu_list *vhead, struct rt_db_internal *ip, const struct rt_te
 	VSET(p1, 0., pos_b->p[Y], 0.);
 	theta_new = ell_angle(p1, pos_a->p[Y], pos_b->p[Y], dtol, ntol);
 	if (nseg == 0) {
-	    nseg = (int)(M_2PI / theta_new) + 1;
+	    nseg = (int)(bn_twopi / theta_new) + 1;
 	    pts_dbl[i] = 0;
 	} else if (theta_new < theta_prev) {
 	    nseg *= 2;
@@ -1119,7 +1150,7 @@ rt_ell_norms(fastf_t *ov, fastf_t *A, fastf_t *B, fastf_t *h_vec, fastf_t t, int
     sqrt_1mt = sqrt(1.0 - t);
     if (sqrt_1mt <= SMALL_FASTF)
 	bu_bomb("rt_epa_tess: rt_ell_norms: sqrt(1.0 -t) is zero\n");
-    theta = M_2PI / sides;
+    theta = 2 * bn_pi / sides;
     ang = 0.;
 
     for (n = 1; n <= sides; n++, ang += theta) {
@@ -1135,6 +1166,8 @@ rt_ell_norms(fastf_t *ov, fastf_t *A, fastf_t *B, fastf_t *h_vec, fastf_t t, int
 
 
 /**
+ * R T _ E L L
+ *
  * Generate an ellipsoid with the specified number of sides approximating it.
  */
 void
@@ -1143,7 +1176,7 @@ rt_ell(fastf_t *ov, const fastf_t *V, const fastf_t *A, const fastf_t *B, int si
     fastf_t ang, theta, x, y;
     int n;
 
-    theta = M_2PI / sides;
+    theta = 2 * bn_pi / sides;
     ang = 0.;
     /* make ellipse regardless of whether it meets req's */
     for (n = 1; n <= sides; n++, ang += theta) {
@@ -1156,6 +1189,8 @@ rt_ell(fastf_t *ov, const fastf_t *V, const fastf_t *A, const fastf_t *B, int si
 
 
 /**
+ * R T _ E P A _ T E S S
+ *
  * Returns -
  * -1 failure
  * 0 OK.  *r points to nmgregion that holds this tessellation.
@@ -1220,7 +1255,7 @@ rt_epa_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
 	ntol = ttol->norm;
     else
 	/* tolerate everything */
-	ntol = M_PI;
+	ntol = bn_pi;
 
     /*
      * build epa from 2 parabolas
@@ -1318,7 +1353,7 @@ rt_epa_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
     /* make ellipses at each z level */
     i = 0;
     nseg = 0;
-    theta_prev = M_2PI;
+    theta_prev = bn_twopi;
     pos_a = pts_a->next;	/* skip over apex of epa */
     pos_b = pts_b->next;
     while (pos_a) {
@@ -1332,7 +1367,7 @@ rt_epa_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
 	VSET(p1, 0., pos_b->p[Y], 0.);
 	theta_new = ell_angle(p1, pos_a->p[Y], pos_b->p[Y], dtol, ntol);
 	if (nseg == 0) {
-	    nseg = (int)(M_2PI / theta_new) + 1;
+	    nseg = (int)(bn_twopi / theta_new) + 1;
 	    pts_dbl[i] = 0;
 	    /* maximum number of faces needed for epa */
 	    face = nseg*(1 + 3*((1 << (nell-1)) - 1));
@@ -1506,14 +1541,14 @@ rt_epa_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
     }
 
     /* Associate the face geometry */
-    for (i = 0; i < face; i++) {
+    for (i=0; i < face; i++) {
 	if (nmg_fu_planeeqn(outfaceuses[i], tol) < 0)
 	    goto fail;
     }
 
     /* Associate vertexuse normals */
-    for (i = 0; i < nell; i++) {
-	for (j = 0; j < segs_per_ell[i]; j++) {
+    for (i=0; i<nell; i++) {
+	for (j=0; j<segs_per_ell[i]; j++) {
 	    VREVERSE(rev_norm, &normals[i][j*3]);
 	    for (BU_LIST_FOR(vu, vertexuse, &vells[i][j]->vu_hd)) {
 
@@ -1581,6 +1616,8 @@ rt_epa_tess(struct nmgregion **r, struct model *m, struct rt_db_internal *ip, co
 
 
 /**
+ * R T _ E P A _ I M P O R T
+ *
  * Import an EPA from the database format to the internal format.
  * Apply modeling transformations as well.
  */
@@ -1651,6 +1688,8 @@ rt_epa_import4(struct rt_db_internal *ip, const struct bu_external *ep, const fa
 
 
 /**
+ * R T _ E P A _ E X P O R T
+ *
  * The name is added by the caller, in the usual place.
  */
 int
@@ -1669,7 +1708,7 @@ rt_epa_export4(struct bu_external *ep, const struct rt_db_internal *ip, double l
 
     BU_CK_EXTERNAL(ep);
     ep->ext_nbytes = sizeof(union record);
-    ep->ext_buf = (uint8_t *)bu_calloc(1, ep->ext_nbytes, "epa external");
+    ep->ext_buf = (genptr_t)bu_calloc(1, ep->ext_nbytes, "epa external");
     epa = (union record *)ep->ext_buf;
 
     epa->s.s_id = ID_SOLID;
@@ -1711,6 +1750,8 @@ rt_epa_export4(struct bu_external *ep, const struct rt_db_internal *ip, double l
 
 
 /**
+ * R T _ E P A _ I M P O R T 5
+ *
  * Import an EPA from the database format to the internal format.
  * Apply modeling transformations as well.
  */
@@ -1759,6 +1800,8 @@ rt_epa_import5(struct rt_db_internal *ip, const struct bu_external *ep, const fa
 
 
 /**
+ * R T _ E P A _ E X P O R T 5
+ *
  * The name is added by the caller, in the usual place.
  */
 int
@@ -1779,7 +1822,7 @@ rt_epa_export5(struct bu_external *ep, const struct rt_db_internal *ip, double l
 
     BU_CK_EXTERNAL(ep);
     ep->ext_nbytes = SIZEOF_NETWORK_DOUBLE * 11;
-    ep->ext_buf = (uint8_t *)bu_malloc(ep->ext_nbytes, "epa external");
+    ep->ext_buf = (genptr_t)bu_malloc(ep->ext_nbytes, "epa external");
 
     if (!NEAR_EQUAL(MAGNITUDE(xip->epa_Au), 1.0, RT_LEN_TOL)) {
 	bu_log("rt_epa_export4: Au not a unit vector!\n");
@@ -1820,6 +1863,8 @@ rt_epa_export5(struct bu_external *ep, const struct rt_db_internal *ip, double l
 
 
 /**
+ * R T _ E P A _ D E S C R I B E
+ *
  * Make human-readable formatted presentation of this solid.  First
  * line describes type of solid.  Additional lines are indented one
  * tab, and give parameter values.
@@ -1860,6 +1905,8 @@ rt_epa_describe(struct bu_vls *str, const struct rt_db_internal *ip, int verbose
 
 
 /**
+ * R T _ E P A _ I F R E E
+ *
  * Free the storage associated with the rt_db_internal version of this
  * solid.
  */
@@ -1875,10 +1922,14 @@ rt_epa_ifree(struct rt_db_internal *ip)
     xip->epa_magic = 0;		/* sanity */
 
     bu_free((char *)xip, "epa ifree");
-    ip->idb_ptr = ((void *)0);	/* sanity */
+    ip->idb_ptr = GENPTR_NULL;	/* sanity */
 }
 
 
+/**
+ * R T _ E P A _ P A R A M S
+ *
+ */
 int
 rt_epa_params(struct pc_pc_set *ps, const struct rt_db_internal *ip)
 {
@@ -1889,6 +1940,9 @@ rt_epa_params(struct pc_pc_set *ps, const struct rt_db_internal *ip)
 }
 
 
+/**
+ * R T _ E P A _ V O L U M E
+ */
 void
 rt_epa_volume(fastf_t *vol, const struct rt_db_internal *ip)
 {
@@ -1897,10 +1951,13 @@ rt_epa_volume(fastf_t *vol, const struct rt_db_internal *ip)
     RT_EPA_CK_MAGIC(xip);
 
     mag_h = MAGNITUDE(xip->epa_H);
-    *vol = M_PI_2 * xip->epa_r1 * xip->epa_r2 * mag_h;
+    *vol = 0.5 * M_PI * xip->epa_r1 * xip->epa_r2 * mag_h;
 }
 
 
+/**
+ * R T _ E P A _ C E N T R O I D
+ */
 void
 rt_epa_centroid(point_t *cent, const struct rt_db_internal *ip)
 {
@@ -1910,6 +1967,9 @@ rt_epa_centroid(point_t *cent, const struct rt_db_internal *ip)
 }
 
 
+/**
+ * R T _ E P A _ S U R F _ A R E A
+ */
 void
 rt_epa_surf_area(fastf_t *area, const struct rt_db_internal *ip)
 {

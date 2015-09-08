@@ -1,7 +1,7 @@
 /*                      M A T E R I A L . C
  * BRL-CAD
  *
- * Copyright (c) 1985-2014 United States Government as represented by
+ * Copyright (c) 1985-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -28,16 +28,12 @@
 #include <ctype.h>
 #include <math.h>
 #include <string.h>
-
-#ifdef HAVE_DIRECT_H
-#  include <direct.h>
-#endif
-
 #ifdef HAVE_SYS_PARAM_H
 #  include <sys/param.h>
 #endif
-
 #include "bio.h"
+
+#include "bu.h"
 #include "vmath.h"
 #include "raytrace.h"
 #include "optical.h"
@@ -47,6 +43,8 @@ static const char *mdefault = "default"; /* Name of default material */
 
 
 /**
+ * M L I B _ A D D _ S H A D E R
+ *
  * Routine to add an array of mfuncs structures to the linked list of
  * material (shader) routines.
  */
@@ -65,6 +63,8 @@ mlib_add_shader(struct mfuncs **headp, struct mfuncs *mfp1)
 
 
 /**
+ * T R Y _ L O A D
+ *
  * Try to load a DSO from the specified path.  If we succeed in
  * opening the DSO, then retrieve the symbol "shader_mfuncs" and look
  * up the shader named "material" in the table.
@@ -88,7 +88,7 @@ try_load(const char *path, const char *material, const char *shader_name)
 
     /* Find the {shader}_mfuncs symbol in the library */
     snprintf(sym, MAXPATHLEN, "%s_mfuncs", shader_name);
-    shader_mfuncs = (struct mfuncs *)bu_dlsym((struct mfuncs *)handle, sym);
+    shader_mfuncs = bu_dlsym(handle, sym);
 
     dl_error_str=bu_dlerror();
     if (dl_error_str == (char *)NULL) {
@@ -96,7 +96,7 @@ try_load(const char *path, const char *material, const char *shader_name)
 	/* We didn't find a {shader}_mfuncs symbol, so try the generic
 	 * "shader_mfuncs" symbol.
 	 */
-	shader_mfuncs = (struct mfuncs *)bu_dlsym((struct mfuncs *)handle, "shader_mfuncs");
+	shader_mfuncs = bu_dlsym(handle, "shader_mfuncs");
 	if ((dl_error_str=bu_dlerror()) != (char *)NULL) {
 	    /* didn't find anything appropriate, give up */
 	    if (R_DEBUG&RDEBUG_MATERIAL) bu_log("%s has no %s table, %s\n", material, sym, dl_error_str);
@@ -195,6 +195,8 @@ done:
 
 
 /**
+ * M L I B _ S E T U P
+ *
  * Returns -
  * -1 failed
  * 0 indicates that this region should be dropped
@@ -227,7 +229,7 @@ mlib_setup(struct mfuncs **headp,
 	material = mdefault;
 	mlen = strlen(mdefault);
     } else {
-	const char *endp;
+	char *endp;
 	endp = strchr(material, ' ');
 	if (endp) {
 	    mlen = endp - material;
@@ -250,7 +252,7 @@ retry:
      * dynamically load it.
      */
 
-    bu_log("Shader (name: \"%s\" parameters: \"%s\")... ", bu_vls_addr(&name), bu_vls_addr(&params));
+    bu_log("Shader (name: \"%V\" parameters: \"%V\")... ", &name, &params);
 
     mfp_new = load_dynamic_shader(bu_vls_addr(&name));
     if (mfp_new) {
@@ -266,8 +268,8 @@ retry:
      * table) and search again.
      */
 
-    bu_log("WARNING Unknown shader settings on %s\nDefault (plastic) material used instead of '%s'.\n\n",
-	   rp->reg_name, bu_vls_addr(&name));
+    bu_log("WARNING Unknown shader settings on %s\nDefault (plastic) material used instead of '%V'.\n\n",
+	   rp->reg_name, &name);
 
     if (material != mdefault) {
 	material = mdefault;
@@ -309,6 +311,8 @@ found:
 
 
 /**
+ * M L I B _ F R E E
+ *
  * Routine to free material-property specific data
  */
 void

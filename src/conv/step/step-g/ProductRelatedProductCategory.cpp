@@ -1,7 +1,7 @@
 /*                 ProductRelatedProductCategory.cpp
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -48,8 +48,6 @@ ProductRelatedProductCategory::ProductRelatedProductCategory(STEPWrapper *sw, in
 
 ProductRelatedProductCategory::~ProductRelatedProductCategory()
 {
-    // elements created through factory will be deleted there.
-    products.clear();
 }
 
 string ProductRelatedProductCategory::ClassName()
@@ -64,7 +62,7 @@ bool ProductRelatedProductCategory::Load(STEPWrapper *sw, SDAI_Application_insta
 
     if (!ProductCategory::Load(step, sse)) {
 	std::cout << CLASSNAME << ":Error loading base class ::ProductCategory." << std::endl;
-	goto step_error;
+	return false;
     }
 
     // need to do this for local attributes to makes sure we have
@@ -78,31 +76,20 @@ bool ProductRelatedProductCategory::Load(STEPWrapper *sw, SDAI_Application_insta
 	    SDAI_Application_instance *entity = (*i);
 	    if (entity) {
 		Product *aProd = dynamic_cast<Product *>(Factory::CreateObject(sw, entity));
-		if (aProd) {
-		    products.push_back(aProd);
-		} else {
-		    std::cerr << CLASSNAME << ": Unhandled entity in attribute 'products'." << std::endl;
-		    l->clear();
-		    delete l;
-		    goto step_error;
-		}
+
+		products.push_back(aProd);
 	    } else {
 		std::cerr << CLASSNAME << ": Unhandled entity in attribute 'products'." << std::endl;
 		l->clear();
 		delete l;
-		goto step_error;
+		return false;
 	    }
 	}
 	l->clear();
 	delete l;
     }
 
-    sw->entity_status[id] = STEP_LOADED;
-
     return true;
-step_error:
-    sw->entity_status[id] = STEP_LOAD_ERROR;
-    return false;
 }
 
 void ProductRelatedProductCategory::Print(int level)

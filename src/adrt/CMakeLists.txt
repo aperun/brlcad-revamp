@@ -55,12 +55,11 @@ install(FILES ${tie_HDRS} DESTINATION include/tie)
 CMAKEFILES(${tie_HDRS})
 
 # Tcl/Tk based ISST
-set(isst_dirs
+include_directories(
   ${OPENGL_INCLUDE_DIR_GL}
   ${OPENGL_INCLUDE_DIR_GLX}
   ${X11_INCLUDE_DIR}
   )
-BRLCAD_INCLUDE_DIRS(isst_dirs)
 if(BRLCAD_ENABLE_OPENGL AND BRLCAD_ENABLE_TK)
   if(WIN32)
     BRLCAD_ADDLIB(issttcltk isst_tcltk.c "librender;libdm;${TCL_LIBRARIES};${OPENGL_LIBRARIES};opengl32.lib" NO_INSTALL)
@@ -78,7 +77,6 @@ if(BRLCAD_ENABLE_OPENGL AND BRLCAD_ENABLE_TK)
   endif(WIN32)
   BRLCAD_MANAGE_FILES("isst" ${BIN_DIR} EXEC)
   add_custom_target(isst ALL DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/isst)
-  set_target_properties(isst PROPERTIES FOLDER "BRL-CAD Executables")
   add_dependencies(isst issttcltk bwish)
   foreach(item ${tclindex_target_list})
     add_dependencies(isst ${item})

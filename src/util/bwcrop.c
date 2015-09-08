@@ -1,7 +1,7 @@
 /*                        B W C R O P . C
  * BRL-CAD
  *
- * Copyright (c) 1986-2014 United States Government as represented by
+ * Copyright (c) 1986-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -35,11 +35,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <limits.h> /* for INT_MAX */
 
-#include "bu/log.h"
-#include "bu/file.h"
-#include "bu/malloc.h"
+#include "bu.h"
 
 
 #define round(x) ((int)(x+0.5))
@@ -66,12 +63,12 @@ Usage: bwcrop in.bw out.bw (I prompt!)\n\
  * XXX - CHECK FILE SIZE
  */
 void
-init_buffer()
+init_buffer(int len)
 {
-    ssize_t max;
+    int max;
 
     /* See how many we could buffer */
-    max = MAXBUFBYTES / scanlen;
+    max = MAXBUFBYTES / len;
 
     /*
      * Do a max of 4096.  We really should see how big
@@ -80,12 +77,8 @@ init_buffer()
      */
     if (max > 4096) max = 4096;
 
-    if (max < scanlen)
-	buflines = max;
-    else
-	buflines = scanlen;
-
-    buffer = (unsigned char *)bu_malloc(buflines * scanlen, "buffer");
+    buflines = max;
+    buffer = (unsigned char *)bu_malloc(buflines * len, "buffer");
 }
 
 
@@ -101,7 +94,7 @@ fill_buffer(int y)
     buf_start = y - buflines/2;
     if (buf_start < 0) buf_start = 0;
 
-    bu_fseek(ifp, 0, 0);
+    bu_fseek(ifp, buf_start * scanlen, 0);
     ret = fread(buffer, scanlen, buflines, ifp);
     if (ret == 0)
 	perror("fread");
@@ -111,7 +104,7 @@ fill_buffer(int y)
 int
 main(int argc, char **argv)
 {
-    float x1, y1, x2, y2, x, y;
+    float x_1, y_1, x_2, y_2, x, y;
     size_t row, col;
     ssize_t yindex;
     char value;
@@ -130,65 +123,77 @@ main(int argc, char **argv)
     }
 
     if (argc == 14) {
-	if (! argv[3])
+	if (argv[3])
+	    scanlen = atoi(argv[3]);
+	else
 	    return 1;
-        scanlen = atoi(argv[3]);
 
-	if (! argv[4])
+	if (argv[4]) {
+	    atoival = atoi(argv[4]);
+	    if (atoival < 0)
+		atoival = 0;
+	    if (atoival > INT_MAX-1)
+		atoival = INT_MAX-1;
+	    xnum = atoival;
+	} else {
 	    return 1;
-	atoival = atoi(argv[4]);
-	if (atoival < 0)
-	    atoival = 0;
-	else if (atoival > INT_MAX-1)
-	    atoival = INT_MAX-1;
-        xnum = atoival;
+	}
 
-	if (! argv[5])
+	if (argv[5]) {
+	    atoival = atoi(argv[5]);
+	    if (atoival < 0)
+		atoival = 0;
+	    if (atoival > INT_MAX-1)
+		atoival = INT_MAX-1;
+	    ynum = atoival;
+	} else {
 	    return 1;
-	atoival = atoi(argv[5]);
-	if (atoival < 0)
-	    atoival = 0;
-	else if (atoival > INT_MAX-1)
-	    atoival = INT_MAX-1;
-	ynum = atoival;
+	}
 
-	if (! argv[6])
+	if (argv[6])
+	    ulx = atoi(argv[6]);
+	else
 	    return 1;
-	ulx = atoi(argv[6]);
 
-	if (! argv[7])
+	if (argv[7])
+	    uly = atoi(argv[7]);
+	else
 	    return 1;
-	uly = atoi(argv[7]);
 
-	if (! argv[8])
+	if (argv[8])
+	    urx = atoi(argv[8]);
+	else
 	    return 1;
-	urx = atoi(argv[8]);
 
-	if (! argv[9])
+	if (argv[9])
+	    ury = atoi(argv[9]);
+	else
 	    return 1;
-	ury = atoi(argv[9]);
 
-	if (! argv[10])
+	if (argv[10])
+	    lrx = atoi(argv[10]);
+	else
 	    return 1;
-	lrx = atoi(argv[10]);
 
-	if (! argv[11])
+	if (argv[11])
+	    lry = atoi(argv[11]);
+	else
 	    return 1;
-	lry = atoi(argv[11]);
 
-	if (! argv[12])
+	if (argv[12])
+	    llx = atoi(argv[12]);
+	else
 	    return 1;
-	llx = atoi(argv[12]);
 
-	if (! argv[13])
+	if (argv[13])
+	    lly = atoi(argv[13]);
+	else
 	    return 1;
-	lly = atoi(argv[13]);
     } else {
-	double xval, yval;
+	float xval, yval;
 	unsigned long len;
 	/* Get info */
-
-	printf("Scanline length in input file?: ");
+	printf("Scanline length in input file: ");
 	ret = scanf("%lu", &len);
 	if (ret != 1)
 	    perror("scanf");
@@ -196,26 +201,27 @@ main(int argc, char **argv)
 	if (scanlen <= 0) {
 	    bu_exit(4, "bwcrop: scanlen = %zu, don't be ridiculous\n", scanlen);
 	}
-
-	printf("Line Length and Number of scan lines in new file?: ");
-	ret = scanf("%lf%lf", &xval, &yval);
+	printf("Line Length and Number of scan lines (in new file)?: ");
+	ret = scanf("%f%f", &xval, &yval);
 	if (ret != 2) {
 	    perror("scanf");
 	}
 
-	/* sanitize xval,yval*/
+	/* sanitize */
 	if (xval < 1)
 	    xval = 1;
-	else if (xval > INT_MAX-1)
+	if (xval > INT_MAX-1)
 	    xval = INT_MAX-1;
 	xnum = xval;
+
+	/* sanitize */
 	if (yval < 1)
 	    yval = 1;
-	else if (yval > INT_MAX-1)
+	if (yval > INT_MAX-1)
 	    yval = INT_MAX-1;
 	ynum = yval;
 
-	printf("Upper left corner (in input file) (x, y)?: ");
+	printf("Upper left corner in input file (x, y)?: ");
 	ret = scanf("%f%f", &ulx, &uly);
 	if (ret != 2)
 	    perror("scanf");
@@ -225,19 +231,19 @@ main(int argc, char **argv)
 	if (ret != 2)
 	    perror("scanf");
 
-	printf("Lower right corner (x, y)?: ");
+	printf("Lower right (x, y)?: ");
 	ret = scanf("%f%f", &lrx, &lry);
 	if (ret != 2)
 	    perror("scanf");
 
-	printf("Lower left corner (x, y)?: ");
+	printf("Lower left (x, y)?: ");
 	ret = scanf("%f%f", &llx, &lly);
 	if (ret != 2)
 	    perror("scanf");
     }
 
     /* See how many lines we can buffer */
-    init_buffer();
+    init_buffer(scanlen);
 
     /* Check for silly buffer syndrome */
     if ((ssize_t)abs((int)(ury - uly)) > buflines/2 || (ssize_t)abs((int)(lry - lly)) > buflines/2) {
@@ -250,16 +256,16 @@ main(int argc, char **argv)
     /* Move all points */
     for (row = 0; row < ynum; row++) {
 	/* calculate left point of row */
-	x1 = ((ulx-llx)/(fastf_t)(ynum-1)) * (fastf_t)row + llx;
-	y1 = ((uly-lly)/(fastf_t)(ynum-1)) * (fastf_t)row + lly;
+	x_1 = ((ulx-llx)/(fastf_t)(ynum-1)) * (fastf_t)row + llx;
+	y_1 = ((uly-lly)/(fastf_t)(ynum-1)) * (fastf_t)row + lly;
 	/* calculate right point of row */
-	x2 = ((urx-lrx)/(fastf_t)(ynum-1)) * (fastf_t)row + lrx;
-	y2 = ((ury-lry)/(fastf_t)(ynum-1)) * (fastf_t)row + lry;
+	x_2 = ((urx-lrx)/(fastf_t)(ynum-1)) * (fastf_t)row + lrx;
+	y_2 = ((ury-lry)/(fastf_t)(ynum-1)) * (fastf_t)row + lry;
 
 	for (col = 0; col < xnum; col++) {
 	    /* calculate point along row */
-	    x = ((x2-x1)/(fastf_t)(xnum-1)) * (fastf_t)col + x1;
-	    y = ((y2-y1)/(fastf_t)(xnum-1)) * (fastf_t)col + y1;
+	    x = ((x_2-x_1)/(fastf_t)(xnum-1)) * (fastf_t)col + x_1;
+	    y = ((y_2-y_1)/(fastf_t)(xnum-1)) * (fastf_t)col + y_1;
 
 	    /* Make sure we are in the buffer */
 	    yindex = round(y) - buf_start;
@@ -267,7 +273,6 @@ main(int argc, char **argv)
 		fill_buffer(round(y));
 		yindex = round(y) - buf_start;
 	    }
-	    yindex = yindex + buf_start;
 
 	    value = buffer[ yindex * scanlen + round(x) ];
 	    ret = fwrite(&value, sizeof(value), 1, ofp);

@@ -1,7 +1,7 @@
 /*                 Factory.h
  * BRL-CAD
  *
- * Copyright (c) 1994-2014 United States Government as represented by
+ * Copyright (c) 1994-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef CONV_STEP_STEP_G_FACTORY_H
-#define CONV_STEP_STEP_G_FACTORY_H
+#ifndef FACTORY_H_
+#define FACTORY_H_
 
 #include "common.h"
 
@@ -34,7 +34,7 @@
 #include <vector>
 #include <string>
 
-/* interface headers */
+/* inteface headers */
 #include "STEPWrapper.h"
 
 
@@ -86,7 +86,7 @@ public:
 };
 
 
-#endif /* CONV_STEP_STEP_G_FACTORY_H */
+#endif /* FACTORY_H_ */
 
 /*
  * Local Variables:

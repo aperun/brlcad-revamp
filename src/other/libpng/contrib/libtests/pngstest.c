@@ -1,9 +1,9 @@
 /*-
  * pngstest.c
  *
- * Copyright (c) 2013-2014 John Cunningham Bowler
+ * Copyright (c) 2013 John Cunningham Bowler
  *
- * Last changed in libpng 1.6.16 [December 22, 2014]
+ * Last changed in libpng 1.6.8 [December 19, 2013]
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -3173,43 +3173,32 @@ read_one_file(Image *image)
             {
                long int cb = ftell(f);
 
-               if (cb > 0)
+               if (cb > 0 && (unsigned long int)cb < (size_t)~(size_t)0)
                {
-                  if ((unsigned long int)cb <= (size_t)~(size_t)0)
+                  png_bytep b = voidcast(png_bytep, malloc((size_t)cb));
+
+                  if (b != NULL)
                   {
-                     png_bytep b = voidcast(png_bytep, malloc((size_t)cb));
+                     rewind(f);
 
-                     if (b != NULL)
+                     if (fread(b, (size_t)cb, 1, f) == 1)
                      {
-                        rewind(f);
-
-                        if (fread(b, (size_t)cb, 1, f) == 1)
-                        {
-                           fclose(f);
-                           image->input_memory_size = cb;
-                           image->input_memory = b;
-                        }
-
-                        else
-                        {
-                           free(b);
-                           return logclose(image, f, image->file_name,
-                              ": read failed: ");
-                        }
+                        fclose(f);
+                        image->input_memory_size = cb;
+                        image->input_memory = b;
                      }
 
                      else
+                     {
+                        free(b);
                         return logclose(image, f, image->file_name,
-                           ": out of memory: ");
+                           ": read failed: ");
+                     }
                   }
 
                   else
                      return logclose(image, f, image->file_name,
-                        ": file too big for this architecture: ");
-                     /* cb is the length of the file as a (long) and
-                      * this is greater than the maximum amount of
-                      * memory that can be requested from malloc.
-                      */
+                        ": out of memory: ");
                }
 
                else if (cb == 0)

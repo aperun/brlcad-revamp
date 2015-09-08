@@ -1,7 +1,7 @@
 /*                          G 5 - G 4 . C
  * BRL-CAD
  *
- * Copyright (c) 2004-2014 United States Government as represented by
+ * Copyright (c) 2004-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This program is free software; you can redistribute it and/or
@@ -42,12 +42,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "bu.h"
 #include "vmath.h"
-#include "bu/debug.h"
-#include "bu/units.h"
 #include "bn.h"
 #include "raytrace.h"
-#include "rt/geom.h"
+#include "rtgeom.h"
 #include "wdb.h"
 
 
@@ -64,12 +63,14 @@ main(int argc, char **argv)
 
     /* FIXME: These need to be improved */
     tol.magic = BN_TOL_MAGIC;
-    tol.dist = BN_TOL_DIST;
+    tol.dist = 0.0005;
     tol.dist_sq = tol.dist * tol.dist;
     tol.perp = 1e-6;
     tol.para = 1 - tol.perp;
 
     bu_debug = BU_DEBUG_COREDUMP;
+
+    rt_init_resource( &rt_uniresource, 0, NULL );
 
     if ( argc != 3 )  {
 	bu_log( "Usage: %s v5.g v4.g\n", argv[0]);
@@ -80,6 +81,9 @@ main(int argc, char **argv)
 	perror( argv[1] );
 	return 2;
     }
+
+    if ( rt_uniresource.re_magic != RESOURCE_MAGIC )
+	rt_init_resource( &rt_uniresource, 0, NULL );
 
     if ( (dbip4 = db_create( argv[2], 4 )) == DBI_NULL ) {
 	bu_log( "Failed to create output database (%s)\n", argv[2] );

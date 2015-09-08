@@ -26,7 +26,7 @@
 #
 # Originally based off of FindBISON.cmake from Kitware's CMake distribution
 #
-# Copyright (c) 2010-2014 United States Government as represented by
+# Copyright (c) 2010-2013 United States Government as represented by
 #                the U.S. Army Research Laboratory.
 # Copyright 2009 Kitware, Inc.
 # Copyright 2006 Tristan Carel
@@ -63,99 +63,51 @@
 #============================================================
 # PERPLEX_TARGET (public macro)
 #============================================================
-
-include(CMakeParseArguments)
-
-macro(PERPLEX_TARGET Name Input)
-  get_filename_component(IN_FILE_WE ${Input} NAME_WE)
-  set(PVAR_PREFIX ${Name}_${IN_FILE_WE})
-
-  if(${ARGC} GREATER 3)
-    CMAKE_PARSE_ARGUMENTS(${PVAR_PREFIX} "" "TEMPLATE;OUT_SRC_FILE;OUT_HDR_FILE;WORKING_DIR" "" ${ARGN})
-  endif(${ARGC} GREATER 3)
-
-  # Need a working directory
-  if("${${PVAR_PREFIX}_WORKING_DIR}" STREQUAL "")
-    set(${PVAR_PREFIX}_WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}/${PVAR_PREFIX})
-  endif("${${PVAR_PREFIX}_WORKING_DIR}" STREQUAL "")
-  file(MAKE_DIRECTORY ${${PVAR_PREFIX}_WORKING_DIR})
-
-  # Set up intermediate and final output names
-
-  # Output source file
-  if ("${${PVAR_PREFIX}_OUT_SRC_FILE}" STREQUAL "")
-    set(${PVAR_PREFIX}_OUT_SRC_FILE ${${PVAR_PREFIX}_WORKING_DIR}/${IN_FILE_WE}.c)
-  else ("${${PVAR_PREFIX}_OUT_SRC_FILE}" STREQUAL "")
-    get_filename_component(specified_out_dir ${${PVAR_PREFIX}_OUT_SRC_FILE} PATH)
-    if(NOT "${specified_out_dir}" STREQUAL "")
-      message(FATAL_ERROR "\nFull path specified for OUT_SRC_FILE - should be filename only.\n")
-    endif(NOT "${specified_out_dir}" STREQUAL "")
-    set(${PVAR_PREFIX}_OUT_SRC_FILE ${${PVAR_PREFIX}_WORKING_DIR}/${${PVAR_PREFIX}_OUT_SRC_FILE})
-  endif ("${${PVAR_PREFIX}_OUT_SRC_FILE}" STREQUAL "")
-
-  # Output header file
-  if ("${${PVAR_PREFIX}_OUT_HDR_FILE}" STREQUAL "")
-    set(${PVAR_PREFIX}_OUT_HDR_FILE ${${PVAR_PREFIX}_WORKING_DIR}/${IN_FILE_WE}.h)
-  else ("${${PVAR_PREFIX}_OUT_HDR_FILE}" STREQUAL "")
-    get_filename_component(specified_out_dir ${${PVAR_PREFIX}_OUT_HDR_FILE} PATH)
-    if(NOT "${specified_out_dir}" STREQUAL "")
-      message(FATAL_ERROR "\nFull path specified for OUT_HDR_FILE - should be filename only.\n")
-    endif(NOT "${specified_out_dir}" STREQUAL "")
-    set(${PVAR_PREFIX}_OUT_HDR_FILE ${${PVAR_PREFIX}_WORKING_DIR}/${${PVAR_PREFIX}_OUT_HDR_FILE})
-  endif ("${${PVAR_PREFIX}_OUT_HDR_FILE}" STREQUAL "")
-
-  # input file
-  get_filename_component(in_full ${Input} ABSOLUTE)
-  if("${in_full}" STREQUAL "${Input}")
-    set(perplex_in_file ${Input})
-  else("${in_full}" STREQUAL "${Input}")
-    set(perplex_in_file ${CMAKE_CURRENT_SOURCE_DIR}/${Input})
-  endif("${in_full}" STREQUAL "${Input}")
-
-  # Intermediate file
-  set(re2c_src "${${PVAR_PREFIX}_WORKING_DIR}/${IN_FILE_WE}.re")
-
-  # Make sure we have a template
-  if ("${${PVAR_PREFIX}_TEMPLATE}" STREQUAL "")
+#
+# TODO - rework this macro to make use of CMakeParseArguments, see
+# http://www.cmake.org/pipermail/cmake/2012-July/051309.html
+#
+macro(PERPLEX_TARGET Name Input OutputSrc OutputHeader)
+  if(${ARGC} GREATER 4)
+    set(Template ${ARGV4})
+  else(${ARGC} GREATER 4)
     if(PERPLEX_TEMPLATE)
-      set(${PVAR_PREFIX}_TEMPLATE ${PERPLEX_TEMPLATE})
+      set(Template ${PERPLEX_TEMPLATE})
     else(PERPLEX_TEMPLATE)
       message(FATAL_ERROR "\nNo Perplex template file specified - please specify the file using the PERPLEX_TEMPLATE variable:\ncmake .. -DPERPLEX_TEMPLATE=/path/to/template_file.c\n")
     endif(PERPLEX_TEMPLATE)
-  endif ("${${PVAR_PREFIX}_TEMPLATE}" STREQUAL "")
+  endif(${ARGC} GREATER 4)
 
-  get_filename_component(IN_FILE ${Input} NAME)
+  get_filename_component(OutputName ${OutputSrc} NAME)
+  set(re2c_src "${CMAKE_CURRENT_BINARY_DIR}/${OutputName}.re")
+
   add_custom_command(
-    OUTPUT ${re2c_src} ${${PVAR_PREFIX}_OUT_HDR_FILE} ${${PVAR_PREFIX}_WORKING_DIR}/${IN_FILE}
-    COMMAND ${CMAKE_COMMAND} -E copy ${perplex_in_file} ${${PVAR_PREFIX}_WORKING_DIR}/${IN_FILE}
-    COMMAND ${PERPLEX_EXECUTABLE} -c -o ${re2c_src} -i ${${PVAR_PREFIX}_OUT_HDR_FILE} -t ${${PVAR_PREFIX}_TEMPLATE} ${${PVAR_PREFIX}_WORKING_DIR}/${IN_FILE}
-    DEPENDS ${Input} ${${PVAR_PREFIX}_TEMPLATE} ${PERPLEX_EXECUTABLE_TARGET} ${RE2C_EXECUTABLE_TARGET}
-    WORKING_DIRECTORY ${${PVAR_PREFIX}_WORKING_DIR}
+    OUTPUT ${re2c_src} ${OutputHeader}
+    COMMAND ${PERPLEX_EXECUTABLE} -c -o ${re2c_src} -i ${OutputHeader} -t ${Template} ${Input}
+    DEPENDS ${Input} ${Template} ${PERPLEX_EXECUTABLE_TARGET} ${RE2C_EXECUTABLE_TARGET}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "[PERPLEX][${Name}] Generating re2c input with ${PERPLEX_EXECUTABLE}"
     )
-
   if(NOT DEBUGGING_GENERATED_SOURCES)
     add_custom_command(
-      OUTPUT ${${PVAR_PREFIX}_OUT_SRC_FILE}
-      COMMAND ${RE2C_EXECUTABLE} --no-debug-info --no-generation-date -c -o ${${PVAR_PREFIX}_OUT_SRC_FILE} ${re2c_src}
-      DEPENDS ${Input} ${re2c_src} ${${PVAR_PREFIX}_OUT_HDR_FILE} ${PERPLEX_EXECUTABLE_TARGET} ${RE2C_EXECUTABLE_TARGET}
-      WORKING_DIRECTORY ${${PVAR_PREFIX}_WORKING_DIR}
+      OUTPUT ${OutputSrc}
+      COMMAND ${RE2C_EXECUTABLE} --no-debug-info --no-generation-date -c -o ${OutputSrc} ${re2c_src}
+      DEPENDS ${Input} ${re2c_src} ${OutputHeader} ${PERPLEX_EXECUTABLE_TARGET} ${RE2C_EXECUTABLE_TARGET}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMENT "[RE2C][${Name}] Building scanner with ${RE2C_EXECUTABLE}"
       )
   else(NOT DEBUGGING_GENERATED_SOURCES)
     add_custom_command(
-      OUTPUT ${${PVAR_PREFIX}_OUT_SRC_FILE}
-      COMMAND ${RE2C_EXECUTABLE} --no-generation-date -c -o ${${PVAR_PREFIX}_OUT_SRC_FILE} ${re2c_src}
-      DEPENDS ${Input} ${re2c_src} ${${PVAR_PREFIX}_OUT_HDR_FILE} ${PERPLEX_EXECUTABLE_TARGET} ${RE2C_EXECUTABLE_TARGET}
-      WORKING_DIRECTORY ${${PVAR_PREFIX}_WORKING_DIR}
+      OUTPUT ${OutputSrc}
+      COMMAND ${RE2C_EXECUTABLE} --no-generation-date -c -o ${OutputSrc} ${re2c_src}
+      DEPENDS ${Input} ${re2c_src} ${OutputHeader} ${PERPLEX_EXECUTABLE_TARGET} ${RE2C_EXECUTABLE_TARGET}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMENT "[RE2C][${Name}] Building scanner with ${RE2C_EXECUTABLE}"
       )
   endif(NOT DEBUGGING_GENERATED_SOURCES)
-
   set(PERPLEX_${Name}_DEFINED TRUE)
-  set(PERPLEX_${Name}_SRC ${${PVAR_PREFIX}_OUT_SRC_FILE})
-  set(PERPLEX_${Name}_HDR ${${PVAR_PREFIX}_OUT_HDR_FILE})
-  set(PERPLEX_${Name}_INCLUDE_DIR ${${PVAR_PREFIX}_WORKING_DIR})
+  set(PERPLEX_${Name}_OUTPUTS ${OutputSrc})
+  set(PERPLEX_${Name}_INPUT ${Input})
 endmacro(PERPLEX_TARGET)
 
 #============================================================
@@ -163,17 +115,20 @@ endmacro(PERPLEX_TARGET)
 #============================================================
 macro(ADD_PERPLEX_LEMON_DEPENDENCY PERPLEXTarget LemonTarget)
 
-  if(NOT PERPLEX_${PERPLEXTarget}_SRC)
+  if(NOT PERPLEX_${PERPLEXTarget}_OUTPUTS)
     message(SEND_ERROR "PERPLEX target `${PERPLEXTarget}' does not exists.")
   endif()
 
-  if(NOT LEMON_${LemonTarget}_HDR)
+  if(NOT LEMON_${LemonTarget}_OUTPUT_HEADER)
     message(SEND_ERROR "Lemon target `${LemonTarget}' does not exists.")
   endif()
 
-  set_source_files_properties(${PERPLEX_${PERPLEXTarget}_SRC}
-    PROPERTIES OBJECT_DEPENDS ${LEMON_${LemonTarget}_HDR})
+  set_source_files_properties(${PERPLEX_${PERPLEXTarget}_OUTPUTS}
+    PROPERTIES OBJECT_DEPENDS ${LEMON_${LemonTarget}_OUTPUT_HEADER})
 endmacro(ADD_PERPLEX_LEMON_DEPENDENCY)
+
+#============================================================
+# PERPLEX_Utils.cmake ends here
 
 # Local Variables:
 # tab-width: 8
@@ -181,4 +136,3 @@ endmacro(ADD_PERPLEX_LEMON_DEPENDENCY)
 # indent-tabs-mode: t
 # End:
 # ex: shiftwidth=2 tabstop=8
-

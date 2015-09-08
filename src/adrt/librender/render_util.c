@@ -1,7 +1,7 @@
 /*                   R E N D E R _ U T I L . C
  * BRL-CAD / ADRT
  *
- * Copyright (c) 2007-2014 United States Government as represented by
+ * Copyright (c) 2007-2013 United States Government as represented by
  * the U.S. Army Research Laboratory.
  *
  * This library is free software; you can redistribute it and/or
@@ -28,8 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "bu/malloc.h"
-
+#include "bu.h"
 
 struct render_segment_s {
     adrt_mesh_t *mesh;
@@ -131,7 +130,7 @@ render_util_shotline_list(struct tie_s *tie, struct tie_ray_s *ray, void **data,
     struct tie_id_s id;
     struct render_shotline_s shotline;
     uint32_t i;
-    size_t c;
+    uint8_t c;
 
     shotline.seglist = NULL;
     shotline.segnum = 0;

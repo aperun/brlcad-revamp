@@ -35,4 +35,3 @@ class SC_LAZYFILE_EXPORT headerSectionReader: public sectionReader {
 };
 
 #endif  //HEADERSECTIONREADER_H
-

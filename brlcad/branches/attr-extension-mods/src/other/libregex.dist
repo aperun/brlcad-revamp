@@ -1,9 +1,0 @@
-SET(libregex_ignore_files
-Makefile.am
-cclass.h
-cname.h
-engine.c
-regex.h
-regex2.h
-utils.h
-)

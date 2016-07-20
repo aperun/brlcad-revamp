@@ -1,4 +1,0 @@
-SET(libutahrle_ignore_files
-getopt.c
-include
-)

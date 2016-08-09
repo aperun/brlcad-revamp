@@ -54,9 +54,15 @@ extern "C++" {
 	 * SurfaceTree declaration
 	 */
 	class BREP_EXPORT SurfaceTree {
+	    private:
+		bool m_removeTrimmed;
+
 	    public:
-		explicit SurfaceTree(const ON_BrepFace *face, bool removeTrimmed = true, int depthLimit = BREP_MAX_FT_DEPTH, double within_distance_tol = BREP_EDGE_MISS_TOLERANCE);
+		SurfaceTree();
+		SurfaceTree(const ON_BrepFace *face, bool removeTrimmed = true, int depthLimit = BREP_MAX_FT_DEPTH, double within_distance_tol = BREP_EDGE_MISS_TOLERANCE);
 		~SurfaceTree();
+
+		CurveTree *ctree;
 
 		BBNode *getRootNode() const;
 
@@ -65,38 +71,32 @@ extern "C++" {
 		 * estimate for the closest point on the surface to the point in
 		 * 3-space.
 		 */
-		ON_2dPoint getClosestPointEstimate(const ON_3dPoint &pt) const;
-		ON_2dPoint getClosestPointEstimate(const ON_3dPoint &pt, ON_Interval &u, ON_Interval &v) const;
+		ON_2dPoint getClosestPointEstimate(const ON_3dPoint &pt);
+		ON_2dPoint getClosestPointEstimate(const ON_3dPoint &pt, ON_Interval &u, ON_Interval &v);
 
 		/**
 		 * Return surface
 		 */
-		const ON_Surface *getSurface() const;
+		const ON_Surface *getSurface();
 		int getSurfacePoint(const ON_3dPoint &pt, ON_2dPoint &uv, const ON_3dPoint &from, double tolerance = BREP_SAME_POINT_TOLERANCE) const;
 
 		/**
 		 * Return just the leaves of the surface tree
 		 */
-		void getLeaves(std::list<const BBNode *> &out_leaves) const;
-
-		const CurveTree *m_ctree;
+		void getLeaves(std::list<BBNode *> &out_leaves);
+		int depth();
 
 	    private:
-		SurfaceTree(const SurfaceTree &source);
-		SurfaceTree &operator=(const SurfaceTree &source);
+		bool isFlat(ON_Plane frames[]);
+		bool isStraight(ON_Plane frames[]);
+		bool isFlatU(ON_Plane frames[]);
+		bool isFlatV(ON_Plane frames[]);
+		BBNode *subdivideSurface(const ON_Surface *localsurf, const ON_Interval &u, const ON_Interval &v, ON_Plane frames[], int depth, int depthLimit, int prev_knot, double within_distance_tol);
+		BBNode *surfaceBBox(const ON_Surface *localsurf, bool leaf, ON_Plane frames[], const ON_Interval &u, const ON_Interval &v, double within_distance_tol);
 
-		int depth() const;
-		bool isFlat(const ON_Plane frames[9]) const;
-		bool isStraight(const ON_Plane frames[9]) const;
-		bool isFlatU(const ON_Plane frames[9]) const;
-		bool isFlatV(const ON_Plane frames[9]) const;
-		BBNode *subdivideSurface(const ON_Surface *localsurf, const ON_Interval &u, const ON_Interval &v, ON_Plane frames[9], int depth, int depthLimit, int prev_knot, double within_distance_tol) const;
-		BBNode *surfaceBBox(const ON_Surface *localsurf, bool leaf, const ON_Plane frames[9], const ON_Interval &u, const ON_Interval &v, double within_distance_tol) const;
-
-		const bool m_removeTrimmed;
-		const ON_BrepFace * const m_face;
+		const ON_BrepFace *m_face;
 		BBNode *m_root;
-		std::queue<ON_Plane *> * const m_f_queue;
+		std::queue<ON_Plane *> *f_queue;
 	};
 
     } /* namespace brlcad */

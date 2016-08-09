@@ -1,6 +1,6 @@
 // astyle_main.h
 // Copyright (c) 2016 by Jim Pattee <jimp03@email.com>.
-// This code is licensed under the MIT License.
+// Licensed under the MIT license.
 // License.txt describes the conditions under which this software may be distributed.
 
 #ifndef ASTYLE_MAIN_H
@@ -52,25 +52,14 @@
 	#error - Use GNU C compiler release 3 or higher
 #endif
 
-// for getenv and localtime
-#if defined(_MSC_VER)
-	#pragma warning(disable: 4996)  // secure version deprecation warnings
-#endif
-
 // for namespace problem in version 5.0
 #if defined(_MSC_VER) && _MSC_VER < 1200        // check for V6.0
 	#error - Use Microsoft compiler version 6 or higher
 #endif
 
-#ifdef __clang__
-	#pragma clang diagnostic ignored "-Wdeprecated-declarations"  // getenv, localtime
-	#pragma clang diagnostic ignored "-Wmissing-braces"
-#endif
-
 // for mingw BOM, UTF-16, and Unicode functions
 #if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
-	#if (__MINGW32_MAJOR_VERSION > 3) ||
-		((__MINGW32_MAJOR_VERSION == 3)&& (__MINGW32_MINOR_VERSION < 16))
+	#if (__MINGW32_MAJOR_VERSION > 3) || ((__MINGW32_MAJOR_VERSION == 3) && (__MINGW32_MINOR_VERSION < 16))
 		#error - Use MinGW compiler version 4 or higher
 	#endif
 #endif
@@ -144,10 +133,10 @@ private:
 	T* inStream;            // pointer to the input stream
 	string buffer;          // current input line
 	string prevBuffer;      // previous input line
-	string outputEOL;       // next output end of line char
 	int eolWindows;         // number of Windows line endings, CRLF
 	int eolLinux;           // number of Linux line endings, LF
 	int eolMacOld;          // number of old Mac line endings. CR
+	char outputEOL[4];      // next output end of line char
 	streamoff streamLength; // length of the input file stream
 	streamoff peekStart;    // starting position for peekNextLine
 	bool prevLineDeleted;   // the previous input line was deleted
@@ -155,7 +144,7 @@ private:
 public:	// inline functions
 	bool compareToInputBuffer(const string& nextLine_) const
 	{ return (nextLine_ == prevBuffer); }
-	const string& getOutputEOL() const { return outputEOL; }
+	const char* getOutputEOL() const { return outputEOL; }
 	bool hasMoreLines() const { return !inStream->eof(); }
 };
 
@@ -250,11 +239,11 @@ private:    // variables
 	int  filesUnchanged;                // number of files unchanged
 	bool lineEndsMixed;                 // output has mixed line ends
 	int  linesOut;                      // number of output lines
+	char outputEOL[4];                  // current line end
+	char prevEOL[4];                    // previous line end
 
 	Utf8_16 utf8_16;                    // utf8/16 conversion methods
 
-	string outputEOL;                   // current line end
-	string prevEOL;                     // previous line end
 	string optionsFileName;             // file path and name of the options file to use
 	string origSuffix;                  // suffix= option
 	string targetDirectory;             // path to the directory being processed
@@ -287,6 +276,8 @@ public:     // variables
 		hasWildcard = false;
 		filesAreIdentical = true;
 		lineEndsMixed = false;
+		outputEOL[0] = '\0';
+		prevEOL[0] = '\0';
 		origSuffix = ".orig";
 		mainDirectoryLength = 0;
 		filesFormatted = 0;
@@ -365,7 +356,7 @@ private:	// functions
 	FileEncoding readFile(const string& fileName_, stringstream& in) const;
 	void removeFile(const char* fileName_, const char* errMsg) const;
 	void renameFile(const char* oldFileName, const char* newFileName, const char* errMsg) const;
-	void setOutputEOL(LineEndFormat lineEndFormat, const string& currentEOL);
+	void setOutputEOL(LineEndFormat lineEndFormat, const char* currentEOL);
 	void sleep(int seconds) const;
 	int  waitForRemove(const char* oldFileName) const;
 	int  wildcmp(const char* wild, const char* data) const;

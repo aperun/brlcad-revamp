@@ -127,12 +127,12 @@ find_next_point(const ON_Curve* crv, double startdomval, double increment, doubl
     ON_3dPoint prev_pt = crv->PointAt(dom.ParameterAt(startdomval));
     ON_3dPoint next_pt = crv->PointAt(dom.ParameterAt(startdomval + inc));
     if (prev_pt.DistanceTo(next_pt) > tolerance) {
-	stepcount++;
-	inc = inc / 2;
-	return find_next_point(crv, startdomval, inc, tolerance, stepcount);
+        stepcount++;
+        inc = inc / 2;
+        return find_next_point(crv, startdomval, inc, tolerance, stepcount);
     } else {
-	if (stepcount > 5) return 0.0;
-	return startdomval + inc;
+        if (stepcount > 5) return 0.0;
+        return startdomval + inc;
     }
 }
 
@@ -188,7 +188,10 @@ int ON_Curve_PolyLine_Approx(ON_Polyline *polyline, const ON_Curve *curve, doubl
 }
 
 
-bool ON_Surface_IsFlat(const ON_Plane frames[9], double f_tol)
+
+
+
+bool ON_Surface_IsFlat(ON_Plane *frames, double f_tol)
 {
     double Ndot=1.0;
 
@@ -203,7 +206,7 @@ bool ON_Surface_IsFlat(const ON_Plane frames[9], double f_tol)
     return true;
 }
 
-bool ON_Surface_IsFlat_U(const ON_Plane frames[9], double f_tol)
+bool ON_Surface_IsFlat_U(ON_Plane *frames, double f_tol)
 {
     // check surface normals in U direction
     double Ndot = 1.0;
@@ -232,7 +235,7 @@ bool ON_Surface_IsFlat_U(const ON_Plane frames[9], double f_tol)
     return true;
 }
 
-bool ON_Surface_IsFlat_V(const ON_Plane frames[9], double f_tol)
+bool ON_Surface_IsFlat_V(ON_Plane *frames, double f_tol)
 {
     // check surface normals in V direction
     double Ndot = 1.0;
@@ -261,7 +264,7 @@ bool ON_Surface_IsFlat_V(const ON_Plane frames[9], double f_tol)
     return true;
 }
 
-bool ON_Surface_IsStraight(const ON_Plane frames[9], double s_tol)
+bool ON_Surface_IsStraight(ON_Plane *frames, double s_tol)
 {
     double Xdot=1.0;
 
@@ -275,6 +278,7 @@ bool ON_Surface_IsStraight(const ON_Plane frames[9], double s_tol)
 
     return true;
 }
+
 
 
 // Local Variables:

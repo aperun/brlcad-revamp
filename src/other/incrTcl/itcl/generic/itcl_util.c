@@ -20,6 +20,8 @@
  *           Bell Labs Innovations for Lucent Technologies
  *           mmclennan@lucent.com
  *           http://www.tcltk.com/itcl
+ *
+ *     RCS:  $Id$
  * ========================================================================
  *           Copyright (c) 1993-1998  Lucent Technologies, Inc.
  * ------------------------------------------------------------------------
@@ -499,9 +501,9 @@ Itcl_SetListValue(elemPtr,val)
     Itcl_ListElem *elemPtr; /* list element being modified */
     ClientData val;         /* new value associated with element */
 {
+    Itcl_List *listPtr = elemPtr->owner;
+    assert(listPtr->validate == ITCL_VALID_LIST);
     assert(elemPtr != NULL);
-    assert(elemPtr->owner != NULL);
-    assert(elemPtr->owner->validate == ITCL_VALID_LIST);
 
     elemPtr->value = val;
 }
@@ -693,7 +695,7 @@ Itcl_ReleaseData(cdata)
     }
     if (!entry) {
 	Tcl_MutexUnlock(&ItclPreservedListLock);
-        Tcl_Panic("Itcl_ReleaseData can't find reference for 0x%p", cdata);
+        Tcl_Panic("Itcl_ReleaseData can't find reference for 0x%x", cdata);
     }
 
     /*
@@ -1267,11 +1269,11 @@ Itcl_DecodeScopedCommand(interp, name, rNsPtr, rCmdPtr)
     char **rCmdPtr;		/* returns: simple command word */
 {
     Tcl_Namespace *nsPtr = NULL;
-    char *cmdName = NULL;
+    char *cmdName;
     int len = strlen(name);
     CONST char *pos;
     int listc, result;
-    CONST char **listv;
+    char **listv;
 
     cmdName = ckalloc((unsigned)strlen(name)+1);
     strcpy(cmdName, name);
@@ -1283,7 +1285,7 @@ Itcl_DecodeScopedCommand(interp, name, rNsPtr, rCmdPtr)
 	if ((*pos == 'i') && ((pos + 7) <= (name + len))
 	        && (strncmp(pos, "inscope", 7) == 0)) {
 
-            result = Tcl_SplitList(interp, name, &listc,
+            result = Tcl_SplitList(interp, (CONST84 char *)name, &listc,
 		    &listv);
             if (result == TCL_OK) {
                 if (listc != 4) {
@@ -1309,10 +1311,6 @@ Itcl_DecodeScopedCommand(interp, name, rNsPtr, rCmdPtr)
 
             if (result != TCL_OK) {
                 char msg[512];
-
-		if (cmdName) {
-		    ckfree(cmdName);
-		}
                 sprintf(msg, "\n    (while decoding scoped command \"%.400s\")", name);
                 Tcl_AddObjErrorInfo(interp, msg, -1);
                 return TCL_ERROR;
@@ -1428,7 +1426,7 @@ Itcl_CreateArgs(interp, string, objc, objv)
 
     listPtr = Tcl_NewListObj(0, (Tcl_Obj**)NULL);
     Tcl_ListObjAppendElement((Tcl_Interp*)NULL, listPtr,
-        Tcl_NewStringObj(string, -1));
+        Tcl_NewStringObj((CONST84 char *)string, -1));
 
     for (i=0; i < objc; i++) {
         Tcl_ListObjAppendElement((Tcl_Interp*)NULL, listPtr, objv[i]);

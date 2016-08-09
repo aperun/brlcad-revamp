@@ -213,7 +213,7 @@ set_layout(_ged_dag_data *dag, bool has_parent, unsigned long int parent_id, uns
     position_node(dag, has_parent, parent, child, level, maxX_level);
     dag->router->processTransaction();
 
-    if (children.empty()) {
+    if (children.size() == 0) {
 	return;
     } else {
 	has_parent = true;

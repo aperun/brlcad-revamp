@@ -38,7 +38,13 @@
  *  THE SOFTWARE.
  */
 
+extern "C" {
 #include "common.h"
+#include "bu/log.h"
+#include "bu/list.h"
+#include "raytrace.h"
+#include "rt/func.h"
+}
 
 #include <map>
 
@@ -66,12 +72,6 @@
 #include <osgDB/WriteFile>
 
 #include <osgText/Text>
-
-#include "bu/log.h"
-#include "bu/list.h"
-#include "raytrace.h"
-#include "rt/func.h"
-
 
 struct bu_list *
 obj_vlist(const struct directory *dp, const struct db_i *dbip, mat_t mat)

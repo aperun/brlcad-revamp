@@ -1,6 +1,6 @@
 // ASEnhancer.cpp
 // Copyright (c) 2016 by Jim Pattee <jimp03@email.com>.
-// This code is licensed under the MIT License.
+// Licensed under the MIT license.
 // License.txt describes the conditions under which this software may be distributed.
 
 //-----------------------------------------------------------------------------

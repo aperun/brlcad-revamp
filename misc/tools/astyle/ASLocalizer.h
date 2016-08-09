@@ -1,6 +1,6 @@
 // ASLocalizer.h
 // Copyright (c) 2016 by Jim Pattee <jimp03@email.com>.
-// This code is licensed under the MIT License.
+// Licensed under the MIT license.
 // License.txt describes the conditions under which this software may be distributed.
 
 
@@ -71,9 +71,6 @@ protected:
 	void addPair(const string& english, const wstring& translated);
 	// variables
 	vector<pair<string, wstring> > m_translation;		// translation vector
-
-private:
-	mutable string m_mbTranslation;
 };
 
 //----------------------------------------------------------------------------
@@ -82,74 +79,107 @@ private:
 // These classes have only a constructor which builds the language vector.
 //----------------------------------------------------------------------------
 
-class Bulgarian : public Translation
-{ public: Bulgarian(); };
-
 class ChineseSimplified : public Translation
-{ public: ChineseSimplified(); };
+{
+public:
+	ChineseSimplified();
+};
 
 class ChineseTraditional : public Translation
-{ public: ChineseTraditional(); };
+{
+public:
+	ChineseTraditional();
+};
 
 class Dutch : public Translation
-{ public: Dutch(); };
+{
+public:
+	Dutch();
+};
 
 class English : public Translation
-{ public: English(); };
-
-class Estonian : public Translation
-{ public: Estonian(); };
+{
+public:
+	English();
+};
 
 class Finnish : public Translation
-{ public: Finnish(); };
+{
+public:
+	Finnish();
+};
 
 class French : public Translation
-{ public: French(); };
+{
+public:
+	French();
+};
 
 class German : public Translation
-{ public: German(); };
-
-class Greek : public Translation
-{ public: Greek(); };
+{
+public:
+	German();
+};
 
 class Hindi : public Translation
-{ public: Hindi(); };
-
-class Hungarian : public Translation
-{ public: Hungarian(); };
+{
+public:
+	Hindi();
+};
 
 class Italian : public Translation
-{ public: Italian(); };
+{
+public:
+	Italian();
+};
 
 class Japanese : public Translation
-{ public: Japanese(); };
+{
+public:
+	Japanese();
+};
 
 class Korean : public Translation
-{ public: Korean(); };
-
-class Norwegian : public Translation
-{ public: Norwegian(); };
+{
+public:
+	Korean();
+};
 
 class Polish : public Translation
-{ public: Polish(); };
+{
+public:
+	Polish();
+};
 
 class Portuguese : public Translation
-{ public: Portuguese(); };
-
-class Romanian : public Translation
-{ public: Romanian(); };
+{
+public:
+	Portuguese();
+};
 
 class Russian : public Translation
-{ public: Russian(); };
+{
+public:
+	Russian();
+};
 
 class Spanish : public Translation
-{ public: Spanish(); };
+{
+public:
+	Spanish();
+};
 
 class Swedish : public Translation
-{ public: Swedish(); };
+{
+public:
+	Swedish();
+};
 
 class Ukrainian : public Translation
-{ public: Ukrainian(); };
+{
+public:
+	Ukrainian();
+};
 
 
 #endif	//  ASTYLE_LIB

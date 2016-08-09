@@ -31,6 +31,7 @@
 #include <string.h> /* for memset */
 #include <vector>
 
+extern "C" {
 #include "vmath.h"
 #include "bu/log.h"
 #include "bu/ptbl.h"
@@ -38,7 +39,7 @@
 #include "raytrace.h"
 #include "analyze.h"
 #include "./analyze_private.h"
-
+}
 
 #define MINIMUM_RAYS_FOR_DECISION 100
 

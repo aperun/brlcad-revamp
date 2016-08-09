@@ -134,6 +134,7 @@ if(NOT RE2C_SKIP_INSTALL)
 endif(NOT RE2C_SKIP_INSTALL)
 
 configure_file(README.in ${CMAKE_CURRENT_BINARY_DIR}/README)
+configure_file(run_tests.sh.in ${CMAKE_CURRENT_BINARY_DIR}/run_tests.sh @ONLY)
 
 # Local Variables:
 # tab-width: 8

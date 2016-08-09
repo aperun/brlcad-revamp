@@ -584,44 +584,29 @@ endif(_orig_lang)
 # generated packages, the resulting packages may behave badly when installed.
 # In particular, RPM packages may improperly reset permissions on core
 # directories such as /usr.
-function(check_umask umask_val status_var)
+macro(CHECK_UMASK umask_val status_var)
   string(REGEX REPLACE "[^x]" "" umask_x "${umask_val}")
   string(REGEX REPLACE "[^r]" "" umask_r "${umask_val}")
   string(LENGTH "${umask_r}" UMASK_HAVE_R)
-  set(${status_var} 0 PARENT_SCOPE)
+  set(${status_var} 0)
   if(UMASK_HAVE_R AND "${umask_x}" STREQUAL "xxx")
-    set(${status_var} 1 PARENT_SCOPE)
+    set(${status_var} 1)
   endif(UMASK_HAVE_R AND "${umask_x}" STREQUAL "xxx")
-endfunction(check_umask)
-
-# Note - umask is not always an executable, so find_program wont' necessarily
-# determine whether the umask check is appropriate.  If we don't find an
-# executable, follow up to see if we can use sh to get the info.
-find_program(UMASK_EXEC umask)
-if(NOT UMASK_EXEC)
-  # If we don't have a umask cmd, see if sh -c "umask -S" works
-  execute_process(COMMAND sh -c "umask -S" OUTPUT_VARIABLE umask_out)
-  # Check if we've got something that looks like a umask output
-  if("${umask_out}" MATCHES "^u=.*g=.*o=.*")
-    set(UMASK_EXEC sh)
-    set(UMASK_EXEC_ARGS -c "umask -S")
-  endif("${umask_out}" MATCHES "^u=.*g=.*o=.*")
-else(NOT UMASK_EXEC)
-  set(UMASK_EXEC_ARGS -S)
-endif(NOT UMASK_EXEC)
-
-if(UMASK_EXEC)
-  execute_process(COMMAND ${UMASK_EXEC} ${UMASK_EXEC_ARGS} OUTPUT_VARIABLE umask_curr)
+endmacro(CHECK_UMASK)
+# Note - umask is not always an executable, so we can't use find_program
+# to determine whether the umask check is appropriate.
+IF(NOT WIN32)
+  exec_program(umask ARGS -S OUTPUT_VARIABLE umask_curr)
   string(STRIP "${umask_curr}" umask_curr)
-  check_umask("${umask_curr}" UMASK_OK)
-  if(NOT UMASK_OK)
+  CHECK_UMASK("${umask_curr}" UMASK_OK)
+  if (NOT UMASK_OK)
     message(" ")
     message(WARNING "umask is set to ${umask_curr} - this setting is not recommended if one of the goals of this build is to generate packages. Use 'umask 022' for improved package behavior.")
     if(SLEEP_EXEC)
       execute_process(COMMAND ${SLEEP_EXEC} 1)
     endif(SLEEP_EXEC)
-  endif(NOT UMASK_OK)
-endif(UMASK_EXEC)
+  endif (NOT UMASK_OK)
+ENDIF(NOT WIN32)
 
 #---------------------------------------------------------------------
 # Unfortunately, CMake doesn't give you variables with current day,
@@ -1149,13 +1134,6 @@ endif(BRLCAD_ENABLE_OPENCL)
 option(BRLCAD_ENABLE_SPR "Enable features requiring Screened Poisson Surface Reconstruction" OFF)
 mark_as_advanced(BRLCAD_ENABLE_SPR)
 
-# Enable experimental support for binary attributes
-option(BRLCAD_ENABLE_BINARY_ATTRIBUTES "Enable support for binary attributes" OFF)
-mark_as_advanced(BRLCAD_ENABLE_BINARY_ATTRIBUTES)
-if(BRLCAD_ENABLE_BINARY_ATTRIBUTES)
-  CONFIG_H_APPEND(BRLCAD "#define USE_BINARY_ATTRIBUTES 1\n")
-endif(BRLCAD_ENABLE_BINARY_ATTRIBUTES)
-
 #----------------------------------------------------------------------
 # The following are fine-grained options for enabling/disabling compiler
 # and source code definition settings.  Typically these are set to
@@ -1575,21 +1553,8 @@ else()
   else("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
     CHECK_C_FLAG("std=gnu89")
   endif("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-  CHECK_CXX_FLAG("std=gnu++11" VARS CXX11_FLAG)
-  if(NOT CXX11_FLAG)
-    CHECK_CXX_FLAG("std=gnu++0x" VARS CXX11_FLAG)
-    if(NOT CXX11_FLAG)
-      CHECK_CXX_FLAG("std=c++11" VARS CXX11_FLAG)
-      if(NOT CXX11_FLAG)
-	CHECK_CXX_FLAG("std=c++0x" VARS CXX11_FLAG)
-	if(NOT MSVC AND NOT CXX11_FLAG)
-	  message(WARNING "No working C++11 flag found.")
-	endif(NOT MSVC AND NOT CXX11_FLAG)
-      endif(NOT CXX11_FLAG)
-    endif(NOT CXX11_FLAG)
-  endif(NOT CXX11_FLAG)
+  CHECK_CXX_FLAG("std=gnu++98")
 endif()
-
 # TODO - should be using this with MSVC, but it breaks the BUILD_SLEEP
 # try_compile below with errors that appear to be coming from Windows
 # headers??

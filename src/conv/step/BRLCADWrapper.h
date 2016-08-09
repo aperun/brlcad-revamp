@@ -31,10 +31,12 @@
 #include <string>
 #include <map>
 
-/* brlcad headers */
+extern "C" {
+    /* brlcad headers */
 #include <bu/list.h>
 #include <wdb.h>
 #include <raytrace.h>
+}
 
 
 class ON_Brep;

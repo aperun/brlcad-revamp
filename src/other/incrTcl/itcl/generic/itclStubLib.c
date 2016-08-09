@@ -8,6 +8,8 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ *
+ * RCS: $Id$
  */
 
 /*
@@ -66,7 +68,7 @@ Itcl_InitStubs (interp, version, exact)
 {
     CONST char *actualVersion;
     
-    actualVersion = Tcl_PkgRequireEx(interp, "Itcl", version, exact,
+    actualVersion = Tcl_PkgRequireEx(interp, "Itcl", (CONST84 char *)version, exact,
         (ClientData *) &itclStubsPtr);
 
     if (actualVersion == NULL) {

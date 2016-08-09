@@ -21,6 +21,8 @@
  *           Bell Labs Innovations for Lucent Technologies
  *           mmclennan@lucent.com
  *           http://www.tcltk.com/itcl
+ *
+ *     RCS:  $Id$
  * ========================================================================
  *           Copyright (c) 1993-1998  Lucent Technologies, Inc.
  * ------------------------------------------------------------------------
@@ -654,7 +656,7 @@ ItclReportPublicOpt(interp, vdefn, contextObj)
         contextObj->classDefn);
 
     if (val) {
-        objPtr = Tcl_NewStringObj(val, -1);
+        objPtr = Tcl_NewStringObj((CONST84 char *)val, -1);
     } else {
         objPtr = Tcl_NewStringObj("<undefined>", -1);
     }
@@ -1019,7 +1021,7 @@ Itcl_BiInfoFunctionCmd(dummy, interp, objc, objv)
     Tcl_Obj *resultPtr = NULL;
     Tcl_Obj *objPtr = NULL;
 
-    static CONST char *options[] = {
+    static char *options[] = {
         "-args", "-body", "-name", "-protection", "-type",
         (char*)NULL
     };
@@ -1214,7 +1216,7 @@ Itcl_BiInfoVariableCmd(dummy, interp, objc, objv)
     Tcl_Obj *resultPtr = NULL;
     Tcl_Obj *objPtr = NULL;
 
-    static CONST char *options[] = {
+    static char *options[] = {
         "-config", "-init", "-name", "-protection", "-type",
         "-value", (char*)NULL
     };
@@ -1367,13 +1369,13 @@ Itcl_BiInfoVariableCmd(dummy, interp, objc, objv)
 
                 case BIvProtectIdx:
                     val = Itcl_ProtectionStr(member->protection);
-                    objPtr = Tcl_NewStringObj(val, -1);
+                    objPtr = Tcl_NewStringObj((CONST84 char *)val, -1);
                     break;
 
                 case BIvTypeIdx:
                     val = ((member->flags & ITCL_COMMON) != 0)
                         ? "common" : "variable";
-                    objPtr = Tcl_NewStringObj(val, -1);
+                    objPtr = Tcl_NewStringObj((CONST84 char *)val, -1);
                     break;
 
                 case BIvValueIdx:
@@ -1397,7 +1399,7 @@ Itcl_BiInfoVariableCmd(dummy, interp, objc, objv)
                     if (val == NULL) {
                         val = "<undefined>";
                     }
-                    objPtr = Tcl_NewStringObj(val, -1);
+                    objPtr = Tcl_NewStringObj((CONST84 char *)val, -1);
                     break;
             }
 
@@ -1574,7 +1576,6 @@ Itcl_BiInfoArgsCmd(dummy, interp, objc, objv)
         Proc *procPtr;
         CompiledLocal *localPtr;
 
-    regular:
         procPtr = TclFindProc((Interp*)interp, name);
         if (procPtr == NULL) {
             Tcl_AppendResult(interp,
@@ -1594,15 +1595,14 @@ Itcl_BiInfoArgsCmd(dummy, interp, objc, objv)
         }
 
         Tcl_SetObjResult(interp, objPtr);
-	return TCL_OK;
     }
 
     /*
      *  Otherwise, treat the name as a class method/proc.
      */
     if (Itcl_GetContext(interp, &contextClass, &contextObj) != TCL_OK) {
-	/* This might be a "can't happen" situation now. */
         name = Tcl_GetStringFromObj(objv[0], (int*)NULL);
+        Tcl_ResetResult(interp);
         Tcl_AppendResult(interp,
             "\nget info like this instead: ",
             "\n  namespace eval className { info ", name, "... }",
@@ -1612,7 +1612,10 @@ Itcl_BiInfoArgsCmd(dummy, interp, objc, objv)
 
     entry = Tcl_FindHashEntry(&contextClass->resolveCmds, name);
     if (entry == NULL) {
-	goto regular;
+        Tcl_AppendResult(interp,
+            "\"", name, "\" isn't a procedure",
+            (char*)NULL);
+        return TCL_ERROR;
     }
 
     mfunc = (ItclMemberFunc*)Tcl_GetHashValue(entry);

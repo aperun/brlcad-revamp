@@ -1,4 +1,5 @@
 SET(libregex_ignore_files
+Makefile.am
 cclass.h
 cname.h
 engine.c

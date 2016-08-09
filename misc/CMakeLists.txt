@@ -73,7 +73,6 @@ set(misc_ignore_files
   batch-indent-region.el
   brlcad-config.in
   brlcad.spec.in
-  d-bindings
   debian
   flawfinder
   jove.emacs
@@ -81,7 +80,6 @@ set(misc_ignore_files
   mime.types
   mime_cad.types
   nsis
-  osl_shaders
   wix
   svn2git
   uncpowerplant2g.sh

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType convenience functions to handle glyphs (body).              */
 /*                                                                         */
-/*  Copyright 1996-2016 by                                                 */
+/*  Copyright 1996-2005, 2007, 2008, 2010, 2012-2014 by                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -82,7 +82,7 @@
     }
     else
     {
-      FT_Bitmap_Init( &glyph->bitmap );
+      FT_Bitmap_New( &glyph->bitmap );
       error = FT_Bitmap_Copy( library, &slot->bitmap, &glyph->bitmap );
     }
 
@@ -125,10 +125,10 @@
     FT_BitmapGlyph  glyph = (FT_BitmapGlyph)bitmap_glyph;
 
 
-    cbox->xMin = glyph->left * 64;
-    cbox->xMax = cbox->xMin + (FT_Pos)( glyph->bitmap.width * 64 );
-    cbox->yMax = glyph->top * 64;
-    cbox->yMin = cbox->yMax - (FT_Pos)( glyph->bitmap.rows * 64 );
+    cbox->xMin = glyph->left << 6;
+    cbox->xMax = cbox->xMin + ( glyph->bitmap.width << 6 );
+    cbox->yMax = glyph->top << 6;
+    cbox->yMin = cbox->yMax - ( glyph->bitmap.rows << 6 );
   }
 
 
@@ -173,9 +173,7 @@
     }
 
     /* allocate new outline */
-    error = FT_Outline_New( library,
-                            (FT_UInt)source->n_points,
-                            source->n_contours,
+    error = FT_Outline_New( library, source->n_points, source->n_contours,
                             &glyph->outline );
     if ( error )
       goto Exit;
@@ -207,10 +205,8 @@
     FT_Library       library = FT_GLYPH( source )->library;
 
 
-    error = FT_Outline_New( library,
-                            (FT_UInt)source->outline.n_points,
-                            source->outline.n_contours,
-                            &target->outline );
+    error = FT_Outline_New( library, source->outline.n_points,
+                            source->outline.n_contours, &target->outline );
     if ( !error )
       FT_Outline_Copy( &source->outline, &target->outline );
 
@@ -291,7 +287,7 @@
      FT_Glyph   glyph  = NULL;
 
 
-     *aglyph = NULL;
+     *aglyph = 0;
 
      if ( !FT_ALLOC( glyph, clazz->glyph_size ) )
      {
@@ -403,9 +399,9 @@
     if ( error )
       goto Exit;
 
-    /* copy advance while converting 26.6 to 16.16 format */
-    glyph->advance.x = slot->advance.x * 1024;
-    glyph->advance.y = slot->advance.y * 1024;
+    /* copy advance while converting it to 16.16 format */
+    glyph->advance.x = slot->advance.x << 10;
+    glyph->advance.y = slot->advance.y << 10;
 
     /* now import the image from the glyph slot */
     error = clazz->glyph_init( glyph, slot );

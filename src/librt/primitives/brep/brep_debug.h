@@ -47,6 +47,14 @@
 
 #define fastf_t double
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
 using namespace brlcad;
 
 #include "bn/plot3.h"

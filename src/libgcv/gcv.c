@@ -264,7 +264,6 @@ _gcv_plugins_load(struct bu_ptbl *filter_table, const char *path)
 {
     void *info_val;
     const struct gcv_plugin *(*plugin_info)();
-    const struct gcv_plugin *plugin;
     const struct gcv_filter * const *current;
     void *dl_handle;
 
@@ -291,14 +290,12 @@ _gcv_plugins_load(struct bu_ptbl *filter_table, const char *path)
 	bu_bomb("could not find 'gcv_plugin_info' symbol in plugin");
     }
 
-    plugin = plugin_info();
-
-    if (!plugin || !plugin->filters) {
+    if (!plugin_info()->filters) {
 	bu_log("invalid gcv_plugin in '%s'\n", path);
 	bu_bomb("invalid gcv_plugin");
     }
 
-    for (current = plugin->filters; *current; ++current)
+    for (current = plugin_info()->filters; *current; ++current)
 	_gcv_filter_register(filter_table, *current);
 }
 

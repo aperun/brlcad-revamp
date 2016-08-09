@@ -53,25 +53,37 @@ extern "C++" {
 	 */
 	class BREP_EXPORT BRNode {
 	    public:
-		explicit BRNode(const ON_BoundingBox &node);
+		BRNode();
+		BRNode(const ON_BoundingBox &node);
 		BRNode(const ON_Curve *curve,
-			int adj_face_index,
+			int m_adj_face_index,
 			const ON_BoundingBox &node,
 			const ON_BrepFace *face,
 			const ON_Interval &t,
-			bool innerTrim,
-			bool checkTrim,
-			bool trimmed);
+			bool innerTrim = false,
+			bool checkTrim = true,
+			bool trimmed = false);
 		~BRNode();
 
+		/** List of all children of a given node */
+		std::vector<BRNode *> *m_children;
+
+		/** Bounding Box */
+		ON_BoundingBox m_node;
+
 		/** Node management functions */
+		void addChild(const ON_BoundingBox &child);
 		void addChild(BRNode *child);
+		void removeChild(BRNode *child);
+
+		/** Test if this node is a leaf node (i.e. m_children is empty) */
+		bool isLeaf();
 
 		/** Return a list of all nodes below this node that are leaf nodes */
-		void getLeaves(std::list<const BRNode *> &out_leaves) const;
+		void getLeaves(std::list<BRNode *> &out_leaves);
 
 		/** Report the depth of this node in the hierarchy */
-		int depth() const;
+		int depth();
 
 		/**
 		 * Get 2 points defining bounding box:
@@ -87,62 +99,50 @@ extern "C++" {
 		 */
 		void GetBBox(fastf_t *min, fastf_t *max) const;
 
-		bool isTrimmed(const ON_2dPoint &uv, double &trimdist) const;
-
-		ON_2dPoint getClosestPointEstimate(const ON_3dPoint &pt) const;
-		ON_2dPoint getClosestPointEstimate(const ON_3dPoint &pt, ON_Interval &u, ON_Interval &v) const;
-		fastf_t getCurveEstimateOfV(fastf_t u, fastf_t tol) const;
-		fastf_t getCurveEstimateOfU(fastf_t v, fastf_t tol) const;
-
-		/** Bounding Box */
-		ON_BoundingBox m_node;
-
 		/** Surface Information */
+		const ON_BrepFace *m_face;
+		ON_Interval m_u;
 		ON_Interval m_v;
 
 		/** Trim Curve Information */
+		const ON_Curve *m_trim;
+		ON_Interval m_t;
 		int m_adj_face_index;
 
 		/** Trimming Flags */
+		bool m_checkTrim;
+		bool m_trimmed;
 		bool m_XIncreasing;
 		bool m_Horizontal;
 		bool m_Vertical;
-		const bool m_innerTrim;
+		bool m_innerTrim;
 
-	    private:
-		BRNode(const BRNode &source);
-		BRNode &operator=(const BRNode &source);
+		ON_3dPoint m_estimate;
+		ON_2dPoint getClosestPointEstimate(const ON_3dPoint &pt);
+		ON_2dPoint getClosestPointEstimate(const ON_3dPoint &pt, ON_Interval &u, ON_Interval &v);
+		fastf_t getLinearEstimateOfV(fastf_t u);
+		fastf_t getCurveEstimateOfV(fastf_t u, fastf_t tol) const;
+		fastf_t getCurveEstimateOfU(fastf_t v, fastf_t tol) const;
 
-		void removeChild(BRNode *child);
-
-		/** Test if this node is a leaf node (i.e. m_children is empty) */
-		bool isLeaf() const;
-
+		bool isTrimmed(const ON_2dPoint &uv, double &trimdist) const;
 		bool doTrimming() const;
 
-		fastf_t getLinearEstimateOfV(fastf_t u) const;
-
-		const BRNode *closer(const ON_3dPoint &pt, const BRNode *left, const BRNode *right) const;
-
-		/** List of all children of a given node */
-		std::vector<const BRNode *> * const m_children;
-
-		const ON_BrepFace * const m_face;
-		ON_Interval m_u;
-
-		const ON_Curve * const m_trim;
-		ON_Interval m_t;
-
-		const bool m_checkTrim;
-		const bool m_trimmed;
-
-		const ON_3dPoint m_estimate;
-
+	    private:
+		BRNode *closer(const ON_3dPoint &pt, BRNode *left, BRNode *right);
 		fastf_t m_slope;
+		fastf_t m_vdot;
 		fastf_t m_bb_diag;
 		ON_3dPoint m_start;
 		ON_3dPoint m_end;
 	};
+
+	inline
+	    BRNode::BRNode()
+	    {
+		m_start = ON_3dPoint::UnsetPoint;
+		m_end = ON_3dPoint::UnsetPoint;
+		m_children = new std::vector<BRNode *>();
+	    }
 
 	inline
 	    _BU_ATTR_ALWAYS_INLINE
@@ -152,29 +152,15 @@ extern "C++" {
 		    const ON_BoundingBox &node,
 		    const ON_BrepFace *face,
 		    const ON_Interval &t,
-		    bool innerTrim,
-		    bool checkTrim,
-		    bool trimmed) :
-		m_node(node),
-		m_v(),
-		m_adj_face_index(adj_face_index),
-		m_XIncreasing(false),
-		m_Horizontal(false),
-		m_Vertical(false),
-		m_innerTrim(innerTrim),
-		m_children(new std::vector<const BRNode *>),
-		m_face(face),
-		m_u(),
-		m_trim(curve),
-		m_t(t),
-		m_checkTrim(checkTrim),
-		m_trimmed(trimmed),
-		m_estimate(),
-		m_slope(0.0),
-		m_bb_diag(0.0),
-		m_start(curve->PointAt(m_t[0])),
-		m_end(curve->PointAt(m_t[1]))
+		    bool innerTrim /* = false */,
+		    bool checkTrim /* = true */,
+		    bool trimmed /* = false */)
+	    : m_node(node), m_face(face), m_trim(curve), m_t(t),
+	    m_adj_face_index(adj_face_index), m_checkTrim(checkTrim),
+	    m_trimmed(trimmed), m_innerTrim(innerTrim), m_slope(0.0), m_vdot(0.0)
 	{
+	    m_start = curve->PointAt(m_t[0]);
+	    m_end = curve->PointAt(m_t[1]);
 	    /* check for vertical segments they can be removed from trims
 	     * above (can't tell direction and don't need
 	     */
@@ -223,31 +209,28 @@ extern "C++" {
 		m_slope = (m_end[Y] - m_start[Y]) / (m_end[X] - m_start[X]);
 	    }
 	    m_bb_diag = DIST_PT_PT(m_start, m_end);
+	    m_children = new std::vector<BRNode *>();
 	}
 
 	inline
 	    _BU_ATTR_ALWAYS_INLINE
-	    BRNode::BRNode(const ON_BoundingBox &node) :
-		m_node(node),
-		m_v(),
-		m_adj_face_index(-99),
-		m_XIncreasing(false),
-		m_Horizontal(false),
-		m_Vertical(false),
-		m_innerTrim(false),
-		m_children(new std::vector<const BRNode *>),
-		m_face(NULL),
-		m_u(),
-		m_trim(NULL),
-		m_t(),
-		m_checkTrim(true),
-		m_trimmed(false),
-		m_estimate(),
-		m_slope(0.0),
-		m_bb_diag(0.0),
-		m_start(ON_3dPoint::UnsetPoint),
-		m_end(ON_3dPoint::UnsetPoint)
-	{
+	    BRNode::BRNode(const ON_BoundingBox &node)
+	    : m_node(node)
+	    {
+		m_adj_face_index = -99;
+		m_checkTrim = true;
+		m_trimmed = false;
+		m_Horizontal = false;
+		m_Vertical = false;
+		m_XIncreasing = false;
+		m_innerTrim = false;
+		m_bb_diag = 0.0;
+		m_slope = 0.0;
+		m_vdot = 0.0;
+		m_face = NULL;
+		m_trim = NULL;
+		m_start = ON_3dPoint::UnsetPoint;
+		m_end = ON_3dPoint::UnsetPoint;
 		for (int i = 0; i < 3; i++) {
 		    double d = m_node.m_max[i] - m_node.m_min[i];
 		    if (NEAR_ZERO(d, ON_ZERO_TOLERANCE)) {
@@ -257,6 +240,13 @@ extern "C++" {
 		}
 		m_start = m_node.m_min;
 		m_end = m_node.m_max;
+		m_children = new std::vector<BRNode *>();
+	    }
+
+	inline void
+	    BRNode::addChild(const ON_BoundingBox &child)
+	    {
+		m_children->push_back(new BRNode(child));
 	    }
 
 	inline void
@@ -270,21 +260,19 @@ extern "C++" {
 	inline void
 	    BRNode::removeChild(BRNode *child)
 	    {
-		std::vector<const BRNode *>::iterator i;
-		for (i = m_children->begin(); i != m_children->end();) {
+		std::vector<BRNode *>::iterator i;
+		for (i = m_children->begin(); i < m_children->end(); ++i) {
 		    if (*i == child) {
 			delete *i;
-			i = m_children->erase(i);
-		    } else {
-			++i;
+			m_children->erase(i);
 		    }
 		}
 	    }
 
 	inline bool
-	    BRNode::isLeaf() const
+	    BRNode::isLeaf()
 	    {
-		if (m_children->empty()) {
+		if (m_children->size() == 0) {
 		    return true;
 		}
 		return false;
@@ -310,8 +298,8 @@ extern "C++" {
 		return m_checkTrim;
 	    }
 
-	extern bool sortX(const BRNode *first, const BRNode *second);
-	extern bool sortY(const BRNode *first, const BRNode *second);
+	extern bool sortX(BRNode *first, BRNode *second);
+	extern bool sortY(BRNode *first, BRNode *second);
 
 
     } /* namespace brlcad */

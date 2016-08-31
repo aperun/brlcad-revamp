@@ -1,7 +1,0 @@
-SET(freetype_ignore_files
-README
-builds
-devel/ft2build.h
-devel/ftoption.h
-include
-)

@@ -1,7 +1,0 @@
-SET(libpng_ignore_files
-libpng-config.in
-libpng.pc.in
-LICENSE
-pngusr.dfa
-scripts
-)

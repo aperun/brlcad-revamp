@@ -22,11 +22,8 @@
  * RCS: @(#) $Id: tkTable.c,v 1.37 2013/04/18 23:59:59 hobbs Exp $
  */
 
+#include "tktable_cfg.h"
 #include "tkTable.h"
-
-#ifdef CMAKE_HEADERS
-#  include "tktable_cfg.h"
-#endif
 
 #ifdef DEBUG
 #include "dprint.h"

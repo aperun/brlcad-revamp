@@ -1,0 +1,8 @@
+SET(libpng_ignore_files
+libpng-config.in
+libpng.pc.in
+README
+LICENSE
+pngusr.dfa
+scripts
+)

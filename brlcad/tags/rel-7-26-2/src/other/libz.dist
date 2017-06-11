@@ -1,0 +1,6 @@
+SET(libz_ignore_files
+README
+zconf.h
+zlib.map
+win32/zlib1.rc
+)

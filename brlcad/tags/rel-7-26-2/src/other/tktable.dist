@@ -1,0 +1,14 @@
+SET(tktable_ignore_files
+README.txt
+generic/tkAppInit.c
+generic/tkTable.h
+generic/tkTableInitScript.h
+generic/tkTablePs.c
+generic/version.h
+library
+license.txt
+mac
+misc
+win
+CMake
+)

@@ -1,0 +1,6 @@
+SET(tkpng_ignore_files
+README
+license.terms
+pkgIndex.tcl.in
+CMake
+)

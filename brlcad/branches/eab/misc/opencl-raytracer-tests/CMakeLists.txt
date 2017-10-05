@@ -1,2 +1,0 @@
-CMAKEFILES(version1)
-CMAKEFILES(version2)

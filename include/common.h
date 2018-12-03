@@ -198,12 +198,8 @@ typedef ptrdiff_t ssize_t;
       * version (ugh.) */
 #    include "pstdint.h"
 #  elif defined(__STDC__) || defined(__STRICT_ANSI__) || defined(__SIZE_TYPE__) || defined(HAVE_STDINT_H)
-#    if !defined(__STDC_LIMIT_MACROS)
-#      define __STDC_LIMIT_MACROS 1
-#    endif
-#    if !defined(__STDC_CONSTANT_MACROS)
-#      define __STDC_CONSTANT_MACROS 1
-#    endif
+#    define __STDC_LIMIT_MACROS 1
+#    define __STDC_CONSTANT_MACROS 1
 #    include <stdint.h>
 #  else
 #    include "pstdint.h"

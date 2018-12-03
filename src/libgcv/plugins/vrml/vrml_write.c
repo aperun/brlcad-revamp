@@ -879,7 +879,7 @@ nmg_2_vrml(const struct conversion_state *pstate, struct db_tree_state *tsp, con
 			    NMG_CK_EDGEUSE(eu);
 			    v = eu->vu_p->v_p;
 			    NMG_CK_VERTEX(v);
-			    fprintf(pstate->fp_out, " %jd, ", bu_ptbl_locate(&verts, (long *)v));
+			    fprintf(pstate->fp_out, " %d, ", bu_ptbl_locate(&verts, (long *)v));
 			}
 			fprintf(pstate->fp_out, "-1");
 		    }
@@ -1178,7 +1178,7 @@ vrml_write_make_units_str(double scale_factor)
 	return bu_strdup(bu_units);
     else {
 	struct bu_vls temp = BU_VLS_INIT_ZERO;
-	bu_vls_printf(&temp, "%g units per mm", scale_factor);
+	bu_vls_printf(&temp, "%zu units per mm", scale_factor);
 	return bu_vls_strgrab(&temp);
     }
 }

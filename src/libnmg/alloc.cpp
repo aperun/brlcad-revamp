@@ -27,11 +27,9 @@
 
 #include <set>
 
-extern "C" {
 #include "bu/malloc.h"
 #include "bu/ptbl.h"
 #include "nmg.h"
-}
 
 /* A naive version, until the correct one is working */
 

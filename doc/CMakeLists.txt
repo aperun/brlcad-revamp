@@ -227,7 +227,6 @@ CMAKEFILES(
   README.OSCON-2014
   STARTERS
   STRATEGY
-  cmake_vars.txt
   csv_to_comgeom.txt
   implicit_constraints.txt
   lcov.txt

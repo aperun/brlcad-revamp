@@ -1,4 +1,5 @@
 set(other_licenses
+  clipper.txt
   gct.txt
   gdal.txt
   incrTcl.txt

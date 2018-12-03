@@ -21,14 +21,14 @@
 /** @{ */
 /** @file libged/polyclip.cpp
  *
- * An interface to clipper.
+ * An interface to src/other/clipper.
  *
  */
 /** @} */
 
 #include "common.h"
 
-#include "clipper.hpp"
+#include <clipper.hpp>
 
 #include "bu/sort.h"
 #include "ged.h"

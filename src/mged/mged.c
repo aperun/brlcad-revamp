@@ -775,7 +775,7 @@ mged_process_char(char ch)
 	    if (input_str_index == bu_vls_strlen(&input_str))
 		break;
 	    pr_prompt(interactive);
-	    bu_log("%*s", (int)input_str_index, bu_vls_addr(&input_str));
+	    bu_log("%*V", input_str_index, &input_str);
 	    escaped = bracketed = 0;
 	    break;
 	case CTRL_B:                   /* Back one character */
@@ -1055,6 +1055,8 @@ main(int argc, char *argv[])
     int run_in_foreground=1;
 
     Tcl_Channel chan;
+    struct timeval timeout;
+
 #if !defined(_WIN32) || defined(__CYGWIN__)
     fd_set read_set;
     fd_set exception_set;
@@ -1066,6 +1068,9 @@ main(int argc, char *argv[])
     setmode(fileno(stdin), O_BINARY);
     setmode(fileno(stdout), O_BINARY);
     setmode(fileno(stderr), O_BINARY);
+
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 1;
 
     (void)_set_invalid_parameter_handler(mgedInvalidParameterHandler);
 
@@ -1138,37 +1143,22 @@ main(int argc, char *argv[])
 	/* if there is more than a file name remaining, mged is not interactive */
 	interactive = 0;
     } else {
-#if defined(_WIN32) && !defined(CYGWIN)
-		if(!isatty(fileno(stdin)) || !isatty(fileno(stdout)))
-			interactive = 0;
+#if defined(_WIN32) && !defined(__CYGWIN__)
+	if (!isatty(fileno(stdin)) || !isatty(fileno(stdout)))
+	    interactive = 0;
 #else
-	struct timeval timeout;
-
-	/* wait 1/10sec for input, in case we're piped */
-	timeout.tv_sec = 0;
-	timeout.tv_usec = 100000;
-
-	/* check if there is data on stdin, first relying on whether
-	 * there is standard input pending, second on whether there's
-	 * a controlling terminal (isatty).
-	 */
+	/* check if there is data on stdin (better than checking if isatty()) */
 	FD_ZERO(&read_set);
 	FD_SET(fileno(stdin), &read_set);
 	result = select(fileno(stdin)+1, &read_set, NULL, NULL, &timeout);
 	if (bu_debug > 0)
 	    fprintf(stdout, "DEBUG: select result: %d, stdin read: %d\n", result, FD_ISSET(fileno(stdin), &read_set));
 
-	if (result == 0) {
-	    if (!isatty(fileno(stdin)) || !isatty(fileno(stdout))) {
-		interactive = 0;
-	    }
-	} else if (result > 0 && FD_ISSET(fileno(stdin), &read_set)) {
+	if (result > 0 && FD_ISSET(fileno(stdin), &read_set)) {
 	    /* stdin pending, probably not interactive */
 	    interactive = 0;
 
-	    /* check if there's an out-of-bounds exception.  sometimes
-	     * the case if mged -c is started via desktop GUI.
-	     */
+	    /* check if there is an out-of-bounds exception set on stdin */
 	    FD_ZERO(&exception_set);
 	    FD_SET(fileno(stdin), &exception_set);
 	    result = select(fileno(stdin)+1, NULL, NULL, &exception_set, &timeout);
@@ -1190,17 +1180,18 @@ main(int argc, char *argv[])
 		if (pfd.revents & POLLNVAL) {
 		    interactive = 1;
 		}
-#else
-		/* just in case we get input too quickly, see if it's coming from a tty */
-		if (isatty(fileno(stdin))) {
-		    interactive = 1;
-		}
+#else /* !HAVE_POLL_H */
+		interactive = 1;
 #endif /* HAVE_POLL_H */
-
 	    }
 
+	    /* just in case we get input too quickly, see if it's coming from a tty */
+	    if (isatty(fileno(stdin))) {
+		interactive = 1;
+	    }
 	} /* read_set */
 #endif
+
     } /* argc > 1 */
 
     if (bu_debug > 0)
@@ -1240,7 +1231,6 @@ main(int argc, char *argv[])
 	     * (child sends us a byte after the window is displayed).
 	     */
 	    if (use_pipe) {
-		struct timeval timeout;
 
 		FD_ZERO(&read_set);
 		FD_SET(parent_pipe[0], &read_set);

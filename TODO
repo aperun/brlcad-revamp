@@ -18,24 +18,9 @@ tasks as they are completed.
 THESE TASKS SHOULD HAPPEN BEFORE THE NEXT RELEASE
 -------------------------------------------------
 
-* prep caching actions
-  - needs to double-check graceful fallback when cache has any issue
-  - db layer needs to not say "database has become corrupted"
-  - debug means to set env vars
-  - ray tracing should proceed regardless of any cache issue (reportedly halts)
-  - db file needs to be split up
-  - large db tests need to be enabled
-
-* attribute normalization is drastically slowing down
-  region creation - need to fix or back out
-
-* g-ply not writing geometry
-
 
 THESE TASKS SHOULD HAPPEN WITHIN TWO RELEASE ITERATIONS
 -------------------------------------------------------
-
-* g-obj not exporting colors
 
 * finish implementation and testing of bu_dir. bu_brlcad_root and
   bu_brlcad_data will need verbose deprecation process.  Also need
@@ -163,11 +148,6 @@ THESE TASKS SHOULD HAPPEN WITHIN TWO RELEASE ITERATIONS
 THESE ARE UNSCHEDULED BACKLOG TASKS
 -----------------------------------
 
-* go_open inmem to db command
-
-* optimize mged interactive loop command processing.  creating 10k
-  objects: 40 sec, via inmem: 2 sec
-
 * sort gqa/rtcheck/check/lint/analyze/g_lint functionality into
   logical groupings (probably analyze - calculate properties and
   lint - find problems). Come up with a command design that
@@ -190,6 +170,8 @@ THESE ARE UNSCHEDULED BACKLOG TASKS
 * cppclean audit
 
 * add a multiview rt script to regression testing (e.g., see rtwalk output)
+
+* screengrab on windows
 
 * bot overlaps when unoriented, when clearly not overlapping
 

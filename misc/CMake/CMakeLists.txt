@@ -9,9 +9,6 @@ set(cmake_ignore_files
   CMakeLists.txt
   CheckCInline.cmake
   CheckCSourceRuns.cmake
-  CheckCXX11Features.cmake
-  CheckCXX11Features/cxx11-test-nullptr.cpp
-  CheckCXX11Features/cxx11-test-nullptr_fail_compile.cpp
   CompilerFlags.cmake
   Distcheck.cmake
   DocBook.cmake

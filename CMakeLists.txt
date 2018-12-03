@@ -836,6 +836,16 @@ cmake_set_rpath()
 # (i.e., -std=xxx flags) and API (i.e., -D_POSIX_C_SOURCE defines) to
 # permit and utilize respectively.  Common profiles:
 #
+#   1989-1998: C90 & C++98  (target: 1990)
+#     ISO/IEC 9899:1990 __STDC__
+#     ISO/IEC 14882:1998 __cplusplus==199711L
+#     ISO/IEC 9945-1:1990 -D_POSIX_C_SOURCE=199009L (or =1)
+#     X/Open Portability Guide 3 (1989) -D_XOPEN_SOURCE=3
+#   1999-2010: C99 & C++98 (skippable,  target: 2000)
+#     ISO/IEC 9899:1999 __STDC_VERSION__==199901L
+#     ISO/IEC 14882:2011 __cplusplus==201103L
+#     IEEE 1003.1-2001 -D_POSIX_C_SOURCE=200112L
+#     X/Open Single UNIX Specification, Version 2 (1998) -D_XOPEN_SOURCE=500
 #   2011-2016: C11 & C++11 (ignoring C++14, target: 2013)
 #     ISO/IEC 9899:2011 __STDC_VERSION__==201112L
 #     ISO/IEC 14882:2011 __cplusplus==201103L
@@ -849,34 +859,68 @@ cmake_set_rpath()
 #
 # Sources: https://sourceforge.net/p/predef/wiki/Standards/
 
+
 # For certain platforms (in particular Visual C++) we want to keep some pre-defined
 # flags that are commonly used in the build logic.
-if(NOT DEFINED CMAKE_C_FLAGS_DEFAULT)
+if(NOT "${CMAKE_C_FLAGS}" STREQUAL "" AND NOT DEFINED CMAKE_C_FLAGS_DEFAULT)
   set(CMAKE_C_FLAGS_DEFAULT "${CMAKE_C_FLAGS}" CACHE STRING "Default C flags" FORCE)
-endif(NOT DEFINED CMAKE_C_FLAGS_DEFAULT)
+endif(NOT "${CMAKE_C_FLAGS}" STREQUAL "" AND NOT DEFINED CMAKE_C_FLAGS_DEFAULT)
 mark_as_advanced(CMAKE_C_FLAGS_DEFAULT)
-if(NOT DEFINED CMAKE_CXX_FLAGS_DEFAULT)
+if(NOT "${CMAKE_CXX_FLAGS}" STREQUAL "" AND NOT DEFINED CMAKE_CXX_FLAGS_DEFAULT)
   set(CMAKE_CXX_FLAGS_DEFAULT "${CMAKE_CXX_FLAGS}" CACHE STRING "Default CXX flags" FORCE)
-endif(NOT DEFINED CMAKE_CXX_FLAGS_DEFAULT)
+endif(NOT "${CMAKE_CXX_FLAGS}" STREQUAL "" AND NOT DEFINED CMAKE_CXX_FLAGS_DEFAULT)
 mark_as_advanced(CMAKE_CXX_FLAGS_DEFAULT)
 
-set(API_FLAGS "-D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700")
-
 # C
+
 unset(C_STANDARD_FLAGS)
 set(CMAKE_C_EXTENSIONS OFF)
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(C_STANDARD_FLAGS "${CMAKE_C_FLAGS_DEFAULT} ${CMAKE_C${CMAKE_C_STANDARD}_STANDARD_COMPILE_OPTION} ${API_FLAGS}")
+# Punt for now on multiconfig tools like Visual Studio and XCode, and just go
+# with the more modern standard in all cases.  After the next (last) C90
+# release, we will be using a uniform standard for all build types and that
+# means it's not worth trying to manage per-build-config standards.
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_C_STANDARD 99)
+  set(CMAKE_C_STANDARD_REQUIRED ON)
+  set(API_FLAGS "-D_POSIX_C_SOURCE=200112L -D_XOPEN_SOURCE=500")
+  if(CMAKE_C_EXTENSIONS)
+    set(C_STANDARD_FLAGS "${CMAKE_C${CMAKE_C_STANDARD}_EXTENSION_COMPILE_OPTION}")
+  else()
+    set(C_STANDARD_FLAGS "${CMAKE_C${CMAKE_C_STANDARD}_STANDARD_COMPILE_OPTION} ${API_FLAGS}")
+  endif(CMAKE_C_EXTENSIONS)
+  if("${C_STANDARD_FLAGS}" STREQUAL "")
+    message(FATAL_ERROR "C standard specification failure: compiler does not support the C${CMAKE_C_STANDARD} standard:\n${CMAKE_C_COMPILE_FEATURES}")
+  endif("${C_STANDARD_FLAGS}" STREQUAL "")
+else()
+  set(CMAKE_C_STANDARD 90)
+  set(CMAKE_C_STANDARD_REQUIRED ON)
+  set(API_FLAGS "-D_POSIX_C_SOURCE=199009L -D_XOPEN_SOURCE=3")
+  if(CMAKE_C_EXTENSIONS)
+    set(C_STANDARD_FLAGS "${CMAKE_C${CMAKE_C_STANDARD}_EXTENSION_COMPILE_OPTION}")
+  else()
+    set(C_STANDARD_FLAGS "${CMAKE_C${CMAKE_C_STANDARD}_STANDARD_COMPILE_OPTION} ${API_FLAGS}")
+  endif(CMAKE_C_EXTENSIONS)
+endif("${CMAKE_BUILD_TYPE}" STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES)
+set(C_STANDARD_FLAGS "${CMAKE_C_FLAGS_DEFAULT} ${C_STANDARD_FLAGS}")
 string(STRIP "${C_STANDARD_FLAGS}" C_STANDARD_FLAGS)
 
 # C++
+
 unset(CXX_STANDARD_FLAGS)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 98)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CXX_STANDARD_FLAGS "${CMAKE_CXX_FLAGS_DEFAULT} ${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION} ${API_FLAGS}")
+if(CMAKE_CXX_EXTENSIONS)
+  set(CXX_STANDARD_FLAGS "${CMAKE_CXX${CMAKE_CXX_STANDARD}_EXTENSION_COMPILE_OPTION}")
+else()
+  set(CXX_STANDARD_FLAGS "${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
+endif(CMAKE_CXX_EXTENSIONS)
+set(CXX_STANDARD_FLAGS "${CMAKE_CXX_FLAGS_DEFAULT} ${CXX_STANDARD_FLAGS}")
 string(STRIP "${CXX_STANDARD_FLAGS}" CXX_STANDARD_FLAGS)
+
+if("${CXX_STANDARD_FLAGS}" STREQUAL "")
+  message(FATAL_ERROR "C++ standard specification failure: supported flags not found for C++${CMAKE_CXX_STANDARD} standard building:\n${CMAKE_CXX_COMPILE_FEATURES}")
+endif("${CXX_STANDARD_FLAGS}" STREQUAL "")
 
 #---------------------------------------------------------------------
 # We will need a brlcad_config.h.in file to hold all the #cmakedefine
@@ -925,15 +969,6 @@ CONFIG_H_APPEND(BRLCAD "#define PACKAGE_TARNAME \"brlcad\"\n")
 # Let programs know what the executable suffix is on this platform, if any
 CONFIG_H_APPEND(BRLCAD "#define EXECUTABLE_SUFFIX \"${CMAKE_EXECUTABLE_SUFFIX}\"\n")
 
-# Define the various relative paths for bu_dir (be sure to have included
-# Path_Setup.cmake before this point, as that file defines these variables.)
-CONFIG_H_APPEND(BRLCAD "#define BRLCAD_BIN_DIR \"${BIN_DIR}\"\n")
-CONFIG_H_APPEND(BRLCAD "#define BRLCAD_LIB_DIR \"${LIB_DIR}\"\n")
-CONFIG_H_APPEND(BRLCAD "#define BRLCAD_LIBEXEC_DIR \"${LIBEXEC_DIR}\"\n")
-CONFIG_H_APPEND(BRLCAD "#define BRLCAD_INCLUDE_DIR \"${INCLUDE_DIR}\"\n")
-CONFIG_H_APPEND(BRLCAD "#define BRLCAD_DATA_DIR \"${DATA_DIR}\"\n")
-CONFIG_H_APPEND(BRLCAD "#define BRLCAD_DOC_DIR \"${DOC_DIR}\"\n")
-CONFIG_H_APPEND(BRLCAD "#define BRLCAD_MAN_DIR \"${MAN_DIR}\"\n")
 
 #----------------------------------------------------------------------
 # If we're not debugging, we want HIDDEN to be defined as static.  Set
@@ -1413,6 +1448,7 @@ BRLCAD_OPTION(BRLCAD_ENABLE_STRICT ON
   DESCRIPTION BRLCAD_ENABLE_STRICT_DESCRIPTION)
 if(BRLCAD_ENABLE_STRICT)
   mark_as_advanced(BRLCAD_ENABLE_STRICT)
+  CONFIG_H_APPEND(BRLCAD "#define STRICT_FLAGS 1\n")
 endif(BRLCAD_ENABLE_STRICT)
 
 # Build with compiler optimization flags.  This should normally be on for
@@ -2419,7 +2455,6 @@ BRLCAD_INCLUDE_FILE(grp.h HAVE_GRP_H)
 BRLCAD_INCLUDE_FILE(inttypes.h HAVE_INTTYPES_H)
 BRLCAD_INCLUDE_FILE(io.h HAVE_IO_H)
 BRLCAD_INCLUDE_FILE(libgen.h HAVE_LIBGEN_H)
-# BRLCAD_INCLUDE_FILE(libproc.h HAVE_LIBPROC_H) - see below
 BRLCAD_INCLUDE_FILE(mach/thread_policy.h HAVE_MACH_THREAD_POLICY_H)
 BRLCAD_INCLUDE_FILE(memory.h HAVE_MEMORY_H)
 BRLCAD_INCLUDE_FILE(netdb.h HAVE_NETDB_H)
@@ -2455,7 +2490,6 @@ BRLCAD_INCLUDE_FILE(sys/select.h HAVE_SYS_SELECT_H)
 BRLCAD_INCLUDE_FILE(sys/shm.h HAVE_SYS_SHM_H)
 BRLCAD_INCLUDE_FILE(sys/socket.h HAVE_SYS_SOCKET_H)
 BRLCAD_INCLUDE_FILE(sys/stat.h HAVE_SYS_STAT_H)
-BRLCAD_INCLUDE_FILE("sys/types.h;sys/sysctl.h" HAVE_SYS_SYSCTL_H)
 BRLCAD_INCLUDE_FILE(sys/sysinfo.h HAVE_SYS_SYSINFO_H)
 BRLCAD_INCLUDE_FILE(sys/sysmp.h HAVE_SYS_SYSMP_H)
 BRLCAD_INCLUDE_FILE(sys/time.h HAVE_SYS_TIME_H)
@@ -2472,11 +2506,11 @@ BRLCAD_INCLUDE_FILE(unistd.h HAVE_UNISTD_H)
 BRLCAD_INCLUDE_FILE(uuid/uuid.h HAVE_UUID_UUID_H) # for uuid_generate() on Mac & Linux
 BRLCAD_INCLUDE_FILE(windows.h HAVE_WINDOWS_H) # for QueryPerformanceCounter() on Windows
 
-# custom libproc.h test due to BSDisms when compiling
-check_c_source_compiles("typedef void *rusage_info_t;\ntypedef unsigned char u_char;\ntypedef unsigned int u_int;\ntypedef unsigned long u_long;\ntypedef unsigned short u_short;\n#define SOCK_MAXADDRLEN 255\n#include <sys/types.h>\n#include <libproc.h>\nint main() { return 0; }" HAVE_LIBPROC_H)
-if(HAVE_LIBPROC_H)
-  CONFIG_H_APPEND(BRLCAD "#define HAVE_LIBPROC_H 1\n")
-endif(HAVE_LIBPROC_H)
+# custom sys/sysctl.h test due to BSDisms when compiling as c90-era API
+check_c_source_compiles("#define u_char unsigned char\n#define u_int unsigned int\n#define u_long unsigned long\n#define u_short unsigned short\n#include <sys/sysctl.h>\nint main() { return 0; }" HAVE_SYS_SYSCTL_H)
+if(HAVE_SYS_SYSCTL_H)
+  CONFIG_H_APPEND(BRLCAD "#define HAVE_SYS_SYSCTL_H 1\n")
+endif(HAVE_SYS_SYSCTL_H)
 
 # Termlib related headers - these will be checked for in FindTERMLIB.cmake
 # testing logic, so at this stage just let the config header know we're
@@ -2587,21 +2621,11 @@ else (HAVE_THREAD_LOCAL)
   endif (HAVE___THREAD)
 endif (HAVE_THREAD_LOCAL)
 
-# Test for C++11 features that we need - CMake will sometimes assert that a
-# C++11 compiler flag exists, but the actual compiler support for C++11 language
-# ends up lacking in practice.
-include(CheckCXX11Features)
-cxx11_check_feature("nullptr" HAS_CXX11_NULLPTR)
-
-
 # see if the compiler supports %z as a size_t print width specifier
 BRLCAD_CHECK_PERCENT_Z()
 
 # see if the compiler supports [static] array hints
 BRLCAD_CHECK_STATIC_ARRAYS()
-
-# see if we have a TLS intrinsic, first check C++11 compliance
-check_cxx_source_compiles("static thread_local int i = 0; int main() { return i; }" HAVE_THREAD_LOCAL)
 
 
 # *******************************************************************
@@ -2621,15 +2645,12 @@ BRLCAD_FUNCTION_EXISTS(dlopen)
 BRLCAD_FUNCTION_EXISTS(drand48)
 BRLCAD_FUNCTION_EXISTS(fchmod)
 BRLCAD_FUNCTION_EXISTS(fdopen)
-BRLCAD_FUNCTION_EXISTS(fmemopen)
 BRLCAD_FUNCTION_EXISTS(fseeko) # implies ftello
 BRLCAD_FUNCTION_EXISTS(fsync)
-BRLCAD_FUNCTION_EXISTS(funopen)
 BRLCAD_FUNCTION_EXISTS(getcwd)
 BRLCAD_FUNCTION_EXISTS(getegid)
 BRLCAD_FUNCTION_EXISTS(getenv_s)
 BRLCAD_FUNCTION_EXISTS(geteuid)
-BRLCAD_FUNCTION_EXISTS(gethostbyname)
 BRLCAD_FUNCTION_EXISTS(gethostname)
 BRLCAD_FUNCTION_EXISTS(getloadavg)
 BRLCAD_FUNCTION_EXISTS(getopt_long)
@@ -2648,8 +2669,6 @@ BRLCAD_FUNCTION_EXISTS(modff REQUIRED_LIBS ${M_LIBRARY})
 BRLCAD_FUNCTION_EXISTS(nextafter REQUIRED_LIBS ${M_LIBRARY})
 BRLCAD_FUNCTION_EXISTS(nextafterf REQUIRED_LIBS ${M_LIBRARY})
 BRLCAD_FUNCTION_EXISTS(ntohll)
-BRLCAD_FUNCTION_EXISTS(proc_pidpath) # Mac OS X
-BRLCAD_FUNCTION_EXISTS(program_invocation_name)
 BRLCAD_FUNCTION_EXISTS(pipe)
 BRLCAD_FUNCTION_EXISTS(popen) # implies pclose
 BRLCAD_FUNCTION_EXISTS(posix_memalign) # IEEE Std 1003.1-2001
@@ -2683,7 +2702,6 @@ BRLCAD_FUNCTION_EXISTS(uname)
 BRLCAD_FUNCTION_EXISTS(vfork)
 BRLCAD_FUNCTION_EXISTS(vsnprintf)
 BRLCAD_FUNCTION_EXISTS(vsscanf)
-BRLCAD_FUNCTION_EXISTS(wait)
 BRLCAD_FUNCTION_EXISTS(writev)
 
 # ALLOCA test - based on AC_FUNC_ALLOCA
@@ -2739,6 +2757,14 @@ if(HAVE_GETFULLPATHNAME)
   CONFIG_H_APPEND(BRLCAD "#define HAVE_GETFULLPATHNAME 1\n")
 endif(HAVE_GETFULLPATHNAME)
 
+# test for program_invocation_name global variable
+if("${HAVE_PROGRAM_INVOCATION_NAME}" MATCHES "^${HAVE_PROGRAM_INVOCATION_NAME}$")
+  check_c_source_compiles("#define _GNU_SOURCE\n#include <errno.h>\nint main() { return (program_invocation_name)?0:1; }" HAVE_PROGRAM_INVOCATION_NAME)
+  if(HAVE_PROGRAM_INVOCATION_NAME)
+    CONFIG_H_APPEND(BRLCAD "#cmakedefine HAVE_PROGRAM_INVOCATION_NAME 1\n")
+  endif(HAVE_PROGRAM_INVOCATION_NAME)
+endif("${HAVE_PROGRAM_INVOCATION_NAME}" MATCHES "^${HAVE_PROGRAM_INVOCATION_NAME}$")
+
 # functionality tests for lrint
 set(lrint_test "long int lrint(double); int main() {return lrint(3.14);}")
 set(lrint_test_negative "long int lrint(double); int main() {return lrint(-1);}")
@@ -2763,10 +2789,6 @@ endif(HAVE_WORKING_LRINT_MACRO)
 # test for tgamma
 set(tgamma_test "#include <math.h>\nint main() {double tga = tgamma(3.14); return 0;}")
 BRLCAD_FUNCTION_EXISTS(tgamma COMPILE_TEST_SRCS tgamma_test REQUIRED_LIBS ${M_LIBRARY})
-
-# test for gethostbyaddr
-set(gethostbyaddr_test "#include<stdlib.h>\n#include <netdb.h>\nint main() {(void)gethostbyaddr(NULL, 0, AF_INET); return 0;}")
-BRLCAD_FUNCTION_EXISTS(gethostbyaddr DECL_TEST_SRCS gethostbyaddr_test REQUIRED_LIBS ${NL_LIBRARY})
 
 # Check for logb in C++
 check_cxx_source_compiles("#include <cmath>\nint main() {return logb(3.14);}" HAVE_CXX_LOGB)

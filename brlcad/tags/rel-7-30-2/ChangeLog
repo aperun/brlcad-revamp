@@ -1,0 +1,2173 @@
+2019-04-01 16:11  brlcad
+
+	* [r72826] src/librt/cache.c:
+	  invert the code so we can minimize the conditional
+
+2019-04-01 14:09  starseeker
+
+	* [r72824] misc/CMakeLists.txt:
+	  list files for distcheck
+
+2019-04-01 00:57  starseeker
+
+	* [r72823] misc/repoconv/svnfexport/custom/37277.fi:
+	  Sigh... another custom commit for r37277. If there are too many
+	  more of these commiting them to the repo will cease being viable
+	  due to size concerns... maybe store them on brlcad.org?
+
+2019-03-31 22:51  starseeker
+
+	* [r72822] misc/repoconv/svnfexport/custom/36941.fi:
+	  Custom file for 36941
+
+2019-03-31 22:08  starseeker
+
+	* [r72821] misc/repoconv/svnfexport/custom/checkout_dercs.sh,
+	  misc/repoconv/svnfexport/custom/sync_commit.sh:
+	  These aren't perfect, but they're helpful when we have to
+	  assemble a one-off syncing file.
+
+2019-03-31 22:06  starseeker
+
+	* [r72820] misc/repoconv/svnfexport/custom/36843.fi:
+	  oof - get a fast import file for r36843
+
+2019-03-31 15:55  starseeker
+
+	* [r72819] misc/repoconv/svnfexport/custom/36631.fi,
+	  misc/repoconv/svnfexport/custom/36633.fi:
+	  Custom fi files for commits 36631 and 36633
+
+2019-03-31 12:04  starseeker
+
+	* [r72818] misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  Was already doing that - what bit here was the custom rel8 file.
+	  Special case that for when we come back around again in the
+	  conversion.
+
+2019-03-31 12:01  starseeker
+
+	* [r72817] misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  added branch, need to track it now
+
+2019-03-31 01:31  starseeker
+
+	* [r72816] misc/repoconv/svnfexport/custom/36053.fi:
+	  Add a fi file to make the rel8 branch
+
+2019-03-30 19:45  starseeker
+
+	* [r72815] misc/repoconv/svnfexport/custom/33115.fi:
+	  Add custom sync file for r33115
+
+2019-03-30 15:11  starseeker
+
+	* [r72814] misc/repoconv/svnfexport/custom/32314.fi:
+	  Commit the 32314.fi custom fast import file
+
+2019-03-30 15:05  starseeker
+
+	* [r72813] misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  stub in a merge line - this will break the fast import, but with
+	  these commits we're usually merging from somewhere and it's
+	  simplier at this point to just check manually - all of these will
+	  eventually be custom fi files anyway.
+
+2019-03-30 14:28  starseeker
+
+	* [r72812] misc/repoconv/svnfexport/common_structs.h:
+	  In the case of some svn branches, we may not have that branch at
+	  a particular revision. In that case, verifying against svn is
+	  meaningless so just return.
+
+2019-03-30 14:11  starseeker
+
+	* [r72811] misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  fix merge lines
+
+2019-03-30 14:02  starseeker
+
+	* [r72810] src/libbu/tests/CMakeLists.txt:
+	  Define (but disable) the mapped file parallel free test.
+	  
+	  This test is intended to simulate what can happen with lots of
+	  db_open/db_close
+	  calls in parallel, since db_close calls the mappedfile free call.
+	  
+	  I believe the newest librt cache logic avoids this issue for now,
+	  and there
+	  dont' seem to be any other calls to bu_free_mapped_files other
+	  than db_close
+	  and the test logic, so I think we can postpone addressing this
+	  for now.
+	  
+	  That derth of bu_free_mapped_files calls is another issue - if
+	  the expectation
+	  is that mapped_file callers clean up after a close then db_close
+	  appears to be
+	  the only one doing it - but barring massive memory or file handle
+	  consumption
+	  it's not a problem that will impact users. There are a few places
+	  where it is
+	  probably safe to add the call now (when it can be done after
+	  parallel
+	  processing is complete) but I'm going to wait even on those until
+	  after the
+	  patch release to avoid any last minute unintended breakages.
+
+2019-03-30 13:24  starseeker
+
+	* [r72809] misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  Use sha1s, not marks for merge reference points
+
+2019-03-30 12:59  starseeker
+
+	* [r72808] src/librt/cache.c:
+	  Tweak message
+
+2019-03-30 11:58  gabbar1947
+
+	* [r72807] src/libged/typein.c:
+	  major_type initialized in hrt_in()
+
+2019-03-30 01:40  starseeker
+
+	* [r72806] src/libbu/tests/mappedfile.c:
+	  If we have the mfp but not the buf (which seems to be the case
+	  for mappedfile test 5) return a failure message rather than
+	  segfaulting.
+
+2019-03-29 22:04  starseeker
+
+	* [r72805] src/librt/cache.c:
+	  Whoops, need tmppath here, not tmpname...
+
+2019-03-29 21:58  starseeker
+
+	* [r72804] src/librt/cache.c:
+	  Print the observed sizes
+
+2019-03-29 21:56  starseeker
+
+	* [r72803] src/libbu/mappedfile.c:
+	  tweak comment
+
+2019-03-29 21:55  starseeker
+
+	* [r72802] src/libbu/mappedfile.c:
+	  Getting sporadic failures to delete rt_cache files due to access
+	  denied errors which seem to be resulting from the files not
+	  getting properly munmapped. This probably isn't the most
+	  efficient way to do this, but need to get it working...
+
+2019-03-29 21:10  starseeker
+
+	* [r72801] src/libbu/file.c:
+	  In theory, Windows can give us some hint about what's going in...
+
+2019-03-29 20:40  starseeker
+
+	* [r72800] src/libbu/file.c:
+	  Leaking fd from bu_file_size - was preventing file deletes in the
+	  rt_cache tests on Windows.
+
+2019-03-29 20:11  starseeker
+
+	* [r72799] src/libbu/file.c, src/libbu/tests/mappedfile.c:
+	  Failure code is 0, not 1 in this case. Also, need to free mapped
+	  files on Windows before we can clean up.
+
+2019-03-29 19:33  starseeker
+
+	* [r72798] src/librt/cache.c:
+	  Something of a last ditch attempt, but refer back to r72661 and
+	  r72706 to pull forward the switch from .g to raw bu_external
+	  serialization objects for cache objects to try testing it with
+	  the current problem cases. Avoids the db_open/db_close logic,
+	  uses the atomic file switching and semaphore guards - doesn't
+	  knowingly upset any of the cache.c improvements. Uses mapped
+	  files, but calls free on them only once at the end when the cache
+	  is closed. The only other change is to add some wait-and-recheck
+	  sanity checks of file sizes before we allow a read attempt to
+	  conclude a pre-existing cache object is useless - shouldn't be
+	  necessary if the moves really are atomic, but I'm not 100%
+	  confident about the atomic nature of MoveFileEx on Windows based
+	  on discussions such as https://stackoverflow.com/q/167414.
+
+2019-03-29 18:20  starseeker
+
+	* [r72797] src/librt/cache.c:
+	  Sigh... MoveFileEx returns non-zero on success, while rename
+	  returns zero on success.
+
+2019-03-29 12:51  starseeker
+
+	* [r72796] src/librt/tests/CMakeLists.txt,
+	  src/librt/tests/cache.cxx:
+	  Not catching a whole lot right now, but it will exercise parallel
+	  treewalk with multiple instances of the same object so go ahead
+	  and add this rt_cache test...
+
+2019-03-29 12:48  starseeker
+
+	* [r72795] src/libbu/malloc.c:
+	  I keep doing this, so just set it up as an env var check so I
+	  don't accidentally commit an unguarded sleep call into libbu.
+
+2019-03-28 20:46  starseeker
+
+	* [r72794] src/libbu/tests/mappedfile.c:
+	  Add in a mappedfiles test that calls bu_free_mapped_files at
+	  intervals during the process (rather than just between cycles,
+	  like the prior tests.)
+
+2019-03-28 16:01  brlcad
+
+	* [r72793] src/librt/primitives/dsp/dsp.c:
+	  make sure we decrement uses now that we're done since we
+	  increased it
+
+2019-03-28 03:43  brlcad
+
+	* [r72792] NEWS:
+	  was crashing mged during solids regression. conceivably could
+	  crash from any point after drawing a dsp, depending on what
+	  happened to the fake data.
+
+2019-03-28 03:29  brlcad
+
+	* [r72791] src/librt/primitives/dsp/dsp.c:
+	  caught a crash on this bu_free. doesn't seem to be serving a
+	  purpose here as ds is on the stack and filled in with what was in
+	  the ip (which is free/managed elsewhere). valgrind report no
+	  leakage if we don't free, so looks good to go. this fixes a
+	  solids regression failure.
+
+2019-03-27 23:55  starseeker
+
+	* [r72790] src/librt/tests/cache.cxx:
+	  This is not ideal in that it is limited to launching ncpus
+	  processes, but at least in principle it demonstrates a
+	  multi-process test of the cache. Even the small CPU counts expose
+	  a failure condition where the format file is not found when the
+	  directory exists, but in real use that condition is probably rare
+	  enough not to worry about so it's questionable whether these last
+	  tests should be hooked up...
+
+2019-03-27 23:53  starseeker
+
+	* [r72789] src/libbu/tests/CMakeLists.txt:
+	  Add realpath to the bu_test program, but leave off the second
+	  test as even canonicalize_file_name is still producing a stack
+	  smash...
+
+2019-03-27 19:34  starseeker
+
+	* [r72788] src/libbu/mappedfile.c:
+	  The actual end of the array here is at all_mapped_files.size - 1,
+	  not all_mapped_files.size - need to null out the last 'active'
+	  entry in the all_mapped_files array. If size < capacity we're
+	  nulling out the wrong slot, and if size == capacity we're nulling
+	  out something not in the array.
+
+2019-03-27 17:07  starseeker
+
+	* [r72787] CMakeLists.txt, src/libbu/realpath.c:
+	  Have CMake check for canonicalize_file_name and use that in
+	  preference to realpath if available
+
+2019-03-27 17:03  starseeker
+
+	* [r72786] src/libbu/tests/CMakeLists.txt:
+	  Whoops, wrong target name
+
+2019-03-27 16:53  starseeker
+
+	* [r72785] src/libbu/tests/CMakeLists.txt:
+	  Add the rest of the hooked-up specific bu test executables as
+	  dependencies of bu_test
+
+2019-03-27 16:21  starseeker
+
+	* [r72784] src/libbu/file.c:
+	  Sean and Cliff went over the bu_file_delete logic flow, reworked
+	  it a bit.
+
+2019-03-27 16:17  starseeker
+
+	* [r72783] src/libbu/tests/CMakeLists.txt,
+	  src/libbu/tests/process.c:
+	  bu_subprocess needs to be around when bu_test is run
+
+2019-03-27 14:25  starseeker
+
+	* [r72782] NEWS:
+	  Reframe - bu_file_delete was used by GED commands edmater,
+	  edcodes, red, put_comb and the MGED tedit command, plus a number
+	  of tools like tire, burst and coil. Any operation in those
+	  commands that needed to remove a file would have hit the
+	  bu_file_delete problem on Windows, which probably wouldn't hault
+	  the command operation but would leave stray temporary files
+	  behind.
+
+2019-03-27 14:17  starseeker
+
+	* [r72781] misc/CMakeLists.txt:
+	  List files for distcheck
+
+2019-03-27 12:51  starseeker
+
+	* [r72780] NEWS:
+	  Certainly at least theoretically user visible... Fixed problem in
+	  libbu's file deletion that was resulting in file deletion failing
+	  on Windows.
+
+2019-03-27 12:50  starseeker
+
+	* [r72779] NEWS:
+	  Definitely user visible - fixed issues with the NURBS cache
+	  generation in multithreaded and multiprocess scenarios.
+
+2019-03-27 11:06  starseeker
+
+	* [r72778] misc/repoconv/svnfexport/custom/32047.fi,
+	  misc/repoconv/svnfexport/custom/32048.fi:
+	  Don't need these two custom files now.
+
+2019-03-27 04:39  brlcad
+
+	* [r72777] src/libbu/realpath.c:
+	  realpath is horribly broken on linux. document it and resort to
+	  canonicalize_file_name(). will need to update cmake-fu
+	  accordingly to test properly instead of realpath().
+
+2019-03-27 04:34  brlcad
+
+	* [r72776] src/librt/cache.c:
+	  even re-implementing bu_file_realpath() using
+	  canonicalize_file_name() or a null second arg appears to still
+	  have a memory overrun errors getting detected on linux. reading
+	  up, the function is just horribly broken for various versions
+	  prior to libc-5.4.13; restore bu_file_realpath() commented since
+	  it's still worth fixing to sanitize our env variable string.
+
+2019-03-27 01:10  starseeker
+
+	* [r72775] misc/repoconv/svnfexport/svnfexport.cxx,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  Make a stab at continually updating the branch list so a restart
+	  knows the current state.
+
+2019-03-26 22:30  starseeker
+
+	* [r72774] src/librt/tests/CMakeLists.txt:
+	  Hook up the librt cache tests
+
+2019-03-26 22:17  starseeker
+
+	* [r72773] src/librt/cache.c:
+	  We don't need realpath here, and it's either causing or exposing
+	  some sort of memory corruption on Linux. Just go with bu_strlcpy
+	  (see src/libbu/tests/realpath.c for simplified code to reproduce
+	  the bu_file_realpath issue.)
+
+2019-03-26 22:13  starseeker
+
+	* [r72772] src/libbu/tests/CMakeLists.txt,
+	  src/libbu/tests/realpath.c:
+	  Cache logic exposed a bu_file_realpath oddity on Linux, which an
+	  isolated test can reproduce. Set up (but don't hook up yet) a
+	  libbu unit test to exercise bu_file_realpath.
+
+2019-03-26 20:25  brlcad
+
+	* [r72771] src/mged/mged.c:
+	  background color is a uchar[3], cannot be null.
+
+2019-03-26 20:13  starseeker
+
+	* [r72770] src/librt/tests/cache.cxx:
+	  rtip_stage_2, not rtip_stage_1
+
+2019-03-26 20:12  starseeker
+
+	* [r72769] src/librt/tests/cache.cxx:
+	  Call rt_clean before rt_free_rti
+
+2019-03-26 16:43  starseeker
+
+	* [r72768] include/bu/mapped_file.h:
+	  reword bu_free_mapped_files - needs more work, but the prior
+	  version was vague to the point of causing misinterpretation.
+
+2019-03-26 15:48  brlcad
+
+	* [r72767] src/libbu/mappedfile.c:
+	  must have allocated some capacity in order to free them
+
+2019-03-26 15:46  brlcad
+
+	* [r72766] src/libbu/mappedfile.c:
+	  document how we're using null pointers for the holders. avoid
+	  preallocating the holders until they're actually used too.
+
+2019-03-26 15:45  starseeker
+
+	* [r72765] src/libbu/tests/CMakeLists.txt,
+	  src/libbu/tests/mappedfile.c:
+	  Make sure we can repeat mapping of files after calling
+	  bu_free_mapped_files
+
+2019-03-26 15:35  brlcad
+
+	* [r72764] src/libbu/mappedfile.c:
+	  since we release the mapped file holder on bu_free_mapped_files,
+	  pointers may be NULL
+
+2019-03-26 05:57  brlcad
+
+	* [r72763] src/librt/cache.c:
+	  c72715 makes no sense and, more importantly, has no different
+	  effect when a local cache dir is set. stash smash was likely
+	  unrelated.
+
+2019-03-26 05:35  brlcad
+
+	* [r72762] src/libbu/mappedfile.c:
+	  tidy up memory when there are no mapped files remaining
+
+2019-03-26 05:24  brlcad
+
+	* [r72761] src/libbu/mappedfile.c:
+	  enough with the prealloc optimization, remove it. still an array
+	  of pointer, but they're all dynamically allocated items that we
+	  need to free up.
+
+2019-03-26 05:18  brlcad
+
+	* [r72760] src/librt/cache.c:
+	  include parallel id in our temp file name so we avoid multiple bu
+	  threads trying to write to the same file. includes the thread id
+	  on debug messages.
+
+2019-03-26 04:15  brlcad
+
+	* [r72759] src/libbu/mappedfile.c:
+	  revert c72751, that's not what was going on here. it's a simple
+	  array of pointers EXCEPT for the first ones that are statically
+	  allocated. revisiting the cleanup code, however, it's clear now
+	  that this code isn't going to clean up dynamic allocations
+	  correctly due to how the statics are getting skipped. needs work.
+
+2019-03-26 02:06  starseeker
+
+	* [r72758] src/librt/tests/cache.cxx:
+	  spelling
+
+2019-03-26 01:55  starseeker
+
+	* [r72757] src/librt/tests/cache.cxx:
+	  Collapse the test functions down to a single master function.
+
+2019-03-26 01:38  starseeker
+
+	* [r72756] src/librt/tests/cache.cxx:
+	  Now that the patterns are emerging, start reducing code
+	  duplication
+
+2019-03-26 01:20  starseeker
+
+	* [r72755] src/librt/tests/cache.cxx:
+	  simplify
+
+2019-03-26 01:18  starseeker
+
+	* [r72754] src/librt/tests/cache.cxx:
+	  Count cache objects to make sure we have the number expected
+
+2019-03-26 01:06  starseeker
+
+	* [r72753] src/librt/tests/cache.cxx:
+	  per discussion with Sean, this test shouldn't do shots
+
+2019-03-26 00:18  starseeker
+
+	* [r72752] src/librt/tests/cache.cxx:
+	  Fix format-security warning
+
+2019-03-25 21:36  starseeker
+
+	* [r72751] src/libbu/mappedfile.c:
+	  I think this is what is intended here? We don't every shrink the
+	  capacity of the all_mapped_files container, so we don't free
+	  entries in the mapped_files array - instead, we keep the 'active'
+	  items at the head of the array, clear the memory of the
+	  no-longer-in-use entry, and swap it in at the end. The current
+	  state of the rt_cache tests passes with this change - I'm able to
+	  do another rtip preparations after an rtip is freed.
+
+2019-03-25 20:24  starseeker
+
+	* [r72750] src/libbu/mappedfile.c:
+	  I think we need to zero out the struct here, not set it to NULL -
+	  this is a full-on container, not a pointer to one. We're not
+	  decreasing the capacity of the all_mapped_files array, just the
+	  size. If we want to come back around after closing everything out
+	  and reuse the mapped_file setup again, we need this storage to be
+	  present and initialized to zero (just as it was originally - see
+	  mappedfile.c:280) to avoid a segfault as the mapfile_add logic
+	  tries to copy the incoming struct to a null memory address.
+
+2019-03-25 16:51  brlcad
+
+	* [r72749] src/librt/cache.c:
+	  oh noes! do not close the dbip we were just checking on! this
+	  resulted in a db_close() error when the cache gets destructed as
+	  the hash continued to hold a pointer to the closed dbip for
+	  later. we got into this situation when two threads or procs
+	  attempted to cache the same object at the same time, and likely
+	  introduced when the cache code was refactored to use rename
+	  semantics. traded a race for bad book-keeping, but now in better
+	  working order. tested with massive collisions, random cache
+	  deletions (live and otherwise), and inconsistent access
+	  permissions.
+
+2019-03-25 16:33  starseeker
+
+	* [r72748] src/librt/tests/cache.cxx:
+	  Do better about setting up parallel processing
+
+2019-03-25 16:11  starseeker
+
+	* [r72747] src/librt/tests/cache.cxx:
+	  Define the remainder of the tests. None of these will work
+	  properly beyond the first stage at the moment, since they all
+	  suffer from whatever is wrong with the multiple rtip usage.
+
+2019-03-25 15:38  starseeker
+
+	* [r72746] src/librt/tests/cache.cxx:
+	  Use the obj_cnt in the names if we aren't doing single object
+	  tests
+
+2019-03-25 15:32  starseeker
+
+	* [r72745] src/librt/tests/CMakeLists.txt,
+	  src/librt/tests/cache.cxx:
+	  Start working up actual cache tests. Probably not doing something
+	  right, because mapped_file_add is failing when I try to build the
+	  second rtip (rtip_stage_2) in test number 1... Maybe I shouldn't
+	  be trying to do multiple rtip in the same process, or I didn't
+	  clean up something correctly?
+
+2019-03-25 07:43  brlcad
+
+	* [r72744] src/librt/cache.c:
+	  print the process id with each debug line
+
+2019-03-25 07:42  brlcad
+
+	* [r72743] src/librt/db_open.c:
+	  wipe out the magic with a pattern to see if we're double-freeing
+
+2019-03-25 07:08  brlcad
+
+	* [r72742] src/librt/cache.c:
+	  wip. closing the file prior to rename is the correct thing to do
+	  on all platforms, but definitely seeing unexpected db_close bombs
+	  when multiple processes are accessing / loading the same cache
+	  objects.
+
+2019-03-25 06:59  brlcad
+
+	* [r72741] src/librt/db_open.c:
+	  fix two places we're not properly protecting the dbi_uses
+	  counter.
+
+2019-03-25 06:57  brlcad
+
+	* [r72740] src/libbu/backtrace.c:
+	  Like Linux, Mac can have both gdb and lldb installed. However
+	  unlike on Linux, make sure we prefer lldb on Mac since that's the
+	  OS default. gets backtraces outputting properly again.
+
+2019-03-25 06:54  brlcad
+
+	* [r72739] src/libbu/mappedfile.c:
+	  minimize the preprocessor conditional sections to just the lines
+	  that differ
+
+2019-03-25 04:02  brlcad
+
+	* [r72738] include/config_win.h.in:
+	  add missing S_IRWXG and S_IRWXO defines too
+
+2019-03-25 03:50  brlcad
+
+	* [r72737] src/libanalyze/analyze_private.h,
+	  src/libanalyze/tests/solid_partitions.c, src/libanalyze/util.cpp,
+	  src/sig/c-d.c, src/sig/d-bw.c, src/sig/d-f.c, src/sig/d-i.c,
+	  src/util/bwdiff.c, src/util/bwhist.c, src/util/cv.c,
+	  src/util/terrain.c:
+	  handful size_t conversions
+
+2019-03-25 02:17  starseeker
+
+	* [r72736] misc/repoconv/svnfexport/svnfexport.cxx,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  Ah, that's why those two extra pre-7-12-6 commits were necessary
+	  - sha1 map isn't getting maintained properly on restart. Need to
+	  fix.
+
+2019-03-25 02:12  starseeker
+
+	* [r72735] misc/repoconv/svnfexport/custom/32046.fi,
+	  misc/repoconv/svnfexport/custom/32047.fi,
+	  misc/repoconv/svnfexport/custom/32048.fi:
+	  Add a couple more custom files
+
+2019-03-25 00:52  starseeker
+
+	* [r72734] misc/repoconv/svnfexport/svnfexport.cxx,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  Make a stab at branch creation
+
+2019-03-25 00:06  starseeker
+
+	* [r72733] misc/repoconv/svnfexport/custom/32009.fi:
+	  Empty dirs are throwing off 32009 - do a custom fi file
+
+2019-03-25 00:04  starseeker
+
+	* [r72732] misc/repoconv/svnfexport/common_structs.h:
+	  Need to keep scrubbing empty directories until there aren't any
+	  more
+
+2019-03-24 22:38  starseeker
+
+	* [r72731] misc/repoconv/svnfexport/common_structs.h,
+	  misc/repoconv/svnfexport/custom/32007.fi,
+	  misc/repoconv/svnfexport/svnfexport.cxx,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  Don't attempt to double-import a .fi file
+
+2019-03-24 22:00  starseeker
+
+	* [r72730] misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  fix command string
+
+2019-03-24 15:24  brlcad
+
+	* [r72729] misc/tools/perplex/perplex_template.c,
+	  misc/tools/perplex/scanner.re:
+	  quell size_t to int warning
+
+2019-03-24 15:03  starseeker
+
+	* [r72728] misc/repoconv/svnfexport/common_structs.h,
+	  misc/repoconv/svnfexport/svnfexport.cxx,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  Quiet compiler warnings about not checking system returns
+
+2019-03-24 14:58  starseeker
+
+	* [r72727]
+	  misc/repoconv/svnfexport/custom/r29886_cvs_svn_rel-5-1-branch_sync.fi:
+	  missed another one somehow??
+
+2019-03-24 14:30  starseeker
+
+	* [r72726]
+	  misc/repoconv/svnfexport/custom/r29886_cvs_svn_trunk_sync.fi:
+	  Go ahead and commit the trunk sync fi file as well
+
+2019-03-24 14:29  starseeker
+
+	* [r72725]
+	  misc/repoconv/svnfexport/custom/r29886_cvs_svn_rel-5-1-branch_sync.fi:
+	  There we go - now the diff test actually passes for the branch
+
+2019-03-24 14:18  starseeker
+
+	* [r72724]
+	  misc/repoconv/svnfexport/custom/r29886_cvs_svn_rel-5-1-branch_sync.fi:
+	  Extra spaces are bad in path names...
+
+2019-03-24 14:15  starseeker
+
+	* [r72723]
+	  misc/repoconv/svnfexport/custom/r29886_cvs_svn_rel-5-1-branch_sync.fi:
+	  apparently missed one blob
+
+2019-03-24 13:50  starseeker
+
+	* [r72722]
+	  misc/repoconv/svnfexport/custom/r29886_cvs_svn_rel-5-1-branch_sync.fi:
+	  Make a stab at a fast-import file to sync up rel-5-1-branch
+
+2019-03-24 12:07  starseeker
+
+	* [r72721] misc/repoconv/svnfexport/common_structs.h,
+	  misc/repoconv/svnfexport/svnfexport.cxx,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  Need to make it easier to resume after we trip during conversion.
+	  Also, apparently need to validate more branches at startup -
+	  rel-5-1-branch doesn't match between cvs->git and svn->git and
+	  svn subsequently commits to it, so we'll have to make a sync
+	  commit for that branch too.
+
+2019-03-23 20:20  starseeker
+
+	* [r72720] src/librt/cache.c:
+	  Something smells very funny here... valgrind is spotting this
+	  memory as lost. Need more investigation.
+
+2019-03-23 20:17  starseeker
+
+	* [r72719] src/librt/tests/cache.cxx:
+	  test memory cleanups
+
+2019-03-23 20:16  starseeker
+
+	* [r72718] src/librt/cache.c:
+	  valgrind reports db_external is leaked memory - clean up after
+	  we've used it
+
+2019-03-23 19:58  starseeker
+
+	* [r72717] include/bu/file.h, src/librt/tests/cache.cxx:
+	  Add cleanup code to remove the local test cache once we're done.
+
+2019-03-23 19:27  starseeker
+
+	* [r72716] src/librt/tests/CMakeLists.txt,
+	  src/librt/tests/cache.cxx:
+	  Start roughing out a test setup to hammer the librt cache. Just
+	  early preliminaries at this point, so not hooked in.
+
+2019-03-23 19:25  starseeker
+
+	* [r72715] src/librt/cache.c:
+	  Not quite sure why, but was getting a stack smash report when
+	  trying to set a local cache directory...
+
+2019-03-23 16:09  d_rossberg
+
+	* [r72714] src/libbu/tests/mappedfile.c:
+	  quell declared/used but not initialized variable warning/error in
+	  gcc 7.3
+
+2019-03-22 22:09  starseeker
+
+	* [r72713] src/librt/cache.c:
+	  Use a Windows API for file movement. Apparently we need to close
+	  the dbip to allow the file to be moved on Windows, but this makes
+	  Linux unhappy about d_namep freeing somehow...
+
+2019-03-22 20:10  starseeker
+
+	* [r72712] src/libbu/mappedfile.c:
+	  Whoops, returns void not int
+
+2019-03-22 20:06  starseeker
+
+	* [r72711] CMakeLists.txt, include/bu/mapped_file.h,
+	  src/libbu/mappedfile.c:
+	  Make a stab at a Windows version of the mmap/munmap logic in
+	  mappedfile.c
+
+2019-03-22 19:40  starseeker
+
+	* [r72710] src/libbu/file.c:
+	  Use RemoveDirectory on Windows if we have a directory.
+
+2019-03-22 15:34  starseeker
+
+	* [r72709] include/rt/defines.h, src/librt/cache.c:
+	  Add a SEM guard on the db_open, db_dirbuild manipulation, and
+	  bu_hash_set in cache_read_dbip to prevent multiple threads from
+	  mucking with the same dbip simultaneously. Also, remove the
+	  dbi_magic set to zero after the db_close. Now getting a
+	  successful raytrace from .g cache objects in basic multi-object
+	  testing.
+
+2019-03-22 14:30  gabbar1947
+
+	* [r72708] src/librt/primitives/annot/annot.c, src/remrt/remrt.c:
+	  -Wformat-security warning fixed
+
+2019-03-22 13:24  starseeker
+
+	* [r72707] src/librt/cache.c:
+	  Back to the db_open version of the cache
+
+2019-03-22 13:07  starseeker
+
+	* [r72706] src/librt/cache.c:
+	  Test a version of r72661 that uses bu_mapped_file for the loading
+	  of the externals - seems to work. Committing this and reverting
+	  it to stash the version of this using mapped_file, but the plan
+	  is still to get the .g based version working.
+
+2019-03-21 22:29  starseeker
+
+	* [r72705] src/libbu/tests/file.c:
+	  use bu_file_delete to zap the directory as well
+
+2019-03-21 21:18  starseeker
+
+	* [r72704] src/libbu/tests/mappedfile.c:
+	  test_num isn't enough, do test_num + file_cnt to get test
+	  specific file names
+
+2019-03-21 21:12  starseeker
+
+	* [r72703] src/libbu/tests/mappedfile.c:
+	  Provide each mappedfile test with its own set of files, so we can
+	  independently run tests in parallel without them doing unexpected
+	  things to each others files.
+
+2019-03-21 20:14  starseeker
+
+	* [r72702] src/libbu/tests/CMakeLists.txt:
+	  Looks like the gettime/utctime compatibility test is working now,
+	  go ahead and enable.
+
+2019-03-21 20:13  starseeker
+
+	* [r72701] src/librt/cache.c:
+	  Revert r72661 and restore the cache to it's use of full .g files
+	  rather than the bu_external serializations.
+
+2019-03-21 18:59  d_rossberg
+
+	* [r72700] src/libbu/tests/mappedfile.c, src/remrt/remrt.c:
+	  quell some compiler warnings/errors
+	  hopefully, other compilers than mine are happy too
+
+2019-03-21 18:56  d_rossberg
+
+	* [r72699] include/bu/mapped_file.h:
+	  the bu_mapped_file struct has only 9 entries
+
+2019-03-21 18:40  brlcad
+
+	* [r72698] src/libbu/tests/CMakeLists.txt:
+	  add additional mapped file tests to explore a broader range,
+	  increasingly larger sets of mapped files
+
+2019-03-21 18:39  brlcad
+
+	* [r72697] src/libbu/mappedfile.c:
+	  profiled mapped file performance shows realpath to be excessively
+	  detrimental, expensive (91% of runtime). let the caller call
+	  realpath if they need the file path canonicalized.
+
+2019-03-21 18:06  brlcad
+
+	* [r72696] src/libbu/tests/datetime.c:
+	  likely overflow of abs(). try c99's llabs()
+
+2019-03-21 17:05  brlcad
+
+	* [r72695] src/librt/cache.c:
+	  turn off debugging
+
+2019-03-21 17:00  brlcad
+
+	* [r72694] src/librt/cache.h:
+	  env command does this now
+
+2019-03-21 17:00  brlcad
+
+	* [r72693] src/liboptical/sh_prj.c, src/liboptical/sh_text.c,
+	  src/librt/db_open.c, src/librt/primitives/dsp/dsp.c,
+	  src/librt/primitives/ebm/ebm.c, src/librt/primitives/hf/hf.c:
+	  bu_close_mapped_file handles null quietly now
+
+2019-03-21 16:55  starseeker
+
+	* [r72692] src/libbu/datetime.c, src/libbu/tests/datetime.c:
+	  Try out GetSystemTimePreciseAsFileTime on Windows for bu_gettime
+
+2019-03-21 16:31  brlcad
+
+	* [r72691] src/libbu/tests/CMakeLists.txt:
+	  enable the mapped file unit test now that things seem to be
+	  working
+
+2019-03-21 16:18  brlcad
+
+	* [r72690] src/libbu/mappedfile.c:
+	  Reimplement mapped file support, restore parallel safety.
+	  
+	  This new version keeps track of mapped files in an array that is
+	  partially static (allocation optimization) with the remainder
+	  dynamic.
+	  Access to the global store now goes through simple accessor
+	  functions
+	  so it should be less error-prone (parallelism) with respect to
+	  future
+	  changes. Code was also simplified with the non-mmap support
+	  reduced
+	  to just a manual open+read.
+	  
+	  When the storage container switched from dynamically allocated
+	  bu_list
+	  elements to a private array, the container was not semaphore
+	  protected
+	  for multithreaded access. Also, the way bu_mapped_file structures
+	  were being returned was also wrong as an increase in the array
+	  size
+	  and subsequent realloc would invalidate pointers previously
+	  handed
+	  out. This version keeps an array of pointers so they remain valid
+	  until bu_free_mapped_files() is called.
+	  
+	  While not unique to it, the prep caching system exacerbated the
+	  problem with multiple threads racing to read in the same database
+	  files. This made db_open() unsafe as a consequence. With this
+	  change, it should be safe to db_open() the same database from
+	  multiple
+	  threads without ill effect.
+	  
+	  Future work: this doesn't change bu_mapped_file_open() from being
+	  a
+	  stateful library call, which is undesirable. The API needs to be
+	  passed an allocation context and/or contain one within the
+	  bu_mapped_file structure, not manage it within the library
+	  itself.
+
+2019-03-21 15:34  starseeker
+
+	* [r72689] src/libbu/tests/datetime.c:
+	  bu_gettime currently warns that its output isn't suitable on
+	  Windows for use with bu_utctime - try to construct a unit test
+	  that will detect if bu_gettime isn't returning something based on
+	  UTC
+
+2019-03-21 15:32  brlcad
+
+	* [r72688] src/libbu/tests/mappedfile.c:
+	  needs to check against the last element, not where the iterator
+	  exceeded. also terminate files with a newline.
+
+2019-03-21 13:12  starseeker
+
+	* [r72687] misc/CMakeLists.txt:
+	  list for distcheck
+
+2019-03-21 05:20  brlcad
+
+	* [r72686] src/libbu/tests/mappedfile.c:
+	  reworked to go through the same mapping harness for debugging and
+	  maintenance simplicity. report failure modes distinct from parsed
+	  value issues.
+
+2019-03-20 21:44  starseeker
+
+	* [r72685] src/libbu/tests/file.c:
+	  These headers are already coming in through bu.h or bio.h
+
+2019-03-20 20:33  starseeker
+
+	* [r72684] include/config_win.h.in, src/libbu/tests/dir.c:
+	  Clear MSVC warning when building dir.c in bu_test executable
+
+2019-03-20 20:20  brlcad
+
+	* [r72683] src/libbu/tests/mappedfile.c:
+	  allow specification of how many files and stage it for future
+	  testing
+
+2019-03-20 20:05  starseeker
+
+	* [r72682] src/libbu/file.c:
+	  It looks like back in commit r48351 there was a specific Coverity
+	  cid report for a TOCTOU issue that prompted the use of fd in
+	  bu_file_delete. (That was when the initial opening of the fd was
+	  introduced, which is also most likely when Windows file deletion
+	  was broken.) Rework bu_file_delete to preserve the r48351
+	  behavior on non-Windows platforms.
+
+2019-03-20 19:32  starseeker
+
+	* [r72681] src/libbu/tests/file.c:
+	  Clean up the vls strings
+
+2019-03-20 19:15  starseeker
+
+	* [r72680] src/libbu/file.c:
+	  Reorganize a bit, one less HAVE_WINDOWS_H ifdef
+
+2019-03-20 19:00  starseeker
+
+	* [r72679] src/libbu/tests/CMakeLists.txt:
+	  Hook basic bu/file.h tests in as libbu unit test
+
+2019-03-20 17:40  starseeker
+
+	* [r72678] src/libbu/file.c:
+	  Ah. The bu_file_exists call at the beginning of the delete logic
+	  with a non-null fd was resulting in Windows considering the file
+	  in-use, and consequently refusing to delete it. Narrow the scope
+	  of the open fd in the delete logic. While we're at it, having
+	  already waded through it, we might as well use the Windows file
+	  APIs on that platform.
+
+2019-03-20 14:52  starseeker
+
+	* [r72677] src/libbu/tests/file.c:
+	  _mkdir header on Windows
+
+2019-03-20 14:41  starseeker
+
+	* [r72676] src/libbu/tests/CMakeLists.txt, src/libbu/tests/file.c:
+	  Untested on Windows and not hooked up to testing yet, but rough
+	  out a basic exercise of most of the bu/file.h API.
+
+2019-03-20 14:36  starseeker
+
+	* [r72675] include/bu/path.h:
+	  whoops, caught path.h in last commit
+
+2019-03-20 14:35  starseeker
+
+	* [r72674] include/bu/file.h, include/bu/path.h:
+	  my mistake, it's in bu/str.h
+
+2019-03-20 14:32  starseeker
+
+	* [r72673] include/bu/file.h:
+	  There is no bu_argv_free to call, remove it from the bu_file_list
+	  header documentation.
+
+2019-03-19 23:38  starseeker
+
+	* [r72672] src/librt/primitives/brep/brep.cpp:
+	  I think we're going to want to use attributes to denote plate
+	  mode, rather than change the on-disk serialization of brep. Quick
+	  test indicates we can access the necessary info at the import5
+	  stage, so we'll be able to stash mode and thickness in the brep
+	  internal structure from attributes.
+
+2019-03-19 23:07  starseeker
+
+	* [r72671] AUTHORS,
+	  src/libgcv/plugins/obj/wfobj/obj_parser_state.h:
+	  Skip empty strings in obj-g import processing (patch from Bojian
+	  Wu, GSoC 2016)
+
+2019-03-19 18:14  brlcad
+
+	* [r72670] src/libbu/mappedfile.c:
+	  closing null is not be a blather-worthy crime.
+
+2019-03-19 18:13  brlcad
+
+	* [r72669] include/bu/mapped_file.h, src/libbu/mappedfile.c,
+	  src/librt/primitives/submodel/submodel.c:
+	  remove the dont_restat 'optimization'. submodels aren't in use or
+	  proven working but also, saving one stat call seems wildly
+	  premature / speculative too.
+
+2019-03-19 18:10  brlcad
+
+	* [r72668] include/bu/opt.h:
+	  ERROR ftw
+
+2019-03-19 18:05  brlcad
+
+	* [r72667] src/libbu/tests/mappedfile.c:
+	  simplify reading logic with strtod, quell long int warnings, and
+	  let close blather when null (it shouldn't be null).
+
+2019-03-19 17:22  starseeker
+
+	* [r72666] src/libbu/tests/mappedfile.c:
+	  if the open failed, don't bother trying bu_opt_long
+
+2019-03-19 15:54  starseeker
+
+	* [r72665] src/libbu/tests/CMakeLists.txt,
+	  src/libbu/tests/mappedfile.c:
+	  This may be a bit too involved for a unit test (not hooking it in
+	  for now) but construct a small setup to allow for stress testing
+	  of the mapped_file logic in libbu.
+
+2019-03-19 13:00  starseeker
+
+	* [r72664] include/config_win.h.in:
+	  Ah - ganalyze exposes that the Windows setmode wrapper was C
+	  only. Pull it out to be defined for both C and C++
+
+2019-03-19 01:14  starseeker
+
+	* [r72663] misc/repoconv/svnfexport/custom/31039.fi:
+	  Add in custom fi file for r31039
+
+2019-03-18 22:24  starseeker
+
+	* [r72662] src/librt/cache.c:
+	  bu_file_size can be <= 0, handle it
+
+2019-03-18 22:11  starseeker
+
+	* [r72661] include/bu/file.h, src/libbu/file.c, src/librt/cache.c:
+	  Checkpoint an experiment - this cuts db_open and bu_mapped_file
+	  out of the cache logic. Instead, we deal directly with low level
+	  bu_external serializations. So far (at least on Linux) haven't
+	  seen the odd invalid bu_free reporting of db_open based logic,
+	  but needs a lot more stress testing (not to mention Windows) to
+	  convince that this is any sort of improvement. Note in passing
+	  that a naive addition of bu_mapped_file usage to
+	  cache_read_external doesn't seem to work - get some kind of
+	  memory corruption, but not confident yet that those issues are
+	  anything other than a consequence of some error on my part...
+
+2019-03-18 11:44  starseeker
+
+	* [r72660] misc/repoconv/svnfexport/common_structs.h,
+	  misc/repoconv/svnfexport/svnfexport.cxx,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  tweaks to verification commands
+
+2019-03-18 06:09  brlcad
+
+	* [r72659] src/librt/cache.c:
+	  convert remaining and add some additional debugging with manual
+	  depth indication.
+
+2019-03-17 16:50  starseeker
+
+	* [r72658] misc/CMakeLists.txt,
+	  misc/repoconv/svnfexport/common_structs.h,
+	  misc/repoconv/svnfexport/custom,
+	  misc/repoconv/svnfexport/custom/29982.fi,
+	  misc/repoconv/svnfexport/svnfexport.cxx,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  29882 is most easily handled by a hand-modded fi file - set up
+	  for that.
+
+2019-03-17 15:46  starseeker
+
+	* [r72657] misc/repoconv/svnfexport/svnfexport_svn.cxx:
+	  Confound it. r29882 is going to take special handling
+
+2019-03-17 15:23  starseeker
+
+	* [r72656] misc/repoconv/svnfexport/svnfexport.cxx,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  support resume even if we've skipped some revs, store state for
+	  all the branches
+
+2019-03-17 01:52  starseeker
+
+	* [r72655] misc/repoconv/svnfexport/svnfexport.cxx,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  always update the rev->sha1 map
+
+2019-03-17 01:36  starseeker
+
+	* [r72654] misc/repoconv/svnfexport/common_structs.h,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx,
+	  misc/repoconv/svnfexport/svnfexport_svn.cxx:
+	  Generates at least a few applicable fast export files now...
+
+2019-03-16 23:14  starseeker
+
+	* [r72653] misc/repoconv/svnfexport/common_structs.h,
+	  misc/repoconv/svnfexport/svnfexport.cxx:
+	  It looks like for svn branches we need to pull the latest branch
+	  version then 'svn up' our way to the revision in question -
+	  trying to check out r29886 directly for STABLE results in an svn
+	  info report with a URL for trunk, not the branch.
+
+2019-03-16 20:03  starseeker
+
+	* [r72652] misc/repoconv/svnfexport/common_structs.h,
+	  misc/repoconv/svnfexport/svnfexport.cxx,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  inputs to branch lookups are wrong (git form, not branch name)
+	  but start setting up for using sha1 labels for all references
+
+2019-03-16 18:25  starseeker
+
+	* [r72651] misc/repoconv/svnfexport/common_structs.h,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  Bail if we can't apply a fi file
+
+2019-03-16 14:11  starseeker
+
+	* [r72650] misc/repoconv/svnfexport/common_structs.h,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx:
+	  untested - working on per-commit fi file application logic.
+
+2019-03-16 13:52  starseeker
+
+	* [r72649] misc/repoconv/svnfexport/svnfexport.cxx,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx,
+	  misc/repoconv/svnfexport/svnfexport_svn.cxx:
+	  Not working yet, but start refactoring the logic towards a one
+	  fast-import file per commit operational mode. Need to replace
+	  mark usage with sha1 for this to work properly, update
+	  repo_verify logic, add actual application of fi file to repo on a
+	  per commit basis, etc. but it's a start.
+
+2019-03-16 01:31  starseeker
+
+	* [r72648] misc/CMakeLists.txt,
+	  misc/repoconv/svnfexport/common_structs.h,
+	  misc/repoconv/svnfexport/svnfexport.cxx,
+	  misc/repoconv/svnfexport/svnfexport_git.cxx,
+	  misc/repoconv/svnfexport/svnfexport_svn.cxx:
+	  Start breaking this down into topical logic - getting a bit hard
+	  to keep track of all the moving pieces.
+
+2019-03-16 01:06  starseeker
+
+	* [r72647] misc/repoconv/svnfexport/svnfexport.cxx:
+	  They're not updating yet since we're not applying per rev fast
+	  export files yet, but start managing a cache of branch,rev->git
+	  sha1 mappings so we can generate fast export files using git
+	  sha1s rather than revision number based marks.
+
+2019-03-15 22:01  brlcad
+
+	* [r72646] src/librt/cache.c:
+	  plug in a second hook specifically for debugging
+
+2019-03-15 21:22  brlcad
+
+	* [r72645] src/librt/cache.c:
+	  encapsulate all logging so we can conditionalize in one place
+
+2019-03-15 21:04  starseeker
+
+	* [r72644] NEWS, doc/docbook/system/mann/attr.xml:
+	  Note the addition of the attr copy subcommand
+
+2019-03-15 15:36  starseeker
+
+	* [r72642] src/gtools/gsh.cxx:
+	  Jot another note for when a real attempt can be made to make this
+	  work.
+
+2019-03-15 14:23  starseeker
+
+	* [r72641] src/gtools/ganalyze.cxx, src/gtools/gsh.cxx:
+	  async command execution needs work at more than just the libged
+	  layer.
+
+2019-03-15 02:37  brlcad
+
+	* [r72640] src/remrt/rtsrv.c:
+	  simplify logic flow, eliminate unhelpful goto
+
+2019-03-15 02:21  brlcad
+
+	* [r72639] include/bio.h, include/common.h:
+	  fileno() is old enough and has a simple enough signature that
+	  we're unlikely to end up with a conflicting declaration. just
+	  don't declare if some platform wraps in a macro. this lets it
+	  live with the other i/o related functions and pulls a major
+	  include out of common.h
+
+2019-03-15 02:19  brlcad
+
+	* [r72638] src/remrt/rtsrv.c:
+	  initialize in case pkc is null and we jump out
+
+2019-03-15 01:50  brlcad
+
+	* [r72637] src/gtools/ganalyze.cxx, src/libged/rtcheck.c:
+	  heh, of the 470+ calls to setmode, rtcheck was the ONE mistakenly
+	  using _fileno instead of fileno. config_win.h makes them
+	  synonymous.
+
+2019-03-14 22:53  starseeker
+
+	* [r72636] src/gtools/ganalyze.cxx:
+	  per rtcheck, use _fileno
+
+2019-03-14 22:52  starseeker
+
+	* [r72635] src/gtools/CMakeLists.txt, src/gtools/geval.c,
+	  src/gtools/gsh.cxx:
+	  have gsh do the geval bit if args are supplied
+
+2019-03-14 20:17  brlcad
+
+	* [r72634] src/librt/cache.c:
+	  clean up cache initialization. now explicitly keeping track when
+	  the cache is in a read-only state too.
+
+2019-03-14 16:49  brlcad
+
+	* [r72633] bench/run.c, include/bu/log.h, src/libbu/log.c,
+	  src/remrt/rtsrv.c:
+	  make bu_log/bu_flog typewise compatible with their printf/fprintf
+	  counterparts so they can be used interchangably in function
+	  pointers. (calling a function pointer cast to a different
+	  signature is undefined behavior per the standard)
+
+2019-03-14 06:42  brlcad
+
+	* [r72632] src/librt/cache.c:
+	  more setup improvement. more robust format file handling, better
+	  warnings to know what's going on.
+
+2019-03-14 05:31  brlcad
+
+	* [r72631] src/librt/cache.c:
+	  be more precise and consistent with cache warning messages, let
+	  user know when / where the cache folder was created when it
+	  doesn't exist. relax the requirement that it must exist in
+	  advance.
+
+2019-03-14 01:26  starseeker
+
+	* [r72630] src/gtools/gsh.cxx:
+	  Add note to experiment with gsh as a generic ged subprocess
+	  execution tool when we want subprocess on commands that aren't
+	  readily exposed in toplevel executables (e.g. search)
+
+2019-03-14 01:17  starseeker
+
+	* [r72629] src/gtools/ganalyze.cxx:
+	  simplify
+
+2019-03-14 01:12  starseeker
+
+	* [r72628] src/gtools/CMakeLists.txt, src/gtools/ganalyze.cxx:
+	  Checkpoint early thoughts about what a gqa/rtcheck/rtweight
+	  replacement command would look like, designing with an eye
+	  towards support for any/all of batch mode, interactive command
+	  use and pipe driven subprocess control. Not much here yet -
+	  basically just trying to boil down rt's command mode (currently
+	  our most sophisticated example of controlled subprocess command
+	  usage) to a bare bones template for general
+	  libged-subprocess-ready executables.
+
+2019-03-14 01:04  starseeker
+
+	* [r72627] include/bu/process.h:
+	  The pipe communication approach seems to do fairly well - not
+	  sure yet, but it may be pretty straightforward to set up a
+	  convention to have bu_process_exec optionally establish more
+	  pipes at launch time that applications could then coordinate use
+	  of. Immediate goal is to allow a vlist drawing information pipe
+	  that we can use instead of having to swipe one of stdout or
+	  stderr (which would leave them free for their intended original
+	  purposes.) Will need to do some exploring/experimentation
+
+2019-03-13 22:35  starseeker
+
+	* [r72626] src/libged/TODO:
+	  Make a note to give some thought to being able to safely run
+	  multiple simultaneous libged subprocess commands - will need to
+	  protect database access in various ways while they are active.
+
+2019-03-13 21:23  starseeker
+
+	* [r72625] src/libged/rtcheck.c:
+	  No longer calling fdopen in this file
+
+2019-03-13 20:12  brlcad
+
+	* [r72624] src/librt/cache.c:
+	  consolidate and clean up cache disabled messages
+
+2019-03-13 19:57  brlcad
+
+	* [r72623] src/librt/cache.c:
+	  Stray commas
+
+2019-03-13 19:56  brlcad
+
+	* [r72622] src/librt/cache.c:
+	  better reporting when cache gets disabled
+
+2019-03-13 19:45  brlcad
+
+	* [r72621] TODO, src/librt/cache.h:
+	  Expand notes for what rt_cache needs next, most not principally
+	  user facing
+
+2019-03-13 06:40  brlcad
+
+	* [r72620] src/librt/cache.c:
+	  the subdir convention is now encapsulated, so use it to get the
+	  right path.
+
+2019-03-13 06:22  brlcad
+
+	* [r72619] src/librt/cache.c:
+	  consolidate the object path and file logic and add some sanity
+	  checks to more gracefully handle a non-writable cache.
+
+2019-03-13 06:17  brlcad
+
+	* [r72618] CMakeLists.txt:
+	  sort funcs
+
+2019-03-13 00:08  starseeker
+
+	* [r72617] src/libged/rtcheck.c:
+	  cleanup code is common now, refactor it into a function.
+
+2019-03-12 22:47  starseeker
+
+	* [r72616] NEWS, src/libged/rtcheck.c:
+	  Fix for infinite loop after running rtcheck at MGED command
+	  prompt.
+	  
+	  Observed a fairly reproducible locking condition where a simple,
+	  fast rtcheck
+	  was hanging the MGED command prompt. Not 100% sure if this was
+	  introduced by
+	  the refactor or has been there longer - it's probably relatively
+	  recent given
+	  its observed severity - but regardless the issue is present in
+	  7.30.0 so
+	  definitely user visible. Probably we got luck in testing after
+	  the logic
+	  refactor. What seems to be happening is that some aspect of the
+	  rtcheck
+	  callbacks is being called in an order that results in Tcl never
+	  getting the
+	  proper IO notifications to resume interactivity in the main MGED
+	  gui - gdb
+	  indicates the hanging is occurring in Tcl's threading and events
+	  layers. (It's
+	  hard pin down - this is one of those situations where running the
+	  test case in
+	  a debugger seems to make the failure less likely to occur.) To
+	  avoid the
+	  issue, we rework both the drawing and textual callback channels
+	  to each be
+	  independently capable of handling the full shutdown and cleanup
+	  process, but
+	  don't trigger that process in either until both channels have set
+	  flags in the
+	  (now shared) ged_rtcheck data structure indicating they are done.
+	  If and only
+	  if both flags are set, whichever callback gets there first
+	  unhooks both rtcheck
+	  callbacks from Tcl and finishes the subprocess cleanup. This will
+	  avoid two
+	  potentially independent callback functions trying to
+	  simultaneously remove
+	  themselves from Tcl's IO callback system.
+
+2019-03-12 20:27  starseeker
+
+	* [r72615] src/librt/cache.c:
+	  Change by Sean Morrison to accomidate raytracing using read-only
+	  cache objects
+
+2019-03-12 16:20  starseeker
+
+	* [r72614] src/librt/cache.c:
+	  quell compiler complaint
+
+2019-03-12 12:30  brlcad
+
+	* [r72613] src/librt/cache.c:
+	  prep caching v2.
+	  
+	  intended to address a potential race condition where multiple
+	  threads
+	  ended up writing out to their own dbip handles simultaneously
+	  with
+	  badness ensuing. now it works on a copy and moves into place
+	  atomically when it's ready.
+	  
+	  as v1 potentially wrote out corrupt cache objects, particularly
+	  on
+	  windows, went ahead and bumped the version number. also
+	  implemented
+	  the necessary logic to "upgrade" an existing cache by wiping it
+	  out
+	  (i.e., delete all the things).
+	  
+	  work in progress, of course. needs testing. needs refactoring.
+	  still need to add the bits for windows atomic move since there's
+	  no
+	  rename() there too; but fortunately there is a function for it.
+
+2019-03-12 12:21  brlcad
+
+	* [r72612] include/bu/file.h:
+	  clarify it's an array of pointers
+
+2019-03-12 06:37  brlcad
+
+	* [r72611] include/bn/vlist.h, include/bu/units.h,
+	  misc/tools/perplex/perplex.h, src/libbg/polygon.c,
+	  src/libbg/polygon_ear_clipping.c, src/libbn/tabdata.c,
+	  src/libbn/vlist.c, src/libbu/parallel_cpp11thread.cpp,
+	  src/libbu/progname.c, src/libbu/scan.c, src/libbu/sort.c,
+	  src/libbu/units_humanize.c, src/libbu/uuid.c, src/libbu/vls.c,
+	  src/libged/display_list.c:
+	  more windows quellage, size_t propagation.
+
+2019-03-12 05:20  brlcad
+
+	* [r72610] src/util/pix-bw.c:
+	  not sure how long it'll take me to get used to separate header
+	  breakout. need bu/file.h for bu_file_exists.
+
+2019-03-12 04:33  brlcad
+
+	* [r72609] src/util/pix-bw.c:
+	  try to catch spurious assertion on windows, make sure our input
+	  exists before we go using it.
+
+2019-03-11 21:39  brlcad
+
+	* [r72608] include/config_win.h.in:
+	  supposed to be execl, fixed typo
+
+2019-03-11 20:20  brlcad
+
+	* [r72607] include/bu/opt.h, include/config_win.h.in,
+	  include/ged/commands.h, src/brlman/brlman.c, src/conv/g-obj.c,
+	  src/conv/gcv/gcv.c, src/conv/step/step-g/step-g.cpp,
+	  src/libbu/color.c, src/libbu/opt.c, src/libbu/path.c,
+	  src/libbu/tests/opt.c, src/libgcv/plugins/obj/obj_read.c,
+	  src/libged/ged_private.h, src/libged/ged_util.c,
+	  src/libged/mater.cxx, src/libged/tire.c, src/nirt/main.cxx,
+	  src/rtwizard/main.c, src/util/icv.cpp:
+	  converted bu_opt to size_t argc plus other size_t
+	  propagation/quellag and style cleanup.
+
+2019-03-07 20:24  starseeker
+
+	* [r72606] src/libged/mater.cxx:
+	  mater -d audit - not sure this is the reporting form we want, but
+	  it seems to be identifying issues now.
+
+2019-03-07 16:28  starseeker
+
+	* [r72605] src/libged/ged_util.c, src/libged/mater.cxx:
+	  Start roughing out what an audit subcommand for mater -d would
+	  look like - some of this happens as a byproduct in the map
+	  command, but it really should be something that can just be run
+	  a.l.a the validate option for .density files - we want to find
+	  problems with the density information ahead of time, not at
+	  runtime.
+
+2019-03-07 15:30  starseeker
+
+	* [r72604] NEWS, doc/docbook/system/mann/mater.xml,
+	  src/libged/mater.cxx:
+	  Support >=< prefixes on density and material id lookup options
+	  for mater -d command
+
+2019-03-07 01:14  starseeker
+
+	* [r72603] src/libbu/hash.c:
+	  whoops, can't acquire a semaphore in get if it's being called
+	  from an already locking function.
+
+2019-03-07 00:24  brlcad
+
+	* [r72602] TODO:
+	  interesting experiment but not the right place, rather
+	  inefficient and adds disruptive complexity. needs tooling to
+	  prioritize better or simpler system.
+
+2019-03-07 00:22  brlcad
+
+	* [r72601] TODO:
+	  notes after encountering user confusion on how bounding boxes are
+	  calculated. need better means for reporting a tighter fitting
+	  (and ideally configurablly tight) bounding box. also clean up
+	  related analyze command items.
+
+2019-03-06 23:04  starseeker
+
+	* [r72600] include/bu/parallel.h, src/libbu/hash.c:
+	  Make a stab at protecting the bu_hash logic during parallel
+	  executions via semaphore locking.
+
+2019-03-06 21:24  starseeker
+
+	* [r72599] NEWS, src/brlman/brlman.c:
+	  Use the new bu_dir API to get the right output locations for
+	  manual pages - looks like things changed and the old logic wasn't
+	  looking in the right dirs any longer.
+
+2019-03-06 20:44  starseeker
+
+	* [r72598] CHANGES, include/bu/hash.h, src/libbu/hash.c:
+	  Remove deprecated bu_hash API
+
+2019-03-06 06:15  brlcad
+
+	* [r72597] TODO:
+	  not finding anything on the cache, need a test case for Windows
+
+2019-03-06 06:11  brlcad
+
+	* [r72596] include/rt/geom.h:
+	  add storage location for holding UVs
+
+2019-03-05 23:36  starseeker
+
+	* [r72595] src/librt/cache.c:
+	  Not sure if this will be a lasting feature, but for now add
+	  pedigree attributes to the cache objects.
+
+2019-03-05 23:23  starseeker
+
+	* [r72594] src/librt/cache.c:
+	  Report via bu_log if any of the create path operations fail when
+	  setting up the cache.
+
+2019-03-05 16:50  brlcad
+
+	* [r72593] BUGS, NEWS, src/rt/view.c, src/rt/worker.c:
+	  turns out rt -t apparently wasn't implemented thread-safe.
+	  re-implemented to simply render in reverse which eliminates the
+	  need for a separate section. now works. also leaving a note that
+	  random pixel rendering is currently set to run continuously, but
+	  fortunately not end-user facing.
+
+2019-03-05 13:38  starseeker
+
+	* [r72592] src/rt/view.c:
+	  Not clear why yet, but turning this on is breaking the benchmark
+	  test
+
+2019-03-05 12:24  starseeker
+
+	* [r72591] src/rt/heatgraph.c:
+	  We're still getting Wdeclaration-after-statement in the compile
+	  flags (probably should track that down and remove it, but for now
+	  just fix the build complaint...)
+
+2019-03-05 03:03  brlcad
+
+	* [r72590] src/rt/opt.c:
+	  caught
+
+2019-03-05 02:57  starseeker
+
+	* [r72589] misc/repoconv/svnfexport/svnfexport.cxx:
+	  Start working on capturing rev -> sha1 mapping information
+
+2019-03-05 02:42  brlcad
+
+	* [r72588] src/rt/ext.h, src/rt/opt.c, src/rt/worker.c:
+	  renamed transpose_grid to top_down since it's a coordinate system
+	  flip (1st to 4th), not actually a tranpose.
+
+2019-03-05 02:40  brlcad
+
+	* [r72587] src/rt/opt.c:
+	  ws, line up columns, eliminate interior tabs
+
+2019-03-05 02:28  brlcad
+
+	* [r72586] src/rt/view.c:
+	  cleanup and group vars, style
+
+2019-03-05 02:18  brlcad
+
+	* [r72585] src/rt/heatgraph.c:
+	  clean up debug statements
+
+2019-03-05 02:18  brlcad
+
+	* [r72584] src/rt/worker.c:
+	  zero init
+
+2019-03-04 22:21  starseeker
+
+	* [r72583] regress/CMakeLists.txt, regress/burst/CMakeLists.txt,
+	  regress/burst/regress-burst-ktank.cmake.in:
+	  Hook up the burst ktank test as a regression test
+
+2019-03-04 20:34  brlcad
+
+	* [r72582] CHANGES:
+	  include pixpaste/pixcut with the image tools
+
+2019-03-04 16:36  starseeker
+
+	* [r72581] BUGS:
+	  User observed behavior that the mirror command rejects brep
+	  objects and does something odd to them if they're part of a comb.
+
+2019-03-04 16:34  starseeker
+
+	* [r72580] NEWS, doc/docbook/system/mann/brep.xml,
+	  src/libged/brep.c, src/libged/ged_private.h,
+	  src/libged/shape_recognition.cpp:
+	  Expose openNURBS ability to flip faces - functionally similar to
+	  bot flip command, except for brep objects.
+
+2019-03-04 13:15  starseeker
+
+	* [r72579] doc/docbook/articles/images/ell_ssm.gif,
+	  doc/docbook/articles/images/moss.mpg:
+	  Missed removing a couple of the docbook image files
+
+2019-03-04 12:00  starseeker
+
+	* [r72578] misc/repoconv/svnfexport/svnfexport.cxx:
+	  It's looking more and more like we'll need to find a way on a
+	  rolling basis to associate revision numbers with commit sha1
+	  strings. r36053 branches from an older trunk rev, and
+	  preliminiary experiments with git notes for revision number
+	  recording seem to indicate they need sha1 strings and not just
+	  marks in the fast import. This probably means dumping the fast
+	  import per revision, importing it into the git repo, reading back
+	  in the commit sha1 from git, and replacing all current uses of
+	  revision number marks with lookups to the rev->sha1 map (at a
+	  minimum.)
+
+2019-03-04 03:19  starseeker
+
+	* [r72577] misc/repoconv/svnfexport/svnfexport.cxx:
+	  Whoops - may still have blobs even in commits referencing older
+	  revisions
+
+2019-03-04 01:57  starseeker
+
+	* [r72576] misc/repoconv/svnfexport/svnfexport.cxx:
+	  This gets us moving forward with trunk - there may be some
+	  branches that will require special casing to keep the state build
+	  logic within reason - will know once we start verification
+	  testing on branches as well as trunk.
+
+2019-03-04 00:49  starseeker
+
+	* [r72575] misc/repoconv/svnfexport/svnfexport.cxx:
+	  Confound it. We'll need nested back-references. It looks like I'm
+	  not properly capturing that in the initial analysis pass.
+
+2019-03-04 00:07  starseeker
+
+	* [r72574] misc/repoconv/svnfexport/svnfexport.cxx:
+	  Flag the dir copy case as needing commit attention
+
+2019-03-03 23:06  starseeker
+
+	* [r72573] misc/repoconv/svnfexport/svnfexport.cxx:
+	  Too aggressive, only use text_copy_source_sha1 if we don't also
+	  have text_content_sha1
+
+2019-03-03 20:36  starseeker
+
+	* [r72572] misc/repoconv/svnfexport/svnfexport.cxx:
+	  if we have text_copy_source_sha1, use it
+
+2019-03-03 16:04  starseeker
+
+	* [r72571] misc/repoconv/svnfexport/svnfexport.cxx:
+	  fix relative path creation for old revision commits, generate
+	  sha1 lists at runtime
+
+2019-03-03 02:50  starseeker
+
+	* [r72570] misc/repoconv/README,
+	  misc/repoconv/svnfexport/svnfexport.cxx:
+	  Make a note on how to use git alias to define a 'git svnrev'
+	  command that can use git note information to checkout svn
+	  revisons, assuming we define the notes according to the expected
+	  pattern.
+
+2019-03-02 15:21  starseeker
+
+	* [r72569] misc/repoconv/svnfexport/svnfexport.cxx:
+	  Start setting up for incremental progress and built-in
+	  independent repository verification via running svn and git
+	  checkout commands and doing a diff comparison. Can't do
+	  incremental fast-imports yet, but ideally need to get there...
+
+2019-03-01 17:41  starseeker
+
+	* [r72568] include/ged/defines.h, src/libged/ged.c,
+	  src/libged/ged_private.h, src/libged/ged_util.c,
+	  src/libged/gqa.c, src/libged/mater.cxx:
+	  Putting the density info in the ged struct was a bad idea - gqa's
+	  code is the only beneficiary, and that's going to be moot anyway
+	  once we do a badly needed refactor of that code to actually pass
+	  info around instead of using a global ged pointer (urk... must
+	  fix...) We always read it at run time anyway, so there's no point
+	  in stashing it in memory.
+
+2019-03-01 17:05  starseeker
+
+	* [r72567] src/rt/viewweight.c:
+	  report the .g file as the density information source
+
+2019-03-01 16:57  starseeker
+
+	* [r72566] NEWS, src/rt/viewweight.c:
+	  Add in support to rtweight for reading information from the .g
+	  file if it is there (in preference to the .density fallbacks, if
+	  present.) A specifically specified .density file still takes
+	  priority.
+
+2019-03-01 12:22  starseeker
+
+	* [r72565] CMakeLists.txt:
+	  Don't accomidate a missing directory - just encourages the build
+	  logic to stay incorrect.
+
+2019-03-01 11:39  starseeker
+
+	* [r72564] src/CMakeLists.txt:
+	  lgt dir removed
+
+2019-02-28 13:57  starseeker
+
+	* [r72563] CHANGES, doc/docbook/system/man1/burst.xml,
+	  src/burst/CMakeLists.txt, src/burst/Hm.c, src/burst/Sc.c,
+	  src/burst/Sc.h, src/burst/burst.c, src/burst/error.c,
+	  src/burst/extern.h, src/burst/prnt.c, src/burst/ui.c:
+	  This is a relatively quick scrub (much more cleanup and reduction
+	  of the burst code is possible) but pull out the termlib calls and
+	  make burst batch only (interactive menu deprecated 7.26).
+
+2019-02-28 13:08  starseeker
+
+	* [r72562] CMakeLists.txt, misc/CMake/CMakeLists.txt,
+	  misc/CMake/FindLEX.cmake:
+	  No longer need lex detection for CMake - last tool requiring it
+	  has been removed.
+
+2019-02-28 13:05  starseeker
+
+	* [r72561] CHANGES, doc/docbook/system/man1/CMakeLists.txt,
+	  doc/docbook/system/man1/buffer.xml,
+	  doc/docbook/system/man1/bw-rle.xml,
+	  doc/docbook/system/man1/fb-rle.xml,
+	  doc/docbook/system/man1/firpass.xml,
+	  doc/docbook/system/man1/hex.xml,
+	  doc/docbook/system/man1/pictx.xml,
+	  doc/docbook/system/man1/pix-rle.xml,
+	  doc/docbook/system/man1/remapid.xml,
+	  doc/docbook/system/man1/rle-fb.xml,
+	  doc/docbook/system/man1/rle-pix.xml,
+	  doc/docbook/system/man1/secpass.xml,
+	  doc/docbook/system/man1/shapefact.xml,
+	  doc/docbook/system/man1/showtherm.xml, src/fb/CMakeLists.txt,
+	  src/fb/fb-rle.c, src/fb/rle-fb.c, src/gtools/CMakeLists.txt,
+	  src/gtools/remapid.c, src/util/CMakeLists.txt, src/util/buffer.c,
+	  src/util/bw-rle.c, src/util/fix_polysolids.c, src/util/hex.c,
+	  src/util/pix-rle.c, src/util/rle-pix.c, src/util/rle_args.c,
+	  src/util/rle_args.h:
+	  Obsolete tools removal (deprecated 7.26)
+
+2019-02-28 12:47  starseeker
+
+	* [r72560] CHANGES, doc/docbook/articles/CMakeLists.txt,
+	  doc/docbook/articles/animation_tutorial.xml,
+	  doc/docbook/articles/images/animtbl.gif,
+	  doc/docbook/articles/images/az_el.gif,
+	  doc/docbook/articles/images/az_el.jpg,
+	  doc/docbook/articles/images/az_el_sm.gif,
+	  doc/docbook/articles/images/azel.jpg,
+	  doc/docbook/articles/images/base.jpg,
+	  doc/docbook/articles/images/dagtbl.gif,
+	  doc/docbook/articles/images/ell.mpg,
+	  doc/docbook/articles/images/ell_sm.gif,
+	  doc/docbook/articles/images/equation.gif,
+	  doc/docbook/articles/images/film.gif,
+	  doc/docbook/articles/images/fn.gif,
+	  doc/docbook/articles/images/matrix.gif,
+	  doc/docbook/articles/images/moss_sm.gif,
+	  doc/docbook/articles/images/trans.gif,
+	  doc/docbook/articles/images/transboth.gif,
+	  doc/docbook/articles/images/transboth_sm.gif,
+	  doc/docbook/articles/images/v_eqn1.gif,
+	  doc/docbook/articles/images/v_eqn2.gif,
+	  doc/docbook/system/man1/CMakeLists.txt,
+	  doc/docbook/system/man1/anim_script.xml,
+	  doc/docbook/system/man1/anim_sort.xml,
+	  doc/docbook/system/man1/anim_time.xml,
+	  doc/docbook/system/man1/anim_track.xml,
+	  doc/docbook/system/man1/anim_turn.xml,
+	  doc/docbook/system/man1/azel.xml,
+	  doc/docbook/system/man1/bary.xml,
+	  doc/docbook/system/man1/chan_mult.xml,
+	  doc/docbook/system/man1/chan_permute.xml,
+	  doc/docbook/system/man1/fbanim.xml,
+	  doc/docbook/system/man1/rtwalk.xml,
+	  doc/docbook/system/man1/scriptsort.xml,
+	  doc/docbook/system/man1/tabinterp.xml,
+	  doc/docbook/system/man1/tabsub.xml, doc/html/CMakeLists.txt,
+	  doc/html/manuals/Anim_Tutorial, doc/html/manuals/mged/animmate,
+	  sh/CMakeLists.txt, sh/orbit.sh, src/CMakeLists.txt, src/anim,
+	  src/fb/CMakeLists.txt, src/fb/fbanim.c, src/fb/pixflip-fb.c,
+	  src/rt/CMakeLists.txt, src/rt/rtwalk.c, src/tab,
+	  src/util/CMakeLists.txt, src/util/azel.c, src/util/bary.c,
+	  src/util/pixfields.c, src/util/pixfieldsep.c:
+	  Remove video and animation tools (deprecated 7.26)
+
+2019-02-28 11:27  starseeker
+
+	* [r72559] doc/TODO.BREP:
+	  Thoughts on how we might improve solid NURBS raytracing for
+	  situations where we've got edge tolerances messing with the hit
+	  points reported (and generally improve confidence that our solid
+	  segments are correctly reporting occupied space).
+
+2019-02-28 02:59  brlcad
+
+	* [r72558] doc/docbook/system/man1/CMakeLists.txt,
+	  doc/docbook/system/man1/pixcut.xml, doc/tool_categories.txt,
+	  src/util/CMakeLists.txt, src/util/pixcut.c:
+	  pixcut and pixpaste go hand-in-hand. removed.
+
+2019-02-27 23:09  starseeker
+
+	* [r72557] CHANGES, doc/docbook/system/man1/CMakeLists.txt,
+	  doc/docbook/system/man1/png_info.xml, src/util/CMakeLists.txt,
+	  src/util/pix-yuv.c, src/util/pixpaste.c, src/util/png_info.c,
+	  src/util/texturescale.c, src/util/yuv-pix.c:
+	  Remove obsolete image (deprecated 7.26)
+
+2019-02-27 22:59  starseeker
+
+	* [r72556] CHANGES, doc/docbook/system/man1/CMakeLists.txt,
+	  doc/docbook/system/man1/bw-imp.xml,
+	  doc/docbook/system/man1/cell-fb.xml,
+	  doc/docbook/system/man1/cmap-fb.xml,
+	  doc/docbook/system/man1/fb-cmap.xml,
+	  doc/docbook/system/man1/fbcmrot.xml,
+	  doc/docbook/system/man1/fbscanplot.xml,
+	  doc/docbook/system/man1/polar-fb.xml, sh/CMakeLists.txt,
+	  sh/pixinfo.sh, src/fb/CMakeLists.txt, src/fb/cell-fb.c,
+	  src/fb/cmap-fb.c, src/fb/fb-cmap.c, src/fb/fbcmrot.c,
+	  src/fb/fbscanplot.c, src/fb/polar-fb.c, src/util/CMakeLists.txt,
+	  src/util/bw-imp.c:
+	  Remove obsolete pix and fb tools (deprecated 7.26)
+
+2019-02-27 22:51  starseeker
+
+	* [r72555] CHANGES, doc/docbook/system/man1/CMakeLists.txt,
+	  doc/docbook/system/man1/bot_shell-vtk.xml,
+	  doc/docbook/system/man1/g-nmg.xml,
+	  doc/docbook/system/man1/nmg-bot.xml,
+	  doc/docbook/system/man1/nmg-rib.xml,
+	  doc/docbook/system/man1/poly-bot.xml,
+	  doc/docbook/system/man1/rt_bot_faces.xml,
+	  src/conv/CMakeLists.txt, src/conv/bot_shell-vtk.c,
+	  src/conv/dxf/bot-bldxf.c, src/conv/nmg/g-nmg.c,
+	  src/conv/nmg/nmg-bot.c, src/conv/nmg/nmg-rib.c,
+	  src/conv/nmg/nmg-sgp.c, src/conv/poly-bot.c,
+	  src/rt/CMakeLists.txt, src/rt/view_bot_faces.c:
+	  Remove obsolete primitive specific converter tools (deprecated
+	  7.26)
+
+2019-02-27 22:42  starseeker
+
+	* [r72554] CHANGES, doc/docbook/system/man1/CMakeLists.txt,
+	  doc/docbook/system/man1/plot3-X.xml,
+	  doc/docbook/system/man1/plot3-hpgl.xml,
+	  doc/docbook/system/man1/plot3-tek.xml,
+	  doc/docbook/system/man1/plot3debug.xml, src/util/CMakeLists.txt,
+	  src/util/plot3-X.c, src/util/plot3-hpgl.c, src/util/plot3-tek.c,
+	  src/util/plot3debug.c, src/util/xyz-plot3.c:
+	  Remove obsolete plot3 utilities (deprecated 7.26)
+
+2019-02-27 22:30  starseeker
+
+	* [r72553] doc/docbook/system/man1/CMakeLists.txt,
+	  doc/docbook/system/man1/cy-g.xml,
+	  doc/docbook/system/man1/euclid-g.xml,
+	  doc/docbook/system/man1/g-euclid.xml,
+	  doc/docbook/system/man1/g-tankill.xml,
+	  doc/docbook/system/man1/lgt.xml,
+	  doc/docbook/system/man1/rtpp.xml,
+	  doc/docbook/system/man1/rtrange.xml,
+	  doc/docbook/system/man1/rtray.xml,
+	  doc/docbook/system/man1/rtregis.xml,
+	  doc/docbook/system/man1/viewpoint-g.xml:
+	  remove man pages
+
+2019-02-27 17:53  starseeker
+
+	* [r72552] CHANGES, src/conv/CMakeLists.txt, src/conv/cy-g.c,
+	  src/conv/euclid, src/conv/intaval-g.py,
+	  src/conv/tankill/g-tankill.c, src/conv/viewpoint-g.c:
+	  Start working on removing deprecated converters (deprecated 7.26)
+
+2019-02-27 17:44  starseeker
+
+	* [r72551] CHANGES, src/rt/CMakeLists.txt, src/rt/rad.h,
+	  src/rt/rtregis.c, src/rt/viewcell.c, src/rt/viewfrac.c,
+	  src/rt/viewpp.c, src/rt/viewrad.c, src/rt/viewrange.c,
+	  src/rt/viewray.c, src/rt/viewscat.c:
+	  Remove rtcell rtfrac rtpp rtrad rtrange rtray and rtregis
+	  (deprecated 7.26)
+
+2019-02-27 17:33  starseeker
+
+	* [r72550] CHANGES, src/lgt:
+	  Remove lgt (deprecated 7.26)
+
+2019-02-27 11:34  d_rossberg
+
+	* [r72549] src/conv/euclid/euclid-g.c, src/conv/off/off-g.c,
+	  src/conv/patch/patch-g.c, src/fb/fb-rle.c, src/lgt/do_options.c,
+	  src/libged/brep.c, src/libged/clone.c, src/libged/fracture.c,
+	  src/mged/clone.c, src/mged/dodraw.c, src/proc-db/pix2g.c,
+	  src/proc-db/torii.c, src/remrt/remrt.c,
+	  src/shapes/picket_fence.c, src/util/bw-rle.c, src/util/plot3-X.c:
+	  quell gcc 8.2 warnings/errors: the compiler calculates the
+	  possible result sizes of string functions as snprintf(), and
+	  complains if e.g. to a string of size n will something be added
+	  and the receiving string has only size n too
+
+2019-02-27 01:51  starseeker
+
+	* [r72548]
+	  misc/external_build_testing/CMake/ExternalProject_Target.cmake,
+	  misc/external_build_testing/CMakeLists.txt:
+	  Variety of fixes - this can build zpipe with MSVC successfully.
+
+2019-02-27 00:04  starseeker
+
+	* [r72547]
+	  misc/external_build_testing/CMake/ExternalProject_Target.cmake:
+	  Blegh - need to refactor this again. We also need to tell Windows
+	  where the .lib file is. Ideally, should just define some name
+	  roots and let the functions expand all this...
+
+2019-02-26 23:55  starseeker
+
+	* [r72546]
+	  misc/external_build_testing/CMake/ExternalProject_Target.cmake,
+	  misc/external_build_testing/CMakeLists.txt:
+	  This isn't enough - MSVC still can't find the zlib object even
+	  with the various IMPORTED_LOCATION variables set.
+
+2019-02-26 23:19  starseeker
+
+	* [r72545]
+	  misc/external_build_testing/CMake/ExternalProject_Target.cmake:
+	  Single config vs. multiconfig is going to be an issue for making
+	  the imported targets work correctly with Visual Studio. Start to
+	  work on how this is going to have to function (untested with MSVC
+	  as yet.)
+
+2019-02-26 22:20  starseeker
+
+	* [r72544] misc/external_build_testing/CMakeLists.txt:
+	  Use zpipe for the example so we don't have unistd.h complicating
+	  the Windows testing
+
+2019-02-26 21:54  starseeker
+
+	* [r72543] misc/external_build_testing/CMakeLists.txt:
+	  8.6 series Tcl is managing Itcl itself.
+
+2019-02-26 21:24  starseeker
+
+	* [r72542] misc/external_build_testing/CMakeLists.txt:
+	  Whoops, one directory too many in explicit string
+
+2019-02-26 21:20  starseeker
+
+	* [r72541] misc/external_build_testing/CMakeLists.txt:
+	  Hmm. 8.7a1 doesn't look like it's happy with latest VS2017... see
+	  if they've fixed 8.6
+
+2019-02-26 21:04  starseeker
+
+	* [r72540] misc/external_build_testing/CMakeLists.txt:
+	  We want the VC/Auxiliary/Build version
+
+2019-02-26 20:36  starseeker
+
+	* [r72539] misc/external_build_testing/CMakeLists.txt:
+	  Location changed in VS2017, check the new location as well
+
+2019-02-26 17:06  brlcad
+
+	* [r72538] TODO:
+	  cliff refactored the density file handling into libanalyze for
+	  rtweight and gqa (analyze_densities_load()), presumably works on
+	  windows now too.
+
+2019-02-26 13:57  starseeker
+
+	* [r72537] src/librt/primitives/vol/vol.c:
+	  bu_vls_cat -> bu_vls_strcat
+
+2019-02-26 12:47  starseeker
+
+	* [r72536] TODO:
+	  Put the top TODOs back into the next release category
+
+2019-02-26 12:45  starseeker
+
+	* [r72535] ., CHANGES, ChangeLog, NEWS, README, doc, doc/STRATEGY,
+	  include, include/conf/MINOR, include/conf/PATCH,
+	  misc/debian/changelog, misc/macosx/Resources/ReadMe.rtfd/TXT.rtf,
+	  misc/macosx/Resources/Welcome.rtfd/TXT.rtf,
+	  src/libged/polyclip.cpp:
+	  Bump version number to next patch release
+
+2019-02-26 08:58  brlcad
+
+	* [r72534] TODO:
+	  put the matrix printer to use after the two remaining to-do's are
+	  to-done.
+
+2019-02-26 08:57  brlcad
+
+	* [r72533] NEWS, src/librt/primitives/vol/vol.c:
+	  fix / improve handling of vol objects when their datafile cannot
+	  be found. e.g., listing commands were failing as corrupt
+	  geometry, but now report the missing file and list so you can
+	  figure out what file it's trying to read or point it at a new
+	  file.
+
+2019-02-26 08:32  brlcad
+
+	* [r72532] src/libbu/CMakeLists.txt, src/libbu/num.c:
+	  Implement a pretty-print function for column printing of numbers.
+	  
+	  This new function takes an array of doubles and formats them into
+	  neat
+	  tabular form with aligned columns. Included in BU instead of BN
+	  as it
+	  pertains more to printing and presentation than numbers. The idea
+	  is
+	  for BN (and any other libs) to use this function with specified
+	  parameters for consistent printing of their numeric types.
+	  
+	  This is already flexible enough to be fully compatible with
+	  nearly all
+	  existing matrix/vector/point print functions (there are numerous)
+	  and
+	  by default will print with superior precision, minimal padding,
+	  and
+	  caller-specified decoration. That said, the specific function
+	  name,
+	  group, and params are subject to change as remaining generality
+	  gets
+	  implemented. Still working on buffer printing, an option to
+	  decimal-align, and will need to update the world incrementally.
+
+2019-02-25 21:39  starseeker
+
+	* [r72530] CMakeLists.txt, misc/CMake/CMakeLists.txt,
+	  misc/CMake/CheckCXX11Features/cxx11-test-lib_regex.cpp:
+	  Add the test for a working C++11 regex library.
+
+2019-02-25 16:43  starseeker
+
+	* [r72526] src/libged/attr.c:
+	  Make a stab at a copy subcommand for attr - defines the key,val
+	  -> new_key,val operation. When paired with rm, makes bulk
+	  attribute renaming simple.
+

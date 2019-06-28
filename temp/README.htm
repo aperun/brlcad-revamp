@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <link rel="stylesheet" href="styles/default.css"/>
+  <title>BetterCAD README</title>
+</head>
+<body>
+  <style>
+    html * { box-sizing: border-box; }
+    dt { font-weight: bold; text-align: right; width: 10%; }
+    dt, dd { display: inline-block; }
+    dd::before { content: "- "; }
+    dd { width: 90%; padding-left: 12px; text-align: left; margin-left: -1px; }
+  </style>
+  <h1>BetterCAD</h1>
+
+  <section>
+    <h2 name="docs">Documentation</h2>
+    <p>For specific documentation like Compiling, GUI translation, old changelogs see the Documentation subfolder.</p>
+  </section>
+
+  <section>
+    <h2 name="meta">META-FILES</h2>
+
+    <dl>
+      <dt>AUTHORS</dt><dd>The authors, contributors, document writers and translators list</dd>
+      <dt>BUILD</dt><dd>The instructions to build releases (binaries)</dd>
+      <dt>INSTALL</dt><dd>The instructions to install releases (binaries)</dd>
+      <dt>LICENSE</dt><dd>A modified copy of the BSD 4-Clause License to be linked to in source comments</dd>
+      <dt>TODO</dt><dd>Project-wide Todo list</dd>
+    </dl>
+  </section>
+  <section>
+    <h2 name="submod">Submodules</h2>
+    <dl>
+      <dt>app/*</dt><dd></dd>
+      <dt>common</dt><dd>Common library</dd>
+      <dt>ext</dt><dd>Extension library</dd>
+      <dt>help</dt><dd>Help Tool</dd>
+      <dt>icon</dt><dd>Application icon resources (PNG, SVG, etc)</dd>
+      <dt>object</dt><dd>Intermediate object library for polygon generation</dd>
+      <dt>physics</dt><dd>In-house physics utilities for rendering calculations</dd>
+      <dt>mesh</dt><dd>Bitmap meshing utility</dd>
+      <dt>renderer</dt><dd>Visualizer for both 3D & 2D imagery</dd>
+      <dt>tracer</dt><dd>2D vector & bitmap drawing system</dd>
+      <dt>workbench</dt><dd>Tool sets for workflows</dd>
+    </dl>
+      template          - Project and pagelayout templates
+    polygon           - Sourcecode of the polygon library
+    potrace           - Sourcecode of the potrace library, used in bitmap2component
+  </section>
+  <section>
+    <h2 name="other">Other Directories</h2>
+    <dl>
+      <dt>demo</dt><dd>Demo examples</dd>
+          doc     |  Documentation for end-users, developers, and system admins
+          test    |  Tests for release builds
+    </dl>
+  </section>
+</body>
+</html>

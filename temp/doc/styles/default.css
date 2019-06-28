@@ -1,0 +1,14 @@
+html * { box-sizing: border-box; }
+dt {
+  font-weight: bold;
+  text-align: right;
+  width: 10%;
+}
+dt, dd { display: inline-block; }
+dd::before { content: "- "; }
+dd {
+  width: 90%;
+  padding-left: 12px;
+  text-align: left;
+  margin-left: -1px;
+}
